@@ -3019,3 +3019,530 @@ class AdStats(db.Model):
     
     def __repr__(self):
         return f"<AdStats {self.ad_id} {self.date} {self.hour}>"
+
+# Add missing indexes and optimizations at the end of the file
+
+# =============================================================================
+# DATABASE OPTIMIZATIONS AND INDEXES
+# =============================================================================
+
+# Add missing indexes for better query performance
+def add_missing_indexes():
+    """Add missing indexes for optimal database performance."""
+    try:
+        # News table optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_news_category_date_visible 
+            ON news (category_id, date DESC, is_visible) 
+            WHERE is_visible = 1
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_news_author_date 
+            ON news (user_id, date DESC)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_news_premium_visible 
+            ON news (is_premium, is_visible, date DESC)
+        """))
+        
+        # Album table optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_album_author_visible 
+            ON album (user_id, is_visible, created_at DESC)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_album_category_visible 
+            ON album (category_id, is_visible, created_at DESC)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_album_premium_visible 
+            ON album (is_premium, is_visible, created_at DESC)
+        """))
+        
+        # Album chapter optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_album_chapter_album_number 
+            ON album_chapter (album_id, chapter_number)
+        """))
+        
+        # User optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_role_active 
+            ON "user" (role, is_active) 
+            WHERE is_active = 1
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_premium_expires 
+            ON "user" (has_premium_access, premium_expires_at)
+        """))
+        
+        # Comment optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_comment_content_approved 
+            ON comment (content_type, content_id, is_approved, created_at DESC)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_comment_user_created 
+            ON comment (user_id, created_at DESC)
+        """))
+        
+        # Rating optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_rating_content_created 
+            ON rating (content_type, content_id, created_at DESC)
+        """))
+        
+        # Reading history optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_reading_history_user_content 
+            ON reading_history (user_id, content_type, content_id)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_reading_history_last_read 
+            ON reading_history (user_id, last_read_at DESC)
+        """))
+        
+        # User library optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_library_user_content 
+            ON user_library (user_id, content_type, content_id)
+        """))
+        
+        # Ad optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_ad_active_priority 
+            ON ad (is_active, priority DESC, created_at DESC)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_ad_campaign_active 
+            ON ad (campaign_id, is_active)
+        """))
+        
+        # Ad placement optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_ad_placement_page_section 
+            ON ad_placement (page_type, section, is_active)
+        """))
+        
+        # Ad stats optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_ad_stats_ad_date 
+            ON ad_stats (ad_id, date DESC)
+        """))
+        
+        # Brand identity optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_brand_identity_updated 
+            ON brand_identity (updated_at DESC)
+        """))
+        
+        # Root SEO optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_root_seo_identifier_active 
+            ON root_seo (page_identifier, is_active)
+        """))
+        
+        # Navigation link optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_navigation_link_location_order 
+            ON navigation_link (location, "order", is_active)
+        """))
+        
+        # YouTube video optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_youtube_video_visible_created 
+            ON youtube_video (is_visible, created_at DESC)
+        """))
+        
+        # Social media optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_social_media_updated 
+            ON social_media (updated_at DESC)
+        """))
+        
+        # Contact detail optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_contact_detail_order_active 
+            ON contact_detail (section_order, is_active)
+        """))
+        
+        # Team member optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_team_member_group_order 
+            ON team_member ("group", member_order, is_active)
+        """))
+        
+        # Policy/guideline optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_policy_order_active 
+            ON privacy_policy (section_order, is_active)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_guideline_order_active 
+            ON media_guideline (section_order, is_active)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_visimisi_order_active 
+            ON visi_misi (section_order, is_active)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_penyangkalan_order_active 
+            ON penyangkalan (section_order, is_active)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_pedomanhak_order_active 
+            ON pedoman_hak (section_order, is_active)
+        """))
+        
+        # Image optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_image_visible_created 
+            ON image (is_visible, created_at DESC)
+        """))
+        
+        # Category optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_category_name 
+            ON category (name)
+        """))
+        
+        # User subscription optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_subscription_user_status 
+            ON user_subscriptions (user_id, status)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_subscription_end_date 
+            ON user_subscriptions (end_date, status)
+        """))
+        
+        # Comment like optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_comment_like_comment_user 
+            ON comment_like (comment_id, user_id, is_like)
+        """))
+        
+        # Comment report optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_comment_report_resolved 
+            ON comment_report (is_resolved, created_at DESC)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_comment_report_comment 
+            ON comment_report (comment_id, is_resolved)
+        """))
+        
+        # User activity optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_activity_user_type 
+            ON user_activity (user_id, activity_type, created_at DESC)
+        """))
+        
+        # Permission optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_permission_resource_action 
+            ON permission (resource, action)
+        """))
+        
+        # Custom role optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_custom_role_active 
+            ON custom_role (is_active, created_at DESC)
+        """))
+        
+        db.session.commit()
+        print("✅ All database indexes created successfully!")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error creating indexes: {e}")
+
+
+# =============================================================================
+# DATABASE HEALTH CHECK AND OPTIMIZATION FUNCTIONS
+# =============================================================================
+
+def check_database_health():
+    """Check database health and provide optimization recommendations."""
+    try:
+        # Check table sizes
+        tables = [
+            'news', 'album', 'user', 'comment', 'rating', 'image', 
+            'reading_history', 'user_library', 'ad', 'ad_stats'
+        ]
+        
+        print("🔍 Database Health Check")
+        print("=" * 50)
+        
+        for table in tables:
+            try:
+                result = db.session.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                count = result.scalar()
+                print(f"📊 {table}: {count:,} records")
+            except Exception as e:
+                print(f"❌ Error checking {table}: {e}")
+        
+        # Check for orphaned records
+        print("\n🔍 Checking for orphaned records...")
+        
+        # Check orphaned comments
+        orphaned_comments = db.session.execute(text("""
+            SELECT COUNT(*) FROM comment c 
+            LEFT JOIN news n ON c.content_type = 'news' AND c.content_id = n.id
+            LEFT JOIN album a ON c.content_type = 'album' AND c.content_id = a.id
+            WHERE n.id IS NULL AND a.id IS NULL
+        """)).scalar()
+        
+        if orphaned_comments > 0:
+            print(f"⚠️ Found {orphaned_comments} orphaned comments")
+        
+        # Check orphaned ratings
+        orphaned_ratings = db.session.execute(text("""
+            SELECT COUNT(*) FROM rating r 
+            LEFT JOIN news n ON r.content_type = 'news' AND r.content_id = n.id
+            LEFT JOIN album a ON r.content_type = 'album' AND r.content_id = a.id
+            WHERE n.id IS NULL AND a.id IS NULL
+        """)).scalar()
+        
+        if orphaned_ratings > 0:
+            print(f"⚠️ Found {orphaned_ratings} orphaned ratings")
+        
+        # Check for duplicate entries
+        print("\n🔍 Checking for potential duplicates...")
+        
+        # Check duplicate usernames (should be prevented by unique constraint)
+        duplicate_usernames = db.session.execute(text("""
+            SELECT username, COUNT(*) FROM "user" 
+            GROUP BY username HAVING COUNT(*) > 1
+        """)).fetchall()
+        
+        if duplicate_usernames:
+            print(f"⚠️ Found {len(duplicate_usernames)} duplicate usernames")
+        
+        # Check for expired premium subscriptions
+        expired_subscriptions = db.session.execute(text("""
+            SELECT COUNT(*) FROM "user" 
+            WHERE has_premium_access = 1 
+            AND premium_expires_at IS NOT NULL 
+            AND premium_expires_at < datetime('now')
+        """)).scalar()
+        
+        if expired_subscriptions > 0:
+            print(f"⚠️ Found {expired_subscriptions} expired premium subscriptions")
+        
+        print("\n✅ Database health check completed!")
+        
+    except Exception as e:
+        print(f"❌ Error during health check: {e}")
+
+
+def optimize_database():
+    """Perform database optimization tasks."""
+    try:
+        print("🔧 Database Optimization")
+        print("=" * 50)
+        
+        # Analyze tables for better query planning
+        db.session.execute(text("ANALYZE"))
+        print("✅ Table analysis completed")
+        
+        # Vacuum database to reclaim space
+        db.session.execute(text("VACUUM"))
+        print("✅ Database vacuum completed")
+        
+        # Reindex for better performance
+        db.session.execute(text("REINDEX"))
+        print("✅ Database reindex completed")
+        
+        db.session.commit()
+        print("✅ Database optimization completed!")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error during optimization: {e}")
+
+
+def cleanup_orphaned_data():
+    """Clean up orphaned data to maintain database integrity."""
+    try:
+        print("🧹 Cleaning up orphaned data...")
+        
+        # Clean up orphaned comments
+        orphaned_comments = db.session.execute(text("""
+            DELETE FROM comment 
+            WHERE content_type = 'news' 
+            AND content_id NOT IN (SELECT id FROM news)
+        """))
+        
+        orphaned_comments_album = db.session.execute(text("""
+            DELETE FROM comment 
+            WHERE content_type = 'album' 
+            AND content_id NOT IN (SELECT id FROM album)
+        """))
+        
+        # Clean up orphaned ratings
+        orphaned_ratings = db.session.execute(text("""
+            DELETE FROM rating 
+            WHERE content_type = 'news' 
+            AND content_id NOT IN (SELECT id FROM news)
+        """))
+        
+        orphaned_ratings_album = db.session.execute(text("""
+            DELETE FROM rating 
+            WHERE content_type = 'album' 
+            AND content_id NOT IN (SELECT id FROM album)
+        """))
+        
+        # Clean up orphaned reading history
+        orphaned_reading = db.session.execute(text("""
+            DELETE FROM reading_history 
+            WHERE content_type = 'news' 
+            AND content_id NOT IN (SELECT id FROM news)
+        """))
+        
+        orphaned_reading_album = db.session.execute(text("""
+            DELETE FROM reading_history 
+            WHERE content_type = 'album' 
+            AND content_id NOT IN (SELECT id FROM album)
+        """))
+        
+        # Clean up orphaned user library
+        orphaned_library = db.session.execute(text("""
+            DELETE FROM user_library 
+            WHERE content_type = 'news' 
+            AND content_id NOT IN (SELECT id FROM news)
+        """))
+        
+        orphaned_library_album = db.session.execute(text("""
+            DELETE FROM user_library 
+            WHERE content_type = 'album' 
+            AND content_id NOT IN (SELECT id FROM album)
+        """))
+        
+        # Clean up expired premium subscriptions
+        expired_subscriptions = db.session.execute(text("""
+            UPDATE "user" 
+            SET has_premium_access = 0, premium_expires_at = NULL
+            WHERE has_premium_access = 1 
+            AND premium_expires_at IS NOT NULL 
+            AND premium_expires_at < datetime('now')
+        """))
+        
+        db.session.commit()
+        print("✅ Orphaned data cleanup completed!")
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error during cleanup: {e}")
+
+
+# =============================================================================
+# DATABASE MIGRATION HELPERS
+# =============================================================================
+
+def get_all_models():
+    """Get all model classes for migration purposes."""
+    return [
+        Permission, CustomRole, UserActivity, User, ReadingHistory, UserLibrary,
+        PrivacyPolicy, MediaGuideline, VisiMisi, Penyangkalan, PedomanHak,
+        Image, Category, News, Album, AlbumChapter, YouTubeVideo, ShareLog,
+        SocialMedia, ContactDetail, TeamMember, BrandIdentity, UserSubscription,
+        Comment, Rating, CommentLike, CommentReport, NavigationLink, RootSEO,
+        AdCampaign, Ad, AdPlacement, AdStats
+    ]
+
+
+def create_all_tables():
+    """Create all database tables."""
+    try:
+        print("🔧 Creating all database tables...")
+        db.create_all()
+        print("✅ All tables created successfully!")
+        
+        # Add indexes after table creation
+        add_missing_indexes()
+        
+    except Exception as e:
+        print(f"❌ Error creating tables: {e}")
+
+
+def drop_all_tables():
+    """Drop all database tables (USE WITH CAUTION!)."""
+    try:
+        print("⚠️ Dropping all database tables...")
+        db.drop_all()
+        print("✅ All tables dropped successfully!")
+        
+    except Exception as e:
+        print(f"❌ Error dropping tables: {e}")
+
+
+# =============================================================================
+# DATABASE PERFORMANCE MONITORING
+# =============================================================================
+
+def get_database_stats():
+    """Get database statistics for monitoring."""
+    try:
+        stats = {}
+        
+        # Get table sizes
+        tables = [
+            'news', 'album', 'user', 'comment', 'rating', 'image', 
+            'reading_history', 'user_library', 'ad', 'ad_stats'
+        ]
+        
+        for table in tables:
+            try:
+                result = db.session.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                stats[f"{table}_count"] = result.scalar()
+            except Exception:
+                stats[f"{table}_count"] = 0
+        
+        # Get database size
+        try:
+            result = db.session.execute(text("""
+                SELECT page_count * page_size as size_bytes 
+                FROM pragma_page_count(), pragma_page_size()
+            """))
+            stats['database_size_bytes'] = result.scalar()
+        except Exception:
+            stats['database_size_bytes'] = 0
+        
+        return stats
+        
+    except Exception as e:
+        print(f"❌ Error getting database stats: {e}")
+        return {}
+
+
+# =============================================================================
+# INITIALIZATION
+# =============================================================================
+
+if __name__ == "__main__":
+    # This allows running models.py directly for database operations
+    print("🚀 LilyOpenCMS Database Models")
+    print("=" * 50)
+    print("Available functions:")
+    print("- create_all_tables()")
+    print("- add_missing_indexes()")
+    print("- check_database_health()")
+    print("- optimize_database()")
+    print("- cleanup_orphaned_data()")
+    print("- get_database_stats()")
+    print("=" * 50)

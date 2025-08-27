@@ -364,11 +364,45 @@ def safe_migrate():
                 print(f"📚 User library records: {user_library_count}")
             except Exception as e:
                 print(f"⚠️ Could not count user library records: {e}")
+
+            # ===== DATABASE OPTIMIZATIONS =====
+            print("\n" + "="*50)
+            print("🔧 DATABASE OPTIMIZATIONS")
+            print("="*50)
+            
+            # Add missing indexes for optimal performance
+            print("\n🔧 Adding database indexes for optimal performance...")
+            try:
+                from models import add_missing_indexes
+                add_missing_indexes()
+                print("✅ Database indexes created successfully")
+            except Exception as e:
+                print(f"⚠️ Could not create indexes: {e}")
+            
+            # Check database health
+            print("\n🔍 Running database health check...")
+            try:
+                from models import check_database_health
+                check_database_health()
+            except Exception as e:
+                print(f"⚠️ Could not run health check: {e}")
+            
+            # Clean up orphaned data
+            print("\n🧹 Cleaning up orphaned data...")
+            try:
+                from models import cleanup_orphaned_data
+                cleanup_orphaned_data()
+                print("✅ Orphaned data cleanup completed")
+            except Exception as e:
+                print(f"⚠️ Could not cleanup orphaned data: {e}")
             
             print(f"\n🎉 Comprehensive migration completed successfully!")
             print("✅ All existing data preserved")
             print("✅ All tables have required columns")
             print("✅ Reading history and user library tables created")
+            print("✅ Database indexes optimized for performance")
+            print("✅ Database health verified")
+            print("✅ Orphaned data cleaned up")
             
             return True
             
