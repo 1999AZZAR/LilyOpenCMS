@@ -1,0 +1,210 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Penempatan Iklan{% endblock %}
+
+{% block hero_title %}Penempatan Iklan{% endblock %}
+{% block hero_desc %}Kelola penempatan iklan di berbagai halaman{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Daftar Penempatan Iklan</h2>
+        <a href="{{ url_for('ads.create_placement') }}" 
+           class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Buat Penempatan Baru
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-amber-100 rounded-lg">
+                    <i class="fas fa-map-marker-alt text-amber-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Penempatan</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ placements|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-green-600">Aktif</p>
+                    <p class="text-2xl font-bold text-green-800">{{ placements|selectattr('is_active')|list|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-globe text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-blue-600">Halaman Berbeda</p>
+                    <p class="text-2xl font-bold text-blue-800">{{ placements|map(attribute='page_type')|unique|list|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-ad text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-purple-600">Iklan Unik</p>
+                    <p class="text-2xl font-bold text-purple-800">{{ placements|map(attribute='ad_id')|unique|list|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placements Table -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Penempatan
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Iklan
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Halaman
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Posisi
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            Aksi
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for placement in placements %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div>
+                                <div class="text-sm font-medium text-amber-900">{{ placement.name }}</div>
+                                {% if placement.description %}
+                                <div class="text-sm text-amber-600 mt-1">{{ placement.description[:50] }}{% if placement.description|length > 50 %}...{% endif %}</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if placement.ad %}
+                            <div>
+                                <div class="text-sm font-medium text-amber-900">{{ placement.ad.title }}</div>
+                                <div class="text-xs text-amber-600">{{ placement.ad.ad_type|title }}</div>
+                            </div>
+                            {% else %}
+                            <span class="text-red-600 text-sm">Iklan tidak ditemukan</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-amber-600">
+                                <span class="font-medium">{{ placement.page_type|title }}</span>
+                                {% if placement.page_specific %}
+                                <br><span class="text-xs">{{ placement.page_specific }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                {{ placement.position|replace('_', ' ')|title }}
+                                {% if placement.position_value %}
+                                ({{ placement.position_value }})
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if placement.is_active %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>Aktif
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-times-circle mr-1"></i>Nonaktif
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right text-sm font-medium">
+                            <div class="flex items-center justify-end space-x-2">
+                                <a href="{{ url_for('ads.edit_placement', placement_id=placement.id) }}"
+                                   class="text-blue-600 hover:text-blue-900 transition-colors"
+                                   title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deletePlacement({{ placement.id }}, '{{ placement.name }}')"
+                                        class="text-red-600 hover:text-red-900 transition-colors"
+                                        title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-amber-600">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-map-marker-alt text-4xl mb-4 text-amber-300"></i>
+                                <p class="text-lg font-medium mb-2">Belum ada penempatan</p>
+                                <p class="text-sm">Buat penempatan pertama untuk mulai menampilkan iklan</p>
+                                <a href="{{ url_for('ads.create_placement') }}" 
+                                   class="mt-4 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>Buat Penempatan
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+async function deletePlacement(placementId, placementName) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus penempatan "${placementName}"?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/ads/placements/${placementId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', 'Penempatan berhasil dihapus!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast('error', result.error || 'Terjadi kesalahan saat menghapus penempatan');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'Terjadi kesalahan saat menghapus penempatan');
+    }
+}
+</script>
+{% endblock %} 

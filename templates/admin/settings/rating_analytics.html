@@ -1,0 +1,276 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Analitik Rating - Admin{% endblock %}
+
+{% block hero_title %}Analitik Rating{% endblock %}
+{% block hero_desc %}Analitik komprehensif dan insight untuk sistem rating{% endblock %}
+
+{% block content %}
+<div class="w-full">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-amber-800 mb-2">Analitik Rating</h1>
+    <p class="text-amber-700">Analitik komprehensif dan insight untuk sistem rating.</p>
+  </div>
+
+  <!-- Overview Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-amber-600">Total Rating</p>
+          <p class="text-2xl font-bold text-amber-800">{{ analytics.total_ratings }}</p>
+        </div>
+        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-star text-white text-lg"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-amber-600">Rata-rata Rating</p>
+          <p class="text-2xl font-bold text-amber-800">{{ "%.2f"|format(analytics.overall_average_rating) }}</p>
+        </div>
+        <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-chart-line text-white text-lg"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-amber-600">Rating News</p>
+          <p class="text-2xl font-bold text-amber-800">{{ analytics.news_ratings }}</p>
+        </div>
+        <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-newspaper text-white text-lg"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-amber-600">Rating Album</p>
+          <p class="text-2xl font-bold text-amber-800">{{ analytics.album_ratings }}</p>
+        </div>
+        <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-book text-white text-lg"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating Distribution -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold text-amber-800 mb-4">Distribusi Rating</h3>
+      <div class="space-y-4">
+        {% for rating, count in analytics.distribution.items() %}
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <span class="text-sm font-medium text-amber-800">{{ rating }} Star{{ 's' if rating != 1 else '' }}</span>
+            <div class="flex items-center space-x-1">
+              {% for i in range(1, 6) %}
+                {% if i <= rating %}
+                  <i class="fas fa-star text-yellow-400 text-sm"></i>
+                {% else %}
+                  <i class="far fa-star text-gray-300 text-sm"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="w-32 bg-gray-200 rounded-full h-3">
+              {% set percentage = (count / analytics.total_ratings * 100) if analytics.total_ratings > 0 else 0 %}
+              <div class="bg-gradient-to-r from-yellow-400 to-yellow-500 h-3 rounded-full" style="width: {{ percentage }}%"></div>
+            </div>
+            <span class="text-sm font-medium text-amber-800 w-12 text-right">{{ count }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold text-amber-800 mb-4">Rata-rata per Tipe Konten</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+              <i class="fas fa-newspaper text-white text-sm"></i>
+            </div>
+            <div>
+              <p class="font-medium text-amber-800">Artikel News</p>
+              <p class="text-sm text-amber-600">{{ analytics.news_ratings }} ratings</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-lg font-bold text-amber-800">{{ "%.2f"|format(analytics.news_average) }}</p>
+            <div class="flex items-center space-x-1">
+              {% for i in range(1, 6) %}
+                {% if i <= analytics.news_average %}
+                  <i class="fas fa-star text-yellow-400 text-xs"></i>
+                {% else %}
+                  <i class="far fa-star text-gray-300 text-xs"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
+              <i class="fas fa-book text-white text-sm"></i>
+            </div>
+            <div>
+              <p class="font-medium text-amber-800">Album</p>
+              <p class="text-sm text-amber-600">{{ analytics.album_ratings }} ratings</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-lg font-bold text-amber-800">{{ "%.2f"|format(analytics.album_average) }}</p>
+            <div class="flex items-center space-x-1">
+              {% for i in range(1, 6) %}
+                {% if i <= analytics.album_average %}
+                  <i class="fas fa-star text-yellow-400 text-xs"></i>
+                {% else %}
+                  <i class="far fa-star text-gray-300 text-xs"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
+              <i class="fas fa-chart-line text-white text-sm"></i>
+            </div>
+            <div>
+              <p class="font-medium text-amber-800">Album (Weighted)</p>
+              <p class="text-sm text-amber-600">{{ analytics.albums_with_weighted_ratings }} albums</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-lg font-bold text-amber-800">{{ "%.2f"|format(analytics.weighted_album_average) }}</p>
+            <div class="flex items-center space-x-1">
+              {% for i in range(1, 6) %}
+                {% if i <= analytics.weighted_album_average %}
+                  <i class="fas fa-star text-yellow-400 text-xs"></i>
+                {% else %}
+                  <i class="far fa-star text-gray-300 text-xs"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weighted Album Ratings -->
+  {% if analytics.weighted_album_stats %}
+  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg mb-8">
+    <div class="p-6 border-b border-amber-200">
+      <h3 class="text-lg font-semibold text-amber-800">Album Ratings (Weighted)</h3>
+      <p class="text-sm text-amber-600 mt-1">Rating berdasarkan popularitas chapter dengan algoritma weighted</p>
+    </div>
+    
+    <div class="divide-y divide-amber-200">
+      {% for album in analytics.weighted_album_stats %}
+      <div class="p-6">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
+              <i class="fas fa-book text-white text-lg"></i>
+            </div>
+            <div>
+              <div class="font-medium text-amber-800">{{ album.album_title }}</div>
+              <div class="text-sm text-amber-600">
+                {{ album.total_chapters_rated }} chapters rated • {{ album.total_ratings }} total ratings
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-1">
+            {% for i in range(1, 6) %}
+              {% if i <= album.weighted_average %}
+                <i class="fas fa-star text-yellow-400 text-lg"></i>
+              {% else %}
+                <i class="far fa-star text-gray-300 text-lg"></i>
+              {% endif %}
+            {% endfor %}
+            <span class="ml-2 text-sm font-medium text-amber-800">{{ "%.2f"|format(album.weighted_average) }}/5</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Recent Ratings -->
+  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg">
+    <div class="p-6 border-b border-amber-200">
+      <h3 class="text-lg font-semibold text-amber-800">Rating Terbaru</h3>
+    </div>
+    
+    {% if analytics.recent_ratings %}
+    <div class="divide-y divide-amber-200">
+      {% for rating in analytics.recent_ratings %}
+      <div class="p-6">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full flex items-center justify-center">
+              <span class="text-white font-semibold text-lg">{{ rating.user.username[0]|upper }}</span>
+            </div>
+            <div>
+              <div class="font-medium text-amber-800">{{ rating.user.username }}</div>
+              <div class="text-sm text-amber-600">
+                <i class="fas fa-clock mr-1"></i>{{ rating.created_at.strftime('%Y-%m-%d %H:%M') }}
+                {% if rating.content_type == 'news' %}
+                  <i class="fas fa-newspaper ml-2 mr-1"></i>News #{{ rating.content_id }}
+                {% else %}
+                  <i class="fas fa-book ml-2 mr-1"></i>Album #{{ rating.content_id }}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-1">
+            {% for i in range(1, 6) %}
+              {% if i <= rating.rating_value %}
+                <i class="fas fa-star text-yellow-400 text-lg"></i>
+              {% else %}
+                <i class="far fa-star text-gray-300 text-lg"></i>
+              {% endif %}
+            {% endfor %}
+            <span class="ml-2 text-sm font-medium text-amber-800">{{ rating.rating_value }}/5</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="p-12 text-center">
+      <div class="text-amber-400 mb-6">
+        <i class="fas fa-star text-6xl"></i>
+      </div>
+      <h3 class="text-xl font-semibold text-amber-800 mb-2">Tidak Ada Rating</h3>
+      <p class="text-amber-600">Tidak ada rating terbaru yang ditemukan.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Back to Management -->
+  <div class="mt-8 text-center">
+    <a href="{{ url_for('ratings.admin_ratings') }}" 
+       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white rounded-lg font-medium transition-all duration-300 shadow-md">
+      <i class="fas fa-arrow-left mr-2"></i>Kembali ke Manajemen Rating
+    </a>
+  </div>
+</div>
+{% endblock %} 

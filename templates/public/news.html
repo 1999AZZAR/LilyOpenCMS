@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ brand_info.brand_name|default('LilyOpenCMS') }} - 
+{% if type == 'news' %}Berita
+{% elif type == 'articles' %}Artikel
+{% elif type == 'utama' %}Utama
+{% elif query %}Hasil Pencarian "{{ query }}"
+{% elif category %}Kategori {{ category }}
+{% elif tag %}Tag #{{ tag }}
+{% else %}Cerita{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+<script>window.__ADS_ALLOWED__ = true;</script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-bold text-foreground mb-4">
+      {% if type == 'news' %}Berita Terkini
+      {% elif type == 'articles' %}Artikel Terkini
+      {% elif type == 'utama' %}Utama
+      {% elif query %}Hasil Pencarian "{{ query }}"
+      {% elif category %}Kategori {{ category }}
+      {% elif tag %}Tag #{{ tag }}
+      {% else %}Semua Berita{% endif %}
+    </h1>
+    <p class="text-muted-foreground text-lg">
+      {% if type == 'news' %}Berita terbaru dan terkini dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
+      {% elif type == 'articles' %}Temukan artikel-artikel mendalam tentang Artikel terbaru dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
+      {% elif type == 'utama' %}Berita Utama dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
+      {% elif query %}Menampilkan hasil pencarian untuk "{{ query }}"
+      {% elif category %}Menampilkan semua Hasil dalam kategori "{{ category }}"
+      {% elif tag %}Menampilkan semua Hasil dengan tag "#{{ tag }}"
+      {% else %}Kumpulan Berita terbaru dari {{ brand_info.brand_name|default('LilyOpenCMS') }}{% endif %}
+    </p>
+  </div>
+
+  <!-- Content Type Tabs -->
+  <div class="content-type-tabs">
+    <div class="content-type-tab {% if not type or type == 'general' %}active{% endif %}" 
+         data-type="general" onclick="switchContentType('general')">
+      Semua
+    </div>
+    <div class="content-type-tab {% if type == 'news' %}active{% endif %}" 
+         data-type="news" onclick="switchContentType('news')">
+      Berita
+    </div>
+    <div class="content-type-tab {% if type == 'articles' %}active{% endif %}" 
+         data-type="articles" onclick="switchContentType('articles')">
+      Artikel
+    </div>
+    <div class="content-type-tab {% if type == 'utama' %}active{% endif %}" 
+         data-type="utama" onclick="switchContentType('utama')">
+      Utama
+    </div>
+  </div>
+
+  <!-- Enhanced Search -->
+  <div class="mb-8 p-4 bg-card rounded-lg border border-border">
+    <div class="flex items-center gap-3">
+      <div class="flex-1 min-w-0">
+        <input type="text" 
+               id="search-input"
+               placeholder="Cari berita, artikel, atau deskripsi..." 
+               class="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+               autocomplete="off">
+      </div>
+      <button type="button"
+              class="px-3 py-2 border border-border rounded-lg hover:bg-secondary transition-colors whitespace-nowrap"
+              data-filters-toggle="#news-filters"
+              data-storage-key="news_filters_open"
+              aria-expanded="false"
+              aria-controls="news-filters">
+        Filter
+        <span data-chevron class="ml-2 inline-block align-middle transition-transform">▾</span>
+      </button>
+      <button type="button"
+              id="refresh-design-btn"
+              class="px-3 py-2 border border-border rounded-lg hover:bg-secondary transition-colors whitespace-nowrap"
+              title="Refresh card design">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+    <div id="news-filters" class="mt-4 hidden">
+      <div class="flex flex-wrap gap-4 items-center">
+        <select id="category-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Semua Kategori</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+        <select id="tag-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Semua Tag</option>
+          {% for tag in all_tags %}
+          <option value="{{ tag }}">#{{ tag }}</option>
+          {% endfor %}
+        </select>
+        <select id="sort-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+          <option value="popular">Terpopuler</option>
+          <option value="least-popular">Kurang Populer</option>
+        </select>
+        <select id="age-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Semua Usia</option>
+          <option value="SU">SU</option>
+          <option value="P">P</option>
+          <option value="A">A</option>
+          <option value="3+">3+</option>
+          <option value="7+">7+</option>
+          <option value="13+">13+</option>
+          <option value="17+">17+</option>
+          <option value="18+">18+</option>
+          <option value="21+">21+</option>
+        </select>
+        <button type="button" onclick="clearAllFilters()" class="px-4 py-2 bg-muted hover:bg-muted/80 text-muted-foreground rounded-lg transition-colors">
+          <i class="fa-solid fa-times mr-1"></i>Clear
+        </button>
+      </div>
+    </div>
+    <div class="result-count mt-3" id="result-count"></div>
+  </div>
+
+  <!-- News Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6 lg:gap-8 mb-8" id="news-grid">
+    <!-- News will be loaded dynamically via AJAX -->
+  </div>
+
+  <!-- No Results Message -->
+  <div class="no-results hidden" id="no-results">
+    <div class="no-results-icon">🔍</div>
+    <h3 class="text-lg font-semibold mb-2">Tidak ada hasil ditemukan</h3>
+    <p class="text-muted-foreground">Coba ubah kata kunci pencarian atau filter yang digunakan</p>
+  </div>
+
+  <!-- Dynamic Pagination -->
+  <div class="flex justify-center mt-8" id="pagination-container">
+    <!-- Pagination will be loaded dynamically via AJAX -->
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Pass brand info to JavaScript
+window.brandInfo = {{ brand_info.to_dict() | tojson | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/filters-toggle.js') }}"></script>
+<script src="{{ url_for('static', filename='js/news-search.js') }}"></script>
+{% endblock %}

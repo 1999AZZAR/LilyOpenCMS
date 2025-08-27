@@ -1,0 +1,564 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Albums List - Admin{% endblock %}
+{% block hero_title %}Albums List{% endblock %}
+{% block hero_desc %}Browse and manage all albums{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header with Actions -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Album</h1>
+            <p class="text-gray-600">Menampilkan {{ albums|length }} dari {{ total_albums }} album</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('albums.dashboard') }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                <i class="fas fa-chart-bar mr-2"></i>Dasbor
+            </a>
+            <a href="{{ url_for('albums.create_album') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                <i class="fas fa-plus mr-2"></i>Buat Album
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
+                <input type="text" name="search" value="{{ request.args.get('search', '') }}" 
+                       placeholder="Cari album..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+                <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua Kategori</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua Status</option>
+                    <option value="visible" {% if request.args.get('status') == 'visible' %}selected{% endif %}>Visible</option>
+                    <option value="hidden" {% if request.args.get('status') == 'hidden' %}selected{% endif %}>Hidden</option>
+                    <option value="archived" {% if request.args.get('status') == 'archived' %}selected{% endif %}>Archived</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Jenis</label>
+                <select name="type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua Jenis</option>
+                    <option value="regular" {% if request.args.get('type') == 'regular' %}selected{% endif %}>Regular</option>
+                    <option value="premium" {% if request.args.get('type') == 'premium' %}selected{% endif %}>Premium</option>
+                </select>
+            </div>
+            <div class="md:col-span-4 flex justify-between">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-filter mr-2"></i>Terapkan Filter
+                </button>
+                <a href="{{ url_for('albums.list_albums') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-times mr-2"></i>Bersihkan
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Albums Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <input type="checkbox" id="select-all" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Album</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chapters</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for album in albums %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" class="album-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="{{ album.id }}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-12 w-12">
+                                    {% if album.cover_image and album.cover_image.filepath %}
+                                    <img class="h-12 w-12 rounded-lg object-cover" src="{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}" alt="Cover">
+                                    {% else %}
+                                    <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                                        <i class="fas fa-book-open text-blue-500"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ album.title }}</div>
+                                    <div class="text-sm text-gray-500">{{ album.description[:50] + '...' if album.description and album.description|length > 50 else album.description or 'No description' }}</div>
+                                    <div class="text-xs text-gray-400">{{ album.author.username if album.author else 'Unknown' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900">{{ album.category.name if album.category else 'Uncategorized' }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ album.total_chapters or 0 }}</div>
+                            <div class="text-xs text-gray-500">{{ album.total_views or 0 }} tampilan</div>
+                            <div class="text-xs text-gray-500">{{ album.total_reads or 0 }} bacaan</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-wrap gap-1">
+                                {% if album.is_premium %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <i class="fas fa-crown mr-1"></i>Premium (Paid)
+                                </span>
+                                {% endif %}
+                                {% if album.age_rating %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="Kelompok Usia">
+                                    <i class="fas fa-user-shield mr-1"></i>{{ album.age_rating }}
+                                </span>
+                                {% endif %}
+                                {% if not album.is_visible %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-eye-slash mr-1"></i>Tersembunyi
+                                </span>
+                                {% endif %}
+                                {% if album.is_archived %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <i class="fas fa-archive mr-1"></i>Arsip
+                                </span>
+                                {% endif %}
+                                {% if album.is_completed %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check mr-1"></i>Selesai
+                                </span>
+                                {% endif %}
+                                {% if album.is_hiatus %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    <i class="fas fa-pause mr-1"></i>Hiatus
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ album.created_at.strftime('%Y-%m-%d') if album.created_at else 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{{ url_for('albums.album_detail', album_id=album.id) }}" 
+                                   class="text-indigo-600 hover:text-indigo-900 p-1 rounded" title="Edit Album">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="toggleAlbumVisibility({{ album.id }})" 
+                                        class="text-green-600 hover:text-green-900 p-1 rounded" title="{{ 'Sembunyikan' if album.is_visible else 'Tampilkan' }} Album">
+                                    <i class="fas fa-{{ 'eye' if album.is_visible else 'eye-slash' }}"></i>
+                                </button>
+                                <button onclick="toggleAlbumType({{ album.id }})" 
+                                        class="text-purple-600 hover:text-purple-900 p-1 rounded" title="{{ 'Set to Regular' if album.is_premium else 'Set to Premium' }}">
+                                    <i class="fas fa-{{ 'crown' if album.is_premium else 'star' }}"></i>
+                                </button>
+                                <button onclick="deleteAlbum({{ album.id }})" 
+                                        class="text-red-600 hover:text-red-900 p-1 rounded" title="Delete Album">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div id="bulk-actions" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6 hidden">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-blue-900">
+                    <span id="selected-count">0</span> album terpilih
+                </span>
+                <button onclick="bulkToggleVisibility()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-eye mr-2"></i>Tampilkan/Sembunyikan
+                </button>
+                <button onclick="bulkToggleType()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-crown mr-2"></i>Premium/Regular
+                </button>
+                <button onclick="bulkArchive()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-archive mr-2"></i>Arsip
+                </button>
+            </div>
+            <button onclick="clearSelection()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                Bersihkan Pilihan
+            </button>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="flex justify-center mt-8">
+        <nav class="flex items-center space-x-2">
+            {% if has_prev %}
+            <a href="{{ url_for('albums.list_albums') }}?page={{ prev_page }}{% if query_string %}&{{ query_string }}{% endif %}"
+               class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Sebelumnya
+            </a>
+            {% endif %}
+            
+            <!-- Page numbers -->
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num == page %}
+                <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-lg">
+                    {{ page_num }}
+                </span>
+                {% else %}
+                <a href="{{ url_for('albums.list_albums') }}?page={{ page_num }}{% if query_string %}&{{ query_string }}{% endif %}"
+                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    {{ page_num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if has_next %}
+            <a href="{{ url_for('albums.list_albums') }}?page={{ next_page }}{% if query_string %}&{{ query_string }}{% endif %}"
+               class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Selanjutnya
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4" id="confirm-title">Konfirmasi Aksi</h3>
+            <p class="text-gray-700 mb-6" id="confirm-message">Apakah Anda yakin ingin melakukan aksi ini?</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeConfirmModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                    Batal
+                </button>
+                <button id="confirm-action" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Konfirmasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Global modal management
+document.addEventListener('DOMContentLoaded', function() {
+    // Add escape key listener to close modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
+    });
+    
+    // Add click outside to close modals
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('fixed') && e.target.classList.contains('bg-black')) {
+            closeAllModals();
+        }
+    });
+});
+
+// Bulk selection functionality
+document.getElementById('select-all').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.album-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+    });
+    updateBulkActions();
+});
+
+document.querySelectorAll('.album-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateBulkActions);
+});
+
+function updateBulkActions() {
+    const selectedCheckboxes = document.querySelectorAll('.album-checkbox:checked');
+    const bulkActions = document.getElementById('bulk-actions');
+    const selectedCount = document.getElementById('selected-count');
+    
+    if (selectedCheckboxes.length > 0) {
+        bulkActions.classList.remove('hidden');
+        selectedCount.textContent = selectedCheckboxes.length;
+    } else {
+        bulkActions.classList.add('hidden');
+    }
+}
+
+function clearSelection() {
+    document.getElementById('select-all').checked = false;
+    document.querySelectorAll('.album-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateBulkActions();
+}
+
+// Album management functions
+function toggleAlbumVisibility(albumId) {
+            fetch(`/admin/albums/${albumId}/toggle-visibility`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    });
+}
+
+function toggleAlbumType(albumId) {
+            fetch(`/admin/albums/${albumId}/toggle-type`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    });
+}
+
+function deleteAlbum(albumId) {
+    showConfirmModal(
+        'Hapus Album',
+        'Apakah Anda yakin ingin menghapus album ini? Aksi ini tidak dapat dibatalkan.',
+        () => {
+            fetch(`/admin/albums/${albumId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            });
+        }
+    );
+}
+
+// Modal functions
+function showConfirmModal(title, message, action) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-action').onclick = action;
+    pushModal('confirm-modal');
+}
+
+function closeConfirmModal() {
+    popModal();
+    // Fallback: also try direct close
+    const modal = document.getElementById('confirm-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Bulk actions
+function bulkToggleVisibility() {
+    const selectedIds = getSelectedAlbumIds();
+    if (selectedIds.length === 0) return;
+    
+            fetch('/admin/albums/bulk/toggle-visibility', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ album_ids: selectedIds })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    });
+}
+
+function bulkToggleType() {
+    const selectedIds = getSelectedAlbumIds();
+    if (selectedIds.length === 0) return;
+    
+            fetch('/admin/albums/bulk/toggle-type', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ album_ids: selectedIds })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    });
+}
+
+function bulkArchive() {
+    const selectedIds = getSelectedAlbumIds();
+    if (selectedIds.length === 0) return;
+    
+    showConfirmModal(
+        'Arsipkan Album',
+        `Apakah Anda yakin ingin mengarsipkan ${selectedIds.length} album(s)?`,
+        () => {
+            fetch('/admin/albums/bulk/archive', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ album_ids: selectedIds })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            });
+        }
+    );
+}
+
+function getSelectedAlbumIds() {
+    const selectedCheckboxes = document.querySelectorAll('.album-checkbox:checked');
+    return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+}
+
+// Modal Management
+let modalStack = [];
+
+function pushModal(modalId) {
+    modalStack.push(modalId);
+    document.getElementById(modalId).classList.remove('hidden');
+}
+
+function popModal() {
+    if (modalStack.length > 0) {
+        const currentModal = modalStack.pop();
+        const modalElement = document.getElementById(currentModal);
+        if (modalElement) {
+            modalElement.classList.add('hidden');
+        }
+    }
+}
+
+function closeAllModals() {
+    modalStack.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    });
+    modalStack = [];
+    
+    // Also close all modals directly as fallback
+    const allModals = document.querySelectorAll('[id$="-modal"]');
+    allModals.forEach(modal => {
+        modal.classList.add('hidden');
+    });
+}
+
+// Debug function to check modal status
+function debugModals() {
+    console.log('Modal Stack:', modalStack);
+    const allModals = document.querySelectorAll('[id$="-modal"]');
+    allModals.forEach(modal => {
+        console.log(`${modal.id}: ${modal.classList.contains('hidden') ? 'Hidden' : 'Visible'}`);
+    });
+}
+</script>
+{% endblock %}

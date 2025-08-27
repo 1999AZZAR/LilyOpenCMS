@@ -1,0 +1,523 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Mengelola Bab - {{ album.title }} - Admin{% endblock %}
+{% block hero_title %}Mengelola Bab{% endblock %}
+{% block hero_desc %}{{ album.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{{ url_for('albums.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-home mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <a href="{{ url_for('albums.list_albums') }}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Albums</a>
+                </div>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <a href="{{ url_for('albums.album_detail', album_id=album.id) }}" class="text-sm font-medium text-gray-700 hover:text-blue-600">{{ album.title }}</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <span class="text-sm font-medium text-gray-500">Bab</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Mengelola Bab</h1>
+            <p class="text-gray-600">{{ album.title }} - {{ chapters|length }} bab</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('main.create_news') }}?album_id={{ album.id }}&album_title={{ album.title|urlencode }}" 
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                <i class="fas fa-plus mr-2"></i>Buat Bab Baru
+            </a>
+            <a href="{{ url_for('albums.album_detail', album_id=album.id) }}" 
+               class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali ke Album
+            </a>
+        </div>
+    </div>
+
+    <!-- Chapters List -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Bab Saat Ini</h2>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-500">{{ chapters|length }} bab</span>
+                <a href="{{ url_for('main.create_news') }}?album_id={{ album.id }}&album_title={{ album.title|urlencode }}" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
+                    <i class="fas fa-plus mr-1"></i>Tambah Bab
+                </a>
+                <button onclick="reorderChapters()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
+                    <i class="fas fa-sort mr-1"></i>Reorder
+                </button>
+            </div>
+        </div>
+
+        {% if chapters %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bab</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artikel Sumber</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="chapters-tbody">
+                    {% for chapter in chapters %}
+                    <tr class="hover:bg-gray-50" data-chapter-id="{{ chapter.id }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg">
+                                    <span class="text-sm font-bold text-blue-600">{{ chapter.chapter_number }}</span>
+                                </div>
+                                <div class="ml-2 flex flex-col">
+                                    <button onclick="moveChapter({{ chapter.id }}, 'up')" 
+                                            class="text-gray-400 hover:text-gray-600 text-xs" title="Move Up">
+                                        <i class="fas fa-chevron-up"></i>
+                                    </button>
+                                    <button onclick="moveChapter({{ chapter.id }}, 'down')" 
+                                            class="text-gray-400 hover:text-gray-600 text-xs" title="Move Down">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">Bab {{ chapter.chapter_number }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ chapter.chapter_title }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ chapter.news.title if chapter.news else 'Tidak ada artikel sumber' }}</div>
+                            {% if chapter.news %}
+                            <div class="text-xs text-gray-500">{{ chapter.news.created_at.strftime('%Y-%m-%d') if chapter.news.created_at else 'Tanggal tidak diketahui' }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if chapter.news and chapter.news.is_visible %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check mr-1"></i>Diterbitkan
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-clock mr-1"></i>Draft/Draft
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="editChapter({{ chapter.id }})" 
+                                        class="text-indigo-600 hover:text-indigo-900" title="Edit Bab">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% if chapter.news %}
+                                <a href="{{ url_for('main.news_detail', news_id=chapter.news.id, news_title=safe_title(chapter.news.title)) }}" 
+                                   class="text-blue-600 hover:text-blue-900" title="View Source Article">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                {% endif %}
+                                <button onclick="removeChapter({{ chapter.id }})" 
+                                        class="text-red-600 hover:text-red-900" title="Hapus Bab">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <div class="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-list text-3xl text-blue-500"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Tidak ada bab</h3>
+            <p class="text-gray-600 mb-6">Mulai membangun album Anda dengan membuat bab baru atau menambahkan artikel yang ada.</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="{{ url_for('main.create_news') }}?album_id={{ album.id }}&album_title={{ album.title|urlencode }}" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Buat Bab Baru
+                </a>
+                <button onclick="openAddChapterModal()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-link mr-2"></i>Tambah dari Artikel
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Available Articles -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Artikel Tersedia</h2>
+        <p class="text-gray-600 mb-4">Pilih artikel untuk ditambahkan sebagai bab ke album ini.</p>
+        
+        <div class="mb-4">
+            <input type="text" id="article-search" placeholder="Search articles..." 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div id="available-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for article in available_news %}
+            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-sm font-medium text-gray-900 line-clamp-2">{{ article.title }}</h3>
+                    <button onclick="addArticleAsChapter({{ article.id }})" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors">
+                        <i class="fas fa-plus mr-1"></i>Tambah
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mb-2">{{ article.description[:100] + '...' if article.description and article.description|length > 100 else article.description or 'No description' }}</p>
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span>{{ article.category.name if article.category else 'Uncategorized' }}</span>
+                    <span>{{ article.created_at.strftime('%Y-%m-%d') if article.created_at else 'Unknown date' }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if not available_news %}
+        <div class="text-center py-8">
+            <p class="text-gray-500">No available articles to add as chapters.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Chapter Modal -->
+<div id="add-chapter-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Tambah Bab</h3>
+                <button onclick="closeAddChapterModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="add-chapter-form" class="space-y-4">
+                <div>
+                    <label for="chapter-number" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nomor Bab *
+                    </label>
+                    <input type="number" id="chapter-number" name="chapter_number" min="1" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="chapter-title" class="block text-sm font-medium text-gray-700 mb-2">
+                        Judul Bab *
+                    </label>
+                    <input type="text" id="chapter-title" name="chapter_title" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="article-select" class="block text-sm font-medium text-gray-700 mb-2">
+                        Artikel Sumber *
+                    </label>
+                    <select id="article-select" name="news_id" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Pilih artikel</option>
+                        {% for article in available_news %}
+                        <option value="{{ article.id }}">{{ article.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddChapterModal()" 
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Tambah Bab
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Chapter Modal -->
+<div id="edit-chapter-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Edit Bab</h3>
+                <button onclick="closeEditChapterModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="edit-chapter-form" class="space-y-4">
+                <input type="hidden" id="edit-chapter-id">
+                
+                <div>
+                    <label for="edit-chapter-number" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nomor Bab *
+                    </label>
+                    <input type="number" id="edit-chapter-number" name="chapter_number" min="1" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="edit-chapter-title" class="block text-sm font-medium text-gray-700 mb-2">
+                        Judul Bab *
+                    </label>
+                    <input type="text" id="edit-chapter-title" name="chapter_title" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeEditChapterModal()" 
+                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Perbarui Bab
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4" id="confirm-title">Konfirmasi Aksi</h3>
+            <p class="text-gray-700 mb-6" id="confirm-message">Apakah Anda yakin ingin melakukan aksi ini?</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeConfirmModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                    Batal
+                </button>
+                <button id="confirm-action" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Konfirmasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal functions
+function openAddChapterModal() {
+    document.getElementById('add-chapter-modal').classList.remove('hidden');
+}
+
+function closeAddChapterModal() {
+    document.getElementById('add-chapter-modal').classList.add('hidden');
+    document.getElementById('add-chapter-form').reset();
+}
+
+function openEditChapterModal() {
+    document.getElementById('edit-chapter-modal').classList.remove('hidden');
+}
+
+function closeEditChapterModal() {
+    document.getElementById('edit-chapter-modal').classList.add('hidden');
+}
+
+function showConfirmModal(title, message, action) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-action').onclick = action;
+    document.getElementById('confirm-modal').classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.add('hidden');
+}
+
+// Form submissions
+document.getElementById('add-chapter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        news_id: document.getElementById('article-select').value,
+        chapter_title: document.getElementById('chapter-title').value,
+        chapter_number: document.getElementById('chapter-number').value
+    };
+    
+    fetch(`/admin/albums/{{ album.id }}/chapters/add`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menambahkan bab');
+    });
+});
+
+document.getElementById('edit-chapter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const chapterId = document.getElementById('edit-chapter-id').value;
+    const formData = {
+        chapter_title: document.getElementById('edit-chapter-title').value,
+        chapter_number: document.getElementById('edit-chapter-number').value
+    };
+    
+    fetch(`/admin/albums/{{ album.id }}/chapters/${chapterId}/edit`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat memperbarui bab');
+    });
+});
+
+// Chapter management functions
+function addArticleAsChapter(articleId) {
+    // Find the article title
+    const articleElement = document.querySelector(`[onclick="addArticleAsChapter(${articleId})"]`).closest('.border');
+    const title = articleElement.querySelector('h3').textContent;
+    
+    // Auto-fill the form
+    document.getElementById('article-select').value = articleId;
+    document.getElementById('chapter-title').value = title;
+    
+    // Auto-calculate next chapter number
+    const currentChapters = document.querySelectorAll('#chapters-tbody tr');
+    const nextNumber = currentChapters.length + 1;
+    document.getElementById('chapter-number').value = nextNumber;
+    
+    openAddChapterModal();
+}
+
+function editChapter(chapterId) {
+    // Find the chapter data from the table
+    const row = document.querySelector(`[data-chapter-id="${chapterId}"]`);
+    const number = row.querySelector('.text-blue-600').textContent;
+    const title = row.querySelector('td:nth-child(3) .text-sm').textContent;
+    
+    document.getElementById('edit-chapter-id').value = chapterId;
+    document.getElementById('edit-chapter-number').value = number;
+    document.getElementById('edit-chapter-title').value = title;
+    
+    openEditChapterModal();
+}
+
+function removeChapter(chapterId) {
+    showConfirmModal(
+        'Hapus Bab',
+        'Apakah Anda yakin ingin menghapus bab ini dari album? Aksi ini tidak akan menghapus artikel sumber.',
+        () => {
+            fetch(`/admin/albums/{{ album.id }}/chapters/${chapterId}/remove`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus bab');
+            });
+        }
+    );
+}
+
+function moveChapter(chapterId, direction) {
+    fetch(`/admin/albums/{{ album.id }}/chapters/${chapterId}/move`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ direction: direction })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat memindahkan bab');
+    });
+}
+
+function reorderChapters() {
+    // This would implement drag-and-drop reordering
+    alert('Fitur pengurutan bab akan segera hadir!');
+}
+
+// Search functionality
+document.getElementById('article-search').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const articles = document.querySelectorAll('#available-articles .border');
+    
+    articles.forEach(article => {
+        const title = article.querySelector('h3').textContent.toLowerCase();
+        const description = article.querySelector('p').textContent.toLowerCase();
+        
+        if (title.includes(searchTerm) || description.includes(searchTerm)) {
+            article.style.display = 'block';
+        } else {
+            article.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

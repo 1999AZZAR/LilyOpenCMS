@@ -1,0 +1,1206 @@
+{% extends 'admin_base.html' %}
+{% block title %}{% if news_id %}Edit Artikel{% else %}{% if request.args.get('album_id') %}Buat Chapter{% else %}Buat Artikel{% endif %}{% endif %} - Admin{% endblock %}
+{% block hero_title %}{% if news_id %}Edit Artikel{% else %}{% if request.args.get('album_id') %}Buat Chapter{% else %}Tambah Artikel{% endif %}{% endif %}{% endblock %}
+{% block hero_desc %}{% if news_id %}Perbarui konten artikel yang ada{% else %}{% if request.args.get('album_id') %}Buat chapter baru untuk album{% else %}Buat konten cerita dan artikel baru{% endif %}{% endif %}{% endblock %}
+{% block extra_head %}
+{% endblock %}
+{% block content %}
+    <!-- Konten Admin -->
+    <main class="container mx-auto px-6 py-12" role="main">
+        <!-- Form Tambah Berita -->
+        <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-news-title">
+            <h2 id="add-news-title" class="text-xl font-semibold mb-4 text-gray-800">Tambah Cerita</h2>
+            
+            <!-- Step Indicator -->
+            <div class="flex items-center justify-center mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <div id="step-1-indicator" class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">1</div>
+                        <span class="ml-2 text-sm font-medium text-gray-700">Detail</span>
+                    </div>
+                    <div class="w-12 h-0.5 bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div id="step-2-indicator" class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-semibold">2</div>
+                        <span class="ml-2 text-sm font-medium text-gray-500">Konten</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="add-news-form" class="flex flex-col lg:flex-row gap-6" method="POST" action="{{ url_for('main.create_news_api') }}" enctype="multipart/form-data" role="form" aria-label="Form tambah berita baru">
+                <!-- Step 1: Details Section (Full Width) -->
+                <div id="step-1-content" class="w-full">
+                    <div class="h-full flex flex-col">
+                        <!-- Title Input -->
+                        <div class="mb-6">
+                            <input type="text" id="news-title" name="title" class="w-full bg-white border-0 border-b-2 border-gray-300 text-gray-800 text-3xl font-light p-4 focus:outline-none focus:border-blue-500 transition-colors" placeholder="Judul artikel..." required aria-required="true">
+                        </div>
+                        
+                        <!-- Two Column Layout for Details -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            
+                            <!-- Left Column: Article Details -->
+                            <div class="lg:col-span-2 space-y-6">
+                                
+                                <!-- Article Details Card -->
+                                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                            <i class="fas fa-file-alt text-blue-600 mr-3"></i>
+                                            Detail Artikel
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mt-1">Informasi dasar artikel</p>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <!-- Author -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2" for="news-writer">
+                                                    <i class="fas fa-user text-gray-400 mr-2"></i>Penulis
+                                                </label>
+                                                <input type="text" id="news-writer" name="writer" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="Masukkan nama penulis" aria-label="Nama penulis">
+                                            </div>
+                                            
+                                            <!-- Category (Required) -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2" for="news-category">
+                                                    <i class="fas fa-tag text-gray-400 mr-2"></i>Kategori <span class="text-red-500">*</span>
+                                                </label>
+                                                <select id="news-category" name="category" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" required aria-required="true">
+                                                    <option value="" disabled selected>Pilih kategori artikel...</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <!-- Date (Required) -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2" for="news-date">
+                                                    <i class="fas fa-calendar text-gray-400 mr-2"></i>Tanggal Publikasi <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="date" id="news-date" name="date" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" required aria-required="true">
+                                            </div>
+                                            
+                                            <!-- Tags -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2" for="news-tagar">
+                                                    <i class="fas fa-hashtag text-gray-400 mr-2"></i>Tag
+                                                </label>
+                                                <input type="text" id="news-tagar" name="tagar" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="teknologi, berita, inovasi" aria-label="Tag berita">
+                                                <p class="text-xs text-gray-500 mt-1">Pisahkan tag dengan koma</p>
+                                            </div>
+                                            
+                                            <!-- Content Age Rating (Required) -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2" for="news-age-rating">
+                                                    <i class="fas fa-user-shield text-gray-400 mr-2"></i>Rating Usia Konten <span class="text-red-500">*</span>
+                                                </label>
+                                                <select id="news-age-rating" name="age_rating" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" required aria-required="true">
+                                                    <option value="" disabled selected>Pilih rating usia konten...</option>
+                                                    <option value="SU">SU — Semua Umur</option>
+                                                    <option value="P">P — Prasekolah (2–6)</option>
+                                                    <option value="A">A — Anak (7–12)</option>
+                                                    <option value="3+">3+ — 3 Tahun ke Atas (Game)</option>
+                                                    <option value="7+">7+ — 7 Tahun ke Atas (Game)</option>
+                                                    <option value="13+">R / 13+ — Remaja</option>
+                                                    <option value="17+">D / 17+ — Dewasa</option>
+                                                    <option value="18+">18+ — 18 Tahun ke Atas (Game)</option>
+                                                    <option value="21+">21+ — 21 Tahun ke Atas</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <!-- External Source (Full Width) -->
+                                            <div class="md:col-span-2">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2" for="news-external-source">
+                                                    <i class="fas fa-link text-gray-400 mr-2"></i>Sumber Eksternal
+                                                </label>
+                                                <input type="url" id="news-external-source" name="external_source" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="https://contoh.com/sumber" aria-label="URL sumber eksternal">
+                                                <p class="text-xs text-gray-500 mt-1">Opsional - untuk atribusi sumber</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Display Settings Card -->
+                                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-200">
+                                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                            <i class="fas fa-eye text-purple-600 mr-3"></i>
+                                            Pengaturan Tampilan
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mt-1">Atur di mana artikel akan ditampilkan</p>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <!-- Article Page Display -->
+                                            <div class="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                                <input type="checkbox" id="news-premium" name="is_news" class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" aria-label="Tampilkan di halaman Artikel">
+                                                <div class="flex-1">
+                                                    <label class="text-sm font-medium text-gray-700 cursor-pointer" for="news-premium">Halaman Artikel</label>
+                                                    <p class="text-xs text-gray-600 mt-1">Muncul di daftar artikel utama</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Main Carousel Display -->
+                                            <div class="flex items-start space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-100">
+                                                <input type="checkbox" id="news-main" name="is_main_news" class="mt-1 rounded border-gray-300 text-purple-600 focus:ring-purple-500" aria-label="Tampilkan di carousel utama">
+                                                <div class="flex-1">
+                                                    <label class="text-sm font-medium text-gray-700 cursor-pointer" for="news-main">Carousel Utama</label>
+                                                    <p class="text-xs text-gray-600 mt-1">Ditampilkan di carousel halaman utama</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Premium Content -->
+                                            <div class="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                                                <input type="checkbox" id="news-is-premium" name="is_premium" class="mt-1 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500" aria-label="Konten Premium">
+                                                <div class="flex-1">
+                                                    <label class="text-sm font-medium text-gray-700 cursor-pointer" for="news-is-premium">Konten Premium</label>
+                                                    <p class="text-xs text-gray-600 mt-1">Akses khusus untuk konten premium</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column: Featured Image & Publication -->
+                            <div class="space-y-6">
+                                
+                                <!-- Featured Image Card -->
+                                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
+                                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                            <i class="fas fa-image text-green-600 mr-3"></i>
+                                            Gambar Unggulan (Header) (Opsional)
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mt-1">Pilih gambar untuk artikel (opsional)</p>
+                                    </div>
+                                    <div class="p-6">
+                                        <div id="image-header-section-create" role="group" aria-label="Pilihan gambar unggulan">
+                                            <input type="hidden" id="news-image-id" name="image_id">
+                                            
+                                            <!-- Image Preview -->
+                                            <div class="mb-4">
+                                                <img id="featured-preview-create" src="" class="w-full h-40 object-cover rounded-lg border-2 border-dashed border-gray-300 hidden" alt="Pratinjau gambar unggulan">
+                                                <div id="no-image-placeholder" class="w-full h-40 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                                                    <div class="text-center">
+                                                        <i class="fas fa-image text-gray-400 text-2xl mb-2"></i>
+                                                        <p class="text-sm text-gray-500">Belum ada gambar unggulan (opsional)</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="flex space-x-2">
+                                                <button type="button" onclick="openImageHeaderModalCreate()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 flex items-center justify-center" aria-label="Pilih gambar unggulan">
+                                                    <i class="fas fa-plus mr-2"></i>Pilih Gambar (Opsional)
+                                                </button>
+                                                <button type="button" id="clear-featured-image-btn" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" aria-label="Hapus gambar unggulan" title="Hapus Gambar Unggulan">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+
+                            </div>
+                        </div>
+                        
+                        <!-- Step 1 Navigation -->
+                        <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                            <button type="button" id="next-step-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Lanjut ke konten">
+                                Lanjut ke Konten <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Content Section (Hidden by default) -->
+                <div id="step-2-content" class="w-full hidden" role="complementary" aria-label="Konten artikel">
+                    <div class="h-full flex flex-col">
+                        <!-- Content Editor -->
+                        <div id="simplemde-wrapper" class="flex flex-col flex-1 overflow-hidden" role="textbox" aria-label="Editor konten berita">
+                            <div id="custom-toolbar" class="flex flex-wrap gap-3 bg-white border border-gray-300 p-2 rounded-t-lg mb-2" role="toolbar" aria-label="Toolbar editor">
+                                <button type="button" data-cmd="bold" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Tebal"><i class="fa fa-bold" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="italic" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Miring"><i class="fa fa-italic" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="heading" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Heading"><i class="fa fa-header" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="quote" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Kutipan"><i class="fa fa-quote-left" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="unordered-list" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Daftar tidak berurutan"><i class="fa fa-list-ul" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="ordered-list" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Daftar berurutan"><i class="fa fa-list-ol" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="link" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Tautan"><i class="fa fa-link" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="image" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Gambar"><i class="fa fa-image" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="preview" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Pratinjau"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="guide" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Panduan Markdown"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
+                            </div>
+                            <textarea id="news-content" name="content" class="custom-mde flex-1" placeholder="Mulai menulis artikel Anda di sini...\n\nTips:\n- Mulai dengan pengantar yang menarik\n- Gunakan heading untuk struktur\n- Tambahkan gambar untuk visual yang lebih baik\n- Gunakan daftar untuk informasi yang mudah dibaca" aria-label="Editor konten berita"></textarea>
+                        </div>
+                        
+                        <!-- Publication Section -->
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                                <div class="bg-gradient-to-r from-orange-50 to-red-50 px-6 py-4 border-b border-gray-200">
+                                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                        <i class="fas fa-rocket text-orange-600 mr-3"></i>
+                                        Publikasi
+                                    </h3>
+                                    <p class="text-sm text-gray-600 mt-1">Simpan atau terbitkan artikel</p>
+                                </div>
+                                <div class="p-6">
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <!-- Back Button -->
+                                        <button type="button" id="prev-step-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Kembali ke detail">
+                                            <i class="fas fa-arrow-left mr-2"></i>Kembali ke Detail
+                                        </button>
+                                        
+                                        <!-- Cancel Button -->
+                                        <button type="button" id="cancel-edit-btn" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" aria-label="Batal dan kembali">
+                                            <i class="fas fa-times mr-2"></i>Batal
+                                        </button>
+                                        
+                                        <!-- Save Draft Button -->
+                                        <button type="submit" name="save-draft" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 flex items-center justify-center" aria-label="Simpan sebagai draf">
+                                            <i class="fas fa-save mr-2"></i>Simpan sebagai Draf
+                                        </button>
+                                        
+                                        <!-- Publish Button -->
+                                        <button type="submit" name="publish" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 flex items-center justify-center" aria-label="Terbitkan berita">
+                                            <i class="fas fa-paper-plane mr-2"></i>Terbitkan Artikel
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Help Text -->
+                                    <div class="text-center pt-4">
+                                        <p class="text-xs text-gray-500">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Pastikan field wajib telah diisi
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </form>
+        </div>
+    </main>
+
+    <!-- Modal Sisip Gambar untuk Tambah Berita -->
+    <div id="image-insert-modal-create" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40" role="dialog" aria-labelledby="image-insert-title" aria-modal="true">
+      <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <h2 id="image-insert-title" class="text-xl font-semibold mb-4 text-gray-800">Sisipkan Gambar</h2>
+        <div class="mb-4" role="radiogroup" aria-label="Pilih sumber gambar">
+          <label class="inline-flex items-center"><input type="radio" name="image-source-create" value="library" checked class="form-radio text-blue-500" aria-label="Pilih dari perpustakaan"><span class="ml-2 text-gray-700">Perpustakaan</span></label>
+          <label class="inline-flex items-center ml-4"><input type="radio" name="image-source-create" value="url" class="form-radio text-blue-500" aria-label="Gunakan URL eksternal"><span class="ml-2 text-gray-700">URL Eksternal</span></label>
+        </div>
+        <div id="image-library-section-create" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" role="list" aria-label="Daftar gambar perpustakaan"></div>
+        <!-- Pagination for Content Image Library (Create) -->
+        <div id="content-image-pagination-controls-create" class="mt-4 mb-4" role="navigation" aria-label="Navigasi halaman gambar">
+            <!-- Create content image pagination will be generated here -->
+        </div>
+        <div id="image-url-section-create" class="hidden space-y-4 mb-4">
+          <input id="image-url-input-create" type="text" inputmode="url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://contoh.com/gambar.jpg" aria-label="URL gambar">
+          <input id="image-alt-input-create" type="text" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Alt teks (opsional)" aria-label="Teks alternatif gambar">
+        </div>
+        <div class="flex space-x-4" role="group" aria-label="Tombol aksi gambar">
+          <button type="button" id="insert-image-btn-create" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Sisipkan gambar">Sisipkan</button>
+          <button type="button" id="close-image-insert-create" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300" aria-label="Tutup dialog">Tutup</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Pilih Gambar Unggulan untuk Tambah Berita -->
+    <div id="image-header-modal-create" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40" role="dialog" aria-labelledby="header-image-title" aria-modal="true">
+      <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <h2 id="header-image-title" class="text-xl font-semibold mb-4 text-gray-800">Pilih Gambar Unggulan</h2>
+        <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg" role="group" aria-label="Unggah gambar baru">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">Unggah Gambar Baru</h3>
+          <input id="header-upload-name-create" type="text" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nama gambar (opsional)" aria-label="Nama gambar">
+          <input id="header-upload-file-create" type="file" accept="image/*" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" aria-label="Pilih file gambar">
+          <input id="header-upload-url-create" type="url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://contoh.com/gambar.jpg" aria-label="URL gambar">
+          <button type="button" id="header-upload-btn-create" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Unggah gambar">Unggah</button>
+        </div>
+        <div id="header-image-library-create" class="grid grid-cols-1 md:grid-cols-3 gap-4" role="list" aria-label="Daftar gambar unggulan"></div>
+        <!-- Pagination for Header Image Library (Create) -->
+        <div id="header-image-pagination-controls-create" class="mt-4 mb-4" role="navigation" aria-label="Navigasi halaman gambar unggulan">
+            <!-- Create header image pagination will be generated here -->
+        </div>
+        <button type="button" id="header-image-close-create" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg mt-4 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300" aria-label="Tutup dialog">Tutup</button>
+      </div>
+    </div>
+
+    <!-- Modal Sisipkan Tautan -->
+    <div id="link-insert-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="link-insert-title" aria-modal="true">
+        <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h3 id="link-insert-title" class="text-xl font-semibold text-gray-800 mb-4">Sisipkan Tautan</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2" for="link-text">Teks Tautan</label>
+                    <input type="text" id="link-text" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="misalnya, Kunjungi situs kami" aria-label="Teks yang akan ditampilkan">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2" for="link-url">URL</label>
+                    <input type="text" inputmode="url" id="link-url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., https://contoh.com" required aria-required="true" aria-label="URL tujuan">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4 mt-6" role="group" aria-label="Tombol aksi tautan">
+                <button type="button" id="cancel-link-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300" aria-label="Batal sisipkan tautan">Batal</button>
+                <button type="button" id="insert-link-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Sisipkan tautan">Sisipkan</button>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{# Load dependent scripts first #}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script> {# Assuming toast.js is available #}
+<script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+{# Load the main script for this page #}
+<script src="{{ url_for('static', filename='js/news-create.js') }}"></script>
+
+<script>
+// 2-Step Process Functionality - Simplified and Robust
+(function() {
+    'use strict';
+    
+    // Wait for DOM to be ready
+    function ready(fn) {
+        if (document.readyState !== 'loading') {
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    
+    ready(function() {
+        console.log('2-Step Process JavaScript loaded');
+        
+        // Get elements
+        const step1Content = document.getElementById('step-1-content');
+        const step2Content = document.getElementById('step-2-content');
+        const step1Indicator = document.getElementById('step-1-indicator');
+        const step2Indicator = document.getElementById('step-2-indicator');
+        const nextStepBtn = document.getElementById('next-step-btn');
+        const prevStepBtn = document.getElementById('prev-step-btn');
+        
+        console.log('Elements found:', {
+            step1Content: !!step1Content,
+            step2Content: !!step2Content,
+            step1Indicator: !!step1Indicator,
+            step2Indicator: !!step2Indicator,
+            nextStepBtn: !!nextStepBtn,
+            prevStepBtn: !!prevStepBtn
+        });
+        
+        // Simple toast function
+        function showToast(message, type = 'info') {
+            console.log('Toast:', message, type);
+            
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 transform transition-all duration-300 translate-x-full`;
+            
+            switch (type) {
+                case 'error':
+                    toast.classList.add('bg-red-500');
+                    break;
+                case 'success':
+                    toast.classList.add('bg-green-500');
+                    break;
+                case 'warning':
+                    toast.classList.add('bg-yellow-500');
+                    break;
+                default:
+                    toast.classList.add('bg-blue-500');
+            }
+            
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Step 1: Details (Default view)
+        function showStep1() {
+            console.log('Showing Step 1 (Details)');
+            if (step1Content) step1Content.classList.remove('hidden');
+            if (step2Content) step2Content.classList.add('hidden');
+            
+            if (step1Indicator) {
+                step1Indicator.classList.remove('bg-gray-300', 'text-gray-600');
+                step1Indicator.classList.add('bg-blue-600', 'text-white');
+            }
+            
+            if (step2Indicator) {
+                step2Indicator.classList.remove('bg-blue-600', 'text-white');
+                step2Indicator.classList.add('bg-gray-300', 'text-gray-600');
+            }
+            
+            // Update step labels
+            const step1Label = document.querySelector('#step-1-indicator + span');
+            const step2Label = document.querySelector('#step-2-indicator + span');
+            
+            if (step1Label) {
+                step1Label.classList.remove('text-gray-500');
+                step1Label.classList.add('text-gray-700');
+            }
+            
+            if (step2Label) {
+                step2Label.classList.remove('text-gray-700');
+                step2Label.classList.add('text-gray-500');
+            }
+        }
+        
+        // Step 2: Content Editor
+        function showStep2() {
+            console.log('Showing Step 2 (Content)');
+            
+            // Validate required fields in step 1 (details)
+            const titleInput = document.getElementById('news-title');
+            const categoryInput = document.getElementById('news-category');
+            const dateInput = document.getElementById('news-date');
+            const ageRatingInput = document.getElementById('news-age-rating');
+            
+            const title = titleInput ? titleInput.value.trim() : '';
+            const category = categoryInput ? categoryInput.value : '';
+            const date = dateInput ? dateInput.value : '';
+            const ageRating = ageRatingInput ? ageRatingInput.value : '';
+            
+            console.log('Validation check:', { 
+                title: title, 
+                category: category,
+                date: date,
+                ageRating: ageRating
+            });
+            
+            if (!title) {
+                showToast('Judul artikel harus diisi', 'error');
+                if (titleInput) titleInput.focus();
+                return;
+            }
+            
+            if (!category) {
+                showToast('Kategori harus dipilih', 'error');
+                if (categoryInput) categoryInput.focus();
+                return;
+            }
+            
+            if (!date) {
+                showToast('Tanggal publikasi harus diisi', 'error');
+                if (dateInput) dateInput.focus();
+                return;
+            }
+            
+            if (!ageRating) {
+                showToast('Rating usia konten harus dipilih', 'error');
+                if (ageRatingInput) ageRatingInput.focus();
+                return;
+            }
+            
+            if (step1Content) step1Content.classList.add('hidden');
+            if (step2Content) step2Content.classList.remove('hidden');
+            
+            if (step1Indicator) {
+                step1Indicator.classList.remove('bg-blue-600', 'text-white');
+                step1Indicator.classList.add('bg-gray-300', 'text-gray-600');
+            }
+            
+            if (step2Indicator) {
+                step2Indicator.classList.remove('bg-gray-300', 'text-gray-600');
+                step2Indicator.classList.add('bg-blue-600', 'text-white');
+            }
+            
+            // Update step labels
+            const step1Label = document.querySelector('#step-1-indicator + span');
+            const step2Label = document.querySelector('#step-2-indicator + span');
+            
+            if (step1Label) {
+                step1Label.classList.remove('text-gray-700');
+                step1Label.classList.add('text-gray-500');
+            }
+            
+            if (step2Label) {
+                step2Label.classList.remove('text-gray-500');
+                step2Label.classList.add('text-gray-700');
+            }
+        }
+        
+        // Event listeners
+        if (nextStepBtn) {
+            console.log('Adding click listener to next step button');
+            nextStepBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Next step button clicked');
+                showStep2();
+            });
+        } else {
+            console.error('Next step button not found!');
+        }
+        
+        if (prevStepBtn) {
+            console.log('Adding click listener to prev step button');
+            prevStepBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Prev step button clicked');
+                showStep1();
+            });
+        } else {
+            console.error('Prev step button not found!');
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Enter to go to next step (from details to content)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (step1Content && !step1Content.classList.contains('hidden')) {
+                    e.preventDefault();
+                    showStep2();
+                }
+            }
+            
+            // Escape to go back to previous step (from content to details)
+            if (e.key === 'Escape') {
+                if (step2Content && !step2Content.classList.contains('hidden')) {
+                    e.preventDefault();
+                    showStep1();
+                }
+            }
+        });
+        
+        // Auto-save functionality
+        let autoSaveTimer;
+        function setupAutoSave() {
+            const titleInput = document.getElementById('news-title');
+            const contentTextarea = document.getElementById('news-content');
+            
+            if (!titleInput) {
+                console.log('Title input not found, skipping auto-save setup');
+                return;
+            }
+            
+            function autoSave() {
+                const title = titleInput.value.trim();
+                
+                // Get content from textarea first, then try SimpleMDE
+                let content = contentTextarea ? contentTextarea.value.trim() : '';
+                
+                if (!content) {
+                    let simplemde = window.simplemde || window.addSimplemde;
+                    if (simplemde) {
+                        try {
+                            if (typeof simplemde.value === 'function') {
+                                content = simplemde.value().trim();
+                            } else if (simplemde.codemirror && simplemde.codemirror.getValue) {
+                                content = simplemde.codemirror.getValue().trim();
+                            }
+                        } catch (e) {
+                            console.error('Error getting SimpleMDE content for auto-save:', e);
+                        }
+                    }
+                }
+                
+                // Get details fields
+                const category = categoryInput ? categoryInput.value : '';
+                const date = dateInput ? dateInput.value : '';
+                const writer = writerInput ? writerInput.value.trim() : '';
+                const tags = tagsInput ? tagsInput.value.trim() : '';
+                const externalSource = externalSourceInput ? externalSourceInput.value.trim() : '';
+                const ageRating = ageRatingInput ? ageRatingInput.value : '';
+                
+                if (title || content || category || date || writer || tags || externalSource || ageRating) {
+                    // Save to localStorage as draft
+                    const draft = {
+                        title: title,
+                        content: content,
+                        category: category,
+                        date: date,
+                        writer: writer,
+                        tags: tags,
+                        externalSource: externalSource,
+                        ageRating: ageRating,
+                        timestamp: new Date().toISOString()
+                    };
+                    localStorage.setItem('news-draft', JSON.stringify(draft));
+                    
+                    // Show subtle indicator
+                    const indicator = document.createElement('div');
+                    indicator.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-3 py-1 rounded-lg text-sm opacity-0 transition-opacity duration-300';
+                    indicator.textContent = 'Draft tersimpan';
+                    document.body.appendChild(indicator);
+                    
+                    setTimeout(() => {
+                        indicator.classList.remove('opacity-0');
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        indicator.classList.add('opacity-0');
+                        setTimeout(() => {
+                            if (document.body.contains(indicator)) {
+                                document.body.removeChild(indicator);
+                            }
+                        }, 300);
+                    }, 2000);
+                }
+            }
+            
+            // Auto-save every 30 seconds
+            function startAutoSave() {
+                autoSaveTimer = setInterval(autoSave, 30000);
+            }
+            
+            function stopAutoSave() {
+                if (autoSaveTimer) {
+                    clearInterval(autoSaveTimer);
+                }
+            }
+            
+            // Start auto-save when user starts typing in title
+            titleInput.addEventListener('input', function() {
+                stopAutoSave();
+                startAutoSave();
+            });
+            
+            // Start auto-save when user changes details fields
+            const categoryInput = document.getElementById('news-category');
+            const dateInput = document.getElementById('news-date');
+            const writerInput = document.getElementById('news-writer');
+            const tagsInput = document.getElementById('news-tagar');
+            const externalSourceInput = document.getElementById('news-external-source');
+            const ageRatingInput = document.getElementById('news-age-rating');
+            
+            [categoryInput, dateInput, writerInput, tagsInput, externalSourceInput, ageRatingInput].forEach(input => {
+                if (input) {
+                    input.addEventListener('input', function() {
+                        stopAutoSave();
+                        startAutoSave();
+                    });
+                    input.addEventListener('change', function() {
+                        stopAutoSave();
+                        startAutoSave();
+                    });
+                }
+            });
+            
+            // Listen for SimpleMDE changes (content editor)
+            let simplemde = window.simplemde || window.addSimplemde;
+            if (simplemde && simplemde.codemirror) {
+                simplemde.codemirror.on('change', function() {
+                    stopAutoSave();
+                    startAutoSave();
+                });
+            } else if (contentTextarea) {
+                contentTextarea.addEventListener('input', function() {
+                    stopAutoSave();
+                    startAutoSave();
+                });
+            }
+            
+            // Load draft on page load
+            const savedDraft = localStorage.getItem('news-draft');
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    
+                    // Load title
+                    if (draft.title) titleInput.value = draft.title;
+                    
+                    // Load details fields
+                    if (draft.category && categoryInput) categoryInput.value = draft.category;
+                    if (draft.date && dateInput) dateInput.value = draft.date;
+                    if (draft.writer && writerInput) writerInput.value = draft.writer;
+                    if (draft.tags && tagsInput) tagsInput.value = draft.tags;
+                    if (draft.externalSource && externalSourceInput) externalSourceInput.value = draft.externalSource;
+                    if (draft.ageRating && ageRatingInput) ageRatingInput.value = draft.ageRating;
+                    
+                    // Load content into SimpleMDE if it exists, otherwise into textarea
+                    if (draft.content) {
+                        let simplemde = window.simplemde || window.addSimplemde;
+                        if (simplemde && typeof simplemde.value === 'function') {
+                            simplemde.value(draft.content);
+                        } else if (contentTextarea) {
+                            contentTextarea.value = draft.content;
+                        }
+                    }
+                    
+                    // Show draft loaded notification
+                    showToast('Draft sebelumnya dimuat', 'info');
+                } catch (e) {
+                    console.error('Error loading draft:', e);
+                }
+            }
+        }
+        
+        // Initialize auto-save
+        setupAutoSave();
+        
+        // Handle featured image preview
+        function setupFeaturedImagePreview() {
+            const clearBtn = document.getElementById('clear-featured-image-btn');
+            const preview = document.getElementById('featured-preview-create');
+            const placeholder = document.getElementById('no-image-placeholder');
+            
+            // Function to show image preview
+            window.showFeaturedImagePreview = function(imageSrc, imageId) {
+                if (preview) {
+                    preview.src = imageSrc;
+                    preview.classList.remove('hidden');
+                }
+                if (placeholder) {
+                    placeholder.classList.add('hidden');
+                }
+                // Set the hidden input
+                const imageIdInput = document.getElementById('news-image-id');
+                if (imageIdInput) {
+                    imageIdInput.value = imageId || '';
+                }
+            };
+            
+            // Function to clear image preview
+            window.clearFeaturedImagePreview = function() {
+                if (preview) {
+                    preview.src = '';
+                    preview.classList.add('hidden');
+                }
+                if (placeholder) {
+                    placeholder.classList.remove('hidden');
+                }
+                // Clear the hidden input
+                const imageIdInput = document.getElementById('news-image-id');
+                if (imageIdInput) {
+                    imageIdInput.value = '';
+                }
+            };
+            
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    window.clearFeaturedImagePreview();
+                });
+            }
+            
+            // Check if there's already an image on page load
+            const imageIdInput = document.getElementById('news-image-id');
+            if (imageIdInput && imageIdInput.value) {
+                // If there's an image ID, show the preview
+                if (preview && preview.src) {
+                    preview.classList.remove('hidden');
+                    if (placeholder) {
+                        placeholder.classList.add('hidden');
+                    }
+                }
+            }
+        }
+        
+        // Initialize featured image functionality
+        setupFeaturedImagePreview();
+        
+        // Note: form submission is handled by static/js/news-create.js
+        
+        // Fallback: Traditional form submission if JavaScript fails
+        function setupFallbackSubmission() {
+            const form = document.getElementById('add-news-form');
+            
+            if (form) {
+                // Add a hidden input to track if JavaScript is working
+                const jsCheck = document.createElement('input');
+                jsCheck.type = 'hidden';
+                jsCheck.name = 'js_enabled';
+                jsCheck.value = 'true';
+                form.appendChild(jsCheck);
+                
+                // If JavaScript is disabled, form will submit normally
+                // The server should handle the redirect
+            }
+        }
+        
+        setupFallbackSubmission();
+        
+        // Enhanced form validation
+        function validateForm() {
+            const title = document.getElementById('news-title');
+            const content = document.getElementById('news-content');
+            const category = document.getElementById('news-category');
+            const date = document.getElementById('news-date');
+            const ageRating = document.getElementById('news-age-rating');
+            
+            const errors = [];
+            
+            if (!title || !title.value.trim()) errors.push('Judul artikel harus diisi');
+            
+            // Get content from textarea first, then try SimpleMDE
+            let contentValue = content ? content.value.trim() : '';
+            
+            if (!contentValue) {
+                let simplemde = window.simplemde || window.addSimplemde;
+                if (simplemde) {
+                    try {
+                        if (typeof simplemde.value === 'function') {
+                            contentValue = simplemde.value().trim();
+                        } else if (simplemde.codemirror && simplemde.codemirror.getValue) {
+                            contentValue = simplemde.codemirror.getValue().trim();
+                        }
+                    } catch (e) {
+                        console.error('Error getting SimpleMDE content for validation:', e);
+                    }
+                }
+            }
+            
+            if (!contentValue) errors.push('Konten artikel harus diisi');
+            if (!category || !category.value) errors.push('Kategori harus dipilih');
+            if (!date || !date.value) errors.push('Tanggal harus diisi');
+            if (!ageRating || !ageRating.value) errors.push('Rating usia konten harus dipilih');
+            
+            if (errors.length > 0) {
+                showToast(errors.join(', '), 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Form validation only - submission is handled by news-create.js
+        const form = document.getElementById('add-news-form');
+        if (form) {
+            // Clear draft on successful submission - validation is handled by news-create.js
+            form.addEventListener('submit', function(e) {
+                localStorage.removeItem('news-draft');
+            });
+        }
+        
+        console.log('2-Step Process JavaScript initialization complete');
+        
+        // Override the original showStep2 function to handle SimpleMDE properly
+        const originalShowStep2 = window.showStep2;
+        window.showStep2 = function() {
+            console.log('Overridden showStep2 called');
+            
+            const titleInput = document.getElementById('news-title');
+            const title = titleInput ? titleInput.value.trim() : '';
+            
+            // Try to get content from the textarea directly first
+            const textarea = document.getElementById('news-content');
+            let content = textarea ? textarea.value.trim() : '';
+            
+            // If textarea is empty, try SimpleMDE (check both window.simplemde and addSimplemde)
+            if (!content) {
+                let simplemde = window.simplemde || window.addSimplemde;
+                if (simplemde) {
+                    try {
+                        if (typeof simplemde.value === 'function') {
+                            content = simplemde.value().trim();
+                            console.log('Content from SimpleMDE:', content);
+                        } else if (simplemde.codemirror && simplemde.codemirror.getValue) {
+                            content = simplemde.codemirror.getValue().trim();
+                            console.log('Content from SimpleMDE codemirror:', content);
+                        }
+                    } catch (e) {
+                        console.error('Error getting SimpleMDE content:', e);
+                    }
+                }
+            }
+            
+            console.log('Content check:', { title, content, contentLength: content.length });
+            
+            if (!title) {
+                showToast('Judul artikel harus diisi', 'error');
+                if (titleInput) titleInput.focus();
+                return;
+            }
+            
+            if (!content) {
+                showToast('Konten artikel harus diisi', 'error');
+                let simplemde = window.simplemde || window.addSimplemde;
+                if (simplemde && simplemde.codemirror) {
+                    simplemde.codemirror.focus();
+                } else if (textarea) {
+                    textarea.focus();
+                }
+                return;
+            }
+            
+            // Call the original function to proceed
+            if (originalShowStep2) {
+                originalShowStep2();
+            }
+        };
+        
+        // Wait for SimpleMDE to be available
+        function waitForSimpleMDE(callback, maxAttempts = 100) {
+            let attempts = 0;
+            
+            function check() {
+                attempts++;
+                console.log(`Checking for SimpleMDE (attempt ${attempts})`);
+                
+                // Check multiple possible locations
+                let simplemde = window.simplemde || window.addSimplemde;
+                
+                if (simplemde) {
+                    console.log('SimpleMDE found!', simplemde);
+                    callback(simplemde);
+                    return;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    console.log('SimpleMDE not found after maximum attempts');
+                    return;
+                }
+                
+                setTimeout(check, 50);
+            }
+            
+            check();
+        }
+        
+        // Initialize SimpleMDE detection
+        waitForSimpleMDE(function(simplemde) {
+            console.log('SimpleMDE is ready, setting up enhanced functionality');
+            
+            // Update the showStep2 function to use the detected SimpleMDE
+            const originalShowStep2 = window.showStep2;
+            window.showStep2 = function() {
+                console.log('Enhanced showStep2 called with SimpleMDE:', simplemde);
+                
+                const titleInput = document.getElementById('news-title');
+                const title = titleInput ? titleInput.value.trim() : '';
+                
+                // Try to get content from the textarea directly first
+                const textarea = document.getElementById('news-content');
+                let content = textarea ? textarea.value.trim() : '';
+                
+                // If textarea is empty, try SimpleMDE
+                if (!content && simplemde) {
+                    try {
+                        if (typeof simplemde.value === 'function') {
+                            content = simplemde.value().trim();
+                            console.log('Content from SimpleMDE.value():', content);
+                        } else if (simplemde.codemirror && simplemde.codemirror.getValue) {
+                            content = simplemde.codemirror.getValue().trim();
+                            console.log('Content from SimpleMDE.codemirror.getValue():', content);
+                        }
+                    } catch (e) {
+                        console.error('Error getting SimpleMDE content:', e);
+                    }
+                }
+                
+                console.log('Enhanced content check:', { title, content, contentLength: content.length });
+                
+                if (!title) {
+                    showToast('Judul artikel harus diisi', 'error');
+                    if (titleInput) titleInput.focus();
+                    return;
+                }
+                
+                if (!content) {
+                    showToast('Konten artikel harus diisi', 'error');
+                    if (simplemde && simplemde.codemirror) {
+                        simplemde.codemirror.focus();
+                    } else if (textarea) {
+                        textarea.focus();
+                    }
+                    return;
+                }
+                
+                // Call the original function to proceed
+                if (originalShowStep2) {
+                    originalShowStep2();
+                }
+            };
+            
+            console.log('Enhanced showStep2 function set up');
+        });
+        
+        // Album Context Handling
+        function handleAlbumContext() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const albumId = urlParams.get('album_id');
+            const albumTitle = urlParams.get('album_title');
+            
+            if (albumId && albumTitle) {
+                console.log('Album context detected:', { albumId, albumTitle });
+                
+                // Add album context to the page
+                const header = document.querySelector('main .container');
+                if (header) {
+                    const albumContextDiv = document.createElement('div');
+                    albumContextDiv.className = 'bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6';
+                    albumContextDiv.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-book text-blue-600 mr-3 text-lg"></i>
+                                <div>
+                                    <h3 class="text-sm font-medium text-blue-900">Creating Chapter for Album</h3>
+                                    <p class="text-sm text-blue-700">${decodeURIComponent(albumTitle)}</p>
+                                </div>
+                            </div>
+                            <a href="/admin/albums/${albumId}/chapters" 
+                               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                <i class="fas fa-arrow-left mr-1"></i>Back to Chapters
+                            </a>
+                        </div>
+                    `;
+                    header.insertBefore(albumContextDiv, header.firstChild);
+                }
+                
+                // Pre-fill title with album context
+                const titleInput = document.getElementById('news-title');
+                if (titleInput && !titleInput.value) {
+                    titleInput.placeholder = `Chapter title for ${decodeURIComponent(albumTitle)}...`;
+                }
+                
+                // Add hidden input for album_id to be sent with form
+                const form = document.getElementById('add-news-form');
+                if (form) {
+                    const albumIdInput = document.createElement('input');
+                    albumIdInput.type = 'hidden';
+                    albumIdInput.name = 'album_id';
+                    albumIdInput.value = albumId;
+                    form.appendChild(albumIdInput);
+                }
+                
+                // Update form action to include album context
+                if (form) {
+                    const currentAction = form.getAttribute('action');
+                    if (currentAction) {
+                        form.setAttribute('action', currentAction + '?album_id=' + albumId);
+                    }
+                }
+                
+                // Show helpful toast
+                showToast(`Creating chapter for album: ${decodeURIComponent(albumTitle)}`, 'info');
+            }
+        }
+        
+        // Initialize album context handling
+        handleAlbumContext();
+
+        // Cancel button handler
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const albumId = urlParams.get('album_id');
+                const newsId = urlParams.get('news_id');
+                
+                if (albumId) {
+                    window.location.href = `/admin/albums/${albumId}/chapters`;
+                } else if (newsId) {
+                    // If we're editing, go back to manage news page
+                    window.location.href = '/settings/manage_news';
+                } else {
+                    // If we're creating new, go back to manage news page
+                    window.location.href = '/settings/manage_news';
+                }
+            });
+        }
+    });
+})();
+</script>
+
+<script>
+// Prefill editor when editing an existing article
+(function() {
+    'use strict';
+    const NEWS_ID = {{ news_id if news_id is not none else 'null' }};
+    if (!NEWS_ID) return;
+
+    function when(elGetter, predicate, cb, tries = 100, delay = 50) {
+        let count = 0;
+        (function wait() {
+            const el = elGetter();
+            if (predicate(el)) return cb(el);
+            if (count++ > tries) return cb(null);
+            setTimeout(wait, delay);
+        })();
+    }
+
+    async function fetchArticle(id) {
+        const res = await fetch(`/api/news/${id}`);
+        if (!res.ok) throw new Error(`Failed to load article (${res.status})`);
+        return res.json();
+    }
+
+    function setIf(el, val) { if (el && val !== undefined && val !== null) el.value = val; }
+    function setCheckedIf(el, val) { if (el && typeof val === 'boolean') el.checked = val; }
+
+    function applyFeaturedImage(info) {
+        try {
+            const imageIdInput = document.getElementById('news-image-id');
+            const preview = document.getElementById('featured-preview-create');
+            const placeholder = document.getElementById('no-image-placeholder');
+            const imgId = (info && (info.id || info.image_id)) || '';
+            // Prefer file_url if provided by to_dict; fall back to url
+            const imgUrl = (info && (info.file_url || info.url || info.image_url)) || '';
+            if (imgId && imgUrl && imageIdInput && preview) {
+                imageIdInput.value = imgId;
+                preview.src = imgUrl;
+                preview.classList.remove('hidden');
+                if (placeholder) placeholder.classList.add('hidden');
+            }
+        } catch (e) { console.warn('applyFeaturedImage error', e); }
+    }
+
+    function applyCategory(cat) {
+        if (!cat) return;
+        const select = document.getElementById('news-category');
+        if (!select) return;
+        // Wait until options are loaded
+        when(
+            () => select,
+            (s) => s && s.options && s.options.length > 1,
+            (s) => { try { s.value = cat.id; } catch(e) { /* noop */ } }
+        );
+    }
+
+    function applyContent(content) {
+        const textarea = document.getElementById('news-content');
+        if (!content) return;
+        // Try SimpleMDE if present
+        let attempts = 0;
+        (function trySet() {
+            attempts++;
+            const simplemde = window.simplemde || window.addSimplemde;
+            if (simplemde && typeof simplemde.value === 'function') {
+                try { simplemde.value(content); return; } catch (e) {}
+            }
+            if (textarea) { textarea.value = content; }
+            if (attempts < 20 && simplemde == null) setTimeout(trySet, 100);
+        })();
+    }
+
+    (async function initPrefill() {
+        try {
+            const a = await fetchArticle(NEWS_ID);
+            setIf(document.getElementById('news-title'), a.title || '');
+            setIf(document.getElementById('news-writer'), a.writer || '');
+            setIf(document.getElementById('news-tagar'), a.tagar || '');
+            setIf(document.getElementById('news-external-source'), a.external_source || '');
+            setIf(document.getElementById('news-age-rating'), a.age_rating || '');
+            if (a.date) setIf(document.getElementById('news-date'), (a.date.split('T')[0]));
+
+            // Flags
+            setCheckedIf(document.getElementById('news-is-premium'), !!a.is_premium);
+            setCheckedIf(document.getElementById('news-main'), !!a.is_main_news);
+
+            // Category and content
+            applyCategory(a.category);
+            applyContent(a.content || '');
+
+            // Featured/header image
+            applyFeaturedImage(a.header_image || a.cover_image || a.image);
+        } catch (e) {
+            console.error('Prefill failed:', e);
+        }
+    })();
+})();
+</script>
+{% endblock %}

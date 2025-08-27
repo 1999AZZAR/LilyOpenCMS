@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ brand_info.brand_name|default('LilyOpenCMS') }} - Album Cerita
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/albums.css') }}">
+<script>window.__ADS_ALLOWED__ = true;</script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-bold text-foreground mb-4">Album Cerita</h1>
+    <p class="text-muted-foreground text-lg">Temukan koleksi cerita menarik dalam berbagai album</p>
+  </div>
+
+  <!-- Enhanced Search -->
+  <div class="mb-8 p-4 bg-card rounded-lg border border-border">
+    <div class="flex items-center gap-3">
+      <div class="flex-1 min-w-0 search-container">
+        <input type="text" 
+               id="search-input"
+               placeholder="Cari album, kategori, atau deskripsi..." 
+               class="search-input w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+               autocomplete="off">
+        <div class="search-loading" id="search-loading"></div>
+        <div class="search-suggestions" id="search-suggestions"></div>
+      </div>
+      <button type="button"
+              class="px-3 py-2 border border-border rounded-lg hover:bg-secondary transition-colors whitespace-nowrap"
+              data-filters-toggle="#albums-filters"
+              data-storage-key="albums_filters_open"
+              aria-expanded="false"
+              aria-controls="albums-filters">
+        Filter
+        <span data-chevron class="ml-2 inline-block align-middle transition-transform">▾</span>
+      </button>
+    </div>
+    <div id="albums-filters" class="mt-4 hidden">
+      <div class="flex flex-wrap gap-4 items-center">
+        <select id="category-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Semua Kategori</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+        <select id="status-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Semua Status</option>
+          <option value="ongoing">Sedang Berlangsung</option>
+          <option value="completed">Selesai</option>
+          <option value="hiatus">Hiatus</option>
+        </select>
+        <select id="rating-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Semua Rating</option>
+          <option value="5">5 Bintang</option>
+          <option value="4">4+ Bintang</option>
+          <option value="3">3+ Bintang</option>
+          <option value="2">2+ Bintang</option>
+          <option value="1">1+ Bintang</option>
+        </select>
+        <select id="age-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="">Semua Usia</option>
+          <option value="SU">SU</option>
+          <option value="P">P</option>
+          <option value="A">A</option>
+          <option value="3+">3+</option>
+          <option value="7+">7+</option>
+          <option value="13+">13+</option>
+          <option value="17+">17+</option>
+          <option value="18+">18+</option>
+          <option value="21+">21+</option>
+        </select>
+        <select id="sort-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+          <option value="popular">Terpopuler (Baca)</option>
+          <option value="least-popular">Kurang Populer (Baca)</option>
+          <option value="most-viewed">Paling Banyak Dilihat</option>
+          <option value="least-viewed">Sedikit Dilihat</option>
+          <option value="highest-rated">Rating Tertinggi</option>
+        </select>
+        <button type="button" onclick="clearAllFilters()" class="px-4 py-2 bg-muted hover:bg-muted/80 text-muted-foreground rounded-lg transition-colors">
+          <i class="fa-solid fa-times mr-1"></i>Clear
+        </button>
+      </div>
+    </div>
+    <div class="result-count mt-3" id="result-count"></div>
+  </div>
+
+  <!-- Albums Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6 mb-8" id="albums-grid"></div>
+
+  <!-- No Results Message -->
+  <div class="no-results hidden" id="no-results">
+    <div class="no-results-icon">🔍</div>
+    <h3 class="text-lg font-semibold mb-2">Tidak ada hasil ditemukan</h3>
+    <p class="text-muted-foreground">Coba ubah kata kunci pencarian atau filter yang digunakan</p>
+  </div>
+
+  <!-- Dynamic Pagination -->
+  <div class="flex justify-center mt-8" id="pagination-container"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/filters-toggle.js') }}"></script>
+<script src="{{ url_for('static', filename='js/albums-search.js') }}"></script>
+{% endblock %} 

@@ -1,0 +1,128 @@
+/* Comprehensive SEO Management Styles */
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-button {
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    transform: translateY(-1px);
+}
+
+/* SEO Status Indicators */
+.seo-status-complete {
+    background-color: #10B981;
+    color: white;
+}
+
+.seo-status-incomplete {
+    background-color: #F59E0B;
+    color: white;
+}
+
+.seo-status-missing {
+    background-color: #EF4444;
+    color: white;
+}
+
+/* Table Styles */
+.table-hover tbody tr:hover {
+    background-color: #FEF3C7;
+}
+
+/* Modal Styles */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+}
+
+/* Form Styles */
+.form-input:focus {
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+/* Character Count Styles */
+.char-count {
+    font-size: 0.75rem;
+    color: #6B7280;
+}
+
+.char-count.warning {
+    color: #F59E0B;
+}
+
+.char-count.danger {
+    color: #EF4444;
+}
+
+/* SEO Score Bar */
+.seo-score-bar {
+    transition: width 0.3s ease;
+}
+
+/* Loading States */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Toast Notifications */
+.toast {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tab-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+}
+
+/* Custom Scrollbar for Modal */
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #F3F4F6;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+}

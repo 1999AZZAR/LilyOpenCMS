@@ -1,0 +1,105 @@
+{% extends 'admin_base.html' %}
+{% block title %}Anggota Tim - Admin{% endblock %}
+{% block hero_title %}Anggota Tim{% endblock %}
+{% block hero_desc %}Kelola anggota tim editorial dan operasional{% endblock %}
+{% block content %}
+<div id="toast-container" class="fixed top-5 right-5 space-y-2 z-50" role="status" aria-live="polite"></div>
+<main class="container mx-auto px-6 py-12" role="main">
+    <!-- Add New Team Member -->
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-member-title">
+        <h2 id="add-member-title" class="text-xl font-semibold text-amber-800 mb-4">Tambah Anggota Tim Baru</h2>
+        <form action="{{ url_for('main.settings_team_members') }}" method="POST" class="space-y-4" role="form" aria-label="Form tambah anggota tim baru">
+            <!-- CSRF protection disabled for this application -->
+            <input type="hidden" name="action" value="create">
+            <div>
+                <label class="block text-amber-700 font-medium mb-2" for="new-member-name">Nama</label>
+                <input type="text" id="new-member-name" name="name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Nama anggota tim">
+            </div>
+            <div>
+                <label class="block text-amber-700 font-medium mb-2" for="new-member-title">Jabatan</label>
+                <input type="text" id="new-member-title" name="title" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Jabatan anggota tim">
+            </div>
+            <div>
+                <label class="block text-amber-700 font-medium mb-2" for="new-member-group">Grup</label>
+                <select id="new-member-group" name="group" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Grup anggota tim">
+                    <option value="leadership">Jajaran Pimpinan</option>
+                    <option value="editorial">Tim Editorial</option>
+                    <option value="news">Tim News</option>
+                    <option value="video">Tim Video</option>
+                    <option value="sales">Tim Sales & Marketing</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-amber-700 font-medium mb-2" for="new-member-order">Urutan</label>
+                <input type="number" id="new-member-order" name="member_order" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Urutan anggota tim">
+            </div>
+            <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Tambah anggota tim baru">Tambah Anggota Tim</button>
+        </form>
+    </div>
+
+    <!-- Existing Team Members -->
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="region" aria-labelledby="existing-members-title">
+        <h2 id="existing-members-title" class="text-xl font-semibold text-amber-800 mb-4">Anggota Tim yang Ada</h2>
+        <div class="space-y-4" role="list" aria-label="Daftar anggota tim">
+            {% for member in team_members %}
+            <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-lg shadow-md space-y-4" role="listitem">
+                <form action="{{ url_for('main.settings_team_members') }}" method="POST" class="space-y-4" role="form" aria-label="Form edit anggota tim {{ member.name }}">
+                    <!-- CSRF protection disabled for this application -->
+                    <input type="hidden" name="member_id" value="{{ member.id }}">
+                    <div>
+                        <label class="block text-amber-700 font-medium mb-2" for="name-{{ member.id }}">Nama</label>
+                        <input type="text" id="name-{{ member.id }}" name="name" value="{{ member.name }}" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Nama anggota tim">
+                    </div>
+                    <div>
+                        <label class="block text-amber-700 font-medium mb-2" for="title-{{ member.id }}">Jabatan</label>
+                        <input type="text" id="title-{{ member.id }}" name="title" value="{{ member.title }}" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Jabatan anggota tim">
+                    </div>
+                    <div>
+                        <label class="block text-amber-700 font-medium mb-2" for="group-{{ member.id }}">Grup</label>
+                        <select id="group-{{ member.id }}" name="group" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Grup anggota tim">
+                            <option value="leadership" {% if member.group=='leadership' %}selected{% endif %}>Jajaran Pimpinan</option>
+                            <option value="editorial" {% if member.group=='editorial' %}selected{% endif %}>Tim Editorial</option>
+                            <option value="news" {% if member.group=='news' %}selected{% endif %}>Tim News</option>
+                            <option value="video" {% if member.group=='video' %}selected{% endif %}>Tim Video</option>
+                            <option value="sales" {% if member.group=='sales' %}selected{% endif %}>Tim Sales & Marketing</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-amber-700 font-medium mb-2" for="order-{{ member.id }}">Urutan</label>
+                        <input type="number" id="order-{{ member.id }}" name="member_order" value="{{ member.member_order }}" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Urutan anggota tim">
+                    </div>
+                    <div class="flex items-center space-x-2" role="group" aria-label="Status anggota tim">
+                        <input type="checkbox" name="is_active" id="is_active_{{ member.id }}" class="rounded border-amber-300 text-amber-500 focus:ring-amber-400" {% if member.is_active %}checked{% endif %} aria-label="Aktifkan anggota tim">
+                        <label for="is_active_{{ member.id }}" class="text-amber-700">Aktif</label>
+                    </div>
+                    <div class="flex space-x-4" role="group" aria-label="Tombol aksi anggota tim">
+                        <button type="submit" name="action" value="update" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Perbarui anggota tim">Perbarui</button>
+                        <button type="submit" name="action" value="delete" class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md" aria-label="Hapus anggota tim">Hapus</button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-team-member-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="delete-modal-title" aria-modal="true">
+        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h3 id="delete-modal-title" class="text-xl font-semibold text-red-600 mb-4">Konfirmasi Hapus</h3>
+            <p class="text-amber-700 mb-4">Apakah Anda yakin ingin menghapus anggota tim ini?</p>
+            <div class="bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-lg p-3 mb-4">
+                <p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i> Tindakan ini tidak dapat dibatalkan!</p>
+            </div>
+            <div class="flex justify-end space-x-4" role="group" aria-label="Tombol konfirmasi hapus">
+                <button id="cancel-delete-btn" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Batal hapus anggota tim">Batal</button>
+                <button id="confirm-delete-btn" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md" aria-label="Konfirmasi hapus anggota tim">Hapus</button>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/team-members-management.js') }}"></script>
+{% endblock %}

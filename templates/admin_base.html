@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='pic/favicon.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <!-- CSRF protection disabled for this application -->
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_base_css.css') }}">
+    <title>{% block title %}Dasbor Admin - LilyOpenCms Admin{% endblock %}</title>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:bg-white focus:px-4 focus:py-2 focus:z-50">Skip to main content</a>
+    <div id="toast-container" class="fixed top-5 right-5 space-y-2 z-50" role="alert" aria-live="assertive" aria-atomic="true"></div>
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400"></div>
+    </div>
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebar-toggle-button" class="fixed left-6 top-6 text-gray-600 hover:text-gray-900 transition-colors duration-200 z-40" aria-expanded="false" aria-controls="sidebar" aria-label="Toggle navigation menu">
+        <i class="fas fa-bars text-3xl"></i>
+    </button>
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-50" role="navigation" aria-label="Admin navigation">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="p-8 border-b border-gray-200 bg-gradient-to-r from-gray-700 to-gray-800">
+                <div class="text-4xl font-bold text-white comic-font text-center">
+                    LILY CMS by <a href="https://azzar.netlify.app/porto" class="text-white hover:text-gray-300 underline" target="_blank" rel="noopener">azzar</a>
+                    <div class="text-sm font-normal text-gray-300 mt-2">Admin Dashboard</div>
+                </div>
+            </div>
+            <!-- Search Bar -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="relative">
+                    <input type="text" id="sidebar-search" placeholder="Cari menu..." class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-500" aria-label="Search navigation menu">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+                </div>
+            </div>
+            
+            <!-- Sidebar Links -->
+            <div class="flex-1 p-8 overflow-y-auto">
+                {% set nav_groups = [
+                    {
+                        'id': 'dashboard',
+                        'title': 'Dashboard',
+                        'icon': 'fas fa-tachometer-alt',
+                        'links': [
+                            {'url': url_for('main.settings_dashboard'), 'icon': 'fas fa-gears', 'label': 'Dasbor', 'roles': ['su','admin','general']}
+                        ]
+                    },
+                    {
+                        'id': 'content',
+                        'title': 'Manajemen Konten',
+                        'icon': 'fas fa-newspaper',
+                        'links': [
+                            {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'roles': ['su','admin','general']},
+                            {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'roles': ['su','admin','general']},
+                            {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'roles': ['su','admin','general']},
+                            {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'roles': ['su','admin','general']},
+                            {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'roles': ['su','admin','general']},
+                            {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'roles': ['admin','su']},
+                            {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'roles': ['su','admin','general']},
+                            {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'roles': ['admin','su']}
+                        ]
+                    },
+                    {
+                        'id': 'ads',
+                        'title': 'Manajemen Iklan',
+                        'icon': 'fas fa-ad',
+                        'links': [
+                            {'url': url_for('ads.admin_dashboard'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Iklan', 'roles': ['admin','su']},
+                            {'url': url_for('ads.campaigns_list'), 'icon': 'fas fa-bullhorn', 'label': 'Kampanye Iklan', 'roles': ['admin','su']},
+                            {'url': url_for('ads.ads_list'), 'icon': 'fas fa-ad', 'label': 'Kelola Iklan', 'roles': ['admin','su']},
+                            {'url': url_for('ads.placements_list'), 'icon': 'fas fa-map-marker-alt', 'label': 'Penempatan Iklan', 'roles': ['admin','su']},
+                            {'url': url_for('ads.analytics_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Analitik Iklan', 'roles': ['admin','su']}
+                        ]
+                    },
+                    {
+                        'id': 'engagement',
+                        'title': 'Engagement & Feedback',
+                        'icon': 'fas fa-comments',
+                        'links': [
+                            {'url': url_for('comments.admin_comments'), 'icon': 'fas fa-comments', 'label': 'Moderasi Komentar', 'roles': ['admin','su']},
+                            {'url': url_for('ratings.admin_ratings'), 'icon': 'fas fa-star', 'label': 'Manajemen Rating', 'roles': ['admin','su']},
+                            {'url': url_for('ratings.rating_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Rating', 'roles': ['admin','su']}
+                        ]
+                    },
+                    {
+                        'id': 'users',
+                        'title': 'Manajemen Pengguna',
+                        'icon': 'fas fa-users',
+                        'links': [
+                            {'url': url_for('main.user_account'), 'icon': 'fas fa-user', 'label': 'Manajemen Akun', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'roles': ['admin','su']}
+                        ]
+                    },
+                    {
+                        'id': 'brand',
+                        'title': 'Brand & Identitas',
+                        'icon': 'fas fa-palette',
+                        'links': [
+                            {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'roles': ['su']},
+                            {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'roles': ['admin','su']}
+                        ]
+                    },
+                    {
+                        'id': 'navigation',
+                        'title': 'Navigasi & SEO',
+                        'icon': 'fas fa-sitemap',
+                        'links': [
+                            {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'roles': ['admin','su']},
+                            {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'roles': ['admin','su']},
+                            {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'roles': ['admin','su']}
+                        ]
+                    },
+                    {
+                        'id': 'analytics',
+                        'title': 'Analitik & Performa',
+                        'icon': 'fas fa-chart-line',
+                        'links': [
+                            {'url': url_for('main.settings_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Dashboard Analitik', 'roles': ['su']},
+                            {'url': url_for('main.settings_performance'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Performa', 'roles': ['su']},
+                            {'url': url_for('main.settings_asset_optimization'), 'icon': 'fas fa-compress-arrows-alt', 'label': 'Optimasi Asset', 'roles': ['su']},
+                            {'url': url_for('main.settings_ssr_optimization'), 'icon': 'fas fa-server', 'label': 'Optimasi SSR', 'roles': ['su']}
+                        ]
+                    },
+                    {
+                        'id': 'legal',
+                        'title': 'Legal & Kebijakan',
+                        'icon': 'fas fa-shield-alt',
+                        'links': [
+                            {'url': url_for('main.settings_privacy_policy'), 'icon': 'fas fa-shield-alt', 'label': 'Kebijakan Privasi', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_media_guidelines'), 'icon': 'fas fa-book', 'label': 'Pedoman Media', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_pedomanhak'), 'icon': 'fas fa-handshake', 'label': 'Pedoman Hak', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_penyangkalan'), 'icon': 'fas fa-file', 'label': 'Penyangkalan', 'roles': ['admin','su']},
+                            {'url': url_for('main.settings_visi_misi'), 'icon': 'fas fa-braille', 'label': 'Visi Misi', 'roles': ['admin','su']}
+                        ]
+                    },
+                    {
+                        'id': 'account',
+                        'title': 'Akun & Sistem',
+                        'icon': 'fas fa-user-cog',
+                        'links': [
+                            {'url': url_for('main.logout'), 'icon': 'fas fa-sign-out-alt', 'label': 'Logout (' + current_user.username + ')', 'roles': ['su','admin','general']}
+                        ]
+                    }
+                ] %}
+                
+                <div class="space-y-8">
+                    {% for group in nav_groups %}
+                            <div class="nav-group bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4" data-group="{{ group.id }}">
+                                <button class="nav-group-toggle w-full flex items-center justify-between text-gray-800 hover:text-gray-600 hover:bg-gray-100 px-4 py-3 rounded-lg transition-all duration-300" aria-expanded="true" aria-controls="nav-group-{{ group.id }}">
+                                    <div class="flex items-center">
+                                        <i class="{{ group.icon }} mr-4 text-gray-600 text-lg"></i>
+                                        <span class="font-semibold text-base">{{ group.title }}</span>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
+                                </button>
+                                <ul id="nav-group-{{ group.id }}" class="nav-group-content mt-3 space-y-2 ml-6">
+                                    {% for link in group.links %}
+                                        <li role="menuitem">
+                                            <a href="{{ link.url }}" class="{% if group.id == 'account' %}text-red-600 hover:text-red-500 hover:bg-red-50{% else %}text-gray-700 hover:text-gray-600 hover:bg-gray-100{% endif %} px-4 py-3 rounded-lg transition-all duration-300 flex items-center text-sm">
+                                                <i class="{{ link.icon }} mr-4 {% if group.id == 'account' %}text-red-500{% else %}text-gray-600{% endif %}"></i>{{ link.label }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Overlay for Mobile -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-25 z-30 hidden" aria-hidden="true"></div>
+    <!-- Hero Section -->
+    <section id="hero-toggle" class="bg-gradient-to-r from-gray-700 to-gray-800 shadow-lg px-6 py-16 text-center cursor-pointer hover:from-gray-800 hover:to-gray-900 transition-all duration-300" role="banner" aria-label="Admin dashboard header">
+        <h1 class="text-5xl font-extrabold text-white">{% block hero_title %}Dasbor Admin{% endblock %}</h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto mt-4">{% block hero_desc %}Kelola pengguna, cerita, dan pengaturan sistem{% endblock %}</p>
+    </section>
+    <!-- Admin Content -->
+    <main id="main-content" class="w-full px-8 py-12" role="main" tabindex="-1">
+      <div class="bg-white rounded-2xl shadow-lg p-10 border border-gray-200" role="region" aria-label="Content">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+    <script>
+        async function fetchQuickStats() { 
+            try { 
+                const response = await fetch('/api/settings/stats'); 
+                if (!response.ok) throw new Error('Failed to fetch stats'); 
+                const stats = await response.json(); 
+                
+                // Only update elements that exist on the current page
+                const elements = {
+                    'total-users': stats.total_users,
+                    'total-news': stats.total_news,
+                    'total-albums': stats.total_albums,
+                    'total-images': stats.total_images,
+                    'total-videos': stats.total_videos
+                };
+                
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+            } catch (error) { 
+                console.error('Quick stats error:', error); 
+                // Only update elements that exist
+                ['total-users', 'total-news', 'total-albums', 'total-images', 'total-videos'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = 'Error';
+                    }
+                });
+            } 
+        }
+        async function fetchAdvancedStats() { 
+            try { 
+                const response = await fetch('/api/settings/advanced-stats'); 
+                if (!response.ok) throw new Error('Failed to fetch advanced stats'); 
+                const stats = await response.json(); 
+                
+                // Only update elements that exist on the current page
+                const elements = {
+                    'today-news-count': stats.today_news || '0',
+                    'week-news-count': stats.week_news || '0',
+                    'month-news-count': stats.month_news || '0',
+                    'total-views': stats.total_views?.toLocaleString() || '0',
+                    'total-shares': stats.total_shares?.toLocaleString() || '0',
+                    'avg-views': stats.avg_views || '0'
+                };
+                
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+                
+                const popularContent = document.getElementById('popular-content');
+                if (popularContent && stats.popular_content) {
+                    popularContent.innerHTML = '';
+                    stats.popular_content.slice(0, 3).forEach(article => {
+                        const div = document.createElement('div');
+                        div.className = 'text-sm';
+                        div.innerHTML = `<div class="flex justify-between items-center"><span class="text-muted-foreground truncate" title="${article.title}">${article.title.length > 20 ? article.title.substring(0, 20) + '...' : article.title}</span><span class="text-xs font-medium text-card-foreground">${article.read_count || 0} views</span></div>`;
+                        popularContent.appendChild(div);
+                    });
+                }
+            } catch (error) { 
+                console.error('Advanced stats error:', error); 
+                // Only update elements that exist
+                ['today-news-count', 'week-news-count', 'month-news-count'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = '-';
+                    }
+                });
+            } 
+        }
+        async function checkUserRole() { 
+            try { 
+                const response = await fetch('/api/user/role'); 
+                if (!response.ok) throw new Error('Failed to fetch user role'); 
+                const data = await response.json(); 
+                const userRole = data.role; 
+                
+                if (userRole === 'su' || userRole === 'admin') { 
+                    // Only update elements that exist on the current page
+                    const elements = [
+                        'user-management-card',
+                        'privacy-policy-card',
+                        'media-guidelines-card',
+                        'pedoman-hak-card',
+                        'penyangkalan-card',
+                        'visi-misi-card',
+                        'social-media-card'
+                    ];
+                    
+                    elements.forEach(id => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.classList.remove('hidden');
+                        }
+                    });
+                } 
+            } catch (error) { 
+                console.error('Error fetching user role:', error); 
+            } 
+        }
+        // Run only on DOM ready and when elements exist
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('total-users')) {
+                fetchQuickStats();
+                fetchAdvancedStats();
+            }
+            if (document.getElementById('user-management-card')) {
+                checkUserRole();
+            }
+        });
+    </script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for category, message in messages %}
+            showToast("{{ category }}", {{ message|tojson }});
+            {% endfor %}
+        });
+        {% endwith %}
+    </script>
+    <script src="{{ url_for('static', filename='js/sidebar-toggle.js') }}"></script>
+    <script>
+        // Navigation Group Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navGroupToggles = document.querySelectorAll('.nav-group-toggle');
+            
+            navGroupToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const groupId = this.getAttribute('aria-controls');
+                    const content = document.getElementById(groupId);
+                    const chevron = this.querySelector('.fas.fa-chevron-down');
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    
+                    // Toggle content visibility
+                    if (isExpanded) {
+                        content.style.display = 'none';
+                        this.setAttribute('aria-expanded', 'false');
+                        chevron.style.transform = 'rotate(-90deg)';
+                    } else {
+                        content.style.display = 'block';
+                        this.setAttribute('aria-expanded', 'true');
+                        chevron.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+            
+            // Auto-expand group containing current page
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-group-content a');
+            
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    const group = link.closest('.nav-group');
+                    const toggle = group.querySelector('.nav-group-toggle');
+                    const content = group.querySelector('.nav-group-content');
+                    const chevron = toggle.querySelector('.fas.fa-chevron-down');
+                    
+                    // Ensure group is expanded
+                    content.style.display = 'block';
+                    toggle.setAttribute('aria-expanded', 'true');
+                    chevron.style.transform = 'rotate(0deg)';
+                    
+                    // Highlight current link
+                    link.classList.add('bg-gray-200', 'text-gray-900', 'active');
+                    
+                    // Add subtle animation to the group
+                    group.style.animation = 'pulse 2s ease-in-out';
+                }
+            });
+            
+            // Add keyboard navigation support
+            navGroupToggles.forEach(toggle => {
+                toggle.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
+        });
+        
+        // Sidebar Search Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('sidebar-search');
+            const navGroups = document.querySelectorAll('.nav-group');
+            const navLinks = document.querySelectorAll('.nav-group-content a');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    if (searchTerm === '') {
+                        // Show all groups and links when search is empty
+                        navGroups.forEach(group => {
+                            group.style.display = 'block';
+                            const links = group.querySelectorAll('.nav-group-content a');
+                            links.forEach(link => {
+                                link.style.display = 'block';
+                            });
+                        });
+                        return;
+                    }
+                    
+                    // Hide all groups initially
+                    navGroups.forEach(group => {
+                        group.style.display = 'none';
+                    });
+                    
+                    // Show groups that have matching links
+                    navLinks.forEach(link => {
+                        const linkText = link.textContent.toLowerCase();
+                        const linkUrl = link.getAttribute('href').toLowerCase();
+                        
+                        if (linkText.includes(searchTerm) || linkUrl.includes(searchTerm)) {
+                            const group = link.closest('.nav-group');
+                            group.style.display = 'block';
+                            
+                            // Highlight matching text
+                            const originalText = link.textContent;
+                            const highlightedText = originalText.replace(
+                                new RegExp(searchTerm, 'gi'),
+                                match => `<mark class="bg-blue-100 text-blue-900 px-1 rounded">${match}</mark>`
+                            );
+                            link.innerHTML = highlightedText;
+                        } else {
+                            // Hide non-matching links
+                            link.style.display = 'none';
+                        }
+                    });
+                    
+                    // Show groups even if they have hidden links but the group title matches
+                    navGroups.forEach(group => {
+                        const groupTitle = group.querySelector('.nav-group-toggle span').textContent.toLowerCase();
+                        if (groupTitle.includes(searchTerm)) {
+                            group.style.display = 'block';
+                        }
+                    });
+                });
+                
+                // Clear search when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!searchInput.contains(e.target) && !e.target.closest('.nav-group')) {
+                        searchInput.value = '';
+                        searchInput.dispatchEvent(new Event('input'));
+                    }
+                });
+                
+                // Keyboard shortcuts
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        this.value = '';
+                        this.dispatchEvent(new Event('input'));
+                        this.blur();
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,174 @@
+/* Hero overlay */
+.album-hero {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 100%);
+}
+
+/* Chapter list */
+.chapter-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.chapter-item {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid hsl(var(--border));
+}
+
+.chapter-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.chapter-item.current {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary));
+}
+
+/* Status badge variants (reuse tokens for consistency) */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-completed {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.status-ongoing {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.status-hiatus {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+.premium-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Horizontal scroll card hover */
+.related-album-card,
+.album-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.related-album-card:hover,
+.album-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Album card-specific elements (scoped to avoid affecting hero badges) */
+.album-card .album-cover {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.album-card .chapter-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.album-card .status-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.album-card .premium-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 10;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Comments split layout */
+.comments-split-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .comments-split-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.comment-form-section {
+  background: hsl(var(--primary) / 0.05);
+  border: 1px solid hsl(var(--primary) / 0.1);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+.comments-list-section {
+  background: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+/* Rating UI tweaks */
+.star-btn {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.star-btn:hover {
+  transform: scale(1.1);
+}
+
+.star-btn.active {
+  color: #fbbf24 !important;
+}
+
+.star-rating-container {
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.star-rating-container > * { text-align: center !important; }
+
+.star-rating-container .stars,
+.star-rating-container [class*="star"],
+.star-rating-container [class*="rating"] {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+

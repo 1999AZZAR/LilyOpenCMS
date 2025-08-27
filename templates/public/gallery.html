@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_info.brand_name|default('LilyOpenCMS') }} - Galeri Gambar{% endblock %}
+
+{# Import pagination template is NOT needed for include #}
+{# {% from '_macros.html' import render_pagination %} #}
+
+{% block content %}
+<div class="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 lg:py-12" role="region" aria-label="Galeri Gambar">
+
+    <div class="text-center mb-10 lg:mb-12" id="gallery-description">
+        <h2 class="text-3xl lg:text-4xl font-semibold text-foreground mb-3">
+          Galeri gambar
+        </h2>
+        <p class="text-base text-muted-foreground max-w-2xl mx-auto">
+            Gambar pilihan dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
+        </p>
+    </div>
+
+    {% if images and images.items %}
+        {# Image Grid - ADDED ID for JS event delegation #}
+        <div id="image-grid-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-6 gap-4 md:gap-6 mb-12" role="list" aria-label="Daftar gambar dalam galeri" aria-describedby="gallery-description">
+            {% for image in images.items %}
+                {# --- Thumbnail Logic Start (Gallery Page Grid) --- #}
+                {% set image_obj = image %}
+                {% set placeholder_img = url_for('static', filename='pic/placeholder.png') %}
+                {% set full_image_url = placeholder_img %} {# Default full image URL to placeholder #}
+                {% set final_thumb_url = placeholder_img %} {# Default thumb URL to placeholder #}
+                {% if image_obj and image_obj.filepath %}
+                  {% set image_filepath = image_obj.filepath %}
+                  {% set path_without_static = image_filepath.replace('static/', '', 1) %}
+                  {% set last_dot_index = path_without_static.rfind('.') %}
+                  {% if last_dot_index != -1 %}
+                    {% set base_path = path_without_static[:last_dot_index] %}
+                    {% set extension = path_without_static[last_dot_index:] %}
+                    {% set thumb_path = base_path ~ '_thumb_square' ~ extension %}
+                    {% set final_thumb_url = url_for('static', filename=thumb_path) %}
+                    {% set full_image_url = url_for('static', filename=path_without_static) %} {# Set the correct full image URL #}
+                  {% endif %}
+                {% endif %}
+                <div class="group relative overflow-hidden rounded-lg border border-border aspect-square shadow-sm bg-secondary hover:shadow-md transition-shadow duration-200 cursor-pointer" role="listitem" tabindex="0"
+                     data-large-src="{{ full_image_url }}"
+                     data-description="{{ image.description or image.filename or 'Gambar Galeri' }}"
+                     data-filename="{{ image.filename or 'download.jpg' }}"
+                     onclick="openImageModal({{ loop.index0 }})">
+                    <img src="{{ final_thumb_url }}"
+                         alt="{{ image.description or image.filename or 'Gallery image' }}"
+                         class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                         loading="lazy" onerror="this.onerror=null; this.src='{{ placeholder_img }}';">
+                    {% if image.description %}
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        <p class="text-xs text-white truncate">{{ image.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        {# --- Include Pagination Partial (Corrected Syntax with 'with' block) --- #}
+        {% with pagination_obj=images, pagination_route='main.gallery' %}
+            {% include 'pagination.html' %}
+        {% endwith %}
+        {# --- End Include Pagination Partial --- #}
+
+    {% else %}
+        <div class="text-center py-16">
+            <p class="text-muted-foreground">Belum ada gambar yang ditambahkan ke galeri.</p>
+            {% if current_user.is_authenticated and (current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER) %}
+                <a href="{{ url_for('main.settingsimage') }}" class="button button-primary button-md mt-6">
+                    Kelola Gambar
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+</div>
+
+{# --- Image Viewer Modal (Adapted from images_management.html style) --- #}
+{# Outer div for backdrop and click-outside handling #}
+<div id="gallery-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden p-4 z-[999] opacity-0 transition-opacity duration-300" role="dialog" aria-modal="true" aria-label="Tampilan Gambar" aria-hidden="true" onclick="closeImageModalOnClickOutside(event)">
+    {# Inner div for content, centered using absolute positioning and transform #}
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-5xl max-h-[95vh] flex flex-col items-center" role="document" onclick="event.stopPropagation()"> {# Prevent closing when clicking inside content #}
+        {# Main content area for image and buttons #}
+        {# Image container #}
+        <div class="relative shadow-xl rounded-lg overflow-hidden mb-4" aria-live="polite"> {# Added mb-4 for spacing #}
+            <img id="modal-image" src="" alt="Gambar Galeri Diperbesar" class="block w-full h-auto max-h-[80vh] object-contain" role="img" aria-describedby="modal-description"> {# Adjusted max-h #}
+
+            {# Download button (Top left) - Adapted ID and kept structure #}
+            <a id="modal-download-button" href="#" download="image.jpg" class="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center bg-black/50 text-white rounded-full shadow-lg hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Unduh gambar" title="Unduh Gambar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            </a>
+
+            {# Close button (Top right) - Adapted onclick #}
+            <button onclick="closeImageModal()" class="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-card/90 text-card-foreground rounded-full shadow-lg hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring" aria-label="Tutup gambar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+
+            <div id="modal-description" class="sr-only" aria-live="polite"></div>
+        </div>
+
+        {# Prev/Next Buttons Container (Below Image) #}
+        <div class="flex items-center justify-center gap-4 mt-2" role="toolbar" aria-label="Navigasi Gambar">
+            {# Adapted ID and onclick #}
+            <button id="modal-prev-button" onclick="showPrevImage()" class="p-2 bg-card/90 text-card-foreground rounded-full shadow-lg hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Gambar Sebelumnya" title="Sebelumnya">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+            </button>
+            {# Adapted ID and onclick #}
+            <button id="modal-next-button" onclick="showNextImage()" class="p-2 bg-card/90 text-card-foreground rounded-full shadow-lg hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Gambar Berikutnya" title="Berikutnya">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+            </button>
+        </div>
+
+    </div>
+</div>
+{# --- End Image Viewer Modal --- #}
+
+{% endblock %}
+
+{% block extra_scripts %}
+{# The JavaScript remains the same as the previous version #}
+<script type="module" src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+{% endblock %}

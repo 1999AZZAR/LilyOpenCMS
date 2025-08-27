@@ -1,0 +1,180 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manajemen Kategori - Admin{% endblock %}
+{% block hero_title %}Manajemen Kategori{% endblock %}
+{% block hero_desc %}Kelola kategori berita dan artikel{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-6 py-12" role="main">
+    <!-- Add Category Form -->
+    <div id="add-category-form" class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-category-title">
+        <h2 id="add-category-title" class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+            <i class="fas fa-plus-circle text-blue-600 mr-3"></i>
+            Tambahkan Kategori Baru
+        </h2>
+        <form id="add-category" class="space-y-4" role="form" aria-label="Form tambah kategori baru">
+            <div>
+                <label for="category-name" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-tag text-gray-400 mr-2"></i>Nama Kategori
+                </label>
+                <input type="text" id="category-name" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="Masukkan nama kategori..." required aria-required="true">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 flex items-center justify-center" aria-label="Tambah kategori baru">
+                <i class="fas fa-plus mr-2"></i>Tambah Kategori
+            </button>
+        </form>
+        <div id="add-category-status" class="mt-4" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- Bulk Actions Toolbar -->
+    <div id="bulk-actions-toolbar" class="bg-white border border-gray-200 p-4 rounded-lg shadow-lg mb-6 hidden" role="toolbar" aria-label="Bulk actions toolbar">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span id="selected-count" class="text-gray-700 font-medium">0 kategori dipilih</span>
+                <button id="select-all-btn" class="text-blue-600 hover:text-blue-800 underline text-sm">Pilih Semua</button>
+                <button id="deselect-all-btn" class="text-blue-600 hover:text-blue-800 underline text-sm">Batal Pilih</button>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="bulk-edit-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 flex items-center" aria-label="Edit kategori yang dipilih">
+                    <i class="fas fa-edit mr-2"></i>Edit Massal
+                </button>
+                <button id="bulk-delete-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200 flex items-center" aria-label="Hapus kategori yang dipilih">
+                    <i class="fas fa-trash mr-2"></i>Hapus Massal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Categories -->
+    <div id="manage-categories" class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="manage-categories-title">
+        <h2 id="manage-categories-title" class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+            <i class="fas fa-tags text-blue-600 mr-3"></i>
+            Kelola Kategori
+        </h2>
+        <div id="category-list" class="space-y-4" role="list" aria-label="Daftar kategori"></div>
+    </div>
+</main>
+
+<!-- Edit Category Modal -->
+<div id="edit-category-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="edit-category-title" aria-modal="true">
+    <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h3 id="edit-category-title" class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-edit text-blue-600 mr-3"></i>
+            Edit Kategori
+        </h3>
+        <form id="edit-category-form" class="space-y-4">
+            <input type="hidden" id="edit-category-id">
+            <div>
+                <label for="edit-category-name" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-tag text-gray-400 mr-2"></i>Nama Kategori
+                </label>
+                <input id="edit-category-name" type="text" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="Masukkan nama kategori baru..." aria-label="Nama kategori baru" required>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button type="button" id="cancel-edit-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" aria-label="Batal edit kategori">Batal</button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" aria-label="Simpan perubahan kategori">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Category Modal -->
+<div id="delete-category-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="delete-category-title" aria-modal="true">
+    <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h3 id="delete-category-title" class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-exclamation-triangle text-red-600 mr-3"></i>
+            Konfirmasi Hapus
+        </h3>
+        <p class="text-gray-700 mb-4">Apakah Anda yakin ingin menghapus kategori ini?</p>
+        <input type="hidden" id="delete-category-id">
+        <div class="flex justify-end space-x-4">
+            <button id="cancel-delete-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" aria-label="Batal hapus kategori">Batal</button>
+            <button id="confirm-delete-category-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200" aria-label="Konfirmasi hapus kategori">Hapus</button>
+        </div>
+    </div>
+</div>
+
+<!-- Safe Delete Category Modal -->
+<div id="safe-delete-category-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="safe-delete-category-title" aria-modal="true">
+    <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h3 id="safe-delete-category-title" class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+            Kategori Sedang Digunakan
+        </h3>
+        <div id="safe-delete-content" class="space-y-4">
+            <p class="text-gray-700">Kategori ini sedang digunakan oleh:</p>
+            <div id="dependency-info" class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <p class="text-sm text-gray-800" id="dependency-text"></p>
+            </div>
+            <div>
+                <label for="new-category-select" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-exchange-alt text-gray-400 mr-2"></i>Pilih kategori baru untuk konten:
+                </label>
+                <select id="new-category-select" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" required>
+                    <option value="">Pilih kategori...</option>
+                </select>
+            </div>
+        </div>
+        <input type="hidden" id="safe-delete-category-id">
+        <div class="flex justify-end space-x-4 mt-6">
+            <button id="cancel-safe-delete-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" aria-label="Batal hapus kategori">Batal</button>
+            <button id="confirm-safe-delete-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200" aria-label="Konfirmasi hapus kategori dengan reassignment">Hapus & Reassign</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Edit Modal -->
+<div id="bulk-edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="bulk-edit-title" aria-modal="true">
+    <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h3 id="bulk-edit-title" class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-edit text-blue-600 mr-3"></i>
+            Edit Massal Kategori
+        </h3>
+        <div class="space-y-4">
+            <p class="text-gray-700" id="bulk-edit-info">Edit kategori yang dipilih</p>
+            <div>
+                <label for="bulk-edit-name" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-tag text-gray-400 mr-2"></i>Nama Kategori Baru
+                </label>
+                <input id="bulk-edit-name" type="text" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="Masukkan nama kategori baru..." required>
+            </div>
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p class="text-sm text-gray-800">
+                    <strong>Catatan:</strong> Semua kategori yang dipilih akan diubah menjadi nama yang sama.
+                </p>
+            </div>
+        </div>
+        <div class="flex justify-end space-x-4 mt-6">
+            <button id="cancel-bulk-edit-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" aria-label="Batal edit massal">Batal</button>
+            <button id="confirm-bulk-edit-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" aria-label="Konfirmasi edit massal">Edit Massal</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Delete Modal -->
+<div id="bulk-delete-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="bulk-delete-title" aria-modal="true">
+    <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h3 id="bulk-delete-title" class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-exclamation-triangle text-red-600 mr-3"></i>
+            Konfirmasi Hapus Massal
+        </h3>
+        <div class="space-y-4">
+            <p class="text-gray-700" id="bulk-delete-info">Anda akan menghapus kategori yang dipilih</p>
+            <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                <p class="text-sm text-gray-800">
+                    <strong>Peringatan:</strong> Tindakan ini tidak dapat dibatalkan. Kategori yang memiliki konten akan memerlukan reassignment.
+                </p>
+            </div>
+        </div>
+        <div class="flex justify-end space-x-4 mt-6">
+            <button id="cancel-bulk-delete-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" aria-label="Batal hapus massal">Batal</button>
+            <button id="confirm-bulk-delete-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200" aria-label="Konfirmasi hapus massal">Hapus Massal</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/categories-management.js') }}"></script>
+{% endblock %}

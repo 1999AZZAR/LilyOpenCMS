@@ -1,0 +1,21 @@
+Test File,Status,Duration (s),Test Cases,Return Code,Timestamp,Notes
+test_share_tracking.py,PASS,1.41,0,0,2025-08-21T19:07:41.858077,Completed successfully
+test_performance_monitoring.py,FAIL,0.15,0,0,2025-08-21T19:07:42.005840,Failed or timed out
+test_navigation_management.py,PASS,0.01,0,0,2025-08-21T19:07:42.020010,Completed successfully
+test_subscription_system.py,FAIL,0.08,0,1,2025-08-21T19:07:42.097855,Failed or timed out
+test_comprehensive_endpoints.py,PASS,22.38,0,0,2025-08-21T19:08:04.474398,Completed successfully
+test_comment_rating_system.py,PASS,0.35,8,0,2025-08-21T19:08:04.826102,Completed successfully
+test_weighted_rating_system.py,FAIL,0.03,0,1,2025-08-21T19:08:04.858550,Failed or timed out
+test_redis_connection.py,PASS,0.01,0,0,2025-08-21T19:08:04.873532,Completed successfully
+test_authentication.py,PASS,0.76,15,0,2025-08-21T19:08:05.632131,Completed successfully
+test_cache_system.py,FAIL,0.03,0,0,2025-08-21T19:08:05.661128,Failed or timed out
+test_user_management.py,PASS,0.61,19,0,2025-08-21T19:08:06.269535,Completed successfully
+test_ads_system.py,PASS,0.28,0,0,2025-08-21T19:08:06.553668,Completed successfully
+test_premium_content_system.py,FAIL,0.03,0,1,2025-08-21T19:08:06.582888,Failed or timed out
+test_user_account_management.py,FAIL,0.03,0,1,2025-08-21T19:08:06.612375,Failed or timed out
+test_unified_news.py,PASS,0.73,0,0,2025-08-21T19:08:07.339324,Completed successfully
+test_brand_image_optimization.py,FAIL,0.17,0,1,2025-08-21T19:08:07.512572,Failed or timed out
+test_database_models.py,FAIL,0.03,0,1,2025-08-21T19:08:07.543814,Failed or timed out
+test_asset_optimization_dashboard.py,FAIL,0.03,0,1,2025-08-21T19:08:07.574318,Failed or timed out
+test_seo_leveling.py,FAIL,0.03,0,1,2025-08-21T19:08:07.605431,Failed or timed out
+test_ads_premium_detector.py,FAIL,0.03,0,1,2025-08-21T19:08:07.634891,Failed or timed out

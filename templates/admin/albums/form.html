@@ -1,0 +1,513 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ 'Edit' if album else 'Create' }} Album - Admin{% endblock %}
+{% block hero_title %}{{ 'Edit' if album else 'Create' }} Album{% endblock %}
+{% block hero_desc %}{{ 'Update album information' if album else 'Create a new album' }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{{ url_for('albums.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-home mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <a href="{{ url_for('albums.list_albums') }}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Albums</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <span class="text-sm font-medium text-gray-500">{{ 'Edit' if album else 'Create' }} Album</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <form id="album-form" class="space-y-6">
+                {% if album %}
+                <input type="hidden" id="album-id" value="{{ album.id }}">
+                {% endif %}
+                
+                <!-- Basic Information -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="album-title" class="block text-sm font-medium text-gray-700 mb-2">
+                                Judul Album *
+                            </label>
+                            <input type="text" id="album-title" name="title" required
+                                   value="{{ album.title if album else '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="Enter album title">
+                        </div>
+                        
+                        <div>
+                            <label for="album-category" class="block text-sm font-medium text-gray-700 mb-2">
+                                Kategori *
+                            </label>
+                            <select id="album-category" name="category_id"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Pilih Kategori</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        {% if album and album.category_id == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label for="album-description" class="block text-sm font-medium text-gray-700 mb-2">
+                            Sinopsis (optional)
+                        </label>
+                        <textarea id="album-description" name="description" rows="4"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Enter album description">{{ album.description if album else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Cover Image -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Cover Image</h3>
+                    <div class="flex items-center space-x-4">
+                        <div id="cover-preview" class="w-32 h-40 bg-gray-100 rounded-lg flex items-center justify-center">
+                            {% if album and album.cover_image and album.cover_image.filepath %}
+                            <img src="{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}" alt="Cover" class="w-full h-full object-cover rounded-lg">
+                            {% else %}
+                            <i class="fas fa-image text-gray-400 text-2xl"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <button type="button" onclick="openImagePicker()" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                <i class="fas fa-upload mr-2"></i>Pilih Gambar Cover
+                            </button>
+                            <p class="text-sm text-gray-500 mt-2">Ukuran rekomendasi: 400x600 pixels</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="cover-image-id" name="cover_image_id" 
+                           value="{{ album.cover_image_id if album else '' }}">
+                </div>
+
+                <!-- Album Settings -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Pengaturan Album</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is-premium" name="is_premium"
+                                       {% if album and album.is_premium %}checked{% endif %}
+                                       class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                <label for="is-premium" class="ml-2 text-sm font-medium text-gray-700">
+                                    Konten Premium
+                                </label>
+                            </div>
+                            <p class="text-xs text-gray-500 ml-6">Tandai sebagai konten premium untuk pengguna premium</p>
+                            
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is-visible" name="is_visible"
+                                       {% if not album or album.is_visible %}checked{% endif %}
+                                       class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                                <label for="is-visible" class="ml-2 text-sm font-medium text-gray-700">
+                                    Tampilkan kepada Publik
+                                </label>
+                            </div>
+                            <p class="text-xs text-gray-500 ml-6">Tandai album sebagai tampilkan kepada semua pengguna</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="age-rating" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Rating Usia Konten
+                                </label>
+                                <select id="age-rating" name="age_rating" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Pilih rating usia konten...</option>
+                                    <option value="SU" {% if album and album.age_rating=='SU' %}selected{% endif %}>SU — Semua Umur</option>
+                                    <option value="P" {% if album and album.age_rating=='P' %}selected{% endif %}>P — Prasekolah (2–6)</option>
+                                    <option value="A" {% if album and album.age_rating=='A' %}selected{% endif %}>A — Anak (7–12)</option>
+                                    <option value="3+" {% if album and album.age_rating=='3+' %}selected{% endif %}>3+ — 3 Tahun ke Atas (Game)</option>
+                                    <option value="7+" {% if album and album.age_rating=='7+' %}selected{% endif %}>7+ — 7 Tahun ke Atas (Game)</option>
+                                    <option value="13+" {% if album and album.age_rating=='13+' %}selected{% endif %}>R / 13+ — Remaja</option>
+                                    <option value="17+" {% if album and album.age_rating=='17+' %}selected{% endif %}>D / 17+ — Dewasa</option>
+                                    <option value="18+" {% if album and album.age_rating=='18+' %}selected{% endif %}>18+ — 18 Tahun ke Atas (Game)</option>
+                                    <option value="21+" {% if album and album.age_rating=='21+' %}selected{% endif %}>21+ — 21 Tahun ke Atas</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is-completed" name="is_completed"
+                                       {% if album and album.is_completed %}checked{% endif %}
+                                       class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                                <label for="is-completed" class="ml-2 text-sm font-medium text-gray-700">
+                                    Album Selesai
+                                </label>
+                            </div>
+                            <p class="text-xs text-gray-500 ml-6">Tandai album sebagai selesai/selesai</p>
+                            
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is-hiatus" name="is_hiatus"
+                                       {% if album and album.is_hiatus %}checked{% endif %}
+                                       class="rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                                <label for="is-hiatus" class="ml-2 text-sm font-medium text-gray-700">
+                                    On Hiatus (Tidak Aktif)
+                                </label>
+                            </div>
+                            <p class="text-xs text-gray-500 ml-6">Tandai album sebagai tidak aktif</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{{ url_for('albums.list_albums') }}" 
+                       class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-medium transition-colors">
+                        Batal
+                    </a>
+                    <button type="submit" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-save mr-2"></i>{{ 'Perbarui' if album else 'Buat' }} Album
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Image Picker Modal -->
+<div id="image-picker-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Pilih Gambar Cover</h3>
+                <button onclick="closeImagePicker()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Upload New Image Section -->
+            <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <h4 class="text-lg font-semibold text-gray-800 mb-3">Unggah Gambar Baru</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input type="text" id="upload-name" placeholder="Nama gambar (opsional)" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="file" id="upload-file" accept="image/*" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="url" id="upload-url" placeholder="https://example.com/image.jpg" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="button" onclick="uploadImage()" 
+                        class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-upload mr-2"></i>Unggah Gambar
+                </button>
+            </div>
+            
+            <!-- Search Section -->
+            <div class="mb-4">
+                <input type="text" id="image-search" placeholder="Cari gambar..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Image Grid -->
+            <div id="image-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+                <!-- Images will be loaded here -->
+            </div>
+            
+            <!-- Pagination -->
+            <div id="image-pagination" class="mt-6 flex justify-center">
+                <!-- Pagination controls will be generated here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Form submission
+document.getElementById('album-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        title: document.getElementById('album-title').value,
+        description: document.getElementById('album-description').value,
+        category_id: document.getElementById('album-category').value || null,
+        cover_image_id: document.getElementById('cover-image-id').value || null,
+        age_rating: document.getElementById('age-rating').value || null,
+        is_premium: document.getElementById('is-premium').checked,
+        is_visible: document.getElementById('is-visible').checked,
+        is_completed: document.getElementById('is-completed').checked,
+        is_hiatus: document.getElementById('is-hiatus').checked
+    };
+    
+    const albumId = document.getElementById('album-id')?.value;
+            const url = albumId ? `/admin/albums/${albumId}/edit` : '/admin/albums/create';
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (albumId) {
+                window.location.href = `/admin/albums/${albumId}`;
+            } else {
+                window.location.href = `/admin/albums/${data.album_id}`;
+            }
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the album');
+    });
+});
+
+// Image picker functionality
+let currentPage = 1;
+let totalPages = 1;
+
+function openImagePicker() {
+    document.getElementById('image-picker-modal').classList.remove('hidden');
+    loadImages(1);
+}
+
+function closeImagePicker() {
+    document.getElementById('image-picker-modal').classList.add('hidden');
+}
+
+async function loadImages(page = 1) {
+    const grid = document.getElementById('image-grid');
+    const search = document.getElementById('image-search').value;
+    
+    grid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">Memuat gambar...</p>';
+    
+    try {
+        let url = `/api/images?page=${page}&per_page=12`;
+        if (search) {
+            url += `&description=${encodeURIComponent(search)}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.items) {
+            displayImages(data.items);
+            updatePagination(data);
+        }
+    } catch (error) {
+        console.error('Error loading images:', error);
+        grid.innerHTML = '<p class="col-span-full text-center text-red-500 py-4">Error loading images.</p>';
+    }
+}
+
+function displayImages(images) {
+    const grid = document.getElementById('image-grid');
+    grid.innerHTML = '';
+    
+    if (images.length === 0) {
+        grid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">Tidak ada gambar yang ditemukan.</p>';
+        return;
+    }
+    
+    images.forEach(image => {
+        const div = document.createElement('div');
+        div.className = 'p-2 group cursor-pointer border border-transparent hover:border-blue-400 rounded-lg transition duration-150';
+        
+        // Generate proper image URL
+        const placeholderImg = '/static/pic/placeholder.png';
+        const fullImageUrl = image.file_url || image.url || placeholderImg;
+        let squareThumbUrl = placeholderImg;
+        let landscapeThumbUrl = placeholderImg;
+
+        if (image.filepath) {
+            const pathWithoutStatic = image.filepath.replace('static/', '', 1);
+            const lastDotIndex = pathWithoutStatic.lastIndexOf('.');
+            if (lastDotIndex !== -1) {
+                const base_path = pathWithoutStatic.substring(0, lastDotIndex);
+                const extension = pathWithoutStatic.substring(lastDotIndex);
+                squareThumbUrl = `/static/${base_path}_thumb_square${extension}`;
+                landscapeThumbUrl = `/static/${base_path}_thumb_landscape${extension}`;
+            } else {
+                squareThumbUrl = fullImageUrl;
+                landscapeThumbUrl = fullImageUrl;
+            }
+        } else {
+            squareThumbUrl = fullImageUrl;
+            landscapeThumbUrl = fullImageUrl;
+        }
+        
+        div.innerHTML = `
+            <img src="${squareThumbUrl}" onerror="this.onerror=null;this.src='${placeholderImg}'" 
+                 alt="${image.filename || 'Image'}" 
+                 class="w-full aspect-square object-cover rounded-lg mb-2 shadow-sm group-hover:shadow-md" 
+                 loading="lazy">
+            <button class="select-image-btn mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-lg font-semibold transition-colors" 
+                    data-thumb-url="${landscapeThumbUrl}" 
+                    data-id="${image.id}">
+                Pilih
+            </button>
+        `;
+        
+        // Add click event to select image
+        const selectBtn = div.querySelector('.select-image-btn');
+        selectBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectImage(image, landscapeThumbUrl);
+        });
+        
+        grid.appendChild(div);
+    });
+}
+
+function selectImage(image, thumbUrl) {
+    document.getElementById('cover-image-id').value = image.id;
+    
+    // Update preview
+    const preview = document.getElementById('cover-preview');
+    preview.innerHTML = `<img src="${thumbUrl}" alt="Cover" class="w-full h-full object-cover rounded-lg">`;
+    
+    closeImagePicker();
+}
+
+function updatePagination(data) {
+    const pagination = document.getElementById('image-pagination');
+    currentPage = data.page || 1;
+    totalPages = data.total_pages || 1;
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHtml = '<div class="flex items-center space-x-2">';
+    
+    // Previous button
+    if (currentPage > 1) {
+        paginationHtml += `
+            <button onclick="loadImages(${currentPage - 1})" 
+                    class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Previous
+            </button>
+        `;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            paginationHtml += `
+                <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-lg">
+                    ${i}
+                </span>
+            `;
+        } else {
+            paginationHtml += `
+                <button onclick="loadImages(${i})" 
+                        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    ${i}
+                </button>
+            `;
+        }
+    }
+    
+    // Next button
+    if (currentPage < totalPages) {
+        paginationHtml += `
+            <button onclick="loadImages(${currentPage + 1})" 
+                    class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Next
+            </button>
+        `;
+    }
+    
+    paginationHtml += '</div>';
+    pagination.innerHTML = paginationHtml;
+}
+
+async function uploadImage() {
+    const nameInput = document.getElementById('upload-name');
+    const fileInput = document.getElementById('upload-file');
+    const urlInput = document.getElementById('upload-url');
+    
+    const name = nameInput.value.trim();
+    const file = fileInput.files[0];
+    const url = urlInput.value.trim();
+    
+    if (!file && !url) {
+        alert('Please select a file or enter a URL');
+        return;
+    }
+    
+    const formData = new FormData();
+    if (file) {
+        formData.append('file', file);
+    }
+    if (url) {
+        formData.append('url', url);
+    }
+    if (name) {
+        formData.append('name', name);
+    }
+    formData.append('is_visible', 'true');
+    
+    try {
+        const response = await fetch('/api/images', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Clear inputs
+            nameInput.value = '';
+            fileInput.value = '';
+            urlInput.value = '';
+            
+            // Reload images
+            await loadImages(currentPage);
+            alert('Image uploaded successfully!');
+        } else {
+            alert('Error uploading image: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert('Error uploading image');
+    }
+}
+
+// Search functionality with debounce
+let searchTimeout;
+document.getElementById('image-search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        loadImages(1);
+    }, 300);
+});
+
+// Initialize image picker when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Load initial cover image if exists
+    const coverImageId = document.getElementById('cover-image-id').value;
+    if (coverImageId) {
+        // The image should already be displayed in the preview from the server-side template
+        console.log('Cover image ID:', coverImageId);
+    }
+});
+</script>
+{% endblock %}

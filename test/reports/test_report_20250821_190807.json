@@ -1,0 +1,194 @@
+{
+  "summary": {
+    "total_tests": 20,
+    "passed_tests": 9,
+    "failed_tests": 11,
+    "success_rate": 45.0,
+    "total_duration": 27.18,
+    "total_test_cases": 42,
+    "start_time": "2025-08-21T19:07:40.444897",
+    "end_time": "2025-08-21T19:08:07.682287"
+  },
+  "test_results": [
+    {
+      "file": "test_share_tracking.py",
+      "success": true,
+      "duration": 1.41,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "🧪 Testing Share Tracking System\n==================================================\nTesting news share tracking...\nTesting with news ID: 1\nInitial share data: {'bluesky_count': 0, 'clipboard_count': 0, 'facebook_count': 0, 'first_shared_at': '2025-08-19T10:14:13.866643', 'id': 1, 'instagram_count': 0, 'latest_shared_at': '2025-08-19T10:14:13.866643', 'news_id': 1, 'total_shares': 1, 'twitter_count': 0, 'whatsapp_count': 1}\nShare tracking response: {'message': 'Share tracked successfully'}\nUpdated share data: {'bluesky_count': 0, 'clipboard_count': 0, 'facebook_count': 0, 'first_shared_at': '2025-08-19T10:14:13.866643', 'id': 1, 'instagram_count': 0, 'latest_shared_at': '2025-08-21T12:07:40.743600', 'news_id': 1, 'total_shares': 2, 'twitter_count': 0, 'whatsapp_count': 2}\n✅ Share tracking working: whatsapp count increased from 1 to 2\n\nTesting album share tracking...\nTesting with album ID: 1\nFailed to get album share data: 404\n\n==================================================\n📊 Test Results:\nNews Share Tracking: ✅ PASS\nAlbum Share Tracking: ❌ FAIL\n\n⚠️  Some share tracking tests failed!\n",
+      "timestamp": "2025-08-21T19:07:41.858077"
+    },
+    {
+      "file": "test_performance_monitoring.py",
+      "success": false,
+      "duration": 0.15,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "🚀 Starting Performance Monitoring Tests\n==================================================\n🧪 Testing Performance Monitor Initialization...\n    ❌ Error testing performance monitor initialization: No module named 'flask'\n\n🧪 Testing Request Metrics...\n    ❌ Error testing request metrics: No module named 'flask'\n\n🧪 Testing System Metrics...\n  💻 Testing CPU metrics...\n    ✅ CPU metrics collection works\n  💾 Testing memory metrics...\n    ✅ Memory metrics collection works\n  💿 Testing disk metrics...\n    ✅ Disk metrics collection works\n    ✅ System metrics tests passed\n\n🧪 Testing Performance Summary...\n    ❌ Error testing performance summary: No module named 'flask'\n\n🧪 Testing Slow Query Detection...\n    ❌ Error testing slow query detection: No module named 'flask'\n\n🧪 Testing Performance Alerts...\n    ❌ Error testing performance alerts: No module named 'flask'\n\n🧪 Testing Performance Recommendations...\n    ❌ Error testing performance recommendations: No module named 'flask'\n\n🧪 Testing Performance Decorators...\n    ❌ Error testing performance decorators: No module named 'flask'\n\n🧪 Testing Performance Utilities...\n    ❌ Error testing performance utilities: No module named 'flask'\n\n🧪 Testing Performance Thresholds...\n    ❌ Error testing performance thresholds: No module named 'flask'\n\n✅ All performance monitoring tests completed!\n\n📋 Test Summary:\n  - Monitor Initialization: Setup and configuration\n  - Request Metrics: Response time tracking\n  - System Metrics: CPU, memory, disk monitoring\n  - Performance Summary: Overall statistics\n  - Slow Queries: Performance bottleneck detection\n  - Performance Alerts: Automated notifications\n  - Performance Recommendations: Optimization suggestions\n  - Performance Decorators: Code-level monitoring\n  - Performance Utilities: Helper functions\n  - Performance Thresholds: Alert triggering\n\n🎉 Performance monitoring system is working correctly!\n",
+      "timestamp": "2025-08-21T19:07:42.005840"
+    },
+    {
+      "file": "test_navigation_management.py",
+      "success": true,
+      "duration": 0.01,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "==================================================\nNAVIGATION MANAGEMENT BULK OPERATIONS TEST\n==================================================\nTesting Navigation Management Bulk Operations...\n✓ API endpoints defined:\n  - /api/navigation-links\n  - /api/navigation-links/bulk-update\n  - /api/navigation-links/bulk-delete\n  - /api/navigation-links/copy\n\nTesting Bulk Operations:\n✓ Bulk operations implemented:\n  - Bulk Activate Links\n  - Bulk Deactivate Links\n  - Bulk Delete Links\n  - Copy Links Between Locations\n\nTesting Copy Functionality:\n✓ Copy features implemented:\n  - Copy from Navbar to Footer\n  - Copy from Footer to Navbar\n  - Overwrite existing links option\n  - Preview before copy\n  - Order preservation\n\nTesting UI Components:\n✓ UI components implemented:\n  - Bulk selection checkboxes\n  - Bulk action buttons (Activate/Deactivate/Delete)\n  - Copy links modal\n  - Bulk delete confirmation modal\n  - Selection counter\n  - Clear selection button\n\n==================================================\n✅ ALL TESTS PASSED - Bulk operations should work correctly!\n==================================================\n",
+      "timestamp": "2025-08-21T19:07:42.020010"
+    },
+    {
+      "file": "test_subscription_system.py",
+      "success": false,
+      "duration": 0.08,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_subscription_system.py\", line 17, in <module>\n    spec.loader.exec_module(main)\n    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"<frozen importlib._bootstrap_external>\", line 1026, in exec_module\n  File \"<frozen importlib._bootstrap>\", line 488, in _call_with_frames_removed\n  File \"/home/azzar/project/exposeur/main.py\", line 1, in <module>\n    from flask import (\n    ...<5 lines>...\n    )\nModuleNotFoundError: No module named 'flask'\n",
+      "timestamp": "2025-08-21T19:07:42.097855"
+    },
+    {
+      "file": "test_comprehensive_endpoints.py",
+      "success": true,
+      "duration": 22.38,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "🧪 Comprehensive Endpoint Testing Suite\n==================================================\nTesting all fixed endpoints with different user roles\nBase URL: http://localhost:5000\nTime: 2025-08-21 19:07:42\n==================================================\n\n🧪 Testing Comment Moderation Endpoints...\n  📝 Testing without login...\n    ❌ Comment moderation page (no login): 200 (expected [302, 403])\n    ❌ Approve comment (no login): 200 (expected [302, 403])\n    ❌ Reject comment (no login): 200 (expected [302, 403])\n    ❌ Mark comment as spam (no login): 200 (expected [302, 403])\n    ❌ Delete comment (no login): 200 (expected [302, 403])\n🔐 Logging in as testuser_reg (GENERAL)...\n❌ Login failed for testuser_reg\n🔐 Logging in as admin0 (ADMIN)...\n✅ Login successful as admin0\n  📝 Testing with admin user...\n    ✅ Comment moderation page (admin): 200\n    ✅ Approve comment (admin): 200\n    ✅ Reject comment (admin): 200\n    ✅ Mark comment as spam (admin): 200\n    ✅ Delete comment (admin): 200\n🔓 Logged out admin\n🔐 Logging in as suadmin (SUPERUSER)...\n✅ Login successful as suadmin\n  📝 Testing with superuser...\n    ✅ Comment moderation page (superuser): 200\n    ✅ Approve comment (superuser): 200\n    ✅ Reject comment (superuser): 200\n    ✅ Mark comment as spam (superuser): 200\n    ✅ Delete comment (superuser): 200\n🔓 Logged out superuser\n\n🧪 Testing Rating Management Endpoints...\n  ⭐ Testing without login...\n    ❌ Rating management page (no login): 200 (expected [302, 403])\n    ❌ Rating analytics page (no login): 200 (expected [302, 403])\n    ❌ Delete rating (no login): 200 (expected [302, 403])\n🔐 Logging in as testuser_reg (GENERAL)...\n❌ Login failed for testuser_reg\n🔐 Logging in as admin0 (ADMIN)...\n✅ Login successful as admin0\n  ⭐ Testing with admin user...\n    ✅ Rating management page (admin): 200\n    ✅ Rating analytics page (admin): 200\n    ✅ Delete rating (admin): 200\n🔓 Logged out admin\n🔐 Logging in as suadmin (SUPERUSER)...\n✅ Login successful as suadmin\n  ⭐ Testing with superuser...\n    ✅ Rating management page (superuser): 200\n    ✅ Rating analytics page (superuser): 200\n    ❌ Delete rating (superuser): 500 (expected [200, 403, 404])\n🔓 Logged out superuser\n\n🧪 Testing Ads Management Endpoints...\n  📢 Testing without login...\n    ❌ Ads dashboard (no login): 200 (expected [302, 403])\n    ❌ Campaigns list (no login): 200 (expected [302, 403])\n    ❌ Ads list (no login): 200 (expected [302, 403])\n    ❌ Placements list (no login): 200 (expected [302, 403])\n    ❌ Ads analytics (no login): 200 (expected [302, 403])\n🔐 Logging in as testuser_reg (GENERAL)...\n❌ Login failed for testuser_reg\n🔐 Logging in as admin0 (ADMIN)...\n✅ Login successful as admin0\n  📢 Testing with admin user...\n    ✅ Ads dashboard (admin): 200\n    ✅ Campaigns list (admin): 200\n    ✅ Ads list (admin): 200\n    ✅ Placements list (admin): 200\n    ✅ Ads analytics (admin): 200\n🔓 Logged out admin\n🔐 Logging in as suadmin (SUPERUSER)...\n✅ Login successful as suadmin\n  📢 Testing with superuser...\n    ✅ Ads dashboard (superuser): 200\n    ✅ Campaigns list (superuser): 200\n    ✅ Ads list (superuser): 200\n    ✅ Placements list (superuser): 200\n    ✅ Ads analytics (superuser): 200\n🔓 Logged out superuser\n\n🧪 Testing Analytics Endpoints...\n  📊 Testing without login...\n    ❌ Performance dashboard (no login): 200 (expected [302, 403])\n    ❌ Asset optimization (no login): 200 (expected [302, 403])\n    ❌ SSR optimization (no login): 200 (expected [302, 403])\n    ❌ Visitor stats API (no login): 200 (expected [302, 403])\n    ❌ Content analytics API (no login): 200 (expected [302, 403])\n🔐 Logging in as testuser_reg (GENERAL)...\n❌ Login failed for testuser_reg\n🔐 Logging in as admin0 (ADMIN)...\n✅ Login successful as admin0\n  📊 Testing with admin user...\n    ✅ Performance dashboard (admin): 200\n    ✅ Asset optimization (admin): 200\n    ✅ SSR optimization (admin): 200\n    ✅ Visitor stats API (admin): 200\n    ✅ Content analytics API (admin): 200\n🔓 Logged out admin\n🔐 Logging in as suadmin (SUPERUSER)...\n✅ Login successful as suadmin\n  📊 Testing with superuser...\n    ✅ Performance dashboard (superuser): 200\n    ✅ Asset optimization (superuser): 200\n    ✅ SSR optimization (superuser): 200\n    ✅ Visitor stats API (superuser): 200\n    ✅ Content analytics API (superuser): 200\n🔓 Logged out superuser\n\n🧪 Testing User Management Endpoints...\n  👥 Testing without login...\n    ❌ User management page (no login): 200 (expected [302, 403])\n    ❌ Users API (no login): 200 (expected [302, 403])\n    ❌ Pending registrations API (no login): 200 (expected [302, 403])\n🔐 Logging in as testuser_reg (GENERAL)...\n❌ Login failed for testuser_reg\n🔐 Logging in as admin0 (ADMIN)...\n✅ Login successful as admin0\n  👥 Testing with admin user...\n    ✅ User management page (admin): 200\n    ✅ Users API (admin): 200\n    ✅ Pending registrations API (admin): 200\n🔓 Logged out admin\n🔐 Logging in as suadmin (SUPERUSER)...\n✅ Login successful as suadmin\n  👥 Testing with superuser...\n    ✅ User management page (superuser): 200\n    ✅ Users API (superuser): 200\n    ✅ Pending registrations API (superuser): 200\n🔓 Logged out superuser\n\n🧪 Testing Subscription Endpoints...\n  💳 Testing without login...\n    ❌ Admin subscriptions API (no login): 200 (expected [302, 403])\n🔐 Logging in as testuser_reg (GENERAL)...\n❌ Login failed for testuser_reg\n🔐 Logging in as admin0 (ADMIN)...\n✅ Login successful as admin0\n  💳 Testing with admin user...\n    ❌ Admin subscriptions API (admin): 500 (expected [200, 302])\n🔓 Logged out admin\n🔐 Logging in as suadmin (SUPERUSER)...\n✅ Login successful as suadmin\n  💳 Testing with superuser...\n    ❌ Admin subscriptions API (superuser): 500 (expected [200, 302])\n🔓 Logged out superuser\n\n🧪 Testing SEO Management Endpoints...\n  🔍 Testing without login...\n    ❌ Root SEO management (no login): 200 (expected [302, 403])\n🔐 Logging in as testuser_reg (GENERAL)...\n❌ Login failed for testuser_reg\n🔐 Logging in as admin0 (ADMIN)...\n✅ Login successful as admin0\n  🔍 Testing with admin user...\n    ✅ Root SEO management (admin): 200\n🔓 Logged out admin\n🔐 Logging in as suadmin (SUPERUSER)...\n✅ Login successful as suadmin\n  🔍 Testing with superuser...\n    ✅ Root SEO management (superuser): 200\n🔓 Logged out superuser\n\n==================================================\n✅ Comprehensive endpoint testing completed!\n==================================================\n",
+      "timestamp": "2025-08-21T19:08:04.474398"
+    },
+    {
+      "file": "test_comment_rating_system.py",
+      "success": true,
+      "duration": 0.35,
+      "return_code": 0,
+      "test_cases": 8,
+      "output": "🚀 Starting Comment and Rating System Tests\n==================================================\n🧪 Testing Comment System...\n  📝 Testing GET comments for news...\n    ✅ Success: Found 1 comments\n  📝 Testing GET comments for album...\n    ✅ Success: Found 8 comments\n\n🧪 Testing Rating System...\n  ⭐ Testing GET ratings for news...\n    ✅ Success: Average rating 2.67\n  ⭐ Testing GET ratings for album...\n    ✅ Success: Average rating 3.75\n  📊 Testing GET rating statistics...\n    ✅ Success: Total ratings 5380\n\n🧪 Testing Admin Endpoints...\n  👨‍💼 Testing admin comments page...\n    ✅ Success: Admin comments page accessible\n  👨‍💼 Testing admin ratings page...\n    ✅ Success: Admin ratings page accessible\n  📈 Testing rating analytics page...\n    ✅ Success: Rating analytics page accessible\n\n✅ All tests completed!\n\n📋 Test Summary:\n  - Comment system: API endpoints working\n  - Rating system: API endpoints working\n  - Admin interfaces: Accessible\n\n🎉 Comment and Rating System is ready to use!\n",
+      "timestamp": "2025-08-21T19:08:04.826102"
+    },
+    {
+      "file": "test_weighted_rating_system.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_weighted_rating_system.py\", line 4, in <module>\n    import pytest\nModuleNotFoundError: No module named 'pytest'\n",
+      "timestamp": "2025-08-21T19:08:04.858550"
+    },
+    {
+      "file": "test_redis_connection.py",
+      "success": true,
+      "duration": 0.01,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "🔧 Redis Connection Test\n========================================\n\n🔍 Checking Redis configuration:\n⚠️  Config reader not available, using environment variables\n📋 Current Redis Configuration:\n========================================\nconnection_type: socket\nsocket_path: /home/username/.redis/redis.sock\nhost: localhost\nport: 6379\npassword: None\nsocket_connect_timeout: 2\nsocket_timeout: 2\ntcp_connect_timeout: 2\ntcp_timeout: 2\n========================================\n\n🧪 Testing Redis connection...\n❌ Redis module not installed\n\n⚠️  Redis is not available\nThe application will use simple in-memory caching as fallback.\n\n💡 Solutions:\n1. Edit the configuration file:\n   - Open config/redis_config.txt\n   - Modify REDIS_SOCKET path for your server\n   - Change CONNECTION_TYPE if needed\n\n2. Common socket paths:\n   - DirectAdmin: /home/username/.redis/redis.sock\n   - cPanel: /home/username/.redis/redis.sock\n   - VPS: /var/run/redis/redis.sock\n\n3. For TCP connection:\n   - Set CONNECTION_TYPE=tcp\n   - Configure REDIS_HOST and REDIS_PORT\n\n4. The application will automatically fall back to simple caching\n   when Redis is not available (no action needed)\n\n5. For DirectAdmin hosting:\n   - Contact your hosting provider to enable Redis\n   - Or use a managed Redis service (Redis Cloud, AWS ElastiCache, etc.)\n",
+      "timestamp": "2025-08-21T19:08:04.873532"
+    },
+    {
+      "file": "test_authentication.py",
+      "success": true,
+      "duration": 0.76,
+      "return_code": 0,
+      "test_cases": 15,
+      "output": "🚀 Starting Authentication System Tests\n==================================================\n🧪 Testing User Registration...\n  📝 Testing successful registration...\n    ❌ Failed: 200\n  📝 Testing duplicate username...\n    ✅ Success: Duplicate username properly rejected\n  📝 Testing duplicate email...\n    ✅ Success: Duplicate email properly rejected\n\n🧪 Testing Login/Logout...\n  🔐 Testing login with valid credentials...\n    ❌ Failed: 200\n  🔐 Testing login with invalid credentials...\n    ✅ Success: Invalid credentials properly rejected\n  🔐 Testing logout...\n    ❌ Failed: 200\n\n🧪 Testing Password Change...\n  🔐 Testing password change...\n    ✅ Success: Password change endpoint accessible\n\n🧪 Testing Account Deletion...\n  🗑️ Testing account deletion...\n    ✅ Success: Account deletion endpoint accessible\n\n🧪 Testing Admin Registration Approval...\n  👨‍💼 Testing get pending registrations...\n    ✅ Success: Pending registrations endpoint accessible\n  👨‍💼 Testing approve registration...\n    ✅ Success: Approve registration endpoint accessible\n  👨‍💼 Testing reject registration...\n    ✅ Success: Reject registration endpoint accessible\n  👨‍💼 Testing bulk approve registrations...\n    ✅ Success: Bulk approve endpoint accessible\n  👨‍💼 Testing bulk reject registrations...\n    ✅ Success: Bulk reject endpoint accessible\n\n🧪 Testing Security Features...\n  🛡️ Testing CSRF protection...\n    ❌ Failed: 500\n  🛡️ Testing rate limiting...\n    ✅ Success: Rate limiting active\n\n✅ All authentication tests completed!\n\n📋 Test Summary:\n  - Registration: User registration and validation\n  - Login/Logout: Authentication flow\n  - Password Management: Change and reset functionality\n  - Account Management: Deletion and security\n  - Admin Functions: Registration approval/rejection\n  - Security: CSRF and rate limiting\n\n🎉 Authentication system is ready for production!\n",
+      "timestamp": "2025-08-21T19:08:05.632131"
+    },
+    {
+      "file": "test_cache_system.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "🚀 Starting Cache System Tests\n==================================================\n🧪 Testing Redis Connection...\n    ❌ Error testing Redis connection: No module named 'flask'\n\n🧪 Testing Cache Configuration...\n    ❌ Error testing cache configuration: No module named 'flask'\n\n🧪 Testing Query Caching...\n    ❌ Error testing query caching: No module named 'flask'\n\n🧪 Testing Cache Decorators...\n    ❌ Error testing cache decorators: No module named 'flask'\n\n🧪 Testing Cache Invalidation...\n    ❌ Error testing cache invalidation: No module named 'flask'\n\n🧪 Testing Cache Performance...\n    ❌ Error testing cache performance: No module named 'flask'\n\n🧪 Testing Cache Fallback...\n    ❌ Error testing cache fallback: No module named 'flask'\n\n🧪 Testing Cache Statistics...\n    ❌ Error testing cache statistics: No module named 'flask'\n\n🧪 Testing Cache Compression...\n    ❌ Error testing cache compression: No module named 'flask'\n\n🧪 Testing Cache Security...\n    ❌ Error testing cache security: No module named 'flask'\n\n🧪 Testing Cache Error Handling...\n    ❌ Error testing cache error handling: No module named 'flask'\n\n✅ All cache system tests completed!\n\n📋 Test Summary:\n  - Redis Connection: Basic Redis operations\n  - Cache Configuration: Settings and client creation\n  - Query Caching: Data caching and retrieval\n  - Cache Decorators: Function-level caching\n  - Cache Invalidation: Time-based and manual clearing\n  - Cache Performance: Speed improvements\n  - Cache Fallback: In-memory fallback when Redis is down\n  - Cache Statistics: Hit rates and monitoring\n  - Cache Compression: Large data handling\n  - Cache Security: Sensitive data protection\n  - Cache Error Handling: Exception management\n\n🎉 Cache system is working correctly!\n",
+      "timestamp": "2025-08-21T19:08:05.661128"
+    },
+    {
+      "file": "test_user_management.py",
+      "success": true,
+      "duration": 0.61,
+      "return_code": 0,
+      "test_cases": 19,
+      "output": "🚀 Starting User Management System Tests\n==================================================\n🧪 Testing User CRUD Operations...\n  👥 Testing get all users...\n    ✅ Success: Get users endpoint accessible\n  👥 Testing update user...\n    ✅ Success: Update user endpoint accessible\n  👥 Testing delete user...\n    ✅ Success: Delete user endpoint accessible\n\n🧪 Testing User Verification...\n  ✅ Testing toggle user verification...\n    ✅ Success: Toggle verification endpoint accessible\n  ✅ Testing get verified users settings...\n    ✅ Success: Verified users settings endpoint accessible\n\n🧪 Testing User Status Management...\n  🔄 Testing toggle user status...\n    ✅ Success: Toggle status endpoint accessible\n\n🧪 Testing Role Management...\n  👑 Testing get user role...\n    ✅ Success: Get user role endpoint accessible\n\n🧪 Testing Bulk Operations...\n  🔄 Testing bulk update user status...\n    ✅ Success: Bulk status update endpoint accessible\n  👑 Testing bulk assign role...\n    ✅ Success: Bulk role assignment endpoint accessible\n  ✅ Testing bulk verify users...\n    ✅ Success: Bulk verify endpoint accessible\n  ⏸️ Testing bulk suspend users...\n    ✅ Success: Bulk suspend endpoint accessible\n  🗑️ Testing bulk delete users...\n    ✅ Success: Bulk delete endpoint accessible\n  📤 Testing bulk export users...\n    ✅ Success: Bulk export endpoint accessible\n\n🧪 Testing Performance Tracking...\n  📊 Testing get user performance...\n    ✅ Success: User performance endpoint accessible\n  🏆 Testing get performance leaderboard...\n    ✅ Success: Performance leaderboard endpoint accessible\n  📈 Testing get performance report...\n    ✅ Success: Performance report endpoint accessible\n  📤 Testing export performance report...\n    ✅ Success: Export performance report endpoint accessible\n  📤 Testing export user performance...\n    ✅ Success: Export user performance endpoint accessible\n\n🧪 Testing Permission System...\n  🔒 Testing admin-only endpoints...\n    ✅ Success: Admin access granted\n  🔒 Testing superuser protection...\n    ❌ Unexpected: 200\n\n✅ All user management tests completed!\n\n📋 Test Summary:\n  - CRUD Operations: Create, read, update, delete users\n  - Verification: User verification system\n  - Status Management: User activation/deactivation\n  - Role Management: Role assignment and permissions\n  - Bulk Operations: Mass user operations\n  - Performance Tracking: User analytics and reports\n  - Permission System: Access control and security\n\n🎉 User management system is ready for production!\n",
+      "timestamp": "2025-08-21T19:08:06.269535"
+    },
+    {
+      "file": "test_ads_system.py",
+      "success": true,
+      "duration": 0.28,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "🚀 Starting Ads System Tests\n==================================================\n🧪 Testing Ads API Endpoints...\n  📡 Testing ads API...\n    ✅ API working: 0 ads found\n  🗄️ Testing ads dashboard...\n    ✅ Ads dashboard accessible\n\n🧪 Testing Ads Injection System...\n  📄 Testing page: /\n    ✅ API Response: 0 ads found\n  📄 Testing page: /news\n    ✅ API Response: 0 ads found\n  📄 Testing page: /albums\n    ✅ API Response: 0 ads found\n\n🧪 Testing Ads Campaigns...\n  🎯 Testing campaigns endpoint...\n    ✅ Campaigns page accessible\n  📢 Testing ads management...\n    ✅ Ads management page accessible\n\n🧪 Testing Ads Placements...\n  📍 Testing placements endpoint...\n    ✅ Placements page accessible\n  📊 Testing analytics endpoint...\n    ✅ Analytics page accessible\n\n🧪 Testing Ads Performance...\n  ⚡ Testing response time...\n    ✅ API response time: 0.004s\n    ✅ Response time is acceptable (< 1s)\n\n🧪 Testing Ads Error Handling...\n  ⚠️ Testing invalid page type...\n    ⚠️ Invalid page type not properly handled\n  ⚠️ Testing missing parameters...\n    ⚠️ Missing parameters returned: 200\n\n✅ All ads system tests completed!\n\n📋 Test Summary:\n  - API Endpoints: Basic ads API functionality\n  - Injection System: Ads injection across different pages\n  - Campaigns: Campaign management functionality\n  - Placements: Placement management and analytics\n  - Performance: Response time and performance testing\n  - Error Handling: Invalid inputs and error scenarios\n\n🌐 Manual Testing Instructions:\n  1. Visit http://localhost:5000 and refresh multiple times\n  2. Check browser console (F12) for ads injection logs\n  3. Look for ads in different positions and sections\n  4. Test on different devices (mobile/desktop)\n  5. Visit /ads/dashboard for admin interface\n  6. Visit /ads/analytics for performance metrics\n\n🎉 Ads system is ready for testing!\n",
+      "timestamp": "2025-08-21T19:08:06.553668"
+    },
+    {
+      "file": "test_premium_content_system.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_premium_content_system.py\", line 16, in <module>\n    from flask import Flask\nModuleNotFoundError: No module named 'flask'\n",
+      "timestamp": "2025-08-21T19:08:06.582888"
+    },
+    {
+      "file": "test_user_account_management.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_user_account_management.py\", line 7, in <module>\n    import pytest\nModuleNotFoundError: No module named 'pytest'\n",
+      "timestamp": "2025-08-21T19:08:06.612375"
+    },
+    {
+      "file": "test_unified_news.py",
+      "success": true,
+      "duration": 0.73,
+      "return_code": 0,
+      "test_cases": 0,
+      "output": "Testing unified news API...\n==================================================\n✅ General news: PASSED\n   - Type: general\n   - Total count: 2339\n   - Results: 12\n\n✅ Hypes (popular content): PASSED\n   - Type: hypes\n   - Total count: 2335\n   - Results: 12\n\n✅ Articles only: PASSED\n   - Type: articles\n   - Total count: 728\n   - Results: 12\n\n✅ Utama (main news): PASSED\n   - Type: utama\n   - Total count: 225\n   - Results: 12\n\n✅ Search with query: PASSED\n   - Type: general\n   - Total count: 618\n   - Results: 12\n\n✅ Category filter: PASSED\n   - Type: general\n   - Total count: 100\n   - Results: 12\n\n✅ Tag filter: PASSED\n   - Type: general\n   - Total count: 9\n   - Results: 9\n\n✅ Sort by popularity: PASSED\n   - Type: general\n   - Total count: 2339\n   - Results: 12\n\nTesting URL redirects...\n==================================================\n❌ Redirect /hypes: FAILED\n   - Expected: /news?type=hypes\n   - Got: /news?type=news\n\n✅ Redirect /articles: PASSED\n   - Redirects to: /news?type=articles\n\n✅ Redirect /utama: PASSED\n   - Redirects to: /news?type=utama\n\n✅ Redirect /search?q=test: PASSED\n   - Redirects to: /news?q=test\n\n✅ Redirect /search?category=tech: PASSED\n   - Redirects to: /news?category=tech\n\n✅ Redirect /search?tag=news: PASSED\n   - Redirects to: /news?tag=news\n\n",
+      "timestamp": "2025-08-21T19:08:07.339324"
+    },
+    {
+      "file": "test_brand_image_optimization.py",
+      "success": false,
+      "duration": 0.17,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "🧪 Testing Brand Image Optimization...\nTraceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_brand_image_optimization.py\", line 162, in <module>\n    test_brand_image_optimization()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/home/azzar/project/exposeur/test/test_brand_image_optimization.py\", line 46, in test_brand_image_optimization\n    from routes.routes_helper import save_brand_asset_file\n  File \"/home/azzar/project/exposeur/routes/__init__.py\", line 1, in <module>\n    from .common_imports import *\n  File \"/home/azzar/project/exposeur/routes/common_imports.py\", line 1, in <module>\n    from flask import (\n    ...<10 lines>...\n    )\nModuleNotFoundError: No module named 'flask'\n",
+      "timestamp": "2025-08-21T19:08:07.512572"
+    },
+    {
+      "file": "test_database_models.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_database_models.py\", line 9, in <module>\n    import pytest\nModuleNotFoundError: No module named 'pytest'\n",
+      "timestamp": "2025-08-21T19:08:07.543814"
+    },
+    {
+      "file": "test_asset_optimization_dashboard.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_asset_optimization_dashboard.py\", line 10, in <module>\n    from optimizations.asset_optimization import get_asset_optimizer, get_asset_stats\n  File \"/home/azzar/project/exposeur/optimizations/__init__.py\", line 6, in <module>\n    from .cache_config import (\n    ...<9 lines>...\n    )\n  File \"/home/azzar/project/exposeur/optimizations/cache_config.py\", line 8, in <module>\n    from flask import request, current_app\nModuleNotFoundError: No module named 'flask'\n",
+      "timestamp": "2025-08-21T19:08:07.574318"
+    },
+    {
+      "file": "test_seo_leveling.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_seo_leveling.py\", line 14, in <module>\n    from main import app\n  File \"/home/azzar/project/exposeur/main.py\", line 1, in <module>\n    from flask import (\n    ...<5 lines>...\n    )\nModuleNotFoundError: No module named 'flask'\n",
+      "timestamp": "2025-08-21T19:08:07.605431"
+    },
+    {
+      "file": "test_ads_premium_detector.py",
+      "success": false,
+      "duration": 0.03,
+      "return_code": 1,
+      "test_cases": 0,
+      "output": "Traceback (most recent call last):\n  File \"/home/azzar/project/exposeur/test/test_ads_premium_detector.py\", line 17, in <module>\n    from flask import Flask\nModuleNotFoundError: No module named 'flask'\n",
+      "timestamp": "2025-08-21T19:08:07.634891"
+    }
+  ]
+}

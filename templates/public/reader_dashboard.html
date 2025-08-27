@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+    <!-- Welcome / Hero -->
+    <div class="bg-card border border-border rounded-lg p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Halo, {{ user.first_name or user.username }} 👋</h1>
+                <p class="mt-2 text-muted-foreground">Selamat datang kembali. Lanjutkan membaca atau jelajahi konten terbaru.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('main.news') }}" class="button button-primary button-md">Lihat Berita</a>
+                <a href="{{ url_for('main.user_account_settings') }}" class="button button-outline button-md">Pengaturan Akun</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: Quick actions and suggestions -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
+                <h2 class="text-lg font-semibold">Aksi Cepat</h2>
+                <p class="mt-1 text-sm text-muted-foreground">Pilih salah satu untuk mulai menjelajah.</p>
+                <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a href="{{ url_for('main.news') }}" class="group block bg-background border border-border rounded-lg p-5 hover:border-primary transition-colors">
+                        <div class="flex items-start gap-3">
+                            <div class="text-primary mt-0.5"><i class="fa-regular fa-newspaper"></i></div>
+                            <div>
+                                <h3 class="font-medium group-hover:text-primary">Berita Terbaru</h3>
+                                <p class="text-sm text-muted-foreground mt-1">Artikel aktual dan terkini.</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.videos') }}" class="group block bg-background border border-border rounded-lg p-5 hover:border-primary transition-colors">
+                        <div class="flex items-start gap-3">
+                            <div class="text-primary mt-0.5"><i class="fa-solid fa-play"></i></div>
+                            <div>
+                                <h3 class="font-medium group-hover:text-primary">Video</h3>
+                                <p class="text-sm text-muted-foreground mt-1">Tonton konten pilihan.</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.gallery') }}" class="group block bg-background border border-border rounded-lg p-5 hover:border-primary transition-colors">
+                        <div class="flex items-start gap-3">
+                            <div class="text-primary mt-0.5"><i class="fa-solid fa-images"></i></div>
+                            <div>
+                                <h3 class="font-medium group-hover:text-primary">Galeri</h3>
+                                <p class="text-sm text-muted-foreground mt-1">Jelajahi gambar terbaru.</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('main.user_account_settings') }}" class="group block bg-background border border-border rounded-lg p-5 hover:border-primary transition-colors">
+                        <div class="flex items-start gap-3">
+                            <div class="text-primary mt-0.5"><i class="fa-solid fa-circle-user"></i></div>
+                            <div>
+                                <h3 class="font-medium group-hover:text-primary">Akun Saya</h3>
+                                <p class="text-sm text-muted-foreground mt-1">Kelola profil dan preferensi.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reading Tips / Empty state -->
+            <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
+                <h2 class="text-lg font-semibold">Mulai Membaca</h2>
+                <div class="prose prose-sm max-w-none mt-3 text-muted-foreground">
+                    <p>Cari topik favorit Anda di halaman berita, simpan artikel untuk dibaca nanti, dan nikmati pengalaman membaca tanpa distraksi.</p>
+                </div>
+                <div class="mt-4">
+                    <a href="{{ url_for('main.news') }}" class="button button-primary button-md">Jelajahi Berita</a>
+                </div>
+            </div>
+            <!-- Reading History (async filled) -->
+            <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold">Riwayat Bacaan</h2>
+                    <a href="{{ url_for('main.news') }}" class="text-sm text-primary hover:underline">Lihat semua</a>
+                </div>
+                <div id="reading-history" class="mt-4 space-y-4 text-sm text-muted-foreground">
+                    <p>Sedang memuat...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Account summary -->
+        <aside class="space-y-6">
+            <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
+                <h2 class="text-lg font-semibold">Ringkasan Akun</h2>
+                <dl class="mt-4 space-y-3 text-sm">
+                    <div class="flex items-center justify-between">
+                        <dt class="text-muted-foreground">Nama</dt>
+                        <dd class="font-medium">{{ (user.first_name ~ ' ' ~ user.last_name)|trim or user.username }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-muted-foreground">Email</dt>
+                        <dd class="font-medium">{{ user.email or '-' }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-muted-foreground">Status</dt>
+                        <dd class="font-medium">{{ 'Premium' if user.has_premium_access else 'Standar' }}</dd>
+                    </div>
+                </dl>
+                <div class="mt-5 flex gap-3">
+                    <a href="{{ url_for('main.user_account_settings') }}" class="button button-outline button-sm">Kelola Akun</a>
+                    <a href="{{ url_for('main.logout') }}" class="button button-ghost button-sm text-destructive">Logout</a>
+                </div>
+            </div>
+            <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
+                <h2 class="text-lg font-semibold">Rekomendasi</h2>
+                <p class="mt-2 text-sm text-muted-foreground">Lihat konten populer dari pembaca lain.</p>
+                <div class="mt-4">
+                    <a href="{{ url_for('main.news') }}" class="text-primary hover:underline">Jelajahi konten populer →</a>
+                </div>
+            </div>
+        </aside>
+    </div>
+</section>
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/api/reading-history');
+    if (!res.ok) throw new Error('Failed');
+    const items = await res.json();
+    const wrap = document.getElementById('reading-history');
+    if (!items || items.length === 0) {
+      wrap.innerHTML = '<p class="text-muted-foreground">Belum ada riwayat bacaan.</p>';
+      return;
+    }
+    const toUrl = (t, id) => t === 'news' ? `{{ url_for('main.news_detail', news_id=0, news_title='slug') }}`.replace('/0/slug', `/${id}/placeholder`) : `{{ url_for('main.album_detail', album_id=0, album_title='slug') }}`.replace('/0/slug', `/${id}/placeholder`);
+    wrap.innerHTML = items.slice(0, 6).map(it => `
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-accent text-accent-foreground text-xs">${it.content_type === 'news' ? 'N' : 'A'}</span>
+          <span class="text-foreground">${it.content_type} #${it.content_id}</span>
+        </div>
+        <a href="${toUrl(it.content_type, it.content_id)}" class="text-primary hover:underline">Buka</a>
+      </div>`).join('');
+  } catch (e) {
+    document.getElementById('reading-history').innerHTML = '<p class="text-destructive">Gagal memuat riwayat.</p>';
+  }
+});
+</script>
+{% endblock %}
+{% endblock %}
+
+

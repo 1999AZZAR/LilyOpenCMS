@@ -1,0 +1,638 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ brand_info.brand_name|default('LilyOpenCMS') }} - {{ chapter.chapter_title }} - {{ album.title }}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/comment-rating.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/premium-content.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chapter-reader.css') }}">
+<script>window.__ADS_ALLOWED__ = true;</script>
+{% endblock %}
+
+{% block content %}
+<!-- Chapter Navigation Header -->
+<div class="chapter-navigation">
+  <div class="container mx-auto px-4 sm:px-6 py-4">
+    <div class="flex items-center justify-between">
+      <!-- Album Info -->
+      <div class="flex items-center space-x-4">
+        <a href="{{ url_for('main.album_detail', album_id=album.id, album_title=album.title|replace(' ', '-')|lower) }}" 
+           class="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          {{ album.title }}
+        </a>
+        <span class="text-muted-foreground">/</span>
+        <span class="text-sm font-medium text-foreground">{{ chapter.chapter_title }}</span>
+      </div>
+      
+      <!-- Chapter Progress -->
+      <div class="flex items-center space-x-4">
+        <div class="text-sm text-muted-foreground">
+          Bab {{ chapter.chapter_number }} dari {{ all_chapters|length }}
+        </div>
+        <div class="w-32">
+          <div class="chapter-progress">
+            <div class="chapter-progress-bar" style="width: {{ ((current_index + 1) / all_chapters|length) * 100 }}%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Navigation Buttons -->
+      <div class="flex items-center space-x-2">
+        <a href="{{ url_for('main.chapter_reader', album_id=album.id, chapter_id=prev_chapter.id, chapter_title=prev_chapter.chapter_title|replace(' ', '-')|lower) if prev_chapter else '#' }}" 
+           class="navigation-button inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+           {% if not prev_chapter %}disabled{% endif %}>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Sebelumnya
+        </a>
+        
+        <a href="{{ url_for('main.chapter_reader', album_id=album.id, chapter_id=next_chapter.id, chapter_title=next_chapter.chapter_title|replace(' ', '-')|lower) if next_chapter else '#' }}" 
+           class="navigation-button inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+           {% if not next_chapter %}disabled{% endif %}>
+          Selanjutnya
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 ml-1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Article Content -->
+      <div class="lg:col-span-2">
+        <article class="max-w-none" role="article" itemscope itemtype="http://schema.org/Article">
+          <!-- Chapter Header -->
+          <header class="mb-8">
+            <h1 id="chapter-title" class="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight" itemprop="headline">
+              {{ chapter.chapter_title }}
+            </h1>
+            
+            <!-- Chapter Meta -->
+            <div class="text-sm text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border pb-4 mb-4">
+              <span class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.414M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Bab {{ chapter.chapter_number }}
+              </span>
+              <span class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {{ news.read_count | default(0) }} kali dibaca
+              </span>
+              {% if news.age_rating %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">{{ news.age_rating }}</span>
+              {% endif %}
+              {% if news.date %}
+              <time datetime="{{ news.date.isoformat() }}" class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+                {{ news.date.strftime('%d %b %Y, %H:%M') }} WIB
+              </time>
+              {% endif %}
+            </div>
+          </header>
+
+          <!-- Featured Image -->
+          {% if news.image %}
+          <figure id="featured-image-trigger" class="w-full aspect-video mb-8 lg:mb-10 overflow-hidden rounded-lg bg-secondary shadow-md cursor-pointer group" role="figure" aria-label="Featured image" aria-describedby="featured-image-caption">
+            <figcaption id="featured-image-caption" class="sr-only">{{ news.title | default('Featured image') | e }}</figcaption>
+            {% set img_src = url_for('static', filename='pic/placeholder.png') %}
+            {% set img_alt = news.title | default('Gambar Berita') | e %}
+            {% if news.image.url %}
+              {% set img_src = news.image.url %}
+            {% elif news.image.filepath %}
+              {% set rel_path = news.image.filepath.split('static/')[-1] %}
+              {% set img_src = url_for('static', filename=rel_path) %}
+            {% endif %}
+            <div class="relative w-full h-full">
+                <img src="{{ url_for('static', filename='pic/placeholder.png') }}"
+                     data-src="{{ img_src }}"
+                     alt="{{ img_alt }}"
+                     class="lazy w-full h-full object-cover"
+                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='pic/placeholder.png') | e }}'; this.classList.add('loaded');">
+            </div>
+          </figure>
+          {% endif %}
+
+          <!-- Premium Content Stats -->
+          {% if is_premium_content %}
+          <div class="premium-content-stats">
+            <div class="stat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.414M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Konten Premium</span>
+            </div>
+            <div class="stat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              <span>{{ content_stats.total_words }} kata</span>
+            </div>
+            {% if news.age_rating %}
+            <div class="stat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M12 3l8.66 5v8L12 21 3.34 16V8L12 3z" />
+              </svg>
+              <span>{{ news.age_rating }}</span>
+            </div>
+            {% endif %}
+            {% if is_truncated %}
+            <div class="stat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 0V3.375c0-.621.504-1.125 1.125-1.125h18.75c.621 0 1.125.504 1.125 1.125v2.25m-21 0V18.375c0 .621.504 1.125 1.125 1.125h18.75c.621 0 1.125-.504 1.125-1.125V5.625m-21 0h3.75" />
+              </svg>
+              <span>Dipotong</span>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Article Content Area -->
+          <div class="premium-content-container {% if is_truncated %}truncated{% endif %}">
+            {# Use Tailwind Prose for styling HTML generated from Markdown #}
+            {# Adjust prose colors (e.g., prose-slate) and dark mode (dark:prose-invert) as needed #}
+            {# Use prose modifiers (prose-headings:text-...) to align with theme colors #}
+            <div id="article-body" role="article" aria-labelledby="chapter-title"
+                 class="prose prose-lg text-foreground dark:prose-invert
+                        prose-headings:font-semibold prose-headings:mt-6 prose-headings:mb-4
+                        prose-h1:text-3xl prose-h2:text-2xl prose-h2:border-b prose-h2:pb-2 prose-h3:text-xl
+                        prose-p:leading-relaxed prose-p:mb-5
+                        prose-a:text-primary hover:prose-a:underline prose-a:break-words
+                        prose-strong:text-foreground
+                        prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:my-6 prose-blockquote:py-2
+                        prose-ul:list-disc prose-ul:list-inside prose-ul:mb-5 prose-ul:pl-4 prose-ul:space-y-2
+                        prose-ol:list-decimal prose-ol:list-inside prose-ol:mb-5 prose-ol:pl-4 prose-ol:space-y-2
+                        prose-img:rounded-lg prose-img:my-6 prose-img:max-w-full prose-img:h-auto prose-img:shadow-md
+                        prose-table:w-full prose-table:border-collapse prose-table:border prose-table:border-border prose-table:my-6 prose-table:text-sm
+                        prose-th:border prose-th:border-border prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:bg-secondary prose-th:font-semibold
+                        prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-td:text-left
+                        prose-hr:border-border prose-hr:my-8
+                        prose-code:bg-secondary prose-code:text-sm prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                        prose-pre:bg-secondary prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:text-sm prose-pre:my-6 prose-pre:font-mono
+                        prose-pre:code:bg-transparent prose-pre:code:p-0 prose-pre:code:rounded-none
+                        max-w-none
+                        {% if is_premium_content %}premium-content{% endif %}"> {# max-w-none allows it to fill the parent article container #}
+              {{ html_content | safe }} {# Render the pre-converted HTML from the route #}
+            </div>
+            
+            <!-- Content Mask Overlay for Premium Content -->
+            {% if is_premium_content and is_truncated %}
+            <div id="content-mask-{{ news.id }}" class="content-mask-overlay">
+              <div class="content-mask-backdrop"></div>
+              <div class="content-mask-content">
+                <div class="content-mask-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-12 h-12">
+                    <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.937 6.937 0 006.222 6.222.75.75 0 00.859-.584 48.332 48.332 0 001.243-5.034 48.332 48.332 0 005.034-1.243.75.75 0 00.584-.859 6.937 6.937 0 00-6.222-6.222.75.75 0 00-.859.584 48.332 48.332 0 00-1.243 5.034zM13.5 2.25a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM13.5 6.75a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V7.5a.75.75 0 01.75-.75zM13.5 11.25a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V12a.75.75 0 01.75-.75z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-foreground mb-2">Konten Premium</h3>
+                <p class="text-muted-foreground text-center mb-4">Untuk membaca bab ini secara lengkap, Anda memerlukan langganan premium.</p>
+                <div class="premium-content-buttons">
+                  <a href="{{ url_for('main.premium') }}" class="button button-primary">
+                    Berlangganan Premium
+                  </a>
+                  <a href="{{ url_for('main.login') }}" class="button button-outline">
+                    Login
+                  </a>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </article>
+      </div>
+      
+      <!-- Sidebar: Chapter List, Rating, Comments, Share -->
+      <div class="lg:col-span-1">
+        <div class="space-y-6 sticky top-20">
+          <!-- Chapter List (First - Most Accessible) -->
+          <div class="bg-card rounded-lg border border-border p-6">
+            <h2 class="text-lg font-semibold text-foreground mb-4">Daftar Bab</h2>
+            <div class="chapter-list-sidebar">
+              {% for ch in all_chapters %}
+              <a href="{{ url_for('main.chapter_reader', album_id=album.id, chapter_id=ch.id, chapter_title=ch.chapter_title|replace(' ', '-')|lower) }}" 
+                 class="chapter-item block p-3 rounded-lg hover:bg-secondary transition-colors mb-2 {% if ch.id == chapter.id %}current{% endif %}">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-medium text-foreground line-clamp-1">{{ ch.chapter_title }}</h3>
+                    <p class="text-sm text-muted-foreground">Bab {{ ch.chapter_number }}</p>
+                  </div>
+                  {% if ch.id == chapter.id %}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-primary">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {% else %}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-muted-foreground">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                  {% endif %}
+                </div>
+              </a>
+              {% endfor %}
+            </div>
+            <div class="mt-6 pt-6 border-t border-border">
+              <div class="text-center">
+                <a href="{{ url_for('main.album_detail', album_id=album.id, album_title=album.title|replace(' ', '-')|lower) }}" 
+                   class="text-sm text-primary hover:underline">
+                  Kembali ke Album
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          {% if brand_info and brand_info.enable_ratings %}
+          <!-- Combined Rating Section (Chapter + Album) -->
+          <div class="bg-card rounded-lg border border-border p-6">
+            <h2 class="text-xl font-semibold text-foreground mb-4">Rating</h2>
+            
+            <!-- Chapter Rating Section (Primary - Current Chapter) -->
+            <div class="mb-6">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-medium text-foreground">Rating Bab</h3>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                  Bab Saat Ini
+                </span>
+              </div>
+              <div data-content-type="news" data-content-id="{{ news.id }}" data-rating-instance="news-{{ news.id }}">
+                <div class="rating-display mb-4">
+                  <!-- Loading state -->
+                  <div class="rating-loading">
+                    <div class="flex items-center justify-center mb-4">
+                      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      <span class="ml-3 text-muted-foreground">Memuat rating...</span>
+                    </div>
+                  </div>
+                  <!-- Rating statistics will be loaded here -->
+                </div>
+                <div class="star-rating-container text-center">
+                  <!-- Loading state for star rating -->
+                  <div class="star-rating-loading">
+                    <div class="flex justify-center space-x-2 mb-4">
+                      {% for i in range(1, 6) %}
+                      <button class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors duration-200" disabled>★</button>
+                      {% endfor %}
+                    </div>
+                    <p class="text-sm text-muted-foreground">Memuat rating...</p>
+                  </div>
+                  <!-- Star rating interface will be loaded here -->
+                </div>
+              </div>
+            </div>
+            
+            <!-- Divider -->
+            <div class="border-t border-border mb-6"></div>
+            
+            <!-- Album Rating Section (Secondary) -->
+            <div>
+              <h3 class="text-sm font-medium text-muted-foreground mb-3">Rating Album</h3>
+              <div data-content-type="album" data-content-id="{{ album.id }}" data-rating-instance="album-{{ album.id }}">
+                <div class="rating-display mb-4">
+                  <!-- Loading state -->
+                  <div class="rating-loading">
+                    <div class="flex items-center justify-center mb-4">
+                      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      <span class="ml-2 text-sm text-muted-foreground">Memuat rating...</span>
+                    </div>
+                  </div>
+                  <!-- Rating statistics will be loaded here -->
+                </div>
+                <div class="star-rating-container text-center">
+                  <!-- Loading state for star rating -->
+                  <div class="star-rating-loading">
+                    <div class="flex justify-center space-x-1 mb-3">
+                      {% for i in range(1, 6) %}
+                      <button class="star-btn text-xl text-gray-300 hover:text-yellow-400 transition-colors duration-200" disabled>★</button>
+                      {% endfor %}
+                    </div>
+                    <p class="text-xs text-muted-foreground">Memuat rating...</p>
+                  </div>
+                  <!-- Star rating interface will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          
+          {% if brand_info and brand_info.enable_comments %}
+          <!-- Comments Section (Unified, Inline Form) -->
+          <div class="bg-card rounded-lg border border-border p-6" data-content-type="news" data-content-id="{{ news.id }}">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-foreground">Komentar</h2>
+              {% if current_user.is_authenticated %}
+              <button id="add-comment-btn" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Tambah Komentar
+              </button>
+              {% else %}
+              <a href="{{ url_for('main.login') }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Masuk untuk Berkomentar
+              </a>
+              {% endif %}
+            </div>
+            <!-- Inline Comment Form (Hidden by default) -->
+            <div id="inline-comment-form" class="hidden mb-4 p-4 bg-muted/30 rounded-lg border border-border">
+              <form class="comment-form">
+                <div class="form-group">
+                  <textarea class="form-control comment-content w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" rows="4" placeholder="Tulis komentar Anda di sini..." required></textarea>
+                  </div>
+                <div class="flex gap-3 mt-3">
+                  <button type="submit" class="btn btn-primary comment-submit-btn px-4 py-2 text-sm">Kirim Komentar</button>
+                  <button type="button" id="cancel-comment" class="btn btn-secondary px-4 py-2 text-sm">Batal</button>
+                </div>
+              </form>
+            </div>
+            <div class="comments-container">
+              <!-- Comments will be loaded here -->
+            </div>
+            <div class="comments-pagination mt-4">
+              <!-- Auto-loading will handle pagination automatically -->
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Share Section (Unified) -->
+          <div class="bg-card rounded-lg border border-border p-6" role="region" aria-label="Share options">
+            <h2 class="text-lg font-semibold text-foreground mb-4">Bagikan Bab</h2>
+            <p id="total-share-count" class="text-sm text-muted-foreground mb-4">
+              Total dibagikan: <span class="font-semibold text-primary">0</span> kali
+            </p>
+            <div class="share-buttons-container grid grid-cols-3 gap-3" role="toolbar" aria-label="Social media sharing options">
+                <!-- WhatsApp -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on WhatsApp">
+                    <button data-platform="whatsapp" title="Bagikan ke WhatsApp"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#128C7E]">
+                        <i class="fab fa-whatsapp text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="whatsapp">0</span>
+                </div>
+                <!-- Facebook -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Facebook">
+                    <button data-platform="facebook" title="Bagikan ke Facebook"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1877F2] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0C53A7]">
+                        <i class="fab fa-facebook-f text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="facebook">0</span>
+                </div>
+                <!-- Twitter/X -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Twitter">
+                    <button data-platform="twitter" title="Bagikan ke Twitter/X"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1DA1F2] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0A84D0]">
+                        <i class="fab fa-twitter text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="twitter">0</span>
+                </div>
+                <!-- Instagram -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Instagram">
+                    <button data-platform="instagram" title="Bagikan ke Instagram"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-pink-600">
+                        <i class="fab fa-instagram text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="instagram">0</span>
+                </div>
+                <!-- Bluesky -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Bluesky">
+                    <button data-platform="bluesky" title="Bagikan ke Bluesky"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#007AFF] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0056B3]">
+                        <i class="fas fa-cloud text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="bluesky">0</span>
+                </div>
+                <!-- Copy Link -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Copy link">
+                    <button data-platform="clipboard" title="Salin Tautan"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/80 hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary">
+                        <i class="fas fa-copy text-lg"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="clipboard">0</span>
+                </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="border-t border-border bg-card">
+  <div class="container mx-auto px-4 sm:px-6 py-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        {% if prev_chapter %}
+        <a href="{{ url_for('main.chapter_reader', album_id=album.id, chapter_id=prev_chapter.id, chapter_title=prev_chapter.chapter_title|replace(' ', '-')|lower) }}" 
+           class="navigation-button inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Bab {{ prev_chapter.chapter_number }}: {{ prev_chapter.chapter_title }}
+        </a>
+        {% endif %}
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        {% if next_chapter %}
+        <a href="{{ url_for('main.chapter_reader', album_id=album.id, chapter_id=next_chapter.id, chapter_title=next_chapter.chapter_title|replace(' ', '-')|lower) }}" 
+           class="navigation-button inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+          Bab {{ next_chapter.chapter_number }}: {{ next_chapter.chapter_title }}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 ml-2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Featured Image Modal -->
+<div id="featured-image-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-[60] opacity-0 transition-opacity duration-300" onclick="closeFeaturedImageModalOnClickOutside(event)" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description">
+  <div class="relative overflow-hidden rounded-lg shadow-xl flex items-center justify-center h-full" role="document">
+        <h3 id="modal-title" class="sr-only">Gambar Utama Bab</h3>
+        <p id="modal-description" class="sr-only">Tampilan ukuran penuh dari gambar bab</p>
+    {# Image container with rounded corners #}
+    <div class="relative shadow-xl rounded-lg overflow-hidden"> {# Added rounded-lg and overflow-hidden here #}
+      <img id="modal-featured-image" src="" alt="" class="block w-full h-auto max-h-[90vh] object-contain" role="img" aria-label="Featured image"> {# Removed rounded-lg from image #}
+      {# Download button (Top left) #}
+      <a id="modal-featured-download" href="#" download="featured_image.jpg" class="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center bg-black/50 text-white rounded-full shadow-lg hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Unduh gambar" title="Unduh Gambar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+      </a>
+      {# Close button (Top right) - Moved inside relative container #}
+      <button onclick="closeFeaturedImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white rounded-full p-2" aria-label="Close image">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2 z-50"></div>
+
+  {# Embedded Chapter Reader JS Logic #}
+  <script>
+    window.chapterId = {{ chapter.id | default('null') | tojson }};
+    window.newsId = {{ news.id | default('null') | tojson }};
+    window.albumId = {{ album.id | default('null') | tojson }};
+    window.chapterTitle = {{ chapter.chapter_title | default('Bab Ini') | tojson }};
+    window.albumTitle = {{ album.title | default('Album Ini') | tojson }};
+    window.chapterUrl = window.location.href;
+    
+    // User context for comment and rating system
+    window.currentUserId = {{ current_user.id if current_user.is_authenticated else 'null' | tojson }};
+    window.currentUserRole = {{ current_user.role.value if current_user.is_authenticated else 'null' | tojson }};
+  </script>
+  
+  <!-- Load JavaScript files -->
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/premium-content.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/comment-system.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rating-system.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/featured-image-modal.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/share.js') }}"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // --- Initialize Featured Image Modal ---
+      if (typeof initializeFeaturedImageModal === 'function') {
+        initializeFeaturedImageModal(console);
+        // Patch: Use data-src for modal if present
+        const trigger = document.getElementById('featured-image-trigger');
+        if (trigger) {
+          trigger.addEventListener('click', function() {
+            const mainImg = trigger.querySelector('img');
+            if (mainImg && mainImg.dataset && mainImg.dataset.src) {
+              // If lazy loaded, set modal to data-src
+              const modalImg = document.getElementById('modal-featured-image');
+              const downloadBtn = document.getElementById('modal-featured-download');
+              if (modalImg && downloadBtn) {
+                modalImg.src = mainImg.dataset.src;
+                modalImg.alt = mainImg.alt || 'Featured Image';
+                downloadBtn.href = mainImg.dataset.src;
+                downloadBtn.download = (mainImg.dataset.src.split('/').pop() || 'featured_image.jpg').split('?')[0];
+              }
+            }
+          }, {capture: true});
+        }
+      }
+
+      // --- Initialize Share Buttons ---
+      if (typeof initializeSharing === 'function') {
+        initializeSharing({
+          id: window.newsId,
+          title: window.chapterTitle,
+          url: window.chapterUrl,
+          type: 'news'
+        }, console);
+      }
+
+      // --- Initialize Comment and Rating Systems ---
+      if (typeof CommentSystem !== 'undefined' && window.newsId) {
+        window.commentSystem = new CommentSystem('news', window.newsId, {
+          autoLoad: true,
+          perPage: 12,
+          autoLoadMore: true,
+          loadMoreThreshold: 0.8
+        });
+      }
+
+      // Rating system will be auto-initialized by the rating-system.js
+      // The rating instances are already properly set up with data-rating-instance attributes
+      
+      // Ensure proper error handling for rating systems
+      setTimeout(() => {
+        const ratingInstances = document.querySelectorAll('[data-rating-instance]');
+        ratingInstances.forEach(instance => {
+          const instanceId = instance.dataset.ratingInstance;
+          if (!window[instanceId.replace(/[^a-zA-Z0-9]/g, '_')]) {
+            console.warn(`Rating system not initialized for instance: ${instanceId}`);
+          }
+        });
+      }, 1000);
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        if (e.key === 'ArrowLeft' && {{ 'true' if prev_chapter else 'false' }}) {
+          window.location.href = '{{ url_for("main.chapter_reader", album_id=album.id, chapter_id=prev_chapter.id, chapter_title=prev_chapter.chapter_title|replace(" ", "-")|lower) if prev_chapter else "#" }}';
+        } else if (e.key === 'ArrowRight' && {{ 'true' if next_chapter else 'false' }}) {
+          window.location.href = '{{ url_for("main.chapter_reader", album_id=album.id, chapter_id=next_chapter.id, chapter_title=next_chapter.chapter_title|replace(" ", "-")|lower) if next_chapter else "#" }}';
+        }
+      });
+      
+      // Auto-scroll to top when chapter changes
+      window.scrollTo(0, 0);
+      
+      // Inline Comment Form Functionality
+      const inlineCommentForm = document.getElementById('inline-comment-form');
+      const addCommentBtn = document.getElementById('add-comment-btn');
+      const cancelComment = document.getElementById('cancel-comment');
+      
+      if (addCommentBtn) {
+        addCommentBtn.addEventListener('click', () => {
+          inlineCommentForm.classList.remove('hidden');
+          addCommentBtn.classList.add('hidden');
+          // Focus on the textarea
+          const textarea = inlineCommentForm.querySelector('textarea');
+          if (textarea) {
+            textarea.focus();
+          }
+        });
+      }
+      
+      if (cancelComment) {
+        cancelComment.addEventListener('click', () => {
+          inlineCommentForm.classList.add('hidden');
+          addCommentBtn.classList.remove('hidden');
+          // Clear the form
+          const textarea = inlineCommentForm.querySelector('textarea');
+          if (textarea) {
+            textarea.value = '';
+          }
+        });
+      }
+      
+      // Handle comment form submission to close form after successful submission
+      const commentForm = document.querySelector('.comment-form');
+      if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+          // Let the comment system handle the submission
+          // We'll close the form after a short delay to allow the comment to be processed
+          setTimeout(() => {
+            if (inlineCommentForm && addCommentBtn) {
+              inlineCommentForm.classList.add('hidden');
+              addCommentBtn.classList.remove('hidden');
+              // Clear the form
+              const textarea = inlineCommentForm.querySelector('textarea');
+              if (textarea) {
+                textarea.value = '';
+              }
+            }
+          }, 1000); // Wait 1 second for the comment to be processed
+        });
+      }
+    });
+  </script>
+{% endblock %} 

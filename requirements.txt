@@ -1,0 +1,64 @@
+# Core Flask Framework
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-WTF
+Flask-Migrate
+Flask-CORS
+WTForms
+email-validator
+python-dotenv
+
+# Database
+SQLAlchemy
+alembic
+
+# Image Processing
+Pillow
+
+# Task Scheduling
+APScheduler
+
+# Performance and Caching
+Flask-Caching
+redis
+gunicorn
+python-memcached
+
+# Monitoring and Profiling
+flask-profiler
+psutil
+
+# Development and Testing
+pytest
+pytest-flask
+
+# Data Generation (for helper scripts)
+Faker
+requests
+
+# Security
+Werkzeug
+Jinja2
+MarkupSafe
+itsdangerous
+click
+blinker
+bleach
+
+# Additional Utilities
+python-dateutil
+six
+urllib3
+charset-normalizer
+idna
+certifi
+markdown
+
+# Optional: PostgreSQL support (uncomment if using PostgreSQL)
+# psycopg2-binary
+# psycopg2
+
+# Optional: MySQL support (uncomment if using MySQL)
+# PyMySQL
+# cryptography

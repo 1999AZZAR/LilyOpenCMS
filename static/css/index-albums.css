@@ -1,0 +1,129 @@
+/* Album cards - homepage */
+.album-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.album-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Smaller album cards for sections after popular albums */
+.album-card-smaller {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.album-card-smaller:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.album-cover {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.chapter-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-completed {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.status-ongoing {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.status-hiatus {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+.premium-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 10;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Category card */
+.category-card { transition: all 0.3s ease; }
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Overlay badges on featured slider */
+.overlay-badge {
+  display: inline-block;
+  border-radius: 9999px;
+  font-weight: 700;
+  line-height: 1.1;
+  padding: 3px 5px; /* reduced by 50% */
+  font-size: 0.625rem; /* reduced by 50% */
+}
+
+@media (min-width: 768px) { /* md */
+  .overlay-badge {
+    padding: 4px 6px; /* reduced by 50% */
+    font-size: 0.75rem; /* reduced by 50% */
+  }
+}
+
+@media (min-width: 1024px) { /* lg */
+  .overlay-badge {
+    padding: 5px 7px; /* reduced by 50% */
+    font-size: 0.9375rem; /* reduced by 50% */
+  }
+}
+
+.overlay-badge-premium {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: white;
+}
+
+.overlay-status-completed {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.overlay-status-ongoing {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+.overlay-status-hiatus {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+

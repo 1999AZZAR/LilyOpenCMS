@@ -1,0 +1,497 @@
+{% extends "admin_base.html" %}
+{% block title %}Pengaturan Dasbor Admin{% endblock %}
+{% block content %}
+  <!-- Quick Stats -->
+  <div class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6 mb-12" role="region" aria-label="Statistik Cepat">
+      <!-- Total Users Card -->
+      <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center" role="article" aria-label="Total Pengguna">
+        <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full flex items-center justify-center" aria-hidden="true">
+            <i class="fas fa-users text-2xl text-white"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2 text-gray-800">Total Pengguna</h3>
+        <p class="text-gray-700" id="total-users" aria-live="polite">Loading...</p>
+      </div>
+
+              <!-- Total News Card -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center" role="article" aria-label="Total Cerita">
+            <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full flex items-center justify-center" aria-hidden="true">
+                <i class="fas fa-newspaper text-2xl text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-gray-800">Total Cerita</h3>
+            <p class="text-gray-700" id="total-news" aria-live="polite">Loading...</p>
+        </div>
+
+              <!-- Total Albums Card -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center" role="article" aria-label="Total Album">
+            <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full flex items-center justify-center" aria-hidden="true">
+                <i class="fas fa-book-open text-2xl text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-gray-800">Total Album</h3>
+            <p class="text-gray-700" id="total-albums" aria-live="polite">Loading...</p>
+        </div>
+
+              <!-- Total Images Card -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center" role="article" aria-label="Total Gambar">
+            <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full flex items-center justify-center" aria-hidden="true">
+                <i class="fas fa-image text-2xl text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-gray-800">Total Gambar</h3>
+            <p class="text-gray-700" id="total-images" aria-live="polite">Loading...</p>
+        </div>
+
+      <!-- Total Videos Card -->
+      <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center" role="article" aria-label="Total Video">
+        <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-gray-600 to-gray-700 rounded-full flex items-center justify-center" aria-hidden="true">
+            <i class="fas fa-video text-2xl text-white"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2 text-gray-800">Total Video</h3>
+        <p class="text-gray-700" id="total-videos" aria-live="polite">Loading...</p>
+      </div>
+  </div>
+
+  <!-- Management Cards with Tabbed Groups -->
+  <div class="w-full mb-12" role="region" aria-label="Menu Manajemen">
+    <!-- Search Bar -->
+    <div class="mb-8">
+      <div class="relative max-w-md">
+        <input type="text" id="settings-search" placeholder="Cari menu manajemen..." class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800 placeholder-gray-500" aria-label="Search management menu">
+        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+      </div>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <div class="flex flex-wrap gap-2 mb-8 border-b border-gray-200">
+      <button class="tab-btn active px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-blue-500 hover:text-gray-800 transition-all duration-300" data-tab="content">
+        <i class="fas fa-newspaper mr-2"></i>Manajemen Konten
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="engagement">
+        <i class="fas fa-comments mr-2"></i>Engagement & Feedback
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="ads">
+        <i class="fas fa-ad mr-2"></i>Manajemen Iklan
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="users">
+        <i class="fas fa-users mr-2"></i>Manajemen Pengguna
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="brand">
+        <i class="fas fa-palette mr-2"></i>Brand & Identitas
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="navigation">
+        <i class="fas fa-sitemap mr-2"></i>Navigasi & SEO
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="analytics">
+        <i class="fas fa-chart-line mr-2"></i>Analitik & Performa
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="legal">
+        <i class="fas fa-shield-alt mr-2"></i>Legal & Kebijakan
+      </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300 hidden" data-tab="results" id="results-tab-btn">
+        <i class="fas fa-search mr-2"></i>Hasil Pencarian
+      </button>
+    </div>
+
+        <!-- Tab Content -->
+    <div class="tab-content active" id="content-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Create News Card -->
+        <a href="{{ url_for('main.create_news') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Buat Cerita">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-plus-circle text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Buat Cerita</h3>
+          <p class="text-gray-600">Buat cerita dan artikel baru.</p>
+        </a>
+
+        <!-- Manage News Card -->
+        <a href="{{ url_for('main.manage_news') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Kelola Cerita">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-pen-to-square text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Kelola Cerita</h3>
+          <p class="text-gray-600">Edit dan kelola cerita.</p>
+        </a>
+
+        <!-- Album Management Card -->
+        <a href="{{ url_for('albums.dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Manajemen Album">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-book-open text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Album</h3>
+          <p class="text-gray-600">Kelola album cerita dan artikel.</p>
+        </a>
+
+        <!-- Category Management Card -->
+        <a href="{{ url_for('main.settings_categories') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Kategori">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-tags text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Kategori</h3>
+          <p class="text-gray-600">Kelola kategori konten.</p>
+        </a>
+
+        <!-- Image Management Card -->
+        <a href="{{ url_for('main.settingsimage') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Manajemen Gambar">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-image text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Gambar</h3>
+          <p class="text-gray-600">Kelola gambar dan media.</p>
+        </a>
+
+        <!-- Video Management Card -->
+        <a href="{{ url_for('main.settings_youtube') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Video">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fab fa-youtube text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Video</h3>
+          <p class="text-gray-600">Kelola video YouTube.</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Ads Management Tab -->
+    <div class="tab-content" id="ads-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Ads Dashboard -->
+        <a href="{{ url_for('ads.admin_dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Dashboard Iklan">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-tachometer-alt text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Dashboard Iklan</h3>
+          <p class="text-gray-600">Ringkasan kampanye, iklan, dan penempatan.</p>
+        </a>
+
+        <!-- Campaigns -->
+        <a href="{{ url_for('ads.campaigns_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Kampanye Iklan">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-bullhorn text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Kampanye Iklan</h3>
+          <p class="text-gray-600">Kelola kampanye dan audiens target.</p>
+        </a>
+
+        <!-- Manage Ads -->
+        <a href="{{ url_for('ads.ads_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Kelola Iklan">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-ad text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Kelola Iklan</h3>
+          <p class="text-gray-600">Buat, edit, dan kelola iklan.</p>
+        </a>
+
+        <!-- Placements -->
+        <a href="{{ url_for('ads.placements_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Penempatan Iklan">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-map-marker-alt text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Penempatan Iklan</h3>
+          <p class="text-gray-600">Atur penempatan dan target halaman.</p>
+        </a>
+
+        <!-- Analytics -->
+        <a href="{{ url_for('ads.analytics_dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Analitik Iklan">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-chart-line text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Analitik Iklan</h3>
+          <p class="text-gray-600">Pantau impresi, klik, CTR, dan tren.</p>
+        </a>
+
+        <!-- Feature Toggles: Ads & Campaigns -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-300" role="article" aria-label="Pengaturan Fitur Iklan & Kampanye">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-violet-500 to-fuchsia-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-bullhorn text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 text-center">Fitur Iklan & Kampanye</h3>
+          <p class="text-gray-600 text-sm text-center mb-4">Aktif/nonaktifkan sistem iklan dan kampanye.</p>
+          <div class="space-y-4">
+            <label class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 cursor-pointer">
+              <span class="text-gray-800 font-medium">Aktifkan Iklan</span>
+              <input id="toggle-ads-enable" type="checkbox" class="h-5 w-10 appearance-none rounded-full bg-gray-300 relative transition-colors duration-200 align-middle">
+            </label>
+            <label class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 cursor-pointer">
+              <span class="text-gray-800 font-medium">Aktifkan Kampanye</span>
+              <input id="toggle-campaigns-enable" type="checkbox" class="h-5 w-10 appearance-none rounded-full bg-gray-300 relative transition-colors duration-200 align-middle">
+            </label>
+            <p class="text-xs text-gray-500">Pengaturan ini mempengaruhi UI dan API penyajian iklan.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Management Tab -->
+    <div class="tab-content" id="users-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Account Management Card -->
+        <a href="{{ url_for('main.user_account') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Akun">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-user text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Akun</h3>
+          <p class="text-gray-600">Kelola pengaturan akun Anda.</p>
+        </a>
+
+        <!-- User Management Card (Only for Superuser and Admin) -->
+        <a id="user-management-card" href="{{ url_for('main.settings_users') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Pengguna">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-users-cog text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Pengguna</h3>
+          <p class="text-gray-600">Kelola pengguna dan akses.</p>
+        </a>
+
+
+      </div>
+    </div>
+
+    <!-- Engagement & Feedback Tab -->
+    <div class="tab-content" id="engagement-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Comment Moderation Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('comments.admin_comments') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Moderasi Komentar">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-comments text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Moderasi Komentar</h3>
+          <p class="text-gray-600">Kelola komentar dan laporan.</p>
+        </a>
+
+        <!-- Rating Management Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('ratings.admin_ratings') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Rating">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-star text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Rating</h3>
+          <p class="text-gray-600">Kelola rating dan analitik.</p>
+        </a>
+
+        <!-- Rating Analytics Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('ratings.rating_analytics') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Analitik Rating">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-chart-bar text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Analitik Rating</h3>
+          <p class="text-gray-600">Lihat statistik rating dan performa.</p>
+        </a>
+
+        <!-- Feature Toggles: Comments & Ratings (UI-only, no DB changes) -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-300" role="article" aria-label="Pengaturan Fitur Komentar & Rating">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-slate-500 to-slate-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-toggle-on text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-gray-800 text-center">Fitur Komentar & Rating</h3>
+          <p class="text-gray-600 text-sm text-center mb-4">Nonaktifkan dari UI tanpa mengubah data di database.</p>
+          <div class="space-y-4">
+            <!-- Enable Comments Toggle -->
+            <label class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 cursor-pointer">
+              <span class="text-gray-800 font-medium">Aktifkan Komentar</span>
+              <input id="toggle-comments-enable" type="checkbox" class="h-5 w-10 appearance-none rounded-full bg-gray-300 relative transition-colors duration-200 align-middle">
+            </label>
+            <!-- Enable Ratings Toggle -->
+            <label class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 cursor-pointer">
+              <span class="text-gray-800 font-medium">Aktifkan Rating</span>
+              <input id="toggle-ratings-enable" type="checkbox" class="h-5 w-10 appearance-none rounded-full bg-gray-300 relative transition-colors duration-200 align-middle">
+            </label>
+            <p class="text-xs text-gray-500">Catatan: Ini hanya mempengaruhi tampilan UI di browser; backend dan data tetap sama.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Brand & Identity Tab -->
+    <div class="tab-content" id="brand-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Brand Identity Management Card (Only for Superuser) -->
+        <a id="brand-identity-card" href="{{ url_for('main.settings_brand_identity') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Brand Identity">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-palette text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Brand Identity</h3>
+          <p class="text-gray-600">Kelola logo, favicon, dan gambar placeholder.</p>
+        </a>
+
+        <!-- Social Media Management Card (Only for Admin and Superuser) -->
+        <a id="social-media-card" href="{{ url_for('main.settings_social_media') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Media Sosial">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-share-alt text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Media Sosial</h3>
+          <p class="text-gray-600">Kelola tautan media sosial.</p>
+        </a>
+
+        <!-- Contact Details Management Card (Only for Admin and Superuser) -->
+        <a id="contact-details-card" href="{{ url_for('main.settings_contact_details') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Detail Kontak">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-address-book text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Detail Kontak</h3>
+          <p class="text-gray-600">Kelola detail kontak.</p>
+        </a>
+
+        <!-- Team Members Management Card (Only for Admin and Superuser) -->
+        <a id="team-members-card" href="{{ url_for('main.settings_team_members') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Anggota Tim">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-user-friends text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Anggota Tim</h3>
+          <p class="text-gray-600">Kelola anggota tim.</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Navigation & SEO Tab -->
+    <div class="tab-content" id="navigation-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Navigation Management Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.navigation_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Navigasi">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-link text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Navigasi</h3>
+          <p class="text-gray-600">Kelola link navbar dan footer.</p>
+        </a>
+
+        <!-- SEO Root Management Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('root_seo.root_seo_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Root">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-globe text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">SEO Root</h3>
+          <p class="text-gray-600">Kelola SEO untuk halaman utama website.</p>
+        </a>
+
+        <!-- SEO Album Management Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.albums_seo_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Album">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-search-plus text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">SEO Album</h3>
+          <p class="text-gray-600">Kelola SEO untuk album cerita dan artikel.</p>
+        </a>
+
+        <!-- SEO Konten Management Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.settings_seo') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Konten">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-search text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">SEO Konten</h3>
+          <p class="text-gray-600">Kelola meta, keyword, dan OG tag untuk konten.</p>
+        </a>
+
+        <!-- SEO Komprehensif Management Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.settings_comprehensive_seo') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Komprehensif">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-search-plus text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">SEO Komprehensif</h3>
+          <p class="text-gray-600">Kelola SEO secara menyeluruh untuk website.</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Legal & Policy Tab -->
+    <div class="tab-content" id="legal-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Privacy Policy Management Card (Only for Superuser and Admin) -->
+        <a id="privacy-policy-card" href="{{ url_for('main.settings_privacy_policy') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Kebijakan Privasi">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-shield-alt text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Kebijakan Privasi</h3>
+          <p class="text-gray-600">Kelola kebijakan privasi.</p>
+        </a>
+
+        <!-- Media Guidelines Management Card (Only for Superuser and Admin) -->
+        <a id="media-guidelines-card" href="{{ url_for('main.settings_media_guidelines') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Pedoman Media">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-book text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Pedoman Media</h3>
+          <p class="text-gray-600">Kelola pedoman media.</p>
+        </a>
+
+        <!-- Pedoman Hak Management Card (Only for Superuser and Admin) -->
+        <a id="pedoman-hak-card" href="{{ url_for('main.settings_pedomanhak') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Pedoman Hak">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-handshake text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Pedoman Hak</h3>
+          <p class="text-gray-600">Kelola Pedoman Hak.</p>
+        </a>
+
+        <!-- Penyangkalan Management Card (Only for Superuser and Admin) -->
+        <a id="penyangkalan-card" href="{{ url_for('main.settings_penyangkalan') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Penyangkalan">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-file text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Penyangkalan</h3>
+          <p class="text-gray-600">Kelola penyangkalan.</p>
+        </a>
+
+        <!-- Visi Misi Management Card (Only for Superuser and Admin) -->
+        <a id="visi-misi-card" href="{{ url_for('main.settings_visi_misi') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Visi Misi">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-braille text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Visi Misi</h3>
+          <p class="text-gray-600">Kelola visi dan misi.</p>
+        </a>
+      </div>
+    </div>
+
+
+
+    <!-- Analytics & Performance Tab -->
+    <div class="tab-content" id="analytics-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Analytics Dashboard Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.settings_analytics') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Dashboard Analitik">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-chart-line text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Dashboard Analitik</h3>
+          <p class="text-gray-600">Lihat statistik dan performa.</p>
+        </a>
+
+        <!-- Performance Dashboard Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.settings_performance') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Dashboard Performa">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-tachometer-alt text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Dashboard Performa</h3>
+          <p class="text-gray-600">Monitor performa sistem dan optimasi.</p>
+        </a>
+
+        <!-- Asset Optimization Dashboard Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.settings_asset_optimization') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Optimasi Asset">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-compress-arrows-alt text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Optimasi Asset</h3>
+          <p class="text-gray-600">Optimasi gambar dan asset statis.</p>
+        </a>
+
+        <!-- SSR Optimization Dashboard Card (Only for Admin and Superuser) -->
+        <a href="{{ url_for('main.settings_ssr_optimization') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Optimasi SSR">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-server text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Optimasi SSR</h3>
+          <p class="text-gray-600">Server-side rendering dan caching.</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Search Results Tab -->
+    <div class="tab-content" id="results-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="search-results-container">
+        <!-- Search results will be dynamically populated here -->
+      </div>
+    </div>
+
+      
+  </div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/settings-management.js') }}"></script>
+{% endblock %}

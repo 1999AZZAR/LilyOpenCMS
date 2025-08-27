@@ -1,0 +1,48 @@
+# Redis Configuration File
+# This file contains Redis connection settings for different server environments
+# Modify these values according to your server's Redis setup
+
+# Connection Type: 'socket' or 'tcp'
+CONNECTION_TYPE=socket
+
+# Unix Socket Path (for DirectAdmin and similar hosting)
+# Common paths:
+# - DirectAdmin: /home/username/.redis/redis.sock
+# - cPanel: /home/username/.redis/redis.sock
+# - Custom: /var/run/redis/redis.sock
+REDIS_SOCKET=/home/username/.redis/redis.sock
+
+# TCP Connection Settings (fallback or primary)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Authentication (if required)
+REDIS_PASSWORD=
+
+# Connection Timeouts (in seconds)
+SOCKET_CONNECT_TIMEOUT=1
+SOCKET_TIMEOUT=1
+TCP_CONNECT_TIMEOUT=2
+TCP_TIMEOUT=2
+
+# Cache Settings
+CACHE_DEFAULT_TIMEOUT=300
+CACHE_KEY_PREFIX=lilycms_
+
+# Environment-specific settings
+# Uncomment and modify for different environments:
+
+# DirectAdmin Hosting
+# REDIS_SOCKET=/home/username/.redis/redis.sock
+
+# cPanel Hosting
+# REDIS_SOCKET=/home/cpaneluser/.redis/redis.sock
+
+# VPS/Dedicated Server
+# REDIS_HOST=localhost
+# REDIS_PORT=6379
+
+# Cloud Redis (Redis Cloud, AWS ElastiCache, etc.)
+# REDIS_HOST=your-redis-host.com
+# REDIS_PORT=6379
+# REDIS_PASSWORD=your-redis-password 

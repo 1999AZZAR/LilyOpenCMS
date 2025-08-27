@@ -1,0 +1,277 @@
+/* Ads Injection System Styles */
+
+/* Ad Placement Area */
+.ad-placement-area {
+    min-height: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.ad-placement-area:empty {
+    display: none;
+}
+
+.ad-placement-area:not(:empty) {
+    padding: 1rem 0;
+    background: hsl(var(--muted) / 0.1);
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Ad Container Base Styles */
+.ad-placement-container {
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: var(--ad-card-bg, hsl(var(--card)));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--ad-card-radius, var(--radius));
+    box-shadow: var(--ad-card-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
+    transition: all 0.2s ease-in-out;
+    text-align: center;
+}
+
+.ad-placement-container:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Header/Top Ad Styling */
+.ad-header-top {
+    margin: 0 0 2rem 0;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--primary) / 0.02));
+    border: 1px solid hsl(var(--primary) / 0.1);
+}
+
+/* Sidebar Ad Styling */
+.ad-sidebar-top {
+    margin: 1rem 0;
+    background: hsl(var(--muted) / 0.3);
+    border: 1px solid hsl(var(--border));
+}
+
+/* Content Ad Styling */
+.ad-content-after_n_items {
+    margin: 0; /* in-stream: rely on card spacing instead */
+    padding: 0;
+    background: transparent; /* let the card carry visuals */
+    border: none;
+    text-align: initial; /* inherit typical card text alignment */
+}
+
+/* Ensure ad container behaves like grid item when placed inside grids */
+.ad-placement-container.ad-content-after_n_items {
+    display: block;
+}
+
+/* Inside-card placement: remove external margins/paddings and fit content */
+.ad-placement-container.ad-inside-card {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+.ad-placement-container.ad-inside-card .ad-wrapper {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+.ad-placement-container.ad-inside-card .ad-inner {
+    padding: 0.5rem 0; /* subtle spacing within card */
+}
+
+/* Ad Wrapper Styles */
+.ad-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: calc(var(--ad-card-radius, var(--radius)) - 2px);
+    height: 100%;
+    width: 100%;
+    aspect-ratio: var(--ad-aspect-ratio, auto);
+}
+
+.ad-wrapper .ad-inner {
+    width: 100%;
+    height: 100%;
+}
+
+.ad-fade-in {
+    opacity: 0;
+    animation: adFadeIn 400ms ease forwards;
+}
+
+@keyframes adFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Ad Content Styling */
+.ad-wrapper img {
+    max-width: 100%;
+    height: auto;
+    border-radius: calc(var(--ad-card-radius, var(--radius)) - 2px);
+}
+
+.ad-wrapper iframe {
+    width: 100%;
+    border: none;
+    border-radius: calc(var(--ad-card-radius, var(--radius)) - 2px);
+}
+
+/* Ad Label */
+.ad-wrapper::before {
+    content: "Iklan";
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 1;
+}
+
+.ad-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.08);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10;
+    color: rgba(0,0,0,0.7);
+    transition: background 160ms ease, transform 120ms ease;
+}
+
+.ad-close-btn:hover {
+    background: rgba(0,0,0,0.15);
+}
+
+.ad-close-btn:active {
+    transform: scale(0.96);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .ad-placement-container {
+        margin: 1rem 0;
+        padding: 1rem;
+    }
+    
+    .ad-header-top {
+        margin: 0 0 1.5rem 0;
+    }
+    
+    .ad-placement-area:not(:empty) {
+        padding: 0.5rem 0;
+    }
+}
+
+/* Loading State */
+.ad-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: hsl(var(--muted) / 0.3);
+    border-radius: var(--radius);
+}
+
+.ad-loading::after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    border: 2px solid hsl(var(--border));
+    border-top: 2px solid hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Premium User Ad Hiding */
+.premium-user .ad-placement-container {
+    display: none;
+}
+
+/* Debug Mode Styling */
+.ad-debug-mode {
+    border: 2px dashed hsl(var(--destructive));
+    background: hsl(var(--destructive) / 0.05);
+}
+
+.ad-debug-mode::after {
+    content: "DEBUG: Ad Placement";
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: hsl(var(--destructive));
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+} 
+
+/* Lightweight skeleton while loading */
+.ad-skeleton {
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--ad-aspect-ratio, 16/9);
+    border-radius: calc(var(--ad-card-radius, var(--radius)) - 2px);
+    background: linear-gradient(90deg, 
+      hsl(var(--muted) / 0.15) 25%,
+      hsl(var(--muted) / 0.25) 37%,
+      hsl(var(--muted) / 0.15) 63%
+    );
+    background-size: 400% 100%;
+    animation: adSkeletonShimmer 1.4s ease infinite;
+}
+
+/* Skeleton aspect ratio based on imitation target */
+.ad-skeleton.album-card { aspect-ratio: 3/4; }
+.ad-skeleton.news-card { aspect-ratio: 16/9; }
+.ad-skeleton.gallery-item { aspect-ratio: 1/1; }
+
+/* When ad imitates a news/album card, ensure grid behavior matches */
+.news-card.ad-wrapper,
+.album-card.ad-wrapper,
+.content-card.ad-wrapper {
+    display: block;
+}
+
+/* Make ad as grid item fill like siblings in grids */
+#news-grid > .ad-placement-container,
+#albums-grid > .ad-placement-container,
+#videos-grid > .ad-placement-container,
+#image-grid-container > .ad-placement-container,
+#latest-image-grid-container > .ad-placement-container {
+    width: 100%;
+}
+
+/* Ensure ads in horizontal carousels behave like a card item */
+[data-ad-group] > .ad-placement-container {
+    display: block;
+}
+
+/* Media helpers for imitation */
+.news-image {
+    aspect-ratio: 16/9;
+    object-fit: cover;
+}
+
+.album-cover {
+    aspect-ratio: 3/4;
+    object-fit: cover;
+}
+
+@keyframes adSkeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

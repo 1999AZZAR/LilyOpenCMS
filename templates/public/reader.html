@@ -1,0 +1,612 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ brand_info.brand_name|default('LilyOpenCMS') }} - {{ news.title | default('Berita') | e }}
+{% endblock %}
+
+{% block og_title %}
+{% if news.og_title %}{{ news.og_title }}{% else %}{{ news.title | default('Berita') | e }}{% endif %}
+{% endblock %}
+
+{% block og_description %}
+{% if news.og_description %}{{ news.og_description }}{% else %}{{ news.meta_description | default('Baca artikel selengkapnya') }}{% endif %}
+{% endblock %}
+
+{% block og_image %}
+{% if news.og_image %}{{ news.og_image }}{% else %}{{ url_for('static', filename='pic/dark.png', _external=True) }}{% endif %}
+{% endblock %}
+
+{% block twitter_title %}
+{% if news.twitter_title %}{{ news.twitter_title }}{% else %}{{ news.title | default('Berita') | e }}{% endif %}
+{% endblock %}
+
+{% block twitter_description %}
+{% if news.twitter_description %}{{ news.twitter_description }}{% else %}{{ news.meta_description | default('Baca artikel selengkapnya') }}{% endif %}
+{% endblock %}
+
+{% block twitter_image %}
+{% if news.twitter_image %}{{ news.twitter_image }}{% else %}{{ url_for('static', filename='pic/dark.png', _external=True) }}{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+  {# Ensure Tailwind/Main CSS is loaded in base.html #}
+
+  {# Slick Carousel CSS - Moved to base.html #}
+  {# Font Awesome CSS (Load ONLY if used, preferably in base.html) #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  {# Comment and Rating System CSS #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/comment-rating.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/premium-content.css') }}">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
+  <script>window.__ADS_ALLOWED__ = true;</script>
+{% endblock %}
+
+{% block content %}
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12" role="main" aria-labelledby="article-title">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Article Content -->
+      <div class="lg:col-span-2">
+        <article class="max-w-none" role="article" itemscope itemtype="http://schema.org/Article" aria-labelledby="article-title" aria-describedby="article-meta">
+
+          <!-- Back Button -->
+          <div class="mb-6">
+            <a href="javascript:history.back()" onclick="history.back(); return false;" class="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80 group" role="button" aria-label="Back to previous page">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:-translate-x-1 transition-transform duration-200">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Kembali
+            </a>
+          </div>
+
+          <!-- Article Meta Info -->
+          <header class="mb-8" role="banner" id="article-meta">
+            <h1 id="article-title" class="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight" itemprop="headline">
+                {{ news.title | default('Judul Tidak Tersedia') }}
+            </h1>
+            {% if news.category and news.category.name %}
+              <a href="{{ url_for('main.search', category=news.category.name) }}" class="text-sm font-semibold text-primary uppercase tracking-wider hover:underline mb-3 inline-block" role="link" aria-label="Category link">
+                  {{ news.category.name }}
+              </a>
+            {% else %}
+              <span class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 inline-block" aria-label="No category">Tanpa Kategori</span>
+            {% endif %}
+
+            <div class="text-sm text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border pb-4 mb-4" role="contentinfo" aria-label="Article metadata">
+              <span>
+                <i class="fas fa-user fa-fw mr-1 opacity-70"></i>
+                {{ news.writer if news.writer else news.author.username if news.author else 'Penulis Tidak Diketahui' }}
+              </span>
+              {% if news.date %}
+                <time datetime="{{ news.date.isoformat() }}">
+                  <i class="fas fa-calendar-alt fa-fw mr-1 opacity-70"></i>
+                  {{ news.date.strftime('%d %b %Y, %H:%M') }} WIB
+                </time>
+              {% endif %}
+              <span>
+                <i class="fas fa-eye fa-fw mr-1 opacity-70"></i>
+                {{ news.read_count | default(0) }} kali dibaca
+              </span>
+              {% if news.age_rating %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">{{ news.age_rating }}</span>
+              {% endif %}
+            </div>
+
+             {% if news.tagar %}
+                 <div class="text-sm flex flex-wrap items-center gap-2">
+                      <span class="font-medium text-muted-foreground mr-1">Tag:</span>
+                      {% for tag_item in news.tagar.split(',') %}
+                          {% set cleaned_tag = tag_item.strip() %}
+                          {% if cleaned_tag %}
+                              <a href="{{ url_for('main.search', tag=cleaned_tag) }}" class="text-xs bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors duration-200" role="link" aria-label="Tag link">
+                                #{{ cleaned_tag }}
+                              </a>
+                          {% endif %}
+                      {% endfor %}
+                 </div>
+             {% endif %}
+          </header>
+
+          <!-- Article Image -->
+          <figure id="featured-image-trigger" class="w-full aspect-video mb-8 lg:mb-10 overflow-hidden rounded-lg bg-secondary shadow-md cursor-pointer group" role="figure" aria-label="Featured image" aria-describedby="featured-image-caption">
+            <figcaption id="featured-image-caption" class="sr-only">{{ news.title | default('Featured image') | e }}</figcaption>
+            {% set img_src = url_for('static', filename='pic/placeholder.png') %}
+            {% set img_alt = news.title | default('Gambar Berita') | e %}
+            {% if news.image %}
+              {% if news.image.url %}
+                {% set img_src = news.image.url %}
+              {% elif news.image.filepath %}
+                {% set rel_path = news.image.filepath.split('static/')[-1] %}
+                {% set img_src = url_for('static', filename=rel_path) %}
+              {% endif %}
+            {% endif %}
+            <div class="relative w-full h-full">
+                <img src="{{ url_for('static', filename='pic/placeholder.png') }}"
+                     data-src="{{ img_src }}"
+                     alt="{{ news.title | default('Gambar Berita') | e }}"
+                     class="lazy w-full h-full object-cover"
+                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='pic/placeholder.png') | e }}'; this.classList.add('loaded');">
+            </div>
+          </figure>
+
+          <!-- Premium Content Stats -->
+          {% if is_premium_content %}
+          <div class="premium-content-stats">
+            <div class="stat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.414M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Konten Premium</span>
+            </div>
+            <div class="stat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              <span>{{ content_stats.total_words }} kata</span>
+            </div>
+            {% if news.age_rating %}
+            {% endif %}
+            {% if is_truncated %}
+            <div class="stat">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stat-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 0V3.375c0-.621.504-1.125 1.125-1.125h18.75c.621 0 1.125.504 1.125 1.125v2.25m-21 0V18.375c0 .621.504 1.125 1.125 1.125h18.75c.621 0 1.125-.504 1.125-1.125V5.625m-21 0h3.75" />
+              </svg>
+              <span>Dipotong</span>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Article Content Area -->
+          <div class="premium-content-container {% if is_truncated %}truncated{% endif %} bg-card rounded-lg border border-border p-6 shadow-sm">
+            <div id="article-body" role="article" aria-labelledby="article-title"
+                 class="prose prose-lg text-foreground dark:prose-invert
+                        prose-headings:font-semibold prose-headings:mt-6 prose-headings:mb-4
+                        prose-h1:text-3xl prose-h2:text-2xl prose-h2:border-b prose-h2:pb-2 prose-h3:text-xl
+                        prose-p:leading-relaxed prose-p:mb-5
+                        prose-a:text-primary hover:prose-a:underline prose-a:break-words
+                        prose-strong:text-foreground
+                        prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground prose-blockquote:my-6 prose-blockquote:py-2
+                        prose-ul:list-disc prose-ul:list-inside prose-ul:mb-5 prose-ul:pl-4 prose-ul:space-y-2
+                        prose-ol:list-decimal prose-ol:list-inside prose-ol:mb-5 prose-ol:pl-4 prose-ol:space-y-2
+                        prose-img:rounded-lg prose-img:my-6 prose-img:max-w-full prose-img:h-auto prose-img:shadow-md
+                        prose-table:w-full prose-table:border-collapse prose-table:border prose-table:border-border prose-table:my-6 prose-table:text-sm
+                        prose-th:border prose-th:border-border prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:bg-secondary prose-th:font-semibold
+                        prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2 prose-td:text-left
+                        prose-hr:border-border prose-hr:my-8
+                        prose-code:bg-secondary prose-code:text-sm prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                        prose-pre:bg-secondary prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:text-sm prose-pre:my-6 prose-pre:font-mono
+                        prose-pre:code:bg-transparent prose-pre:code:p-0 prose-pre:code:rounded-none
+                        max-w-none
+                        {% if is_premium_content %}premium-content{% endif %}">
+                {{ html_content | safe }}
+            </div>
+            
+            <!-- Content Mask Overlay for Premium Content -->
+            {% if is_premium_content and is_truncated %}
+            <div id="content-mask-{{ news.id }}" class="content-mask-overlay">
+              <div class="content-mask-backdrop"></div>
+              <div class="content-mask-content">
+                <div class="content-mask-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-12 h-12">
+                    <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.937 6.937 0 006.222 6.222.75.75 0 00.859-.584 48.332 48.332 0 001.243-5.034 48.332 48.332 0 005.034-1.243.75.75 0 00.584-.859 6.937 6.937 0 00-6.222-6.222.75.75 0 00-.859.584 48.332 48.332 0 00-1.243 5.034zM13.5 2.25a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM13.5 6.75a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V7.5a.75.75 0 01.75-.75zM13.5 11.25a.75.75 0 01.75.75v.75a.75.75 0 01-1.5 0V12a.75.75 0 01.75-.75z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-foreground mb-2">Konten Premium</h3>
+                <p class="text-muted-foreground text-center mb-4">Untuk membaca artikel ini secara lengkap, Anda memerlukan langganan premium.</p>
+                <div class="premium-content-buttons">
+                  <a href="{{ url_for('main.premium') }}" class="button button-primary">
+                    Berlangganan Premium
+                  </a>
+                  <a href="{{ url_for('main.login') }}" class="button button-outline">
+                    Login
+                  </a>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          {% if news.external_source %}
+            <div class="my-8 text-center">
+              <a href="{{ news.external_source }}" target="_blank" rel="noopener noreferrer" class="inline-block px-8 py-3 text-lg font-semibold text-primary bg-accent rounded-lg shadow-md transition-transform hover:scale-105 hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                Baca Selengkapnya
+              </a>
+            </div>
+          {% endif %}
+        </article>
+      </div>
+      
+      <!-- Right Column: Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="space-y-6 sticky top-4">
+          {% if brand_info and brand_info.enable_ratings %}
+          <!-- Rating Section -->
+          <div class="bg-card rounded-lg border border-border p-6" data-content-type="news" data-content-id="{{ news.id }}" data-rating-instance="news-{{ news.id }}">
+            <div class="text-center">
+              <!-- Rating Header -->
+              <div class="mb-6">
+                <h2 class="text-xl font-bold text-foreground mb-2">Bagaimana menurut Anda?</h2>
+                <p class="text-sm text-muted-foreground">Berikan rating untuk artikel ini</p>
+              </div>
+              
+              <!-- Rating Display -->
+              <div class="rating-display mb-6">
+                <!-- Loading state -->
+                <div class="rating-loading">
+                  <div class="flex items-center justify-center mb-4">
+                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span class="ml-3 text-muted-foreground">Memuat rating...</span>
+                  </div>
+                </div>
+                
+                <!-- Rating statistics will be loaded here -->
+              </div>
+              
+              <!-- Star Rating Interface -->
+              <div class="star-rating-container text-center">
+                <!-- Loading state for star rating -->
+                <div class="star-rating-loading">
+                  <div class="flex justify-center space-x-2 mb-4">
+                    {% for i in range(1, 6) %}
+                    <button class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors duration-200" disabled>
+                      ★
+                    </button>
+                    {% endfor %}
+                  </div>
+                  <p class="text-sm text-muted-foreground">Memuat rating...</p>
+                </div>
+                <!-- Star rating interface will be loaded here -->
+              </div>
+              
+
+            </div>
+          </div>
+          {% endif %}
+          
+          {% if brand_info and brand_info.enable_comments %}
+          <!-- Comments Section -->
+          <div class="bg-card rounded-lg border border-border p-6" data-content-type="news" data-content-id="{{ news.id }}">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-foreground">Komentar</h2>
+              {% if current_user.is_authenticated %}
+              <button id="add-comment-btn" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Tambah Komentar
+              </button>
+              {% else %}
+              <a href="{{ url_for('main.login') }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Masuk untuk Berkomentar
+              </a>
+              {% endif %}
+            </div>
+            
+            <!-- Inline Comment Form (Hidden by default) -->
+            <div id="inline-comment-form" class="hidden mb-4 p-4 bg-muted/30 rounded-lg border border-border">
+              <form class="comment-form">
+                <div class="form-group">
+                  <textarea class="form-control comment-content w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" rows="4" placeholder="Tulis komentar Anda di sini..." required></textarea>
+                  </div>
+                <div class="flex gap-3 mt-3">
+                  <button type="submit" class="btn btn-primary comment-submit-btn px-4 py-2 text-sm">Kirim Komentar</button>
+                  <button type="button" id="cancel-comment" class="btn btn-secondary px-4 py-2 text-sm">Batal</button>
+                </div>
+              </form>
+            </div>
+            
+            <div class="comments-container">
+              <!-- Comments will be loaded here -->
+            </div>
+            
+            <div class="comments-pagination mt-4">
+              <!-- Auto-loading will handle pagination automatically -->
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Share Section -->
+          <div class="bg-card rounded-lg border border-border p-6" role="region" aria-label="Share options">
+            <h2 class="text-lg font-semibold text-foreground mb-4">Bagikan Artikel</h2>
+            <p id="total-share-count" class="text-sm text-muted-foreground mb-4">
+              Total dibagikan: <span class="font-semibold text-primary">0</span> kali
+            </p>
+            <div class="share-buttons-container grid grid-cols-3 gap-3" role="toolbar" aria-label="Social media sharing options">
+                <!-- WhatsApp -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on WhatsApp">
+                    <button data-platform="whatsapp" title="Bagikan ke WhatsApp"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#128C7E]">
+                        <i class="fab fa-whatsapp text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="whatsapp">0</span>
+                </div>
+                <!-- Facebook -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Facebook">
+                    <button data-platform="facebook" title="Bagikan ke Facebook"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1877F2] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0C53A7]">
+                        <i class="fab fa-facebook-f text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="facebook">0</span>
+                </div>
+                <!-- Twitter/X -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Twitter">
+                    <button data-platform="twitter" title="Bagikan ke Twitter/X"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1DA1F2] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0A84D0]">
+                        <i class="fab fa-twitter text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="twitter">0</span>
+                </div>
+                <!-- Instagram -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Instagram">
+                    <button data-platform="instagram" title="Bagikan ke Instagram"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-pink-600">
+                        <i class="fab fa-instagram text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="instagram">0</span>
+                </div>
+                <!-- Bluesky -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Bluesky">
+                    <button data-platform="bluesky" title="Bagikan ke Bluesky"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#007AFF] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0056B3]">
+                        <i class="fas fa-cloud text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="bluesky">0</span>
+                </div>
+                <!-- Copy Link -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Copy link">
+                    <button data-platform="clipboard" title="Salin Tautan"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/80 hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary">
+                        <i class="fas fa-copy text-lg"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="clipboard">0</span>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> <!-- End Main Content container -->
+
+  <!-- Related News Carousel -->
+  <section class="container mx-auto px-0 sm:px-4 py-12 border-t border-border mt-12 lg:mt-16" role="region" aria-labelledby="related-news-heading">
+      <h2 id="related-news-heading" class="text-2xl lg:text-3xl font-semibold text-foreground mb-6 text-center lg:text-left px-4 sm:px-0">Berita Terkait</h2>
+      {% if related_news %}
+        {# Relative wrapper is important for absolute positioning of arrows #}
+        <div class="relative related-news-carousel-wrapper">
+            {# This div is the target for Slick JS initialization #}
+            <div class="related-news-carousel">
+              {% for related_item in related_news %}
+                {# Each direct child of .related-news-carousel becomes a slide #}
+                <div> {# Remove padding here, let Slick handle spacing #}
+                  {# Ensure the article takes full height of its container #}
+                  <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden h-full flex flex-col transition-shadow hover:shadow-lg duration-300 mx-1">
+                     <a href="{{ url_for('main.news_detail', news_id=related_item.id, news_title=safe_title(related_item.title)) }}" class="block group" role="link" aria-label="Related news link">
+                       <div class="aspect-video bg-secondary overflow-hidden">
+                           {# --- Landscape Thumbnail Logic Start (Related News Card) --- #}
+                           {% set image_obj = related_item.image %}
+                           {% set placeholder_img = url_for('static', filename='pic/placeholder.png') %}
+                           {% set final_img_url = placeholder_img %} {# Default to placeholder #}
+                           {% if image_obj and image_obj.filepath %}
+                             {% set image_filepath = image_obj.filepath %}
+                             {% set path_without_static = image_filepath.replace('static/', '', 1) %}
+                             {% set last_dot_index = path_without_static.rfind('.') %}
+                             {% if last_dot_index != -1 %}
+                               {% set base_path = path_without_static[:last_dot_index] %}
+                               {% set extension = path_without_static[last_dot_index:] %}
+                               {% set thumb_path = base_path ~ '_thumb_landscape' ~ extension %}
+                               {% set final_img_url = url_for('static', filename=thumb_path) %}
+                             {% endif %}
+                            {% endif %}
+                           {# --- End Thumbnail Logic --- #}
+
+                           {# Use the generated landscape thumbnail URL #}
+                           <div class="relative w-full h-full">
+                               <img src="{{ url_for('static', filename='pic/placeholder.png') }}"
+                                   data-src="{{ final_img_url }}"
+                                   alt="{{ related_item.title | default('Gambar Terkait') | e }}"
+                                   class="lazy w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                   onerror="this.onerror=null; this.src='{{ url_for('static', filename='pic/placeholder.png') | e }}'; this.classList.add('loaded');">
+                           </div>
+                       </div>
+                     </a>
+                     <div class="p-4 flex flex-col flex-grow">
+                        {% if related_item.category and related_item.category.name %}
+                          <span class="inline-block mb-2 px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                            {{ related_item.category.name }}
+                          </span>
+                        {% endif %}
+                        <h3 class="text-base font-semibold text-card-foreground leading-snug line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                          <a href="{{ url_for('main.news_detail', news_id=related_item.id, news_title=safe_title(related_item.title)) }}" role="link" aria-label="Related news link">{{ related_item.title | default('Judul Terkait') }}</a>
+                        </h3>
+                        <div class="mt-auto pt-2 text-xs text-muted-foreground border-t border-border/50">
+                             {% if related_item.date %}
+                               <span>{{ related_item.date.strftime('%d %b %Y') }}</span>
+                             {% endif %}
+                        </div>
+                      </div>
+                  </article>
+                </div> {# End Slide Content Wrapper #}
+              {% endfor %}
+            </div> {# End .related-news-carousel #}
+
+            <!-- Custom Slick Arrows (Placed inside the wrapper) -->
+            <button class="slick-prev slick-arrow group" aria-label="Previous" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5M3 12h18" /></svg>
+            </button>
+            <button class="slick-next slick-arrow group" aria-label="Next" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5M3 12h18" /></svg>
+            </button>
+        </div> {# End .related-news-carousel-wrapper #}
+      {% else %}
+        <p class="text-muted-foreground text-center py-4 px-4">Tidak ada berita terkait yang ditemukan.</p>
+      {% endif %}
+  </section>
+  <!-- Featured Image Modal -->
+  <div id="featured-image-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-[60] opacity-0 transition-opacity duration-300" onclick="closeFeaturedImageModalOnClickOutside(event)" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description">
+    <div class="relative overflow-hidden rounded-lg shadow-xl flex items-center justify-center h-full" role="document">
+          <h3 id="modal-title" class="sr-only">Gambar Utama Berita</h3>
+          <p id="modal-description" class="sr-only">Tampilan ukuran penuh dari gambar berita</p>
+      {# Image container with rounded corners #}
+      <div class="relative shadow-xl rounded-lg overflow-hidden"> {# Added rounded-lg and overflow-hidden here #}
+        <img id="modal-featured-image" src="" alt="" class="block w-full h-auto max-h-[90vh] object-contain" role="img" aria-label="Featured image"> {# Removed rounded-lg from image #}
+        {# Download button (Top left) #}
+        <a id="modal-featured-download" href="#" download="featured_image.jpg" class="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center bg-black/50 text-white rounded-full shadow-lg hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Unduh gambar" title="Unduh Gambar">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+        </a>
+        {# Close button (Top right) - Moved inside relative container #}
+        <button onclick="closeFeaturedImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white rounded-full p-2" aria-label="Close image">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+  {# IMPORTANT: Ensure jQuery is loaded BEFORE Slick JS in base.html #}
+  {# <script src="https://code.jquery.com/jquery-3.6.0.min.js" ...></script> #}
+
+  {# Slick JS - Load after jQuery (already loaded in base.html) #}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js" integrity="sha512-XtmMtDEcNz2j7ekrtHvOVR4iwwaD6o/FUJe6+Zq+HgcCsk3kj4uSQQR8weQ2QVj1o0Pk6PwYLohm206ZzNfubg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2 z-50"></div>
+
+  {# Embedded Reader JS Logic #}
+  <script>
+    window.newsId = {{ news.id | default('null') | tojson }};
+    window.newsTitle = {{ news.title | default('Artikel Ini') | tojson }};
+    window.newsUrl = window.location.href;
+    
+    // User context for comment and rating system
+    window.currentUserId = {{ current_user.id if current_user.is_authenticated else 'null' | tojson }};
+    window.currentUserRole = {{ current_user.role.value if current_user.is_authenticated else 'null' | tojson }};
+  </script>
+  <!-- Load JavaScript files directly instead of as modules -->
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/premium-content.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/featured-image-modal.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/share.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/slick-init.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/reader.js') }}"></script>
+  
+  {# Comment and Rating System JavaScript #}
+  <script src="{{ url_for('static', filename='js/comment-system.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rating-system.js') }}"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // --- Fix Featured Image Modal Handler ---
+      if (typeof initializeFeaturedImageModal === 'function') {
+        initializeFeaturedImageModal(console);
+        // Patch: Use data-src for modal if present
+        const trigger = document.getElementById('featured-image-trigger');
+        if (trigger) {
+          trigger.addEventListener('click', function() {
+            const mainImg = trigger.querySelector('img');
+            if (mainImg && mainImg.dataset && mainImg.dataset.src) {
+              // If lazy loaded, set modal to data-src
+              const modalImg = document.getElementById('modal-featured-image');
+              const downloadBtn = document.getElementById('modal-featured-download');
+              if (modalImg && downloadBtn) {
+                modalImg.src = mainImg.dataset.src;
+                modalImg.alt = mainImg.alt || 'Featured Image';
+                downloadBtn.href = mainImg.dataset.src;
+                downloadBtn.download = (mainImg.dataset.src.split('/').pop() || 'featured_image.jpg').split('?')[0];
+              }
+            }
+          }, {capture: true});
+        }
+      }
+
+      // --- Fix Share Buttons ---
+      if (typeof initializeSharing === 'function') {
+        initializeSharing({
+          id: window.newsId,
+          title: window.newsTitle,
+          url: window.newsUrl,
+          type: 'news'
+        }, console);
+      }
+
+      // --- Robust Slick Carousel Initialization for Related News ---
+      if (window.jQuery && typeof $('.related-news-carousel').slick === 'function') {
+        if (!$('.related-news-carousel').hasClass('slick-initialized')) {
+          $('.related-news-carousel').slick({
+            slidesToShow: 3,
+            slidesToScroll: 1,
+            infinite: false,
+            arrows: true,
+            prevArrow: $('.related-news-carousel-wrapper .slick-prev'),
+            nextArrow: $('.related-news-carousel-wrapper .slick-next'),
+            responsive: [
+              { breakpoint: 1280, settings: { slidesToShow: 3 } },
+              { breakpoint: 1024, settings: { slidesToShow: 2 } },
+              { breakpoint: 768,  settings: { slidesToShow: 1 } }
+            ]
+          });
+        }
+      }
+
+      // --- Initialize Comment and Rating Systems ---
+      if (typeof CommentSystem !== 'undefined' && window.newsId) {
+        window.commentSystem = new CommentSystem('news', window.newsId, {
+          autoLoad: true,
+          perPage: 12,
+          autoLoadMore: true,
+          loadMoreThreshold: 0.8
+        });
+      }
+
+      // Rating system will be auto-initialized by the rating-system.js
+      // The rating instances are already properly set up with data-rating-instance attributes
+      
+      // Ensure proper error handling for rating systems
+      setTimeout(() => {
+        const ratingInstances = document.querySelectorAll('[data-rating-instance]');
+        ratingInstances.forEach(instance => {
+          const instanceId = instance.dataset.ratingInstance;
+          if (!window[instanceId.replace(/[^a-zA-Z0-9]/g, '_')]) {
+            console.warn(`Rating system not initialized for instance: ${instanceId}`);
+          }
+        });
+      }, 1000);
+      
+      // Inline Comment Form Functionality
+      const inlineCommentForm = document.getElementById('inline-comment-form');
+      const addCommentBtn = document.getElementById('add-comment-btn');
+      const cancelComment = document.getElementById('cancel-comment');
+      
+      if (addCommentBtn) {
+        addCommentBtn.addEventListener('click', () => {
+          inlineCommentForm.classList.remove('hidden');
+          addCommentBtn.classList.add('hidden');
+          // Focus on the textarea
+          const textarea = inlineCommentForm.querySelector('textarea');
+          if (textarea) {
+            textarea.focus();
+          }
+        });
+      }
+      
+      if (cancelComment) {
+        cancelComment.addEventListener('click', () => {
+          inlineCommentForm.classList.add('hidden');
+          addCommentBtn.classList.remove('hidden');
+          // Clear the form
+          const textarea = inlineCommentForm.querySelector('textarea');
+          if (textarea) {
+            textarea.value = '';
+          }
+        });
+      }
+    });
+  </script>
+
+{% endblock %}

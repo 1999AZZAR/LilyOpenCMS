@@ -1,0 +1,281 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Penempatan Iklan - {{ 'Edit' if placement else 'Buat' }}{% endblock %}
+
+{% block hero_title %}{{ 'Edit Penempatan' if placement else 'Buat Penempatan Baru' }}{% endblock %}
+{% block hero_desc %}{{ 'Edit penempatan iklan yang ada' if placement else 'Buat penempatan iklan baru untuk menampilkan iklan' }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">
+                {{ 'Edit Penempatan' if placement else 'Buat Penempatan Baru' }}
+            </h2>
+            <a href="{{ url_for('ads.placements_list') }}" 
+               class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+        </div>
+
+        <form id="placementForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Placement Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Penempatan *
+                    </label>
+                    <input type="text" id="name" name="name" required
+                           value="{{ placement.name if placement else '' }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Masukkan nama penempatan">
+                </div>
+
+                <!-- Ad Selection -->
+                <div>
+                    <label for="ad_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pilih Iklan *
+                    </label>
+                    <select id="ad_id" name="ad_id" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Pilih iklan...</option>
+                        {% for ad in ads %}
+                        <option value="{{ ad.id }}" {{ 'selected' if placement and placement.ad_id == ad.id else '' }}>
+                            {{ ad.title }} ({{ ad.ad_type|title }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Page Type -->
+                <div>
+                    <label for="page_type" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tipe Halaman *
+                    </label>
+                    <select id="page_type" name="page_type" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Pilih tipe halaman...</option>
+                        <option value="home" {{ 'selected' if placement and placement.page_type == 'home' else '' }}>Beranda</option>
+                        <option value="news" {{ 'selected' if placement and placement.page_type == 'news' else '' }}>Berita</option>
+                        <option value="album" {{ 'selected' if placement and placement.page_type == 'album' else '' }}>Album</option>
+                        <option value="category" {{ 'selected' if placement and placement.page_type == 'category' else '' }}>Kategori</option>
+                        <option value="search" {{ 'selected' if placement and placement.page_type == 'search' else '' }}>Pencarian</option>
+                        <option value="other" {{ 'selected' if placement and placement.page_type == 'other' else '' }}>Lainnya</option>
+                    </select>
+                </div>
+
+                <!-- Page Specific -->
+                <div>
+                    <label for="page_specific" class="block text-sm font-medium text-gray-700 mb-2">
+                        Halaman Spesifik
+                    </label>
+                    <input type="text" id="page_specific" name="page_specific"
+                           value="{{ placement.page_specific if placement else '' }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Contoh: kategori-nama, album-id, dll">
+                    <p class="text-xs text-gray-600 mt-1">Kosongkan untuk semua halaman dengan tipe yang sama</p>
+                </div>
+
+                <!-- Section -->
+                <div>
+                    <label for="section" class="block text-sm font-medium text-amber-700 mb-2">
+                        Bagian *
+                    </label>
+                    <select id="section" name="section" required
+                            class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                        <option value="">Pilih bagian...</option>
+                        <option value="content" {{ 'selected' if placement and placement.section == 'content' else '' }}>Konten</option>
+                        <option value="sidebar" {{ 'selected' if placement and placement.section == 'sidebar' else '' }}>Sidebar</option>
+                        <option value="header" {{ 'selected' if placement and placement.section == 'header' else '' }}>Header</option>
+                        <option value="footer" {{ 'selected' if placement and placement.section == 'footer' else '' }}>Footer</option>
+                    </select>
+                </div>
+
+                <!-- Position -->
+                <div>
+                    <label for="position" class="block text-sm font-medium text-amber-700 mb-2">
+                        Posisi *
+                    </label>
+                    <select id="position" name="position" required
+                            class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                        <option value="">Pilih posisi...</option>
+                        <option value="top" {{ 'selected' if placement and placement.position == 'top' else '' }}>Atas</option>
+                        <option value="middle" {{ 'selected' if placement and placement.position == 'middle' else '' }}>Tengah</option>
+                        <option value="bottom" {{ 'selected' if placement and placement.position == 'bottom' else '' }}>Bawah</option>
+                        <option value="after_n_items" {{ 'selected' if placement and placement.position == 'after_n_items' else '' }}>Setelah N Item</option>
+                    </select>
+                </div>
+
+                <!-- Position Value -->
+                <div>
+                    <label for="position_value" class="block text-sm font-medium text-amber-700 mb-2">
+                        Nilai Posisi
+                    </label>
+                    <input type="number" id="position_value" name="position_value" min="1"
+                           value="{{ placement.position_value if placement else '3' }}"
+                           class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                           placeholder="3">
+                    <p class="text-xs text-amber-600 mt-1">Untuk posisi "Setelah N Item", masukkan nomor item</p>
+                </div>
+
+                <!-- Max Ads Per Page -->
+                <div>
+                    <label for="max_ads_per_page" class="block text-sm font-medium text-amber-700 mb-2">
+                        Maksimal Iklan per Halaman
+                    </label>
+                    <input type="number" id="max_ads_per_page" name="max_ads_per_page" min="1" max="10"
+                           value="{{ placement.max_ads_per_page if placement else '1' }}"
+                           class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                </div>
+
+                <!-- Display Frequency -->
+                <div>
+                    <label for="display_frequency" class="block text-sm font-medium text-amber-700 mb-2">
+                        Frekuensi Tampil (0.0 - 1.0)
+                    </label>
+                    <input type="number" id="display_frequency" name="display_frequency" min="0" max="1" step="0.1"
+                           value="{{ placement.display_frequency if placement else '1.0' }}"
+                           class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                    <p class="text-xs text-amber-600 mt-1">1.0 = selalu tampil, 0.5 = 50% kemungkinan tampil</p>
+                </div>
+
+                <!-- User Type Targeting -->
+                <div>
+                    <label for="user_type" class="block text-sm font-medium text-amber-700 mb-2">
+                        Target Tipe Pengguna
+                    </label>
+                    <select id="user_type" name="user_type"
+                            class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                        <option value="all" {{ 'selected' if placement and placement.user_type == 'all' else '' }}>Semua Pengguna</option>
+                        <option value="premium" {{ 'selected' if placement and placement.user_type == 'premium' else '' }}>Premium Saja</option>
+                        <option value="non_premium" {{ 'selected' if placement and placement.user_type == 'non_premium' else '' }}>Non-Premium Saja</option>
+                        <option value="guest" {{ 'selected' if placement and placement.user_type == 'guest' else '' }}>Tamu Saja</option>
+                    </select>
+                </div>
+
+                <!-- Device Type Targeting -->
+                <div>
+                    <label for="device_type" class="block text-sm font-medium text-amber-700 mb-2">
+                        Target Tipe Perangkat
+                    </label>
+                    <select id="device_type" name="device_type"
+                            class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                        <option value="all" {{ 'selected' if placement and placement.device_type == 'all' else '' }}>Semua Perangkat</option>
+                        <option value="desktop" {{ 'selected' if placement and placement.device_type == 'desktop' else '' }}>Desktop Saja</option>
+                        <option value="mobile" {{ 'selected' if placement and placement.device_type == 'mobile' else '' }}>Mobile Saja</option>
+                        <option value="tablet" {{ 'selected' if placement and placement.device_type == 'tablet' else '' }}>Tablet Saja</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-amber-700 mb-2">
+                    Deskripsi Penempatan
+                </label>
+                <textarea id="description" name="description" rows="3"
+                          class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          placeholder="Deskripsi penempatan iklan...">{{ placement.description if placement else '' }}</textarea>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label for="is_active" class="block text-sm font-medium text-amber-700 mb-2">
+                    Status Penempatan
+                </label>
+                <select id="is_active" name="is_active"
+                        class="w-full px-4 py-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent">
+                    <option value="true" {{ 'selected' if placement and placement.is_active else '' }}>Aktif</option>
+                    <option value="false" {{ 'selected' if placement and not placement.is_active else '' }}>Nonaktif</option>
+                </select>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-amber-200">
+                <button type="button" onclick="window.location.href='{{ url_for("ads.placements_list") }}'"
+                        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors">
+                    <i class="fas fa-save mr-2"></i>
+                    {{ 'Update Penempatan' if placement else 'Buat Penempatan' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('placementForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        name: formData.get('name'),
+        ad_id: parseInt(formData.get('ad_id')),
+        page_type: formData.get('page_type'),
+        page_specific: formData.get('page_specific') || null,
+        section: formData.get('section'),
+        position: formData.get('position'),
+        position_value: formData.get('position_value') ? parseInt(formData.get('position_value')) : null,
+        max_ads_per_page: parseInt(formData.get('max_ads_per_page')),
+        display_frequency: parseFloat(formData.get('display_frequency')),
+        user_type: formData.get('user_type'),
+        device_type: formData.get('device_type'),
+        description: formData.get('description'),
+        is_active: formData.get('is_active') === 'true'
+    };
+
+    try {
+        const url = '{{ url_for("ads.edit_placement", placement_id=placement.id) if placement else url_for("ads.create_placement") }}';
+        const method = 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', '{{ "Penempatan berhasil diupdate!" if placement else "Penempatan berhasil dibuat!" }}');
+            setTimeout(() => {
+                window.location.href = '{{ url_for("ads.placements_list") }}';
+            }, 1500);
+        } else {
+            showToast('error', result.error || 'Terjadi kesalahan');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'Terjadi kesalahan saat menyimpan penempatan');
+    }
+});
+
+// Auto-fill position value when after_n_items is selected
+document.getElementById('position').addEventListener('change', function() {
+    const positionValue = document.getElementById('position_value');
+    if (this.value === 'after_n_items') {
+        positionValue.value = '3';
+        positionValue.disabled = false;
+    } else {
+        positionValue.value = '';
+        positionValue.disabled = true;
+    }
+});
+
+// Initialize position value field
+document.addEventListener('DOMContentLoaded', function() {
+    const position = document.getElementById('position');
+    const positionValue = document.getElementById('position_value');
+    if (position.value === 'after_n_items') {
+        positionValue.disabled = false;
+    } else {
+        positionValue.disabled = true;
+    }
+});
+</script>
+{% endblock %} 

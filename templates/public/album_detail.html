@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ brand_info.brand_name|default('LilyOpenCMS') }} - {{ album.title }}
+{% endblock %}
+
+{% block og_title %}
+{% if album.og_title %}{{ album.og_title }}{% else %}{{ album.title }}{% endif %}
+{% endblock %}
+
+{% block og_description %}
+{% if album.og_description %}{{ album.og_description }}{% else %}{{ album.meta_description | default('Baca album selengkapnya') }}{% endif %}
+{% endblock %}
+
+{% block og_image %}
+{% if album.og_image %}{{ album.og_image }}{% else %}{{ url_for('static', filename='pic/dark.png', _external=True) }}{% endif %}
+{% endblock %}
+
+{% block twitter_title %}
+{% if album.twitter_title %}{{ album.twitter_title }}{% else %}{{ album.title }}{% endif %}
+{% endblock %}
+
+{% block twitter_description %}
+{% if album.twitter_description %}{{ album.twitter_description }}{% else %}{{ album.meta_description | default('Baca album selengkapnya') }}{% endif %}
+{% endblock %}
+
+{% block twitter_image %}
+{% if album.twitter_image %}{{ album.twitter_image }}{% else %}{{ url_for('static', filename='pic/dark.png', _external=True) }}{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/comment-rating.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/album-detail.css') }}">
+<script>window.__ADS_ALLOWED__ = true;</script>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative bg-cover bg-center bg-no-repeat" 
+     style="background-image: url('{% if album.cover_image %}{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}{% else %}{{ url_for('static', filename='pic/placeholder.png') }}{% endif %}');">
+  <div class="album-hero min-h-[400px] flex items-center">
+    <div class="container mx-auto px-4 sm:px-6 py-12">
+      <div class="max-w-4xl">
+        <!-- Back Button -->
+        <div class="mb-6">
+          <a href="{{ url_for('main.albums_list') }}" 
+             class="inline-flex items-center text-sm font-medium text-white hover:text-gray-200 group">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:-translate-x-1 transition-transform duration-200">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Kembali ke Album
+          </a>
+        </div>
+        
+        <!-- Album Info -->
+        <div class="text-white">
+          <!-- Category -->
+          {% if album.category %}
+          <span class="inline-block mb-4 px-3 py-1 text-sm font-semibold rounded-full bg-white/20 backdrop-blur-sm">
+            {{ album.category.name }}
+          </span>
+          {% endif %}
+          
+          <!-- Title -->
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+            {{ album.title }}
+          </h1>
+          
+          <!-- Status and Premium Badges -->
+          <div class="flex flex-wrap items-center gap-3 mb-6">
+            {% if album.is_completed %}
+            <span class="status-badge status-completed">Selesai</span>
+            {% elif album.is_hiatus %}
+            <span class="status-badge status-hiatus">Hiatus</span>
+            {% else %}
+            <span class="status-badge status-ongoing">Sedang Berlangsung</span>
+            {% endif %}
+            
+            {% if album.is_premium %}
+            <span class="premium-badge">Premium</span>
+            {% endif %}
+
+            {% if album.age_rating %}
+            <span class="age-badge">{{ album.age_rating }}</span>
+            {% endif %}
+          </div>
+          
+          <!-- Meta Info -->
+          <div class="flex flex-wrap items-center gap-6 text-sm text-white/80">
+            <span class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.414M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ album.total_chapters }} Bab
+            </span>
+            <span class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {{ album.total_views }} dilihat
+            </span>
+            <span class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {{ album.total_reads }} baca
+            </span>
+            <span class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              {{ album.created_at.strftime('%d %b %Y') }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left Column: Main Content -->
+      <div class="lg:col-span-2">
+        <!-- Synopsis (moved up for better flow) -->
+        {% if album.description %}
+        <div class="bg-card rounded-lg border border-border p-6 mb-8">
+          <h2 class="text-xl font-semibold text-foreground mb-4">Sinopsis</h2>
+          <div class="prose prose-foreground max-w-none">
+            {{ album.description | safe }}
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- Chapters (moved from sidebar to main content) -->
+        <div class="bg-card rounded-lg border border-border p-6 mb-8">
+          <h2 class="text-xl font-semibold text-foreground mb-4">Daftar Bab</h2>
+          
+          {% if chapters %}
+          <div class="chapter-list max-h-96 overflow-y-auto">
+            {% for chapter in chapters %}
+            <a href="{{ url_for('main.chapter_reader', album_id=album.id, chapter_id=chapter.id, chapter_title=chapter.chapter_title|replace(' ', '-')|lower) }}" 
+               class="chapter-item block p-4 rounded-lg hover:bg-secondary transition-colors mb-3 border border-border">
+              <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-foreground line-clamp-1">{{ chapter.chapter_title }}</h3>
+                  <p class="text-sm text-muted-foreground">Bab {{ chapter.chapter_number }}</p>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-muted-foreground">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+          
+          <!-- Start Reading Button -->
+          {% if chapters %}
+          <div class="mt-6 pt-6 border-t border-border">
+            <a href="{{ url_for('main.chapter_reader', album_id=album.id, chapter_id=chapters[0].id, chapter_title=chapters[0].chapter_title|replace(' ', '-')|lower) }}" 
+               class="w-full bg-primary text-primary-foreground py-4 px-6 rounded-lg font-semibold text-center block hover:bg-primary/90 transition-colors text-lg">
+              Mulai Membaca
+            </a>
+          </div>
+          {% endif %}
+          
+          {% else %}
+          <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-muted-foreground mx-auto mb-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+            <p class="text-muted-foreground">Belum ada bab yang tersedia</p>
+          </div>
+          {% endif %}
+        </div>
+        
+        <!-- Author Info -->
+        <div class="bg-card rounded-lg border border-border p-6 mb-8">
+          <h2 class="text-xl font-semibold text-foreground mb-4">Tentang Penulis</h2>
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold mr-4">
+              {{ album.author.username[0].upper() if album.author.username else 'A' }}
+            </div>
+            <div>
+              <h3 class="font-semibold text-foreground">{{ album.author.username if album.author.username else 'Penulis' }}</h3>
+              <p class="text-sm text-muted-foreground">
+                {{ album.total_chapters }} cerita dalam album ini
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Author's Other Albums -->
+        {% if author_albums %}
+        <div class="bg-card rounded-lg border border-border p-6 mb-8">
+          <h2 class="text-xl font-semibold text-foreground mb-4">Album Lainnya oleh {{ album.author.username if album.author.username else 'Penulis Ini' }}</h2>
+          <div class="flex overflow-x-auto gap-6 px-4 py-4 scroll-smooth">
+            {% for author_album in author_albums %}
+            <article class="album-card bg-card rounded-lg border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group flex-shrink-0 w-64 sm:w-72 lg:w-80">
+              <a href="{{ url_for('main.album_detail', album_id=author_album.id, album_title=author_album.title|replace(' ', '-')|lower) }}" 
+                 class="block group">
+                <div class="relative">
+                  <!-- Album Cover -->
+                  {% set image_obj = author_album.cover_image %}
+                  {% set placeholder_img = url_for('static', filename='pic/placeholder.png') %}
+                  {% set final_img_url = placeholder_img %}
+                  {% if image_obj and image_obj.filepath %}
+                    {% set image_filepath = image_obj.filepath %}
+                    {% set path_without_static = image_filepath.replace('static/', '', 1) %}
+                    {% set last_dot_index = path_without_static.rfind('.') %}
+                    {% if last_dot_index != -1 %}
+                      {% set base_path = path_without_static[:last_dot_index] %}
+                      {% set extension = path_without_static[last_dot_index:] %}
+                      {% set thumb_path = base_path ~ '_thumb_portrait' ~ extension %}
+                      {% set final_img_url = url_for('static', filename=thumb_path) %}
+                    {% endif %}
+                  {% endif %}
+                  <img src="{{ url_for('static', filename='pic/placeholder.png') }}"
+                       data-src="{{ final_img_url }}"
+                       alt="{{ author_album.title }}"
+                       class="album-cover w-full lazy"
+                       onerror="this.onerror=null; this.src='{{ url_for('static', filename='pic/placeholder.png') }}'; this.classList.add('loaded');">
+                  
+                  <!-- Chapter Count -->
+                  <span class="chapter-count">{{ author_album.total_chapters }} Bab</span>
+                  
+                  <!-- Status Badge -->
+                  {% if author_album.is_completed %}
+                  <span class="status-badge status-completed">Selesai</span>
+                  {% elif author_album.is_hiatus %}
+                  <span class="status-badge status-hiatus">Hiatus</span>
+                  {% else %}
+                  <span class="status-badge status-ongoing">Ongoing</span>
+                  {% endif %}
+                  
+                  <!-- Premium Badge -->
+                  {% if author_album.is_premium %}
+                  <span class="premium-badge">Premium</span>
+                  {% endif %}
+                </div>
+                
+                <div class="p-4">
+                  <!-- Category -->
+                  {% if author_album.category %}
+                  <span class="inline-block mb-2 px-2 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary">
+                    {{ author_album.category.name }}
+                  </span>
+                  {% endif %}
+                  
+                  <!-- Title -->
+                  <h3 class="text-lg font-semibold text-card-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                    {{ author_album.title }}
+                  </h3>
+                  
+                  <!-- Description -->
+                  {% if author_album.description %}
+                  <p class="text-sm text-muted-foreground line-clamp-3 mb-3">
+                    {{ author_album.description }}
+                  </p>
+                  {% endif %}
+                  
+                  <!-- Meta Info -->
+                  <div class="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{{ author_album.created_at.strftime('%d %b %Y') }}</span>
+                    <span>{{ author_album.total_reads }} baca</span>
+                  </div>
+                </div>
+              </a>
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- Related Albums -->
+        {% if related_albums %}
+        <div class="bg-card rounded-lg border border-border p-6">
+          <h2 class="text-xl font-semibold text-foreground mb-4">Album Terkait</h2>
+          <div class="flex overflow-x-auto gap-6 px-4 py-4 scroll-smooth">
+            {% for related in related_albums %}
+            <article class="album-card bg-card rounded-lg border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group flex-shrink-0 w-64 sm:w-72 lg:w-80">
+              <a href="{{ url_for('main.album_detail', album_id=related.id, album_title=related.title|replace(' ', '-')|lower) }}" 
+                 class="block group">
+                <div class="relative">
+                  <!-- Album Cover -->
+                  {% set image_obj = related.cover_image %}
+                  {% set placeholder_img = url_for('static', filename='pic/placeholder.png') %}
+                  {% set final_img_url = placeholder_img %}
+                  {% if image_obj and image_obj.filepath %}
+                    {% set image_filepath = image_obj.filepath %}
+                    {% set path_without_static = image_filepath.replace('static/', '', 1) %}
+                    {% set last_dot_index = path_without_static.rfind('.') %}
+                    {% if last_dot_index != -1 %}
+                      {% set base_path = path_without_static[:last_dot_index] %}
+                      {% set extension = path_without_static[last_dot_index:] %}
+                      {% set thumb_path = base_path ~ '_thumb_portrait' ~ extension %}
+                      {% set final_img_url = url_for('static', filename=thumb_path) %}
+                    {% endif %}
+                  {% endif %}
+                  <img src="{{ url_for('static', filename='pic/placeholder.png') }}"
+                       data-src="{{ final_img_url }}"
+                       alt="{{ related.title }}"
+                       class="album-cover w-full lazy"
+                       onerror="this.onerror=null; this.src='{{ url_for('static', filename='pic/placeholder.png') }}'; this.classList.add('loaded');">
+                  
+                  <!-- Chapter Count -->
+                  <span class="chapter-count">{{ related.total_chapters }} Bab</span>
+                  
+                  <!-- Status Badge -->
+                  {% if related.is_completed %}
+                  <span class="status-badge status-completed">Selesai</span>
+                  {% elif related.is_hiatus %}
+                  <span class="status-badge status-hiatus">Hiatus</span>
+                  {% else %}
+                  <span class="status-badge status-ongoing">Ongoing</span>
+                  {% endif %}
+                  
+                  <!-- Premium Badge -->
+                  {% if related.is_premium %}
+                  <span class="premium-badge">Premium</span>
+                  {% endif %}
+                </div>
+                
+                <div class="p-4">
+                  <!-- Category -->
+                  {% if related.category %}
+                  <span class="inline-block mb-2 px-2 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary">
+                    {{ related.category.name }}
+                  </span>
+                  {% endif %}
+                  
+                  <!-- Title -->
+                  <h3 class="text-lg font-semibold text-card-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                    {{ related.title }}
+                  </h3>
+                  
+                  <!-- Description -->
+                  {% if related.description %}
+                  <p class="text-sm text-muted-foreground line-clamp-3 mb-3">
+                    {{ related.description }}
+                  </p>
+                  {% endif %}
+                  
+                  <!-- Meta Info -->
+                  <div class="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{{ related.created_at.strftime('%d %b %Y') }}</span>
+                    <span>{{ related.total_reads }} baca</span>
+                  </div>
+                </div>
+              </a>
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      
+      <!-- Right Column: Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="space-y-6 sticky top-4">
+          {% if brand_info and brand_info.enable_ratings %}
+          <!-- Rating Section -->
+          <div class="bg-card rounded-lg border border-border p-6" data-content-type="album" data-content-id="{{ album.id }}" data-rating-instance="album-{{ album.id }}">
+            <div class="text-center">
+              <!-- Rating Header -->
+              <div class="mb-6">
+                <h2 class="text-xl font-bold text-foreground mb-2">Bagaimana menurut Anda?</h2>
+                <p class="text-sm text-muted-foreground">Berikan rating untuk album ini</p>
+              </div>
+              
+              <!-- Rating Display -->
+              <div class="rating-display mb-6">
+                <!-- Loading state -->
+                <div class="rating-loading">
+                  <div class="flex items-center justify-center mb-4">
+                  <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span class="ml-3 text-muted-foreground">Memuat rating...</span>
+                  </div>
+                </div>
+                
+                <!-- Rating statistics will be loaded here -->
+              </div>
+              
+              <!-- Star Rating Interface -->
+              <div class="star-rating-container text-center">
+                <!-- Loading state for star rating -->
+                <div class="star-rating-loading">
+                  <div class="flex justify-center space-x-2 mb-4">
+                    {% for i in range(1, 6) %}
+                    <button class="star-btn text-3xl text-gray-300 hover:text-yellow-400 transition-colors duration-200" disabled>
+                      ★
+                    </button>
+                    {% endfor %}
+                  </div>
+                  <p class="text-sm text-muted-foreground">Memuat rating...</p>
+                </div>
+                <!-- Star rating interface will be loaded here -->
+              </div>
+              
+
+            </div>
+          </div>
+          {% endif %}
+          
+          {% if brand_info and brand_info.enable_comments %}
+          <!-- Comments Section -->
+          <div class="bg-card rounded-lg border border-border p-6" data-content-type="album" data-content-id="{{ album.id }}">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-foreground">Komentar</h2>
+              {% if current_user.is_authenticated %}
+              <button id="add-comment-btn" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Tambah Komentar
+              </button>
+              {% else %}
+              <a href="{{ url_for('main.login') }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Masuk untuk Berkomentar
+              </a>
+              {% endif %}
+            </div>
+            
+            <!-- Inline Comment Form (Hidden by default) -->
+            <div id="inline-comment-form" class="hidden mb-4 p-4 bg-muted/30 rounded-lg border border-border">
+              <form class="comment-form">
+                <div class="form-group">
+                  <textarea class="form-control comment-content w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" rows="4" placeholder="Tulis komentar Anda di sini..." required></textarea>
+                  </div>
+                <div class="flex gap-3 mt-3">
+                  <button type="submit" class="btn btn-primary comment-submit-btn px-4 py-2 text-sm">Kirim Komentar</button>
+                  <button type="button" id="cancel-comment" class="btn btn-secondary px-4 py-2 text-sm">Batal</button>
+                </div>
+              </form>
+            </div>
+            
+            <div class="comments-container">
+              <!-- Comments will be loaded here -->
+            </div>
+            
+            <div class="comments-pagination mt-4">
+              <!-- Auto-loading will handle pagination automatically -->
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Share Section -->
+          <div class="bg-card rounded-lg border border-border p-6" role="region" aria-label="Share options">
+            <h2 class="text-lg font-semibold text-foreground mb-4">Bagikan Album</h2>
+            <p id="total-share-count" class="text-sm text-muted-foreground mb-4">
+              Total dibagikan: <span class="font-semibold text-primary">0</span> kali
+            </p>
+            <div class="share-buttons-container grid grid-cols-3 gap-3" role="toolbar" aria-label="Social media sharing options">
+                <!-- WhatsApp -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on WhatsApp">
+                    <button data-platform="whatsapp" title="Bagikan ke WhatsApp"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#128C7E]">
+                        <i class="fab fa-whatsapp text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="whatsapp">0</span>
+                </div>
+                <!-- Facebook -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Facebook">
+                    <button data-platform="facebook" title="Bagikan ke Facebook"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1877F2] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0C53A7]">
+                        <i class="fab fa-facebook-f text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="facebook">0</span>
+                </div>
+                <!-- Twitter/X -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Twitter">
+                    <button data-platform="twitter" title="Bagikan ke Twitter/X"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#1DA1F2] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0A84D0]">
+                        <i class="fab fa-twitter text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="twitter">0</span>
+                </div>
+                <!-- Instagram -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Instagram">
+                    <button data-platform="instagram" title="Bagikan ke Instagram"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-pink-600">
+                        <i class="fab fa-instagram text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="instagram">0</span>
+                </div>
+                <!-- Bluesky -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Share on Bluesky">
+                    <button data-platform="bluesky" title="Bagikan ke Bluesky"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#007AFF] text-white shadow-md hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-[#0056B3]">
+                        <i class="fas fa-cloud text-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="bluesky">0</span>
+                </div>
+                <!-- Copy Link -->
+                <div class="group flex flex-col items-center" role="button" tabindex="0" aria-label="Copy link">
+                    <button data-platform="clipboard" title="Salin Tautan"
+                            class="share-button inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/80 hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary">
+                        <i class="fas fa-copy text-lg"></i>
+                    </button>
+                    <span class="share-count mt-1 text-xs font-medium text-muted-foreground" data-platform="clipboard">0</span>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+  <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-2 z-50"></div>
+
+  {# Embedded Album Detail JS Logic #}
+  <script>
+    window.albumId = {{ album.id | default('null') | tojson }};
+    window.albumTitle = {{ album.title | default('Album Ini') | tojson }};
+    window.albumUrl = window.location.href;
+    
+    // User context for comment and rating system
+    window.currentUserId = {{ current_user.id if current_user.is_authenticated else 'null' | tojson }};
+    window.currentUserRole = {{ current_user.role.value if current_user.is_authenticated else 'null' | tojson }};
+  </script>
+  
+  <!-- Load JavaScript files -->
+  <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/share.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/comment-system.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rating-system.js') }}"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // --- Initialize Share Buttons ---
+      if (typeof initializeSharing === 'function') {
+        initializeSharing({
+          id: window.albumId,
+          title: window.albumTitle,
+          url: window.albumUrl,
+          type: 'album'
+        }, console);
+      }
+
+      // --- Initialize Comment and Rating Systems ---
+      if (typeof CommentSystem !== 'undefined' && window.albumId) {
+        window.commentSystem = new CommentSystem('album', window.albumId, {
+          autoLoad: true,
+          perPage: 12,
+          autoLoadMore: true,
+          loadMoreThreshold: 0.8
+        });
+      }
+
+      // Rating system will be auto-initialized by the rating-system.js
+      // The rating instances are already properly set up with data-rating-instance attributes
+      
+      // Ensure proper error handling for rating systems
+      setTimeout(() => {
+        const ratingInstances = document.querySelectorAll('[data-rating-instance]');
+        ratingInstances.forEach(instance => {
+          const instanceId = instance.dataset.ratingInstance;
+          if (!window[instanceId.replace(/[^a-zA-Z0-9]/g, '_')]) {
+            console.warn(`Rating system not initialized for instance: ${instanceId}`);
+          }
+        });
+      }, 1000);
+      
+      // Inline Comment Form Functionality
+      const inlineCommentForm = document.getElementById('inline-comment-form');
+      const addCommentBtn = document.getElementById('add-comment-btn');
+      const cancelComment = document.getElementById('cancel-comment');
+      
+      if (addCommentBtn) {
+        addCommentBtn.addEventListener('click', () => {
+          inlineCommentForm.classList.remove('hidden');
+          addCommentBtn.classList.add('hidden');
+          // Focus on the textarea
+          const textarea = inlineCommentForm.querySelector('textarea');
+          if (textarea) {
+            textarea.focus();
+          }
+        });
+      }
+      
+      if (cancelComment) {
+        cancelComment.addEventListener('click', () => {
+          inlineCommentForm.classList.add('hidden');
+          addCommentBtn.classList.remove('hidden');
+          // Clear the form
+          const textarea = inlineCommentForm.querySelector('textarea');
+          if (textarea) {
+            textarea.value = '';
+          }
+        });
+      }
+    });
+  </script>
+{% endblock %} 

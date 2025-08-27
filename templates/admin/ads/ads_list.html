@@ -1,0 +1,215 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Ads Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Ads Management</h1>
+                <p class="text-gray-600">Manage your advertising content</p>
+            </div>
+            <a href="{{ url_for('ads.create_ad') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                Create New Ad
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ad Type</label>
+                <select id="filter-type" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    <option value="">All Types</option>
+                    <option value="internal">Internal</option>
+                    <option value="external">External</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
+                <select id="filter-content" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    <option value="">All Content</option>
+                    <option value="image">Image</option>
+                    <option value="text">Text</option>
+                    <option value="html">HTML</option>
+                    <option value="google_ads">Google Ads</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select id="filter-status" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Campaign</label>
+                <select id="filter-campaign" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                    <option value="">All Campaigns</option>
+                    {% for campaign in campaigns %}
+                    <option value="{{ campaign.id }}">{{ campaign.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ads Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">All Ads</h3>
+        </div>
+        
+        {% if ads %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for ad in ads %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">{{ ad.title }}</div>
+                                <div class="text-sm text-gray-500">{{ ad.description[:50] }}{% if ad.description|length > 50 %}...{% endif %}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ ad.ad_type|title }}</div>
+                            <div class="text-sm text-gray-500">{{ ad.content_type|title }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if ad.campaign %}
+                            <div class="text-sm text-gray-900">{{ ad.campaign.name }}</div>
+                            {% else %}
+                            <div class="text-sm text-gray-500">No Campaign</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ "{:,}".format(ad.impressions) }} impressions</div>
+                            <div class="text-sm text-gray-500">{{ "{:.2f}".format(ad.ctr) }}% CTR</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 'bg-green-100 text-green-800' if ad.is_active_now() else 'bg-red-100 text-red-800' }}">
+                                {{ 'Active' if ad.is_active_now() else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ ad.created_at.strftime('%Y-%m-%d') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end space-x-2">
+                                <a href="{{ url_for('ads.view_ad', ad_id=ad.id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                <a href="{{ url_for('ads.edit_ad', ad_id=ad.id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                <button onclick="deleteAd({{ ad.id }})" class="text-red-600 hover:text-red-900">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No ads</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating a new ad.</p>
+            <div class="mt-6">
+                <a href="{{ url_for('ads.create_ad') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    Create Ad
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Delete Ad</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">Are you sure you want to delete this ad? This action cannot be undone.</p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button id="confirmDelete" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 mr-2">
+                    Delete
+                </button>
+                <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let adToDelete = null;
+
+function deleteAd(adId) {
+    adToDelete = adId;
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+    adToDelete = null;
+}
+
+document.getElementById('confirmDelete').addEventListener('click', function() {
+    if (adToDelete) {
+        fetch(`/ads/ads/${adToDelete}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Error deleting ad');
+            }
+        });
+    }
+    closeDeleteModal();
+});
+
+// Filter functionality
+document.getElementById('filter-type').addEventListener('change', filterAds);
+document.getElementById('filter-content').addEventListener('change', filterAds);
+document.getElementById('filter-status').addEventListener('change', filterAds);
+document.getElementById('filter-campaign').addEventListener('change', filterAds);
+
+function filterAds() {
+    // This would be implemented with AJAX to filter the table
+    // For now, we'll just log the filter values
+    const type = document.getElementById('filter-type').value;
+    const content = document.getElementById('filter-content').value;
+    const status = document.getElementById('filter-status').value;
+    const campaign = document.getElementById('filter-campaign').value;
+    
+    console.log('Filtering by:', { type, content, status, campaign });
+    // TODO: Implement actual filtering
+}
+</script>
+{% endblock %} 

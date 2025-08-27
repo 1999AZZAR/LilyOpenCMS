@@ -1,0 +1,318 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Dashboard Analitik - Admin{% endblock %}
+{% block hero_title %}Dashboard Analitik{% endblock %}
+{% block hero_desc %}Wawasan real-time dan metrik performa{% endblock %}
+
+{% block content %}
+<div id="toast-container" class="fixed top-5 right-5 space-y-2 z-50" role="status" aria-live="polite"></div>
+
+<!-- Navigation Tabs -->
+<div class="mb-6">
+  <nav class="flex space-x-1 bg-amber-100 p-1 rounded-lg" role="tablist">
+    <button class="tab-button active bg-white text-amber-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
+      <i class="fas fa-chart-line mr-2"></i>Ringkasan
+    </button>
+    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="content">
+      <i class="fas fa-file-alt mr-2"></i>Analitik Konten
+    </button>
+    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="activity">
+      <i class="fas fa-list-alt mr-2"></i>Log Aktivitas
+    </button>
+    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="performance">
+      <i class="fas fa-server mr-2"></i>Performa Sistem
+    </button>
+  </nav>
+</div>
+
+<!-- Overview Tab -->
+<div id="overview-tab" class="tab-content active">
+  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold text-amber-800">Ringkasan Dashboard</h2>
+      <div class="flex space-x-2">
+        <button id="refresh-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+          <i class="fas fa-sync-alt mr-2"></i>Segarkan
+        </button>
+        <div class="relative">
+          <select id="period-selector" class="bg-white border border-amber-300 text-amber-700 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+            <option value="7">7 Hari Terakhir</option>
+            <option value="30" selected>30 Hari Terakhir</option>
+            <option value="90">90 Hari Terakhir</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Active Visitors -->
+      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-users text-green-600 text-2xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Pengunjung Aktif</p>
+            <p class="text-2xl font-bold text-gray-900" id="active-visitors">-</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+            <i class="fas fa-arrow-up mr-1"></i>Live
+          </span>
+        </div>
+      </div>
+
+      <!-- Total Users -->
+      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-user-friends text-blue-600 text-2xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Total Pengguna</p>
+            <p class="text-2xl font-bold text-gray-900" id="total-users">-</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+            <i class="fas fa-users mr-1"></i>Terdaftar
+          </span>
+        </div>
+      </div>
+
+      <!-- Content Created -->
+      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-file-alt text-purple-600 text-2xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Konten Dibuat</p>
+            <p class="text-2xl font-bold text-gray-900" id="content-created">-</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+            <i class="fas fa-plus mr-1"></i>Periode Ini
+          </span>
+        </div>
+      </div>
+
+      <!-- Engagement Score -->
+      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-chart-bar text-orange-600 text-2xl"></i>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Keterlibatan</p>
+            <p class="text-2xl font-bold text-gray-900" id="engagement-score">-</p>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+            <i class="fas fa-trending-up mr-1"></i>Skor
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Summary -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h3 class="text-lg font-semibold text-amber-800 mb-4">
+        <i class="fas fa-calendar-week mr-2"></i>Ringkasan Minggu Ini
+      </h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-center p-4 bg-amber-50 rounded-lg">
+          <div class="text-2xl font-bold text-amber-600" id="weekly-news">-</div>
+          <div class="text-sm text-amber-700">Berita Dibuat</div>
+        </div>
+        <div class="text-center p-4 bg-green-50 rounded-lg">
+          <div class="text-2xl font-bold text-green-600" id="weekly-images">-</div>
+          <div class="text-sm text-green-700">Gambar Diunggah</div>
+        </div>
+        <div class="text-center p-4 bg-purple-50 rounded-lg">
+          <div class="text-2xl font-bold text-purple-600" id="weekly-videos">-</div>
+          <div class="text-sm text-purple-700">Video Diunggah</div>
+        </div>
+        <div class="text-center p-4 bg-orange-50 rounded-lg">
+          <div class="text-2xl font-bold text-orange-600" id="weekly-users">-</div>
+          <div class="text-sm text-orange-700">Pengguna Aktif</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Reports -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-amber-800 mb-4">
+        <i class="fas fa-download mr-2"></i>Ekspor Laporan
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button id="export-content" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center justify-center">
+          <i class="fas fa-file-alt mr-2"></i>
+          Performa Konten
+        </button>
+        <button id="export-users" class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg flex items-center justify-center">
+          <i class="fas fa-users mr-2"></i>
+          Statistik Pengguna
+        </button>
+        <button id="export-activity" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg flex items-center justify-center">
+          <i class="fas fa-list-alt mr-2"></i>
+          Log Aktivitas
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Content Analytics Tab -->
+<div id="content-tab" class="tab-content">
+  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold text-amber-800">Performa Konten</h2>
+    </div>
+
+    <!-- Content Performance Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- News Analytics -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-amber-900 mb-4">
+          <i class="fas fa-newspaper mr-2 text-blue-600"></i>Artikel Berita
+        </h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+            <div>
+              <p class="font-medium text-gray-900">Total Artikel</p>
+              <p class="text-sm text-gray-600" id="news-stats">-</p>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-blue-600" id="news-count">-</p>
+              <p class="text-xs text-gray-500">Total Dibaca: <span id="news-reads">-</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Analytics -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-amber-900 mb-4">
+          <i class="fas fa-image mr-2 text-green-600"></i>Gambar
+        </h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+            <div>
+              <p class="font-medium text-gray-900">Total Gambar</p>
+              <p class="text-sm text-gray-600" id="image-stats">-</p>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-green-600" id="image-count">-</p>
+              <p class="text-xs text-gray-500">Rata-rata Unduhan: <span id="image-downloads">-</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Analytics -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-amber-900 mb-4">
+          <i class="fas fa-video mr-2 text-purple-600"></i>Video
+        </h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+            <div>
+              <p class="font-medium text-gray-900">Total Video</p>
+              <p class="text-sm text-gray-600" id="video-stats">-</p>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-purple-600" id="video-count">-</p>
+              <p class="text-xs text-gray-500">Rata-rata Tontonan: <span id="video-views">-</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popular Content -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-amber-900 mb-4">
+        <i class="fas fa-star mr-2 text-yellow-600"></i>Konten Populer
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="popular-content">
+        <div class="text-center text-gray-500 py-8">
+          <i class="fas fa-spinner fa-spin text-xl"></i>
+          <p class="mt-2">Memuat konten populer...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Activity Logs Tab -->
+<div id="activity-tab" class="tab-content">
+  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold text-amber-800">Aktivitas Terbaru</h2>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="space-y-3 max-h-96 overflow-y-auto" id="activity-logs">
+        <div class="text-center text-gray-500 py-4">
+          <i class="fas fa-spinner fa-spin text-xl"></i>
+          <p class="mt-2">Memuat aktivitas...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- System Performance Tab -->
+<div id="performance-tab" class="tab-content">
+  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold text-amber-800">Performa Sistem</h2>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold text-amber-900 mb-4">
+        <i class="fas fa-server mr-2 text-red-600"></i>Performa Server
+      </h3>
+      <div class="space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-gray-700">Penggunaan CPU</span>
+          <div class="flex items-center">
+            <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+              <div class="bg-red-600 h-2 rounded-full" id="cpu-bar" style="width: 0%"></div>
+            </div>
+            <span class="text-sm font-medium text-gray-900" id="cpu-percent">-</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-gray-700">Penggunaan Memori</span>
+          <div class="flex items-center">
+            <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+              <div class="bg-blue-600 h-2 rounded-full" id="memory-bar" style="width: 0%"></div>
+            </div>
+            <span class="text-sm font-medium text-gray-900" id="memory-percent">-</span>
+          </div>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-gray-700">Respon Database</span>
+          <span class="text-sm font-medium text-gray-900" id="db-response">-</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg p-6 flex items-center">
+    <i class="fas fa-spinner fa-spin text-blue-600 text-xl mr-3"></i>
+    <span class="text-gray-700">Memuat data analitik...</span>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/analytics-dashboard.js') }}"></script>
+{% endblock %} 

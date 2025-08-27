@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ brand_info.brand_name|default('LilyOpenCMS') }} - Tentang Kami
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
+
+{% block content %}
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 sm:px-6 py-12 lg:py-16">
+    <!-- Hero Section -->
+    <section class="text-center mb-16 lg:mb-20">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-primary">Tentang {{ brand_info.brand_name|default('LilyOpenCMS') }}</h1>
+      <p class="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+        {{ brand_info.tagline|default('Modern content management for the digital age') }}
+      </p>
+    </section>
+
+    <!-- Dynamic Vision & Mission Section -->
+    <section class="mb-16 lg:mb-20">
+        <h2 class="text-3xl font-bold text-foreground mb-10 md:mb-12 text-center">Visi & Misi Kami</h2>
+        <div class="grid md:grid-cols-2 gap-8 md:gap-12">
+            <!-- Visi Content Area -->
+            <div id="visi-container" class="bg-card p-8 rounded-lg border border-border shadow-sm">
+                <h3 class="text-2xl font-bold text-foreground mb-4">Visi</h3>
+                <div id="visi-content" class="text-muted-foreground leading-relaxed min-h-[80px]">
+                    <!-- Loading State -->
+                    <div class="flex items-center space-x-2 text-sm">
+                        <div class="spinner-sm border-primary"></div> <span>Memuat Visi...</span>
+                    </div>
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+            <!-- Misi Content Area -->
+            <div id="misi-container" class="bg-card p-8 rounded-lg border border-border shadow-sm">
+                <h3 class="text-2xl font-bold text-foreground mb-4">Misi</h3>
+                <div id="misi-content" class="text-muted-foreground leading-relaxed min-h-[80px]">
+                     <!-- Loading State -->
+                    <div class="flex items-center space-x-2 text-sm">
+                        <div class="spinner-sm border-primary"></div> <span>Memuat Misi...</span>
+                    </div>
+                    <!-- Content will be loaded here as a list or paragraphs -->
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End Dynamic Vision & Mission Section -->
+
+    <!-- Team Section -->
+    {% if leadership or editorial or news_team or video_team or sales_team %}
+    <section class="mb-16 lg:mb-20">
+        <h2 class="text-3xl font-bold text-foreground mb-10 md:mb-12 text-center">Tim Redaksi Kami</h2>
+
+        <!-- Leadership Team -->
+        {% if leadership %}
+        <div class="mb-12">
+          <h3 class="text-2xl font-semibold text-foreground mb-8 text-center">Jajaran Pimpinan</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+            {% for member in leadership %}
+            <div class="bg-card p-6 rounded-lg border border-border shadow-sm text-center transition-shadow hover:shadow-md">
+              <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-secondary flex items-center justify-center border border-border">
+                <span class="text-3xl font-semibold text-primary">{{ member.initials }}</span>
+              </div>
+              <h4 class="text-lg font-semibold text-foreground mb-1">{{ member.name }}</h4>
+              <p class="text-sm text-muted-foreground">{{ member.title }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Editorial Team -->
+        {% if editorial %}
+        <div class="mb-12">
+          <h3 class="text-xl font-semibold text-foreground mb-6 text-center">Tim Editorial</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {% for member in editorial %}
+            <div class="bg-card p-4 rounded-lg border border-border text-center shadow-sm">
+              <h4 class="text-base font-medium text-foreground">{{ member.name }}</h4>
+              <p class="text-xs text-muted-foreground">{{ member.title }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- News Team -->
+        {% if news_team %}
+        <div class="mb-12">
+          <h3 class="text-xl font-semibold text-foreground mb-6 text-center">Tim News</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
+            {% for member in news_team %}
+            <div class="bg-card p-4 rounded-lg border border-border text-center shadow-sm">
+              <h4 class="text-base font-medium text-foreground">{{ member.name }}</h4>
+              <p class="text-xs text-muted-foreground">{{ member.title }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Video Team -->
+        {% if video_team %}
+        <div class="mb-12">
+          <h3 class="text-xl font-semibold text-foreground mb-6 text-center">Tim Video</h3>
+          <div class="grid grid-cols-2 gap-6">
+            {% for member in video_team %}
+            <div class="bg-card p-4 rounded-lg border border-border text-center shadow-sm">
+              <h4 class="text-base font-medium text-foreground">{{ member.name }}</h4>
+              <p class="text-xs text-muted-foreground">{{ member.title }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Sales & Marketing Team -->
+        {% if sales_team %}
+        <div>
+          <h3 class="text-xl font-semibold text-foreground mb-6 text-center">Tim Sales & Marketing</h3>
+          <div class="grid grid-cols-2 gap-6">
+            {% for member in sales_team %}
+            <div class="bg-card p-4 rounded-lg border border-border text-center shadow-sm">
+              <h4 class="text-base font-medium text-foreground">{{ member.name }}</h4>
+              <p class="text-xs text-muted-foreground">{{ member.title }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+    <!-- End Team Section -->
+
+    <!-- Policies Section - Buttons for Modals -->
+    <section class="mb-16 lg:mb-20">
+      <h2 class="text-3xl font-bold text-foreground mb-10 md:mb-12 text-center">Kebijakan & Pedoman</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        {# Privacy Policy Button #}
+        <div class="bg-card p-6 rounded-lg border border-border shadow-sm text-center flex flex-col justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-foreground mb-3">Kebijakan Privasi</h3>
+                <p class="text-muted-foreground text-sm mb-5">Perlindungan data pribadi Anda adalah prioritas kami.</p>
+            </div>
+            <button onclick="toggleModal('privacy')" class="button button-outline button-md w-full mt-auto">
+                Baca Detail
+            </button>
+        </div>
+
+        {# Media Guidelines Button #}
+        <div class="bg-card p-6 rounded-lg border border-border shadow-sm text-center flex flex-col justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-foreground mb-3">Pedoman Media Siber</h3>
+                <p class="text-muted-foreground text-sm mb-5">Standar etika dan operasional jurnalistik online kami.</p>
+            </div>
+            <button onclick="toggleModal('media')" class="button button-outline button-md w-full mt-auto">
+                Baca Detail
+            </button>
+        </div>
+
+        {# Disclaimer (Penyangkalan) Button #}
+        <div class="bg-card p-6 rounded-lg border border-border shadow-sm text-center flex flex-col justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-foreground mb-3">Penyangkalan</h3>
+                <p class="text-muted-foreground text-sm mb-5">Batasan tanggung jawab atas informasi yang disajikan.</p>
+            </div>
+            <button onclick="toggleModal('disclaimer')" class="button button-outline button-md w-full mt-auto">
+                Baca Detail
+            </button>
+        </div>
+
+        {# Rights Guidelines (Pedoman Hak) Button #}
+        <div class="bg-card p-6 rounded-lg border border-border shadow-sm text-center flex flex-col justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-foreground mb-3">Pedoman Hak Cipta</h3>
+                <p class="text-muted-foreground text-sm mb-5">Informasi mengenai penggunaan konten dan hak cipta.</p>
+            </div>
+            <button onclick="toggleModal('rights')" class="button button-outline button-md w-full mt-auto">
+                Baca Detail
+            </button>
+        </div>
+      </div>
+    </section>
+    <!-- End Policies Section -->
+
+    <!-- Contact Section -->
+    {% if contact_details %}
+    <section class="text-center">
+      <h2 class="text-3xl font-bold text-foreground mb-10 md:mb-12">Hubungi Kami</h2>
+      <div class="bg-card p-8 rounded-lg inline-block border border-border shadow-sm max-w-lg w-full">
+        <div class="space-y-4 text-muted-foreground text-sm md:text-base">
+          {% for detail in contact_details %}
+          <p>
+            {% if detail.icon_class %}
+              <i class="fa fa-{{ detail.icon_class }} mr-2"></i>
+            {% endif %}
+            <span class="font-semibold text-foreground">{{ detail.title }}:</span>
+            {% if detail.link %}
+              <a href="{{ detail.link }}" class="text-primary hover:underline underline-offset-4">{{ detail.content }}</a>
+            {% else %}
+              {{ detail.content }}
+            {% endif %}
+          </p>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+    <!-- End Contact Section -->
+  </div>
+  <!-- End Main Content -->
+
+  {# --- Modals --- #}
+  {# Generic Modal Structure Function (Helper, not displayed) #}
+  {% macro policy_modal(modal_id, title_id, title_text, content_id) %}
+  <div id="{{ modal_id }}" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 transition-opacity duration-300 ease-in-out" aria-labelledby="{{ title_id }}" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 text-center">
+      <div class="bg-card text-card-foreground p-6 sm:p-8 rounded-lg w-full max-w-4xl relative max-h-[90vh] overflow-y-auto border border-border shadow-xl transform transition-all duration-300 ease-in-out scale-95 opacity-0 data-[state=open]:scale-100 data-[state=open]:opacity-100" data-state="closed">
+        <button onclick="toggleModal('{{ modal_id.replace('Modal', '') }}')" class="absolute top-4 right-4 text-muted-foreground hover:text-primary transition-colors p-1 rounded-full hover:bg-secondary" aria-label="Tutup modal">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        <h2 id="{{ title_id }}" class="text-2xl sm:text-3xl font-bold text-primary mb-6 text-left">{{ title_text }}</h2>
+        <div id="{{ content_id }}" class="space-y-5 text-left text-muted-foreground leading-relaxed">
+          <!-- Loading State -->
+          <div class="text-center py-10">
+            <div class="spinner mx-auto"></div> {# Uses spinner style from base.html #}
+            <p class="mt-4 text-muted-foreground">Memuat konten...</p>
+          </div>
+          <!-- Content will be loaded dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endmacro %}
+
+  <!-- Instantiate Modals using the macro -->
+  {{ policy_modal('privacyModal', 'privacyModalTitle', 'Kebijakan Privasi', 'privacyContent') }}
+  {{ policy_modal('mediaModal', 'mediaModalTitle', 'Pedoman Media Siber', 'mediaContent') }}
+  {{ policy_modal('disclaimerModal', 'disclaimerModalTitle', 'Penyangkalan (Disclaimer)', 'disclaimerContent') }}
+  {{ policy_modal('rightsModal', 'rightsModalTitle', 'Pedoman Hak Cipta', 'rightsContent') }}
+
+  {# --- End Modals --- #}
+
+{% endblock %}
+
+{% block extra_scripts %}
+  <script type="module" src="{{ url_for('static', filename='js/about.js') }}"></script>
+{% endblock %}

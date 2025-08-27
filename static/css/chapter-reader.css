@@ -1,0 +1,52 @@
+/* Chapter top navigation */
+.chapter-navigation {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(8px);
+  background: hsl(var(--background) / 0.9);
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Progress bar */
+.chapter-progress {
+  height: 4px;
+  background: hsl(var(--primary) / 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.chapter-progress-bar {
+  height: 100%;
+  background: hsl(var(--primary));
+  transition: width 0.3s ease;
+}
+
+/* Sidebar list */
+.chapter-list-sidebar { max-height: calc(100vh - 200px); overflow-y: auto; }
+.chapter-item { transition: all 0.2s ease-in-out; }
+.chapter-item:hover { transform: translateX(4px); }
+.chapter-item.current { background: hsl(var(--primary) / 0.1); border-left: 4px solid hsl(var(--primary)); }
+
+/* Navigation buttons */
+.navigation-button { transition: all 0.2s ease-in-out; }
+.navigation-button:hover { transform: translateY(-1px); }
+.navigation-button[disabled],
+.navigation-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Comments split layout */
+.comments-split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+@media (max-width: 768px) { .comments-split-container { grid-template-columns: 1fr; gap: 1rem; } }
+.comment-form-section {
+  background: hsl(var(--primary) / 0.05);
+  border: 1px solid hsl(var(--primary) / 0.1);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+.comments-list-section {
+  background: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+

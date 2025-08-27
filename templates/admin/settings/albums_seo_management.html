@@ -1,0 +1,176 @@
+{% extends "admin_base.html" %}
+{% block title %}Manajemen SEO Album - Admin{% endblock %}
+{% block hero_title %}Manajemen SEO Album{% endblock %}
+{% block hero_desc %}Kelola SEO untuk album cerita dan artikel{% endblock %}
+{% block content %}
+<div id="toast-container" class="fixed top-5 right-5 space-y-2 z-50" role="status" aria-live="polite"></div>
+
+<main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-amber-800">Kelola SEO Album</h2>
+    <div class="flex space-x-2">
+      <button id="refresh-seo-albums" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <i class="fas fa-sync-alt mr-2"></i>Segarkan
+      </button>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status SEO</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Meta Desc</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keywords</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OG Tags</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="seo-albums-table-body" class="bg-white divide-y divide-gray-200">
+          <tr>
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              <i class="fas fa-spinner fa-spin text-xl"></i>
+              <p class="mt-2">Memuat album...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-700">
+      Menampilkan <span id="seo-showing-start">0</span> - <span id="seo-showing-end">0</span> dari <span id="seo-total-albums">0</span> album
+    </div>
+    <div id="seo-pagination-controls" class="flex space-x-2">
+    </div>
+  </div>
+</main>
+
+<!-- SEO Edit Modal -->
+<div id="seo-edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40" role="dialog" aria-labelledby="seo-edit-modal-title" aria-modal="true">
+  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h2 id="seo-edit-modal-title" class="text-2xl font-semibold text-amber-800">Edit SEO Album</h2>
+      <button onclick="closeSEOEditModal()" class="text-amber-600 hover:text-amber-800 text-2xl focus:outline-none focus:ring-2 focus:ring-amber-300 rounded-lg p-1">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <form id="seo-edit-form" class="space-y-6">
+      <input type="hidden" id="seo-album-id">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-meta-description">Meta Description</label>
+            <textarea id="seo-meta-description" rows="3" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Deskripsi untuk mesin pencari (maksimal 500 karakter)"></textarea>
+            <p class="text-xs text-amber-500 mt-1">Deskripsi yang akan muncul di hasil pencarian</p>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-meta-keywords">Meta Keywords</label>
+            <input type="text" id="seo-meta-keywords" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="kata kunci, pencarian, album">
+            <p class="text-xs text-amber-500 mt-1">Kata kunci dipisahkan dengan koma</p>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-seo-slug">SEO Slug</label>
+            <input type="text" id="seo-seo-slug" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="judul-album-seo-friendly">
+            <p class="text-xs text-amber-500 mt-1">URL yang SEO-friendly untuk album ini</p>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-canonical-url">Canonical URL</label>
+            <input type="url" id="seo-canonical-url" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="https://example.com/album/url">
+            <p class="text-xs text-amber-500 mt-1">URL kanonik untuk mencegah konten duplikat</p>
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-og-title">Open Graph Title</label>
+            <input type="text" id="seo-og-title" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Judul untuk Facebook, Twitter, dll">
+            <p class="text-xs text-amber-500 mt-1">Judul yang akan muncul saat dibagikan di media sosial</p>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-og-description">Open Graph Description</label>
+            <textarea id="seo-og-description" rows="3" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Deskripsi untuk media sosial"></textarea>
+            <p class="text-xs text-amber-500 mt-1">Deskripsi yang akan muncul saat dibagikan</p>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-og-image">Open Graph Image URL</label>
+            <input type="url" id="seo-og-image" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="https://example.com/image.jpg">
+            <p class="text-xs text-amber-500 mt-1">URL gambar untuk media sosial (1200x630px direkomendasikan)</p>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-meta-author">Meta Author</label>
+            <input type="text" id="seo-meta-author" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Nama penulis">
+            <p class="text-xs text-amber-500 mt-1">Nama penulis untuk meta tag</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-amber-200 pt-6">
+        <h4 class="text-md font-semibold text-amber-800 mb-4 flex items-center">
+          <i class="fas fa-cog mr-2"></i>Pengaturan Lanjutan
+        </h4>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-meta-language">Meta Language</label>
+            <select id="seo-meta-language" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+              <option value="id">Indonesia (id)</option>
+              <option value="en">English (en)</option>
+              <option value="ja">Japanese (ja)</option>
+              <option value="ko">Korean (ko)</option>
+              <option value="zh">Chinese (zh)</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-meta-robots">Meta Robots</label>
+            <select id="seo-meta-robots" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+              <option value="index, follow">Index, Follow</option>
+              <option value="noindex, follow">No Index, Follow</option>
+              <option value="index, nofollow">Index, No Follow</option>
+              <option value="noindex, nofollow">No Index, No Follow</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-amber-700 font-medium mb-2" for="seo-structured-data-type">Structured Data Type</label>
+            <select id="seo-structured-data-type" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+              <option value="Book">Book</option>
+              <option value="CreativeWork">Creative Work</option>
+              <option value="Article">Article</option>
+              <option value="WebPage">Web Page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-4 pt-4 border-t border-amber-200">
+        <button type="button" onclick="closeSEOEditModal()" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-6 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md">
+          Batal
+        </button>
+        <button type="submit" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white px-6 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md">
+          <i class="fas fa-save mr-2"></i>Simpan SEO
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/albums-seo-management.js') }}"></script>
+{% endblock %} 

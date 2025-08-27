@@ -1,0 +1,188 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Kampanye Iklan - {{ 'Edit' if campaign else 'Buat' }}{% endblock %}
+
+{% block hero_title %}{{ 'Edit Kampanye' if campaign else 'Buat Kampanye Baru' }}{% endblock %}
+{% block hero_desc %}{{ 'Edit kampanye iklan yang ada' if campaign else 'Buat kampanye iklan baru untuk mengelola iklan' }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">
+                {{ 'Edit Kampanye' if campaign else 'Buat Kampanye Baru' }}
+            </h2>
+            <a href="{{ url_for('ads.campaigns_list') }}" 
+               class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+        </div>
+
+        <form id="campaignForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Campaign Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Kampanye *
+                    </label>
+                    <input type="text" id="name" name="name" required
+                           value="{{ campaign.name if campaign else '' }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Masukkan nama kampanye">
+                </div>
+
+                <!-- Campaign Status -->
+                <div>
+                    <label for="is_active" class="block text-sm font-medium text-gray-700 mb-2">
+                        Status Kampanye
+                    </label>
+                    <select id="is_active" name="is_active"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="true" {{ 'selected' if campaign and campaign.is_active else '' }}>Aktif</option>
+                        <option value="false" {{ 'selected' if campaign and not campaign.is_active else '' }}>Nonaktif</option>
+                    </select>
+                </div>
+
+                <!-- Start Date -->
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tanggal Mulai
+                    </label>
+                    <input type="datetime-local" id="start_date" name="start_date"
+                           value="{{ campaign.start_date.strftime('%Y-%m-%dT%H:%M') if campaign and campaign.start_date else '' }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- End Date -->
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tanggal Berakhir
+                    </label>
+                    <input type="datetime-local" id="end_date" name="end_date"
+                           value="{{ campaign.end_date.strftime('%Y-%m-%dT%H:%M') if campaign and campaign.end_date else '' }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+
+                <!-- Budget -->
+                <div>
+                    <label for="budget" class="block text-sm font-medium text-gray-700 mb-2">
+                        Anggaran (IDR)
+                    </label>
+                    <input type="number" id="budget" name="budget" step="0.01"
+                           value="{{ campaign.budget if campaign else '' }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="0.00">
+                </div>
+
+                <!-- Currency -->
+                <div>
+                    <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">
+                        Mata Uang
+                    </label>
+                    <select id="currency" name="currency"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="IDR" {{ 'selected' if campaign and campaign.currency == 'IDR' else '' }}>IDR (Rupiah)</option>
+                        <option value="USD" {{ 'selected' if campaign and campaign.currency == 'USD' else '' }}>USD (Dollar)</option>
+                        <option value="EUR" {{ 'selected' if campaign and campaign.currency == 'EUR' else '' }}>EUR (Euro)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Deskripsi Kampanye
+                </label>
+                <textarea id="description" name="description" rows="4"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Deskripsi kampanye iklan...">{{ campaign.description if campaign else '' }}</textarea>
+            </div>
+
+            <!-- Target Audience -->
+            <div>
+                <label for="target_audience" class="block text-sm font-medium text-gray-700 mb-2">
+                    Target Audiens (JSON)
+                </label>
+                <textarea id="target_audience" name="target_audience" rows="3"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                          placeholder='{"age_range": "18-35", "interests": ["technology", "news"]}'>{{ campaign.target_audience|tojson if campaign and campaign.target_audience else '' }}</textarea>
+                <p class="text-xs text-gray-600 mt-1">Format JSON untuk target audiens</p>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <button type="button" onclick="window.location.href='{{ url_for('ads.campaigns_list') }}'"
+                        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>
+                    {{ 'Update Kampanye' if campaign else 'Buat Kampanye' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('campaignForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        is_active: formData.get('is_active') === 'true',
+        start_date: formData.get('start_date') || null,
+        end_date: formData.get('end_date') || null,
+        budget: formData.get('budget') ? parseFloat(formData.get('budget')) : null,
+        currency: formData.get('currency'),
+        target_audience: formData.get('target_audience') ? JSON.parse(formData.get('target_audience')) : null
+    };
+
+    try {
+        const url = '{{ url_for("ads.edit_campaign", campaign_id=campaign.id) if campaign else url_for("ads.create_campaign") }}';
+        const method = '{{ "POST" if campaign else "POST" }}';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', '{{ "Kampanye berhasil diupdate!" if campaign else "Kampanye berhasil dibuat!" }}');
+            setTimeout(() => {
+                window.location.href = '{{ url_for("ads.campaigns_list") }}';
+            }, 1500);
+        } else {
+            showToast('error', result.error || 'Terjadi kesalahan');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'Terjadi kesalahan saat menyimpan kampanye');
+    }
+});
+
+// Validate target audience JSON
+document.getElementById('target_audience').addEventListener('blur', function() {
+    const value = this.value.trim();
+    if (value) {
+        try {
+            JSON.parse(value);
+            this.classList.remove('border-red-500');
+            this.classList.add('border-gray-300');
+        } catch (e) {
+            this.classList.remove('border-gray-300');
+            this.classList.add('border-red-500');
+            showToast('error', 'Format JSON target audiens tidak valid');
+        }
+    }
+});
+</script>
+{% endblock %} 

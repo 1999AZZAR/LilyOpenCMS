@@ -1,0 +1,291 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ 'Edit' if ad else 'Create' }} Ad - Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ 'Edit' if ad else 'Create' }} Ad</h1>
+        <p class="text-gray-600">{{ 'Update' if ad else 'Create' }} your advertising content</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <form id="adForm" class="space-y-6">
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Ad Title *</label>
+                    <input type="text" id="title" name="title" value="{{ ad.title if ad else '' }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="ad_type" class="block text-sm font-medium text-gray-700 mb-2">Ad Type *</label>
+                    <select id="ad_type" name="ad_type" 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Select Ad Type</option>
+                        <option value="internal" {{ 'selected' if ad and ad.ad_type == 'internal' else '' }}>Internal</option>
+                        <option value="external" {{ 'selected' if ad and ad.ad_type == 'external' else '' }}>External</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea id="description" name="description" rows="3" 
+                          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ ad.description if ad else '' }}</textarea>
+            </div>
+
+            <!-- Content Type and Settings -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="content_type" class="block text-sm font-medium text-gray-700 mb-2">Content Type *</label>
+                    <select id="content_type" name="content_type" 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Select Content Type</option>
+                        <option value="image" {{ 'selected' if ad and ad.content_type == 'image' else '' }}>Image</option>
+                        <option value="text" {{ 'selected' if ad and ad.content_type == 'text' else '' }}>Text</option>
+                        <option value="html" {{ 'selected' if ad and ad.content_type == 'html' else '' }}>HTML</option>
+                        <option value="google_ads" {{ 'selected' if ad and ad.content_type == 'google_ads' else '' }}>Google Ads</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="campaign_id" class="block text-sm font-medium text-gray-700 mb-2">Campaign</label>
+                    <select id="campaign_id" name="campaign_id" 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">No Campaign</option>
+                        {% for campaign in campaigns %}
+                        <option value="{{ campaign.id }}" {{ 'selected' if ad and ad.campaign_id == campaign.id else '' }}>
+                            {{ campaign.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Content Fields (Dynamic based on content type) -->
+            <div id="contentFields" class="space-y-6">
+                <!-- Image Content -->
+                <div id="imageFields" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="image_url" class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                            <input type="url" id="image_url" name="image_url" value="{{ ad.image_url if ad else '' }}" 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="image_alt" class="block text-sm font-medium text-gray-700 mb-2">Image Alt Text</label>
+                            <input type="text" id="image_alt" name="image_alt" value="{{ ad.image_alt if ad else '' }}" 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div id="textFields" class="hidden">
+                    <div>
+                        <label for="text_content" class="block text-sm font-medium text-gray-700 mb-2">Text Content</label>
+                        <textarea id="text_content" name="text_content" rows="4" 
+                                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">{{ ad.text_content if ad else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- HTML Content -->
+                <div id="htmlFields" class="hidden">
+                    <div>
+                        <label for="html_content" class="block text-sm font-medium text-gray-700 mb-2">HTML Content</label>
+                        <textarea id="html_content" name="html_content" rows="6" 
+                                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm">{{ ad.html_content if ad else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Google Ads Content -->
+                <div id="googleAdsFields" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label for="external_ad_code" class="block text-sm font-medium text-gray-700 mb-2">Ad Code</label>
+                            <textarea id="external_ad_code" name="external_ad_code" rows="4" 
+                                      class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm">{{ ad.external_ad_code if ad else '' }}</textarea>
+                        </div>
+                        <div>
+                            <label for="external_ad_client" class="block text-sm font-medium text-gray-700 mb-2">Ad Client</label>
+                            <input type="text" id="external_ad_client" name="external_ad_client" value="{{ ad.external_ad_client if ad else '' }}" 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="external_ad_slot" class="block text-sm font-medium text-gray-700 mb-2">Ad Slot</label>
+                            <input type="text" id="external_ad_slot" name="external_ad_slot" value="{{ ad.external_ad_slot if ad else '' }}" 
+                                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target URL -->
+            <div>
+                <label for="target_url" class="block text-sm font-medium text-gray-700 mb-2">Target URL</label>
+                <input type="url" id="target_url" name="target_url" value="{{ ad.target_url if ad else '' }}" 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Display Settings -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="width" class="block text-sm font-medium text-gray-700 mb-2">Width (px)</label>
+                    <input type="number" id="width" name="width" value="{{ ad.width if ad else '' }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="height" class="block text-sm font-medium text-gray-700 mb-2">Height (px)</label>
+                    <input type="number" id="height" name="height" value="{{ ad.height if ad else '' }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <input type="number" id="priority" name="priority" value="{{ ad.priority if ad else 0 }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <!-- Styling -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="css_classes" class="block text-sm font-medium text-gray-700 mb-2">CSS Classes</label>
+                    <input type="text" id="css_classes" name="css_classes" value="{{ ad.css_classes if ad else '' }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="inline_styles" class="block text-sm font-medium text-gray-700 mb-2">Inline Styles</label>
+                    <input type="text" id="inline_styles" name="inline_styles" value="{{ ad.inline_styles if ad else '' }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <!-- Scheduling -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                    <input type="datetime-local" id="start_date" name="start_date" 
+                           value="{{ ad.start_date.strftime('%Y-%m-%dT%H:%M') if ad and ad.start_date else '' }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                    <input type="datetime-local" id="end_date" name="end_date" 
+                           value="{{ ad.end_date.strftime('%Y-%m-%dT%H:%M') if ad and ad.end_date else '' }}" 
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" id="is_active" name="is_active" 
+                           {{ 'checked' if not ad or ad.is_active else '' }} 
+                           class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    <span class="ml-2 text-sm text-gray-700">Active</span>
+                </label>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4">
+                <a href="{{ url_for('ads.ads_list') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    {{ 'Update' if ad else 'Create' }} Ad
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Show/hide content fields based on content type
+document.getElementById('content_type').addEventListener('change', function() {
+    const contentType = this.value;
+    const contentFields = document.getElementById('contentFields');
+    const imageFields = document.getElementById('imageFields');
+    const textFields = document.getElementById('textFields');
+    const htmlFields = document.getElementById('htmlFields');
+    const googleAdsFields = document.getElementById('googleAdsFields');
+
+    // Hide all fields first
+    imageFields.classList.add('hidden');
+    textFields.classList.add('hidden');
+    htmlFields.classList.add('hidden');
+    googleAdsFields.classList.add('hidden');
+
+    // Show relevant fields
+    switch(contentType) {
+        case 'image':
+            imageFields.classList.remove('hidden');
+            break;
+        case 'text':
+            textFields.classList.remove('hidden');
+            break;
+        case 'html':
+            htmlFields.classList.remove('hidden');
+            break;
+        case 'google_ads':
+            googleAdsFields.classList.remove('hidden');
+            break;
+    }
+});
+
+// Form submission
+document.getElementById('adForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {};
+    
+    for (let [key, value] of formData.entries()) {
+        if (key === 'is_active') {
+            data[key] = true;
+        } else if (value) {
+            data[key] = value;
+        }
+    }
+    
+    // Convert datetime-local to ISO string
+    if (data.start_date) {
+        data.start_date = new Date(data.start_date).toISOString();
+    }
+    if (data.end_date) {
+        data.end_date = new Date(data.end_date).toISOString();
+    }
+    
+    const url = '{{ url_for("ads.edit_ad", ad_id=ad.id) if ad else url_for("ads.create_ad") }}';
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{{ url_for("ads.ads_list") }}';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the ad.');
+    });
+});
+
+// Initialize content fields on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const contentType = document.getElementById('content_type').value;
+    if (contentType) {
+        document.getElementById('content_type').dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %} 

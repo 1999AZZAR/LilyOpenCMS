@@ -1,0 +1,293 @@
+/* Premium Content Styles */
+
+/* Premium Content Notice */
+.premium-content-notice {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.1) 0%, hsl(var(--secondary) / 0.1) 100%);
+  border: 1px solid hsl(var(--primary) / 0.2);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-content-notice::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, hsl(var(--primary) / 0.05) 50%, transparent 70%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Content Mask Overlay */
+.content-mask-overlay {
+  position: relative;
+  margin: 2rem 0;
+}
+
+.content-mask-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--background) / 0.8) 60%,
+    hsl(var(--background)) 100%
+  );
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius);
+  z-index: 10;
+}
+
+.content-mask-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px hsl(var(--foreground) / 0.1), 0 10px 10px -5px hsl(var(--foreground) / 0.04);
+  z-index: 20;
+  max-width: 400px;
+  width: 90%;
+}
+
+.content-mask-icon {
+  margin-bottom: 1rem;
+  color: hsl(var(--primary));
+}
+
+.content-mask-content h3 {
+  margin-bottom: 0.5rem;
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.content-mask-content p {
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+/* Premium Content Container */
+.premium-content-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-content-container.truncated {
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.premium-content-container.truncated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--background)) 100%
+  );
+  pointer-events: none;
+}
+
+/* Premium Content Stats */
+.premium-content-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.premium-content-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.premium-content-stats .stat-icon {
+  width: 1rem;
+  height: 1rem;
+  color: hsl(var(--primary));
+}
+
+/* Premium Content Buttons */
+.premium-content-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.premium-content-buttons .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.premium-content-buttons .button-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.premium-content-buttons .button-primary:hover {
+  background: hsl(var(--primary) / 0.9);
+  transform: translateY(-1px);
+}
+
+.premium-content-buttons .button-outline {
+  background: transparent;
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+.premium-content-buttons .button-outline:hover {
+  background: hsl(var(--muted));
+  border-color: hsl(var(--foreground));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content-mask-content {
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+  
+  .premium-content-buttons {
+    flex-direction: column;
+  }
+  
+  .premium-content-buttons .button {
+    justify-content: center;
+  }
+  
+  .premium-content-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* Dark Mode Adjustments */
+.dark .content-mask-backdrop {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--background) / 0.9) 60%,
+    hsl(var(--background)) 100%
+  );
+}
+
+.dark .content-mask-content {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+/* Animation for premium content reveal */
+.premium-content-reveal {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Premium badge */
+.premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.premium-badge svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* Premium content indicator */
+.premium-content-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: hsl(var(--primary) / 0.05);
+  border: 1px solid hsl(var(--primary) / 0.1);
+  border-radius: var(--radius);
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.premium-content-indicator svg {
+  width: 1rem;
+  height: 1rem;
+  color: hsl(var(--primary));
+}
+
+/* Content truncation indicator */
+.content-truncation-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.content-truncation-indicator svg {
+  width: 1rem;
+  height: 1rem;
+  color: hsl(var(--primary));
+} 

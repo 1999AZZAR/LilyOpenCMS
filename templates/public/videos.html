@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ brand_info.brand_name|default('LilyOpenCMS') }} - Video{% if query %} | Pencarian "{{ query }}"{% endif %}{% endblock %}
+
+{% block content %}
+  <!-- Videos Section -->
+  <section class="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 lg:py-12">
+    <div class="text-center mb-10 lg:mb-12">
+        <h2 class="text-3xl lg:text-4xl font-semibold text-foreground mb-3">
+          {% if query %}
+            Hasil Pencarian Video: "{{ query }}"
+          {% else %}
+            Video Pilihan
+          {% endif %}
+        </h2>
+        <p class="text-base text-muted-foreground max-w-2xl mx-auto">
+            Video pilihan dan Terpopuler dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
+        </p>
+    </div>
+
+    {# Search form could be added here if needed, similar to news.html, #}
+    {# but for now, we just display results if 'query' exists #}
+    {% if query %}
+      {# Removed the redundant search info text as it's in the H2 now #}
+    {% endif %}
+
+    <!-- Videos Grid -->
+    {% if videos.items %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-6 lg:gap-8" id="videos-grid">
+        {% for video in videos.items %}
+         <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden group transition-all hover:shadow-md duration-300 flex flex-col">
+            {# Link wraps the image and title #}
+            <a href="{{ video.link }}" target="_blank" rel="noopener noreferrer" aria-label="Tonton video: {{ video.title | default(video.youtube_id) | e }}">
+                <div class="relative bg-secondary aspect-video overflow-hidden">
+                    {# Use YouTube thumbnail with lazy loading #}
+                    <img src="{{ url_for('static', filename='pic/placeholder.png') }}"
+                         data-src="https://img.youtube.com/vi/{{ video.youtube_id }}/hqdefault.jpg"
+                         alt="{{ video.title | default(video.youtube_id) | e }}"
+                         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 lazy"
+                         loading="lazy">
+                    {# Play Button Overlay #}
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div class="bg-primary/80 rounded-full p-3 backdrop-blur-sm shadow-lg">
+                           <svg class="w-6 h-6 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            <div class="p-4 flex flex-col flex-grow"> {# Flex structure for content alignment #}
+                <h3 class="text-sm font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2 mb-2 flex-grow">
+                    <a href="{{ video.link }}" target="_blank" rel="noopener noreferrer">
+                        {{ video.title | default(video.youtube_id) | e }}
+                    </a>
+                </h3>
+                {# Meta Info (Pushed to bottom) #}
+                <div class="mt-auto pt-2 text-xs text-muted-foreground border-t border-border">
+                     {# Assuming you add 'created_at' and 'user' relationship to YouTubeVideo model #}
+                     {# If not, remove these lines or adapt #}
+                     {% if video.created_at %}
+                        <span>{{ video.created_at.strftime('%d %b %Y') }}</span>
+                     {% endif %}
+                     {# Simple YouTube Link as fallback/alternative #}
+                     <a href="{{ video.link }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium block mt-1">
+                           Tonton di YouTube →
+                     </a>
+                </div>
+            </div>
+         </article>
+        {% endfor %}
+      </div>
+
+      <!-- Add loading skeleton for better UX -->
+      <div class="hidden" id="loading-skeleton">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-6 lg:gap-8">
+          {% for i in range(3) %}
+          <div class="bg-card rounded-lg shadow-sm border border-border overflow-hidden animate-pulse">
+            <div class="aspect-video bg-gray-200"></div>
+            <div class="p-4">
+              <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+        {# No Videos Found Message #}
+        <div class="text-center py-16 text-muted-foreground bg-card border border-border rounded-lg">
+           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mx-auto mb-4 text-gray-400">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+             <path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
+           </svg>
+           <p class="font-semibold text-lg mb-1">Tidak ada video ditemukan</p>
+           {% if query %}
+           <p class="text-sm">Coba ubah kata kunci pencarian Anda.</p>
+           {% else %}
+            <p class="text-sm">Belum ada video yang ditambahkan.</p>
+           {% endif %}
+        </div>
+    {% endif %}
+
+
+    <!-- Pagination -->
+    {% if videos and videos.items %}
+        {% with pagination_obj=videos, pagination_route='main.videos' %}
+            {% include 'pagination.html' %}
+        {% endwith %}
+    {% endif %}
+
+  </section>
+{% endblock %}
+
+{% block extra_scripts %}
+  <!-- Lazy loading for images -->
+  <script src="{{ url_for('static', filename='js/videos.js') }}"></script>
+{% endblock %}
