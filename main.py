@@ -169,6 +169,59 @@ def load_user(user_id):
 # 🌐 Context Processors with Caching
 # ----------------------
 @app.context_processor
+def inject_permission_functions():
+    """Inject permission checking functions into templates."""
+    from routes.utils.permission_manager import (
+        can_access_admin,
+        can_manage_users,
+        can_manage_content,
+        can_manage_categories,
+        can_manage_settings,
+        can_manage_roles,
+        can_manage_ads,
+        can_moderate_comments,
+        can_manage_ratings,
+        can_access_analytics,
+        can_manage_legal,
+        can_manage_brand,
+        can_manage_seo,
+        has_permission,
+        has_any_permission,
+        has_all_permissions,
+        get_user_role_display,
+        get_user_permissions_summary,
+        is_superuser,
+        is_admin,
+        is_admin_tier,
+        has_custom_role
+    )
+    
+    return {
+        'can_access_admin': can_access_admin,
+        'can_manage_users': can_manage_users,
+        'can_manage_content': can_manage_content,
+        'can_manage_categories': can_manage_categories,
+        'can_manage_settings': can_manage_settings,
+        'can_manage_roles': can_manage_roles,
+        'can_manage_ads': can_manage_ads,
+        'can_moderate_comments': can_moderate_comments,
+        'can_manage_ratings': can_manage_ratings,
+        'can_access_analytics': can_access_analytics,
+        'can_manage_legal': can_manage_legal,
+        'can_manage_brand': can_manage_brand,
+        'can_manage_seo': can_manage_seo,
+        'has_permission': has_permission,
+        'has_any_permission': has_any_permission,
+        'has_all_permissions': has_all_permissions,
+        'get_user_role_display': get_user_role_display,
+        'get_user_permissions_summary': get_user_permissions_summary,
+        'is_superuser': is_superuser,
+        'is_admin': is_admin,
+        'is_admin_tier': is_admin_tier,
+        'has_custom_role': has_custom_role
+    }
+
+@app.context_processor
 def inject_global_search_filters():
     all_categories = []
     unique_sorted_tags = []

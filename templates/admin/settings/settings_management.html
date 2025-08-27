@@ -120,8 +120,26 @@
           <p class="text-gray-600">Kelola album cerita dan artikel.</p>
         </a>
 
+        <!-- Album List Card -->
+        <a href="{{ url_for('albums.list_albums') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Daftar Album">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-list text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Daftar Album</h3>
+          <p class="text-gray-600">Lihat dan kelola daftar album.</p>
+        </a>
+
+        <!-- Album Analytics Card -->
+        <a href="{{ url_for('albums.analytics') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Analitik Album">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-chart-bar text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Analitik Album</h3>
+          <p class="text-gray-600">Lihat statistik dan performa album.</p>
+        </a>
+
         <!-- Category Management Card -->
-        <a href="{{ url_for('main.settings_categories') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Kategori">
+        <a href="{{ url_for('main.settings_categories') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_categories() %}hidden{% endif %}" role="article" aria-label="Manajemen Kategori">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-tags text-2xl text-white"></i>
           </div>
@@ -139,7 +157,7 @@
         </a>
 
         <!-- Video Management Card -->
-        <a href="{{ url_for('main.settings_youtube') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Video">
+        <a href="{{ url_for('main.settings_youtube') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not has_any_permission('videos', ['read', 'create', 'update', 'delete']) %}hidden{% endif %}" role="article" aria-label="Manajemen Video">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fab fa-youtube text-2xl text-white"></i>
           </div>
@@ -153,7 +171,7 @@
     <div class="tab-content" id="ads-tab">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Ads Dashboard -->
-        <a href="{{ url_for('ads.admin_dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Dashboard Iklan">
+        <a href="{{ url_for('ads.admin_dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ads() %}hidden{% endif %}" role="article" aria-label="Dashboard Iklan">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-tachometer-alt text-2xl text-white"></i>
           </div>
@@ -162,7 +180,7 @@
         </a>
 
         <!-- Campaigns -->
-        <a href="{{ url_for('ads.campaigns_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Kampanye Iklan">
+        <a href="{{ url_for('ads.campaigns_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ads() %}hidden{% endif %}" role="article" aria-label="Kampanye Iklan">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-bullhorn text-2xl text-white"></i>
           </div>
@@ -171,7 +189,7 @@
         </a>
 
         <!-- Manage Ads -->
-        <a href="{{ url_for('ads.ads_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Kelola Iklan">
+        <a href="{{ url_for('ads.ads_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ads() %}hidden{% endif %}" role="article" aria-label="Kelola Iklan">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-ad text-2xl text-white"></i>
           </div>
@@ -180,7 +198,7 @@
         </a>
 
         <!-- Placements -->
-        <a href="{{ url_for('ads.placements_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Penempatan Iklan">
+        <a href="{{ url_for('ads.placements_list') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ads() %}hidden{% endif %}" role="article" aria-label="Penempatan Iklan">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-map-marker-alt text-2xl text-white"></i>
           </div>
@@ -189,7 +207,7 @@
         </a>
 
         <!-- Analytics -->
-        <a href="{{ url_for('ads.analytics_dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Analitik Iklan">
+        <a href="{{ url_for('ads.analytics_dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ads() %}hidden{% endif %}" role="article" aria-label="Analitik Iklan">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-chart-line text-2xl text-white"></i>
           </div>
@@ -223,7 +241,7 @@
     <div class="tab-content" id="users-tab">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Account Management Card -->
-        <a href="{{ url_for('main.user_account') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Akun">
+        <a href="{{ url_for('main.user_account') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Manajemen Akun">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-user text-2xl text-white"></i>
           </div>
@@ -232,12 +250,21 @@
         </a>
 
         <!-- User Management Card (Only for Superuser and Admin) -->
-        <a id="user-management-card" href="{{ url_for('main.settings_users') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Pengguna">
+        <a id="user-management-card" href="{{ url_for('main.settings_users') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_users() %}hidden{% endif %}" role="article" aria-label="Manajemen Pengguna">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-users-cog text-2xl text-white"></i>
           </div>
           <h3 class="text-xl font-bold mb-2 text-gray-800">Manajemen Pengguna</h3>
           <p class="text-gray-600">Kelola pengguna dan akses.</p>
+        </a>
+
+        <!-- Pending Registrations Card -->
+        <a href="{{ url_for('main.pending_registrations') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_users() %}hidden{% endif %}" role="article" aria-label="Registrasi Tertunda">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-user-clock text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Registrasi Tertunda</h3>
+          <p class="text-gray-600">Kelola registrasi pengguna yang tertunda.</p>
         </a>
 
 
@@ -248,7 +275,7 @@
     <div class="tab-content" id="engagement-tab">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Comment Moderation Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('comments.admin_comments') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Moderasi Komentar">
+        <a href="{{ url_for('comments.admin_comments') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_moderate_comments() %}hidden{% endif %}" role="article" aria-label="Moderasi Komentar">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-comments text-2xl text-white"></i>
           </div>
@@ -257,7 +284,7 @@
         </a>
 
         <!-- Rating Management Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('ratings.admin_ratings') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Rating">
+        <a href="{{ url_for('ratings.admin_ratings') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ratings() %}hidden{% endif %}" role="article" aria-label="Manajemen Rating">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-star text-2xl text-white"></i>
           </div>
@@ -266,7 +293,7 @@
         </a>
 
         <!-- Rating Analytics Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('ratings.rating_analytics') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Analitik Rating">
+        <a href="{{ url_for('ratings.rating_analytics') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ratings() %}hidden{% endif %}" role="article" aria-label="Analitik Rating">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-chart-bar text-2xl text-white"></i>
           </div>
@@ -302,7 +329,7 @@
     <div class="tab-content" id="brand-tab">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Brand Identity Management Card (Only for Superuser) -->
-        <a id="brand-identity-card" href="{{ url_for('main.settings_brand_identity') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Brand Identity">
+        <a id="brand-identity-card" href="{{ url_for('main.settings_brand_identity') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not is_superuser() %}hidden{% endif %}" role="article" aria-label="Brand Identity">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-palette text-2xl text-white"></i>
           </div>
@@ -310,8 +337,44 @@
           <p class="text-gray-600">Kelola logo, favicon, dan gambar placeholder.</p>
         </a>
 
+        <!-- Brand Info Management Card -->
+        <a href="{{ url_for('main.settings_brand_info') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_brand() %}hidden{% endif %}" role="article" aria-label="Info Brand">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-info-circle text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Info Brand</h3>
+          <p class="text-gray-600">Kelola informasi brand dan perusahaan.</p>
+        </a>
+
+        <!-- Brand Design Management Card -->
+        <a href="{{ url_for('main.settings_brand_design') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_brand() %}hidden{% endif %}" role="article" aria-label="Desain Brand">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-paint-brush text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Desain Brand</h3>
+          <p class="text-gray-600">Kelola desain dan style brand.</p>
+        </a>
+
+        <!-- Brand Assets Management Card -->
+        <a href="{{ url_for('main.settings_brand_assets') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_brand() %}hidden{% endif %}" role="article" aria-label="Asset Brand">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-images text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Asset Brand</h3>
+          <p class="text-gray-600">Kelola asset visual brand.</p>
+        </a>
+
+        <!-- Brand Colors Management Card -->
+        <a href="{{ url_for('main.settings_brand_colors') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_brand() %}hidden{% endif %}" role="article" aria-label="Warna Brand">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-palette text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Warna Brand</h3>
+          <p class="text-gray-600">Kelola skema warna brand.</p>
+        </a>
+
         <!-- Social Media Management Card (Only for Admin and Superuser) -->
-        <a id="social-media-card" href="{{ url_for('main.settings_social_media') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Media Sosial">
+        <a id="social-media-card" href="{{ url_for('main.settings_social_media') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_brand() %}hidden{% endif %}" role="article" aria-label="Media Sosial">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-share-alt text-2xl text-white"></i>
           </div>
@@ -320,7 +383,7 @@
         </a>
 
         <!-- Contact Details Management Card (Only for Admin and Superuser) -->
-        <a id="contact-details-card" href="{{ url_for('main.settings_contact_details') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Detail Kontak">
+        <a id="contact-details-card" href="{{ url_for('main.settings_contact_details') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_brand() %}hidden{% endif %}" role="article" aria-label="Detail Kontak">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-address-book text-2xl text-white"></i>
           </div>
@@ -329,7 +392,7 @@
         </a>
 
         <!-- Team Members Management Card (Only for Admin and Superuser) -->
-        <a id="team-members-card" href="{{ url_for('main.settings_team_members') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Anggota Tim">
+        <a id="team-members-card" href="{{ url_for('main.settings_team_members') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_brand() %}hidden{% endif %}" role="article" aria-label="Anggota Tim">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-user-friends text-2xl text-white"></i>
           </div>
@@ -343,7 +406,7 @@
     <div class="tab-content" id="navigation-tab">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Navigation Management Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.navigation_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Manajemen Navigasi">
+        <a href="{{ url_for('main.navigation_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_seo() %}hidden{% endif %}" role="article" aria-label="Manajemen Navigasi">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-link text-2xl text-white"></i>
           </div>
@@ -352,7 +415,7 @@
         </a>
 
         <!-- SEO Root Management Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('root_seo.root_seo_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Root">
+        <a href="{{ url_for('root_seo.root_seo_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_seo() %}hidden{% endif %}" role="article" aria-label="SEO Root">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-globe text-2xl text-white"></i>
           </div>
@@ -361,7 +424,7 @@
         </a>
 
         <!-- SEO Album Management Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.albums_seo_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Album">
+        <a href="{{ url_for('main.albums_seo_management') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_seo() %}hidden{% endif %}" role="article" aria-label="SEO Album">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-search-plus text-2xl text-white"></i>
           </div>
@@ -370,7 +433,7 @@
         </a>
 
         <!-- SEO Konten Management Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.settings_seo') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Konten">
+        <a href="{{ url_for('main.settings_seo') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_seo() %}hidden{% endif %}" role="article" aria-label="SEO Konten">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-search text-2xl text-white"></i>
           </div>
@@ -379,7 +442,7 @@
         </a>
 
         <!-- SEO Komprehensif Management Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.settings_comprehensive_seo') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="SEO Komprehensif">
+        <a href="{{ url_for('main.settings_comprehensive_seo') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_seo() %}hidden{% endif %}" role="article" aria-label="SEO Komprehensif">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-search-plus text-2xl text-white"></i>
           </div>
@@ -393,7 +456,7 @@
     <div class="tab-content" id="legal-tab">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Privacy Policy Management Card (Only for Superuser and Admin) -->
-        <a id="privacy-policy-card" href="{{ url_for('main.settings_privacy_policy') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Kebijakan Privasi">
+        <a id="privacy-policy-card" href="{{ url_for('main.settings_privacy_policy') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_legal() %}hidden{% endif %}" role="article" aria-label="Kebijakan Privasi">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-shield-alt text-2xl text-white"></i>
           </div>
@@ -402,7 +465,7 @@
         </a>
 
         <!-- Media Guidelines Management Card (Only for Superuser and Admin) -->
-        <a id="media-guidelines-card" href="{{ url_for('main.settings_media_guidelines') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Pedoman Media">
+        <a id="media-guidelines-card" href="{{ url_for('main.settings_media_guidelines') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_legal() %}hidden{% endif %}" role="article" aria-label="Pedoman Media">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-book text-2xl text-white"></i>
           </div>
@@ -411,7 +474,7 @@
         </a>
 
         <!-- Pedoman Hak Management Card (Only for Superuser and Admin) -->
-        <a id="pedoman-hak-card" href="{{ url_for('main.settings_pedomanhak') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Pedoman Hak">
+        <a id="pedoman-hak-card" href="{{ url_for('main.settings_pedomanhak') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_legal() %}hidden{% endif %}" role="article" aria-label="Pedoman Hak">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-handshake text-2xl text-white"></i>
           </div>
@@ -420,7 +483,7 @@
         </a>
 
         <!-- Penyangkalan Management Card (Only for Superuser and Admin) -->
-        <a id="penyangkalan-card" href="{{ url_for('main.settings_penyangkalan') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Penyangkalan">
+        <a id="penyangkalan-card" href="{{ url_for('main.settings_penyangkalan') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_legal() %}hidden{% endif %}" role="article" aria-label="Penyangkalan">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-file text-2xl text-white"></i>
           </div>
@@ -429,7 +492,7 @@
         </a>
 
         <!-- Visi Misi Management Card (Only for Superuser and Admin) -->
-        <a id="visi-misi-card" href="{{ url_for('main.settings_visi_misi') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value != 'su' %}hidden{% endif %}" role="article" aria-label="Visi Misi">
+        <a id="visi-misi-card" href="{{ url_for('main.settings_visi_misi') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_legal() %}hidden{% endif %}" role="article" aria-label="Visi Misi">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-braille text-2xl text-white"></i>
           </div>
@@ -445,7 +508,7 @@
     <div class="tab-content" id="analytics-tab">
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Analytics Dashboard Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.settings_analytics') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Dashboard Analitik">
+        <a href="{{ url_for('main.settings_analytics') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_access_analytics() %}hidden{% endif %}" role="article" aria-label="Dashboard Analitik">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-chart-line text-2xl text-white"></i>
           </div>
@@ -454,7 +517,7 @@
         </a>
 
         <!-- Performance Dashboard Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.settings_performance') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Dashboard Performa">
+        <a href="{{ url_for('main.settings_performance') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_access_analytics() %}hidden{% endif %}" role="article" aria-label="Dashboard Performa">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-tachometer-alt text-2xl text-white"></i>
           </div>
@@ -463,7 +526,7 @@
         </a>
 
         <!-- Asset Optimization Dashboard Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.settings_asset_optimization') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Optimasi Asset">
+        <a href="{{ url_for('main.settings_asset_optimization') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_access_analytics() %}hidden{% endif %}" role="article" aria-label="Optimasi Asset">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-compress-arrows-alt text-2xl text-white"></i>
           </div>
@@ -472,7 +535,7 @@
         </a>
 
         <!-- SSR Optimization Dashboard Card (Only for Admin and Superuser) -->
-        <a href="{{ url_for('main.settings_ssr_optimization') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if current_user.role.value not in ['admin','su'] %}hidden{% endif %}" role="article" aria-label="Optimasi SSR">
+        <a href="{{ url_for('main.settings_ssr_optimization') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_access_analytics() %}hidden{% endif %}" role="article" aria-label="Optimasi SSR">
           <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-server text-2xl text-white"></i>
           </div>

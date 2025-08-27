@@ -44,6 +44,8 @@
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
                 </div>
             </div>
+
+
             
             <!-- Sidebar Links -->
             <div class="flex-1 p-8 overflow-y-auto">
@@ -52,49 +54,75 @@
                         'id': 'dashboard',
                         'title': 'Dashboard',
                         'icon': 'fas fa-tachometer-alt',
-                        'links': [
-                            {'url': url_for('main.settings_dashboard'), 'icon': 'fas fa-gears', 'label': 'Dasbor', 'roles': ['su','admin','general']}
+                        'visible': can_access_admin(),
+                        'subgroups': [
+                            {
+                                'id': 'dashboard-main',
+                                'title': 'Main',
+                                'icon': 'fas fa-tachometer-alt',
+                                'visible': True,
+                                'links': [
+                                    {'url': url_for('main.settings_dashboard'), 'icon': 'fas fa-gears', 'label': 'Dasbor', 'visible': can_access_admin()}
+                                ]
+                            },
+                            {
+                                'id': 'dashboard-toggles',
+                                'title': 'Quick Toggles',
+                                'icon': 'fas fa-toggle-on',
+                                'visible': True,
+                                'links': [
+                                    {'url': '#', 'icon': 'fas fa-comments', 'label': 'Komentar', 'visible': True, 'is_toggle': True, 'toggle_id': 'sidebar-toggle-comments'},
+                                    {'url': '#', 'icon': 'fas fa-star', 'label': 'Rating', 'visible': True, 'is_toggle': True, 'toggle_id': 'sidebar-toggle-ratings'},
+                                    {'url': '#', 'icon': 'fas fa-ad', 'label': 'Iklan', 'visible': True, 'is_toggle': True, 'toggle_id': 'sidebar-toggle-ads'},
+                                    {'url': '#', 'icon': 'fas fa-bullhorn', 'label': 'Kampanye', 'visible': True, 'is_toggle': True, 'toggle_id': 'sidebar-toggle-campaigns'}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'content',
                         'title': 'Manajemen Konten',
                         'icon': 'fas fa-newspaper',
+                        'visible': can_manage_content(),
                         'subgroups': [
                             {
                                 'id': 'cerita',
                                 'title': 'Cerita',
                                 'icon': 'fas fa-newspaper',
+                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete', 'publish']),
                                 'links': [
-                                    {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'roles': ['su','admin','general']},
-                                    {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'roles': ['su','admin','general']}
+                                    {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'visible': has_permission('news', 'create')},
+                                    {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'visible': has_any_permission('news', ['read', 'update', 'delete', 'publish'])}
                                 ]
                             },
                             {
                                 'id': 'album',
                                 'title': 'Album',
                                 'icon': 'fas fa-book-open',
+                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete']),
                                 'links': [
-                                    {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'roles': ['su','admin','general']},
-                                    {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'roles': ['su','admin','general']},
-                                    {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'roles': ['su','admin','general']}
+                                    {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'visible': has_permission('news', 'read')},
+                                    {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'visible': has_permission('news', 'read')},
+                                    {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'visible': has_permission('news', 'read')}
                                 ]
                             },
                             {
                                 'id': 'media',
                                 'title': 'Media',
                                 'icon': 'fas fa-photo-video',
+                                'visible': has_any_permission('images', ['read', 'create', 'update', 'delete']) or has_any_permission('videos', ['read', 'create', 'update', 'delete']),
                                 'links': [
-                                    {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'roles': ['su','admin','general']},
-                                    {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'visible': has_any_permission('images', ['read', 'create', 'update', 'delete'])},
+                                    {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'visible': has_any_permission('videos', ['read', 'create', 'update', 'delete'])}
                                 ]
                             },
                             {
                                 'id': 'kategori',
                                 'title': 'Kategori',
                                 'icon': 'fas fa-tags',
+                                'visible': can_manage_categories(),
                                 'links': [
-                                    {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'visible': can_manage_categories()}
                                 ]
                             }
                         ]
@@ -103,31 +131,35 @@
                         'id': 'ads',
                         'title': 'Manajemen Iklan',
                         'icon': 'fas fa-ad',
+                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'ads-dashboard',
                                 'title': 'Dashboard',
                                 'icon': 'fas fa-tachometer-alt',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('ads.admin_dashboard'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Iklan', 'roles': ['admin','su']}
+                                    {'url': url_for('ads.admin_dashboard'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Iklan', 'visible': True}
                                 ]
                             },
                             {
                                 'id': 'ads-campaigns',
                                 'title': 'Kampanye',
                                 'icon': 'fas fa-bullhorn',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('ads.campaigns_list'), 'icon': 'fas fa-bullhorn', 'label': 'Kampanye Iklan', 'roles': ['admin','su']},
-                                    {'url': url_for('ads.ads_list'), 'icon': 'fas fa-ad', 'label': 'Kelola Iklan', 'roles': ['admin','su']}
+                                    {'url': url_for('ads.campaigns_list'), 'icon': 'fas fa-bullhorn', 'label': 'Kampanye Iklan', 'visible': True},
+                                    {'url': url_for('ads.ads_list'), 'icon': 'fas fa-ad', 'label': 'Kelola Iklan', 'visible': True}
                                 ]
                             },
                             {
                                 'id': 'ads-analytics',
                                 'title': 'Analitik',
                                 'icon': 'fas fa-chart-line',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('ads.placements_list'), 'icon': 'fas fa-map-marker-alt', 'label': 'Penempatan Iklan', 'roles': ['admin','su']},
-                                    {'url': url_for('ads.analytics_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Analitik Iklan', 'roles': ['admin','su']}
+                                    {'url': url_for('ads.placements_list'), 'icon': 'fas fa-map-marker-alt', 'label': 'Penempatan Iklan', 'visible': True},
+                                    {'url': url_for('ads.analytics_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Analitik Iklan', 'visible': True}
                                 ]
                             }
                         ]
@@ -136,22 +168,25 @@
                         'id': 'engagement',
                         'title': 'Engagement & Feedback',
                         'icon': 'fas fa-comments',
+                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'engagement-moderation',
                                 'title': 'Moderasi',
                                 'icon': 'fas fa-comments',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('comments.admin_comments'), 'icon': 'fas fa-comments', 'label': 'Moderasi Komentar', 'roles': ['admin','su']}
+                                    {'url': url_for('comments.admin_comments'), 'icon': 'fas fa-comments', 'label': 'Moderasi Komentar', 'visible': True}
                                 ]
                             },
                             {
                                 'id': 'engagement-ratings',
                                 'title': 'Rating',
                                 'icon': 'fas fa-star',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('ratings.admin_ratings'), 'icon': 'fas fa-star', 'label': 'Manajemen Rating', 'roles': ['admin','su']},
-                                    {'url': url_for('ratings.rating_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Rating', 'roles': ['admin','su']}
+                                    {'url': url_for('ratings.admin_ratings'), 'icon': 'fas fa-star', 'label': 'Manajemen Rating', 'visible': True},
+                                    {'url': url_for('ratings.rating_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Rating', 'visible': True}
                                 ]
                             }
                         ]
@@ -160,13 +195,24 @@
                         'id': 'users',
                         'title': 'Manajemen Pengguna',
                         'icon': 'fas fa-users',
+                        'visible': can_manage_users(),
                         'subgroups': [
                             {
                                 'id': 'users-accounts',
                                 'title': 'Akun',
                                 'icon': 'fas fa-user',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': can_manage_users()}
+                                ]
+                            },
+                            {
+                                'id': 'users-registrations',
+                                'title': 'Registrasi',
+                                'icon': 'fas fa-user-clock',
+                                'visible': True,
+                                'links': [
+                                    {'url': url_for('main.pending_registrations'), 'icon': 'fas fa-user-clock', 'label': 'Registrasi Tertunda', 'visible': can_manage_users()}
                                 ]
                             }
                         ]
@@ -175,34 +221,38 @@
                         'id': 'brand',
                         'title': 'Brand & Identitas',
                         'icon': 'fas fa-palette',
+                        'visible': can_manage_settings(),
                         'subgroups': [
                             {
                                 'id': 'brand-identity',
                                 'title': 'Brand',
                                 'icon': 'fas fa-palette',
+                                'visible': current_user.is_owner(),
                                 'links': [
-                                    {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'roles': ['su']},
-                                    {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'roles': ['su']},
-                                    {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'roles': ['su']},
-                                    {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'roles': ['su']},
-                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'roles': ['su']}
+                                    {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'visible': current_user.is_owner()},
+                                    {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'visible': current_user.is_owner()},
+                                    {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'visible': current_user.is_owner()},
+                                    {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'visible': current_user.is_owner()},
+                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'visible': current_user.is_owner()}
                                 ]
                             },
                             {
                                 'id': 'brand-social',
                                 'title': 'Sosial',
                                 'icon': 'fas fa-share-alt',
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'roles': ['admin','su']},
-                                    {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
                                 ]
                             },
                             {
                                 'id': 'brand-team',
                                 'title': 'Tim',
                                 'icon': 'fas fa-user-friends',
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
                                 ]
                             }
                         ]
@@ -211,24 +261,27 @@
                         'id': 'navigation',
                         'title': 'Navigasi & SEO',
                         'icon': 'fas fa-sitemap',
+                        'visible': can_manage_settings(),
                         'subgroups': [
                             {
                                 'id': 'navigation-management',
                                 'title': 'Navigasi',
                                 'icon': 'fas fa-link',
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'roles': ['admin','su']}
+                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
                                 ]
                             },
                             {
                                 'id': 'navigation-seo',
                                 'title': 'SEO',
                                 'icon': 'fas fa-search',
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'roles': ['admin','su']},
-                                    {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'roles': ['admin','su']},
-                                    {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'roles': ['admin','su']},
-                                    {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
                                 ]
                             }
                         ]
@@ -237,23 +290,26 @@
                         'id': 'analytics',
                         'title': 'Analitik & Performa',
                         'icon': 'fas fa-chart-line',
+                        'visible': current_user.is_owner(),
                         'subgroups': [
                             {
                                 'id': 'analytics-dashboard',
                                 'title': 'Analitik',
                                 'icon': 'fas fa-chart-bar',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Dashboard Analitik', 'roles': ['su']},
-                                    {'url': url_for('main.settings_performance'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Performa', 'roles': ['su']}
+                                    {'url': url_for('main.settings_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Dashboard Analitik', 'visible': True},
+                                    {'url': url_for('main.settings_performance'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Performa', 'visible': True}
                                 ]
                             },
                             {
                                 'id': 'analytics-optimization',
                                 'title': 'Optimasi',
                                 'icon': 'fas fa-compress-arrows-alt',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_asset_optimization'), 'icon': 'fas fa-compress-arrows-alt', 'label': 'Optimasi Asset', 'roles': ['su']},
-                                    {'url': url_for('main.settings_ssr_optimization'), 'icon': 'fas fa-server', 'label': 'Optimasi SSR', 'roles': ['su']}
+                                    {'url': url_for('main.settings_asset_optimization'), 'icon': 'fas fa-compress-arrows-alt', 'label': 'Optimasi Asset', 'visible': True},
+                                    {'url': url_for('main.settings_ssr_optimization'), 'icon': 'fas fa-server', 'label': 'Optimasi SSR', 'visible': True}
                                 ]
                             }
                         ]
@@ -262,55 +318,46 @@
                         'id': 'legal',
                         'title': 'Legal & Kebijakan',
                         'icon': 'fas fa-shield-alt',
+                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'legal-policies',
                                 'title': 'Kebijakan',
                                 'icon': 'fas fa-shield-alt',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_privacy_policy'), 'icon': 'fas fa-shield-alt', 'label': 'Kebijakan Privasi', 'roles': ['admin','su']},
-                                    {'url': url_for('main.settings_media_guidelines'), 'icon': 'fas fa-book', 'label': 'Pedoman Media', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settings_privacy_policy'), 'icon': 'fas fa-shield-alt', 'label': 'Kebijakan Privasi', 'visible': True},
+                                    {'url': url_for('main.settings_media_guidelines'), 'icon': 'fas fa-book', 'label': 'Pedoman Media', 'visible': True}
                                 ]
                             },
                             {
                                 'id': 'legal-documents',
                                 'title': 'Dokumen',
                                 'icon': 'fas fa-file',
+                                'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_pedomanhak'), 'icon': 'fas fa-handshake', 'label': 'Pedoman Hak', 'roles': ['admin','su']},
-                                    {'url': url_for('main.settings_penyangkalan'), 'icon': 'fas fa-file', 'label': 'Penyangkalan', 'roles': ['admin','su']},
-                                    {'url': url_for('main.settings_visi_misi'), 'icon': 'fas fa-braille', 'label': 'Visi Misi', 'roles': ['admin','su']}
+                                    {'url': url_for('main.settings_pedomanhak'), 'icon': 'fas fa-handshake', 'label': 'Pedoman Hak', 'visible': True},
+                                    {'url': url_for('main.settings_penyangkalan'), 'icon': 'fas fa-file', 'label': 'Penyangkalan', 'visible': True},
+                                    {'url': url_for('main.settings_visi_misi'), 'icon': 'fas fa-braille', 'label': 'Visi Misi', 'visible': True}
                                 ]
                             }
                         ]
                     },
-                    {
-                        'id': 'system',
-                        'title': 'Sistem & Keamanan',
-                        'icon': 'fas fa-cogs',
-                        'subgroups': [
-                            {
-                                'id': 'system-auth',
-                                'title': 'Autentikasi',
-                                'icon': 'fas fa-key',
-                                'links': [
-                                    {'url': url_for('main.pending_registrations'), 'icon': 'fas fa-user-clock', 'label': 'Registrasi Tertunda', 'roles': ['admin','su']}
-                                ]
-                            }
-                        ]
-                    },
+
                     {
                         'id': 'account',
                         'title': 'Akun & Sistem',
                         'icon': 'fas fa-user-cog',
+                        'visible': True,
                         'links': [
-                            {'url': url_for('main.logout'), 'icon': 'fas fa-sign-out-alt', 'label': 'Logout (' + current_user.username + ')', 'roles': ['su','admin','general']}
+                            {'url': url_for('main.logout'), 'icon': 'fas fa-sign-out-alt', 'label': 'Logout (' + current_user.username + ')', 'visible': True}
                         ]
                     }
                 ] %}
                 
                 <div class="space-y-8">
                     {% for group in nav_groups %}
+                        {% if group.visible %}
                             <div class="nav-group bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4" data-group="{{ group.id }}">
                                 <button class="nav-group-toggle w-full flex items-center justify-between text-gray-800 hover:text-gray-600 hover:bg-gray-100 px-4 py-3 rounded-lg transition-all duration-300" aria-expanded="true" aria-controls="nav-group-{{ group.id }}">
                                     <div class="flex items-center">
@@ -323,39 +370,56 @@
                                     {% if group.subgroups %}
                                         <!-- Sub-groups -->
                                         {% for subgroup in group.subgroups %}
-                                            <div class="nav-subgroup bg-white border border-gray-200 rounded-lg p-3" data-subgroup="{{ subgroup.id }}">
-                                                <button class="nav-subgroup-toggle w-full flex items-center justify-between text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md transition-all duration-300 text-sm" aria-expanded="true" aria-controls="nav-subgroup-{{ subgroup.id }}">
-                                                    <div class="flex items-center">
-                                                        <i class="{{ subgroup.icon }} mr-3 text-gray-500 text-sm"></i>
-                                                        <span class="font-medium">{{ subgroup.title }}</span>
-                                                    </div>
-                                                    <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
-                                                </button>
-                                                <ul id="nav-subgroup-{{ subgroup.id }}" class="nav-subgroup-content mt-2 space-y-1 ml-6">
-                                                    {% for link in subgroup.links %}
-                                                        <li role="menuitem">
-                                                            <a href="{{ link.url }}" class="text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-2 rounded-md transition-all duration-300 flex items-center text-sm">
-                                                                <i class="{{ link.icon }} mr-3 text-gray-500"></i>{{ link.label }}
-                                                            </a>
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
+                                            {% if subgroup.visible %}
+                                                <div class="nav-subgroup bg-white border border-gray-200 rounded-lg p-3" data-subgroup="{{ subgroup.id }}">
+                                                    <button class="nav-subgroup-toggle w-full flex items-center justify-between text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md transition-all duration-300 text-sm" aria-expanded="true" aria-controls="nav-subgroup-{{ subgroup.id }}">
+                                                        <div class="flex items-center">
+                                                            <i class="{{ subgroup.icon }} mr-3 text-gray-500 text-sm"></i>
+                                                            <span class="font-medium">{{ subgroup.title }}</span>
+                                                        </div>
+                                                        <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+                                                    </button>
+                                                    <ul id="nav-subgroup-{{ subgroup.id }}" class="nav-subgroup-content mt-2 space-y-1 ml-6">
+                                                        {% for link in subgroup.links %}
+                                                            {% if link.visible %}
+                                                                <li role="menuitem">
+                                                                    {% if link.is_toggle %}
+                                                                        <label class="flex items-center justify-between text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-2 rounded-md transition-all duration-300 cursor-pointer text-sm">
+                                                                            <div class="flex items-center">
+                                                                                <i class="{{ link.icon }} mr-3 text-gray-500"></i>
+                                                                                <span>{{ link.label }}</span>
+                                                                            </div>
+                                                                            <input id="{{ link.toggle_id }}" type="checkbox" class="h-4 w-8 appearance-none rounded-full bg-gray-300 relative transition-colors duration-200 align-middle">
+                                                                        </label>
+                                                                    {% else %}
+                                                                        <a href="{{ link.url }}" class="text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-2 rounded-md transition-all duration-300 flex items-center text-sm">
+                                                                            <i class="{{ link.icon }} mr-3 text-gray-500"></i>{{ link.label }}
+                                                                        </a>
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
                                         {% endfor %}
                                     {% else %}
                                         <!-- Regular links -->
                                         <ul class="space-y-2">
                                             {% for link in group.links %}
-                                                <li role="menuitem">
-                                                    <a href="{{ link.url }}" class="{% if group.id == 'account' %}text-red-600 hover:text-red-500 hover:bg-red-50{% else %}text-gray-700 hover:text-gray-600 hover:bg-gray-100{% endif %} px-4 py-3 rounded-lg transition-all duration-300 flex items-center text-sm">
-                                                        <i class="{{ link.icon }} mr-4 {% if group.id == 'account' %}text-red-500{% else %}text-gray-600{% endif %}"></i>{{ link.label }}
-                                                    </a>
-                                                </li>
+                                                {% if link.visible %}
+                                                    <li role="menuitem">
+                                                        <a href="{{ link.url }}" class="{% if group.id == 'account' %}text-red-600 hover:text-red-500 hover:bg-red-50{% else %}text-gray-700 hover:text-gray-600 hover:bg-gray-100{% endif %} px-4 py-3 rounded-lg transition-all duration-300 flex items-center text-sm">
+                                                            <i class="{{ link.icon }} mr-4 {% if group.id == 'account' %}text-red-500{% else %}text-gray-600{% endif %}"></i>{{ link.label }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
                                             {% endfor %}
                                         </ul>
                                     {% endif %}
                                 </div>
                             </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
@@ -528,6 +592,38 @@
         });
     </script>
     <script src="{{ url_for('static', filename='js/sidebar-toggle.js') }}"></script>
+    <style>
+        /* Toggle Switch Styling */
+        input[type="checkbox"] {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            background-color: white;
+            transition: transform 0.2s ease;
+            transform: translateX(0);
+        }
+        
+        input[type="checkbox"]:checked::before {
+            transform: translateX(16px);
+        }
+        
+        input[type="checkbox"]:checked {
+            background-color: #3b82f6 !important;
+        }
+        
+        input[type="checkbox"]:not(:checked) {
+            background-color: #d1d5db !important;
+        }
+    </style>
     <script>
         // Navigation Group and Sub-group Toggle Functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -755,6 +851,41 @@
                     }
                 });
             }
+        });
+
+        // Quick Toggles Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize toggles from localStorage
+            const toggles = ['comments', 'ratings', 'ads', 'campaigns'];
+            
+            toggles.forEach(toggle => {
+                const toggleElement = document.getElementById(`sidebar-toggle-${toggle}`);
+                if (toggleElement) {
+                    // Load saved state
+                    const savedState = localStorage.getItem(`toggle-${toggle}`);
+                    if (savedState === 'true') {
+                        toggleElement.checked = true;
+                        toggleElement.classList.add('bg-blue-500');
+                    }
+                    
+                    // Add change event listener
+                    toggleElement.addEventListener('change', function() {
+                        if (this.checked) {
+                            this.classList.add('bg-blue-500');
+                            localStorage.setItem(`toggle-${toggle}`, 'true');
+                        } else {
+                            this.classList.remove('bg-blue-500');
+                            localStorage.setItem(`toggle-${toggle}`, 'false');
+                        }
+                        
+                        // Dispatch custom event for other components to listen to
+                        const event = new CustomEvent('toggleChanged', {
+                            detail: { toggle: toggle, enabled: this.checked }
+                        });
+                        document.dispatchEvent(event);
+                    });
+                }
+            });
         });
     </script>
     {% block extra_scripts %}{% endblock %}

@@ -194,6 +194,21 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | PUT    | `/api/users/<user_id>/role`              | Yes  | Update user's role                          |
 | POST   | `/api/roles/bulk/export`                 | Yes  | Bulk export roles                           |
 
+## Permission Management System
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/user/role`                         | Yes  | Get current user's role and permissions     |
+| GET    | `/api/user/permissions`                  | Yes  | Get current user's detailed permissions     |
+| GET    | `/api/user/permissions/summary`          | Yes  | Get user permissions summary                |
+| POST   | `/api/permissions/check`                 | Yes  | Check specific permission for user          |
+| GET    | `/api/permissions/resources`             | Yes  | List available permission resources         |
+| GET    | `/api/permissions/actions`               | Yes  | List available permission actions           |
+| POST   | `/api/permissions/bulk-check`            | Yes  | Check multiple permissions for user         |
+| GET    | `/api/roles/available`                   | Yes  | Get available roles for current user        |
+| POST   | `/api/roles/assign`                      | Yes  | Assign role to user                         |
+| POST   | `/api/roles/remove`                      | Yes  | Remove role from user                       |
+| GET    | `/api/roles/statistics`                  | Yes  | Get role distribution statistics            |
+
 ## Social Media
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
@@ -442,6 +457,18 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/settings/manage_news`                  | Yes  | Manage news page                            |
 | GET    | `/settings/albums`                       | Yes  | Album management page                       |
 
+## Admin Sidebar & Quick Toggles
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/admin/sidebar/navigation`          | Yes  | Get sidebar navigation structure with permissions |
+| POST   | `/api/admin/sidebar/toggle`              | Yes  | Toggle sidebar visibility                   |
+| GET    | `/api/admin/toggles/status`              | Yes  | Get quick toggles status (comments, ratings, ads, campaigns) |
+| POST   | `/api/admin/toggles/update`              | Yes  | Update quick toggle settings               |
+| GET    | `/api/admin/toggles/storage`             | Yes  | Get localStorage toggle preferences         |
+| POST   | `/api/admin/toggles/reset`               | Yes  | Reset all toggle settings to defaults      |
+| GET    | `/api/admin/permissions/check`           | Yes  | Check permission for sidebar item visibility |
+| POST   | `/api/admin/navigation/search`           | Yes  | Search sidebar navigation items            |
+
 > Legacy: `/settings/create_news_management` now 302-redirects to `/settings/create_news` (query params preserved).
 | GET/POST| `/settings/privacy-policy`              | Yes  | Privacy policy management                   |
 | GET/POST| `/settings/media-guidelines`            | Yes  | Media guidelines management                 |
@@ -525,6 +552,18 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Custom Roles**: Enhanced role system with Writer, Editor, and Subadmin custom roles
 - **Premium Access**: Improved premium subscription status checking and ad preference management
 - **Reader Features**: Added reading history and user library functionality for general users
+
+#### **Permission Management System Implementation**
+- **Centralized Permission System**: Created `routes/utils/permission_manager.py` with `PermissionManager` class
+- **Role Management System**: Created `routes/utils/role_manager.py` with `RoleManager` class
+- **Template Integration**: Added Flask context processor `inject_permission_functions` in `main.py`
+- **Permission Helper Functions**: 20+ helper functions for permission checking (can_access_admin, can_manage_users, etc.)
+- **Resource-Based Permissions**: 16 resources (news, albums, users, categories, etc.) with 12 actions each
+- **Role Hierarchy**: Superuser (100), Admin (80), General (10) with proper inheritance
+- **Custom Role Support**: Full support for custom roles with permission inheritance
+- **Template Safety**: All permission functions available in Jinja2 templates via context processor
+- **Package Organization**: Proper `routes/utils/__init__.py` exports for clean imports
+- **Comprehensive Documentation**: Complete README with usage examples and security considerations
 
 #### **Performance Dashboard System**
 - **Comprehensive Database Statistics**: Enhanced `/api/database/status` with detailed statistics for all content types (users, news, albums, chapters, categories, comments, ratings)
@@ -675,6 +714,20 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Responsive Layout**: Grid layouts optimized for different screen sizes
 - **Content Limiting**: Homepage displays limited to 4 featured albums for better UX
 - **Visual Hierarchy**: Improved spacing and typography for better readability
+
+### **Admin Sidebar & Settings Management Enhancement**
+- **Sub-group Navigation**: Implemented hierarchical navigation with collapsible sub-groups
+- **Permission-Based Visibility**: Dynamic sidebar content based on user permissions
+- **Quick Toggles System**: Real-time feature toggles for comments, ratings, ads, and campaigns
+- **LocalStorage Persistence**: Toggle states saved and restored across sessions
+- **Search Functionality**: Advanced search with highlighting and filtering
+- **Auto-expansion Logic**: Smart expansion of groups containing current page
+- **Settings Management Integration**: Updated settings page to use permission system
+- **Missing Cards Addition**: Added pending registrations, brand management, and album analytics cards
+- **Responsive Design**: Mobile-optimized sidebar with touch-friendly controls
+- **Accessibility Features**: ARIA labels, keyboard navigation, and screen reader support
+- **JavaScript Integration**: Comprehensive sidebar management with event handling
+- **CSS Styling**: Modern toggle switches with smooth animations and visual feedback
 
 ### **Performance Optimizations**
 - **Redis Auto-Configuration**: Text-based configuration with Unix socket support

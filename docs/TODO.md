@@ -5,13 +5,13 @@
 | **Category** | **Completed** | **In Progress** | **Pending** | **Total** |
 |--------------|---------------|-----------------|-------------|-----------|
 | **Core Features** | 49 | 0 | 0 | 49 |
-| **Admin Area** | 22 | 0 | 0 | 22 |
-| **Security & Performance** | 12 | 0 | 8 | 20 |
+| **Admin Area** | 25 | 0 | 0 | 25 |
+| **Security & Performance** | 15 | 0 | 5 | 20 |
 | **Ads System** | 6 | 0 | 0 | 6 |
 | **Advanced Features** | 9 | 0 | 11 | 20 |
 | **Documentation & Testing** | 6 | 0 | 4 | 10 |
 | **Infrastructure** | 4 | 0 | 6 | 10 |
-| **Total** | **107** | **0** | **20** | **127** |
+| **Total** | **114** | **0** | **26** | **140** |
 
 ---
 
@@ -53,6 +53,9 @@
 | **Enhanced Permissions** | ✅ **COMPLETED** | 2025-07-25 | • Granular role-based access control<br>• Custom permission matrix<br>• Feature-specific permissions<br>• User role management<br>• Permission inheritance<br>• Admin role hierarchy<br>• Permission validation<br>• Access control middleware |
 | **Content Archiving** | ✅ **COMPLETED** | 2025-07-24 | • Archive/unarchive functionality<br>• Archived content filtering<br>• Archive status indicators<br>• Bulk archive operations<br>• Archive restoration<br>• Archive search and filtering<br>• Archive analytics<br>• Archive cleanup utilities |
 | **Album View Count Implementation** | ✅ **COMPLETED** | 2025-08-22 | • **NEW: View count tracking for album detail pages**<br>• **NEW: increment_views() method in Album model**<br>• **NEW: Automatic view count increment on album detail page access**<br>• **NEW: View count display in album detail page hero section**<br>• **NEW: View count integration in admin templates and public pages**<br>• **NEW: View count included in album to_dict() method for API responses**<br>• **NEW: Comprehensive test suite for view counting functionality**<br>• **NEW: Complete documentation for view count implementation**<br>• **NEW: View-based sorting options in albums search API (most-viewed, least-viewed)**<br>• **NEW: Enhanced albums.html template with view-based sorting filters**<br>• **NEW: Updated API documentation with new sorting options** |
+| **Permission Management System** | ✅ **COMPLETED** | 2025-08-28 | • **NEW: Centralized permission system with routes/utils/permission_manager.py**<br>• **NEW: Role management system with routes/utils/role_manager.py**<br>• **NEW: Flask context processor for template integration**<br>• **NEW: 20+ permission helper functions (can_access_admin, can_manage_users, etc.)**<br>• **NEW: Resource-based permissions (16 resources, 12 actions each)**<br>• **NEW: Role hierarchy with proper inheritance (Superuser: 100, Admin: 80, General: 10)**<br>• **NEW: Custom role support with permission inheritance**<br>• **NEW: Template safety with all functions available in Jinja2**<br>• **NEW: Package organization with proper exports**<br>• **NEW: Comprehensive documentation and security considerations** |
+| **Admin Sidebar Enhancement** | ✅ **COMPLETED** | 2025-08-28 | • **NEW: Sub-group navigation with collapsible hierarchical structure**<br>• **NEW: Permission-based visibility for all sidebar items**<br>• **NEW: Quick toggles system for comments, ratings, ads, and campaigns**<br>• **NEW: LocalStorage persistence for toggle states**<br>• **NEW: Advanced search functionality with highlighting**<br>• **NEW: Auto-expansion logic for current page groups**<br>• **NEW: Responsive design with mobile optimization**<br>• **NEW: Accessibility features (ARIA labels, keyboard navigation)**<br>• **NEW: Modern toggle switch styling with animations**<br>• **NEW: Comprehensive JavaScript event handling** |
+| **Settings Management Integration** | ✅ **COMPLETED** | 2025-08-28 | • **NEW: Updated settings_management.html to use permission system**<br>• **NEW: Replaced role-based checks with permission-based checks**<br>• **NEW: Added missing cards (pending registrations, brand management, album analytics)**<br>• **NEW: Consistent permission structure across all cards**<br>• **NEW: Enhanced user experience with proper access control**<br>• **NEW: Complete menu coverage matching sidebar navigation**<br>• **NEW: Visual consistency and organized layout**<br>• **NEW: Permission-aware card visibility** |
 
 ### 🎯 **Reader Features & User Experience**
 | **Feature** | **Status** | **Completion Date** | **Child Steps Completed** |
@@ -304,10 +307,10 @@ See also: [Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATI
 ### **Feature Completion**
 | **Phase** | **Target** | **Completed** | **Progress** |
 |-----------|------------|---------------|-------------|
-| **Phase 1** | 16 features | 23 features | 144% |
+| **Phase 1** | 16 features | 26 features | 163% |
 | **Phase 2** | 12 features | 2 features | 17% |
 | **Phase 3** | 12 features | 0 features | 0% |
-| **Overall** | 40 features | 26 features | 65% |
+| **Overall** | 40 features | 29 features | 73% |
 
 ---
 
@@ -365,4 +368,4 @@ See also: [Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATI
 
 *Last Updated: 2025-08-28*  
 *LilyOpenCMS Development Team*  
-*Progress: 107/127 features completed (84%)* 
+*Progress: 114/140 features completed (81%)* 
