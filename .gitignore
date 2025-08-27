@@ -19,7 +19,14 @@ notes_pj.txt
 pic/*.png
 *.gz
 cookies.txt
-images_to_upload/
+images_to_upload/*.png
+images_to_upload/*.jpg
+images_to_upload/*.jpeg
+images_to_upload/*.gif
+images_to_upload/*.webp
+images_to_upload/*.svg
+images_to_upload/*.ico
+images_to_upload/*.bmp
 .pytorch_cache/
 .pytest_cache/
 
