@@ -4,13 +4,17 @@ A comprehensive Flask-based content management system with advanced SEO features
 
 ## 🚀 Features
 
-### 🔧 Recent System Improvements (2025-08-15)
+### 🔧 Recent System Improvements (2025-08-29)
+- **✅ Enhanced User Management System**: Advanced user listing with pagination, search, and filtering
+- **✅ User Creation API**: Admin user creation with role assignment and premium status
+- **✅ User Statistics Dashboard**: Real-time user statistics and role distribution
+- **✅ Backup API Endpoints**: Resolved 404 errors for roles and permissions
+- **✅ Permission Management**: Centralized permission system with 80+ granular permissions
+- **✅ Admin Sidebar Enhancement**: Sub-group navigation with permission-based visibility
 - **✅ Comprehensive Endpoint Testing**: 95% success rate with full authentication testing
 - **✅ Template Path Fixes**: All admin template paths corrected and verified
-- **✅ Permission System**: All `has_permission()` errors resolved with direct role checks
 - **✅ Authentication Enhancement**: Session-based testing with proper CSRF token handling
 - **✅ Error Handling**: Robust error handling and fallback mechanisms implemented
-- **✅ User Management**: Complete CRUD operations with proper cascade relationships
 
 ### 📝 Content Management
 - **Advanced News Management**: Create, edit, delete articles with rich text editing (edit via `/settings/create_news?news_id=<id>`, redirects back to `/settings/manage_news` or album chapters if `album_id` present)
@@ -37,13 +41,18 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **CDN Ready**: Optimized for content delivery networks
 
 ### 👥 User & Permission System
-- **Custom Role System**: Beyond basic admin/general roles
-- **Granular Permissions**: Matrix-based access control per feature
+- **Enhanced User Management**: Advanced user listing with pagination, search, and filtering
+- **User Creation System**: Admin user creation with role assignment and premium status
+- **User Statistics Dashboard**: Real-time user statistics and role distribution
+- **Custom Role System**: Beyond basic admin/general roles with 14 custom roles
+- **Granular Permissions**: Matrix-based access control with 80+ granular permissions
+- **Centralized Permission System**: Permission management with role-based inheritance
 - **User Activity Tracking**: Login history, content creation, admin actions
 - **Account Management**: Profile pictures, bios, social links
 - **User Performance Metrics**: Track user contributions and activity
 - **Account Suspension**: Temporary and permanent account restrictions
 - **Registration Approval**: Admin-controlled user registration
+- **Backup API Endpoints**: Resolved 404 errors for roles and permissions
 
 ### 🔍 SEO & Analytics
 - **SEO Leveling System**: Hierarchical SEO management with content-specific SEO taking precedence over root SEO
@@ -219,27 +228,48 @@ python -c "import redis; r = redis.Redis(); print('Redis connection:', r.ping())
 ## 📚 Documentation
 
 ### Core Documentation
+- **[Documentation Index](docs/README.md)** - Complete documentation index and navigation
 - **[API Documentation](docs/api.md)** - Complete API reference with endpoints and examples
 - **[Admin UI Guide](docs/admin_ui.md)** - Comprehensive admin interface documentation
 - **[Sitemap Documentation](docs/SITEMAP_DOCUMENTATION.md)** - Complete sitemap system guide
+- **[Development Roadmap](docs/TODO.md)** - Current development status and progress tracking
 
 ### Performance & Optimization
+- **[Performance & Optimizations – Comprehensive](docs/PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Complete performance guide with quick start and advanced topics
 - **[Performance Optimization Guide](docs/PERFORMANCE_OPTIMIZATION.md)** - Comprehensive performance optimization
 - **[Performance Quick Start](docs/PERFORMANCE_QUICK_START.md)** - Quick setup for performance features
 - **[Advanced Optimizations](docs/ADVANCED_OPTIMIZATIONS.md)** - Advanced optimization techniques
 - **[Optimization Reorganization](docs/OPTIMIZATION_REORGANIZATION.md)** - Optimization system structure
 
 ### System Implementation
+- **[Current System Status](docs/CURRENT_SYSTEM_STATUS.md)** - Current implementation status overview
 - **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)** - Current system implementation status
 - **[Final Implementation Summary](docs/FINAL_IMPLEMENTATION_SUMMARY.md)** - Complete implementation overview
 - **[Premium System Implementation](docs/PREMIUM_SYSTEM_IMPLEMENTATION.md)** - Premium content system guide
+- **[Premium Content & Subscription – Comprehensive](docs/PREMIUM_SYSTEM_COMPREHENSIVE.md)** - Premium content and subscription system
 - **[Subscription System Status](docs/SUBSCRIPTION_SYSTEM_STATUS.md)** - Subscription feature status
+- **[Comment & Rating System – Comprehensive](docs/COMMENT_RATING_COMPREHENSIVE.md)** - Complete comment and rating system documentation
 - **[Comment Rating System](docs/COMMENT_RATING_SYSTEM.md)** - Comment and rating system documentation
 - **[Premium Content System](docs/PREMIUM_CONTENT_SYSTEM.md)** - Premium content and subscription features
 - **[Weighted Rating System](docs/WEIGHTED_RATING_SYSTEM.md)** - Advanced rating algorithms and analytics
 - **[Unified News System](docs/UNIFIED_NEWS_SYSTEM.md)** - News and article management system
 - **[Contact Details Guide](docs/CONTACT_DETAILS_GUIDE.md)** - Contact information management
 - **[SEO Leveling System](docs/seo_leveling_system.md)** - Hierarchical SEO management with content-specific overrides
+- **[SEO Leveling Comprehensive](docs/SEO_LEVELING_COMPREHENSIVE.md)** - Hierarchical SEO management system
+
+### UI/UX & Design
+- **[Card Design System](docs/CARD_DESIGN_SYSTEM.md)** - Complete card design system with 4 distinct designs
+- **[Card Design Troubleshooting](docs/CARD_DESIGN_TROUBLESHOOTING.md)** - Troubleshooting guide for card design issues
+
+### Ads & Marketing
+- **[Ads Injection System – Comprehensive](docs/ADS_INJECTION_COMPREHENSIVE.md)** - Ads injection architecture and roadmap
+
+### Content & Media
+- **[Album View Count Implementation](docs/ALBUM_VIEW_COUNT_IMPLEMENTATION.md)** - View count tracking for albums
+- **[Share System Fix](docs/SHARE_SYSTEM_FIX.md)** - Social sharing system implementation
+
+### Deployment & Configuration
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Complete deployment guide for DirectAdmin hosting and other environments
 
 ## 🎯 SEO Leveling System
 
@@ -279,6 +309,8 @@ For detailed implementation information, see [SEO Leveling System Documentation]
 
 ### Development
 - **[Development Roadmap](docs/TODO.md)** - Current development status and future plans
+- **[Helper Scripts README](helper/README.md)** - Helper scripts documentation and usage
+- **[Routes Utils README](routes/utils/README.md)** - Permission and role management system documentation
 
 ## 🔧 Configuration
 
@@ -407,8 +439,12 @@ chmod +x optimizations/setup_redis.sh
 - `DELETE /api/youtube_videos/<id>` - Delete video
 
 ### User Management
-- `GET /api/users` - List users with filtering
-- `POST /api/users` - Create user
+- `GET /api/users` - List users with pagination, search, and filtering (role, status, verification)
+- `POST /api/users` - Create user with role assignment and premium status
+- `GET /api/users/<user_id>/details` - Get comprehensive user details and statistics
+- `POST /api/users/<user_id>/reset-password` - Reset user password (admin only)
+- `GET /api/users/stats` - Get overall user statistics and role distribution
+- `GET /api/pending/stats` - Get pending registration statistics
 - `PUT /api/users/<id>` - Update user
 - `DELETE /api/users/<id>` - Delete user
 - `PATCH /api/users/<id>/verify` - Toggle user verification
@@ -418,6 +454,16 @@ chmod +x optimizations/setup_redis.sh
 - `GET /api/registrations/pending` - Get pending registrations
 - `POST /api/registrations/<id>/approve` - Approve registration
 - `POST /api/registrations/<id>/reject` - Reject registration
+
+### Roles & Permissions
+- `GET /api/roles` - List roles (backup implementation in routes_users.py)
+- `POST /api/roles` - Create role
+- `PUT /api/roles/<id>` - Update role
+- `DELETE /api/roles/<id>` - Delete role
+- `GET /api/permissions` - List permissions (backup implementation in routes_users.py)
+- `POST /api/permissions` - Create permission
+- `PUT /api/permissions/<id>` - Update permission
+- `DELETE /api/permissions/<id>` - Delete permission
 
 ### Navigation Management
 - `GET /api/navigation-links` - List navigation links
@@ -452,13 +498,18 @@ chmod +x optimizations/setup_redis.sh
 - **GENERAL**: Basic content creation and personal management
 
 ### Permission System
-- **Granular Permissions**: Matrix-based access control per feature
+- **Enhanced User Management**: Advanced user listing with pagination, search, and filtering
+- **User Creation System**: Admin user creation with role assignment and premium status
+- **User Statistics Dashboard**: Real-time user statistics and role distribution
+- **Granular Permissions**: Matrix-based access control with 80+ granular permissions
+- **Centralized Permission System**: Permission management with role-based inheritance
 - **Role-based Access**: Automatic permission assignment based on roles
 - **Activity Logging**: Comprehensive audit trails for all actions
 - **Session Management**: Secure session handling with auto-logout
 - **Comprehensive Testing**: All endpoints tested with different user roles
 - **Template Path Verification**: All admin templates properly configured
 - **Error Handling**: Robust error handling for permission violations
+- **Backup API Endpoints**: Resolved 404 errors for roles and permissions
 
 ## 📊 SEO Features
 

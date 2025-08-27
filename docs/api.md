@@ -98,8 +98,12 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 ## Users
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| GET    | `/api/users`                             | Yes  | List users (fixed: all CRUD operations working) |
-| POST   | `/api/users`                             | Yes  | Create a new user                           |
+| GET    | `/api/users`                             | Yes  | List users with pagination, search, and filtering (role, status, verification) |
+| POST   | `/api/users`                             | Yes  | Create a new user with role assignment and premium status |
+| GET    | `/api/users/<user_id>/details`           | Yes  | Get comprehensive user details and statistics |
+| POST   | `/api/users/<user_id>/reset-password`    | Yes  | Reset user password (admin only) |
+| GET    | `/api/users/stats`                       | Yes  | Get overall user statistics (total, active, premium, pending, role distribution) |
+| GET    | `/api/pending/stats`                     | Yes  | Get pending registration statistics |
 | GET    | `/api/users/<user_id>/performance`       | Yes  | Get user performance metrics                |
 | GET    | `/api/users/performance/leaderboard`     | Yes  | Get user leaderboard (fixed: now includes full names) |
 | GET    | `/api/registrations/pending`             | Yes  | Get pending registrations (fixed: proper serialization) |
@@ -181,13 +185,13 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 ## Roles & Permissions
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| GET    | `/api/roles`                             | Yes  | List roles                                  |
+| GET    | `/api/roles`                             | Yes  | List roles (backup implementation in routes_users.py) |
 | POST   | `/api/roles`                             | Yes  | Create a new role                           |
 | PUT    | `/api/roles/<role_id>`                   | Yes  | Update role                                 |
 | DELETE | `/api/roles/<role_id>`                   | Yes  | Delete role                                 |
 | GET    | `/api/roles/<role_id>/permissions`       | Yes  | Get role permissions                        |
 | PUT    | `/api/roles/<role_id>/permissions`       | Yes  | Update role permissions                     |
-| GET    | `/api/permissions`                       | Yes  | List permissions                            |
+| GET    | `/api/permissions`                       | Yes  | List permissions (backup implementation in routes_users.py) |
 | POST   | `/api/permissions`                       | Yes  | Create a new permission                     |
 | PUT    | `/api/permissions/<permission_id>`       | Yes  | Update permission                           |
 | DELETE | `/api/permissions/<permission_id>`       | Yes  | Delete permission                           |
@@ -564,6 +568,8 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Template Safety**: All permission functions available in Jinja2 templates via context processor
 - **Package Organization**: Proper `routes/utils/__init__.py` exports for clean imports
 - **Comprehensive Documentation**: Complete README with usage examples and security considerations
+- **Backup API Endpoints**: Added backup implementations of `/api/roles` and `/api/permissions` in `routes_users.py` to resolve persistent 404 errors
+- **API Stability**: Ensured frontend can successfully fetch role and permission data for user management interface
 
 #### **Performance Dashboard System**
 - **Comprehensive Database Statistics**: Enhanced `/api/database/status` with detailed statistics for all content types (users, news, albums, chapters, categories, comments, ratings)
@@ -594,6 +600,21 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Registration Management**: Fixed pending registrations API with proper role-based access control
 - **Bulk Operations**: All bulk user operations (status, role, verify, suspend, delete, export) working correctly
 - **User Activity Tracking**: Fixed user activity retrieval and display in management interface
+
+#### **Enhanced User Management System**
+- **Advanced User Listing**: Enhanced `/api/users` endpoint with pagination, search, and filtering (role, status, verification)
+- **User Creation API**: New `/api/users` POST endpoint for creating users with role assignment and premium status
+- **User Details API**: New `/api/users/<user_id>/details` endpoint for comprehensive user information
+- **Password Reset API**: New `/api/users/<user_id>/reset-password` endpoint for admin password resets
+- **User Statistics API**: New `/api/users/stats` endpoint for overall user statistics and role distribution
+- **Pending Statistics API**: New `/api/pending/stats` endpoint for pending registration analytics
+- **Frontend Integration**: Complete JavaScript integration with modals, forms, and dynamic content loading
+- **User Management Interface**: Enhanced `users_management.html` with create user modal, user details modal, and password reset functionality
+- **Statistics Dashboard**: Real-time user statistics, role distribution, and pending registration metrics
+- **Pagination System**: Client-side pagination with dynamic controls and proper API integration
+- **Form Validation**: Comprehensive validation for user creation and password reset forms
+- **Modal Management**: Advanced modal system for user creation, details viewing, and password reset
+- **Error Handling**: Robust error handling with user-friendly messages and fallback mechanisms
 
 #### **SEO Leveling System**
 - **Hierarchical SEO Management**: Content-specific SEO takes precedence over root SEO

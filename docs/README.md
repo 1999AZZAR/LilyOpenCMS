@@ -22,18 +22,20 @@ Welcome to the LilyOpenCMS documentation! This directory contains comprehensive 
 ### Performance & Optimization
 - **[Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Complete guide, quick start, advanced topics, and dashboards
 
-
-
-
 ### System Implementation
 - **[Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Unified performance implementation and results
 - **[Premium Content & Subscription – Comprehensive](PREMIUM_SYSTEM_COMPREHENSIVE.md)** - Premium content and subscription system
 - **[Subscription System Status](SUBSCRIPTION_SYSTEM_STATUS.md)** - Subscription feature status
 - **[Weighted Rating System](WEIGHTED_RATING_SYSTEM.md)** - Advanced rating system with weighted calculations
+- **[Album View Count Implementation](ALBUM_VIEW_COUNT_IMPLEMENTATION.md)** - View count tracking for albums
+- **[Share System Fix](SHARE_SYSTEM_FIX.md)** - Social sharing system implementation
+- **[SEO Leveling Comprehensive](SEO_LEVELING_COMPREHENSIVE.md)** - Hierarchical SEO management system
+- **[Unified News System](UNIFIED_NEWS_SYSTEM.md)** - Single template for all news types
+- **[Current System Status](CURRENT_SYSTEM_STATUS.md)** - Current implementation status overview
 
 ### Testing & Quality Assurance
-- **[Comprehensive Endpoint Testing](test/test_comprehensive_endpoints.py)** - Full endpoint testing with 95% success rate
-- **[Test Summary](test/test_summary.md)** - Detailed testing results and system status
+- **[Comprehensive Endpoint Testing](../test/test_comprehensive_endpoints.py)** - Full endpoint testing with 95% success rate
+- **[Test Summary](../test/test_summary.md)** - Detailed testing results and system status
 
 ### Development
 - **[Development Roadmap](TODO.md)** - Current development status and future plans
@@ -43,10 +45,17 @@ Welcome to the LilyOpenCMS documentation! This directory contains comprehensive 
 ### Redis Configuration
 The system uses a text-based configuration for Redis settings:
 
-- **Configuration File**: `config/redis_config.txt`
-- **Deployment Script**: `config/deploy_redis_config.py`
-- **Test Script**: `test/test_redis_connection.py`
-- **Config Reader**: `routes/utils/config_reader.py`
+- **Configuration File**: `../config/redis_config.txt`
+- **Deployment Script**: `../config/deploy_redis_config.py`
+- **Test Script**: `../test/test_redis_connection.py`
+- **Config Reader**: `../routes/utils/config_reader.py`
+
+### Database Management
+- **Database Health Checker**: `../config/database_health_checker.py`
+- **Database Health Checker README**: `../config/DATABASE_HEALTH_CHECKER_README.md`
+- **Database Changes Guide**: `../migrations/DATABASE_CHANGES_GUIDE.md`
+- **Safe Migration System**: `../migrations/safe_migrate.py`
+- **Database Manager**: `../migrations/database_manager.py`
 
 ### Environment Setup
 - **Environment Variables**: See root README.md for complete `.env` configuration
@@ -65,6 +74,8 @@ The system uses a text-based configuration for Redis settings:
 7. **Card Design Issues**: Check `CARD_DESIGN_TROUBLESHOOTING.md` for card design system problems
 8. **Authentication Issues**: Run comprehensive endpoint tests with `python test/test_comprehensive_endpoints.py`
 9. **Template Path Issues**: Check `test/test_summary.md` for template path verification
+10. **User Management Issues**: Check user management system documentation and API endpoints
+11. **Permission System Issues**: Review permission management system implementation
 
 ### Getting Help
 - Check the relevant documentation above
@@ -94,23 +105,26 @@ When adding new documentation:
 ## 🎯 System Features Overview
 
 ### Core Features
-- **User Management**: Role-based access control (SUPERUSER, ADMIN, GENERAL)
+- **User Management**: Role-based access control (SUPERUSER, ADMIN, GENERAL) with enhanced user management system
 - **Content Management**: News, albums, chapters, images, videos
 - **Card Design System**: 4 distinct card designs (classic, modern, minimal, featured)
-- **SEO Optimization**: Comprehensive SEO with structured data
+- **SEO Optimization**: Comprehensive SEO with structured data and SEO leveling system
 - **Performance**: Redis caching, database optimization, asset compression
 - **Comments & Ratings**: Nested comments, 5-star ratings, moderation
 - **Subscription System**: Premium content with ad-free experience
 - **Analytics**: Real-time performance monitoring and analytics
 - **Comprehensive Testing**: 95% endpoint success rate with full authentication testing
+- **Permission Management**: Centralized permission system with role-based access control
+- **Admin Sidebar**: Enhanced navigation with sub-groups and quick toggles
 
 ### Admin Features
 - **Dashboard**: Performance monitoring, analytics, and system health
 - **Content Management**: News, albums, images, videos, categories
-- **User Management**: User roles, permissions, and activity tracking
+- **User Management**: User roles, permissions, activity tracking, and enhanced user creation
 - **SEO Management**: Page-specific and root SEO settings
 - **Brand Management**: Logo, tagline, and brand identity
 - **Settings**: Contact details, social media, navigation, policies
+- **Quick Toggles**: Real-time feature toggles for comments, ratings, ads, and campaigns
 
 ### Performance Features
 - **Caching**: Redis-based intelligent caching with invalidation
@@ -118,6 +132,14 @@ When adding new documentation:
 - **Asset Optimization**: CSS/JS minification, gzip compression, versioning
 - **SSR Optimization**: Template caching and rendering optimization
 - **Monitoring**: Real-time performance metrics and alerts
+
+### Recent Enhancements
+- **Enhanced User Management**: Advanced user listing with pagination, search, and filtering
+- **User Creation System**: Admin user creation with role assignment and premium status
+- **User Statistics**: Real-time user statistics and role distribution
+- **Backup API Endpoints**: Resolved 404 errors for roles and permissions
+- **Permission System**: Centralized permission management with 80+ granular permissions
+- **Admin Sidebar Enhancement**: Sub-group navigation with permission-based visibility
 
 ---
 
