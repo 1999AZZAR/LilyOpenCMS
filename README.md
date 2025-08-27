@@ -91,7 +91,7 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Python 3.8+** - Core programming language
 - **Flask 2.x** - Web framework
 - **SQLAlchemy** - ORM and database management
-- **Alembic** - Database migrations
+- **Safe Migration System** - Custom database migration system
 - **Flask-Login** - Authentication system
 - **Flask-WTF** - Form handling and CSRF protection
 - **Pillow (PIL)** - Image processing and optimization

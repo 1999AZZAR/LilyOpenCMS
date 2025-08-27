@@ -2455,7 +2455,7 @@ def delete_image_file(mapper, connection, target):
 
 # Indexes (can be used with Flask-Migrate)
 # Note: Defining indexes here is informational.
-# Actual creation/management is typically handled by migrations (e.g., using Alembic).
+# Actual creation/management is handled by safe_migrate.py
 def create_indexes():
     """Creates database indexes for better query performance. (Run via migrations)"""
     # Example index commands (adjust dialect if not PostgreSQL/SQLite)

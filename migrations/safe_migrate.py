@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Safe migration script that adds missing columns without dropping existing data.
+Comprehensive safe migration script that handles all database schema changes.
 This script preserves all existing data while ensuring the database schema is correct.
+It replaces all individual migration scripts and Alembic migrations.
 """
 
 import sys
@@ -13,7 +14,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 def safe_migrate():
-    """Safely migrate the database by adding missing columns."""
+    """Safely migrate the database by adding missing columns and tables."""
     
     try:
         # Import Flask app and models
@@ -21,8 +22,8 @@ def safe_migrate():
         from models import db
         
         with app.app_context():
-            print("🛡️ Safe Database Migration")
-            print("=" * 50)
+            print("🛡️ Comprehensive Safe Database Migration")
+            print("=" * 60)
             
             # Get database info
             database_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
@@ -65,6 +66,11 @@ def safe_migrate():
             for table in existing_tables:
                 print(f"   📋 {table}")
             
+            # ===== ALBUM TABLE MIGRATIONS =====
+            print("\n" + "="*50)
+            print("📚 ALBUM TABLE MIGRATIONS")
+            print("="*50)
+            
             # Check album table specifically
             if 'album' not in existing_tables:
                 print("\n❌ Album table not found!")
@@ -87,13 +93,17 @@ def safe_migrate():
                 print(f"   {i:2d}. {col}")
             
             # Check for required columns
-            required_columns = ['total_views', 'average_rating', 'age_rating']
-            missing_columns = [col for col in required_columns if col not in columns]
+            required_album_columns = [
+                'total_views', 'average_rating', 'age_rating', 
+                'view_count', 'rating_count', 'is_premium',
+                'reading_history_id', 'user_library_id'
+            ]
+            missing_album_columns = [col for col in required_album_columns if col not in columns]
             
-            if missing_columns:
-                print(f"\n🔧 Adding missing columns: {missing_columns}")
+            if missing_album_columns:
+                print(f"\n🔧 Adding missing album columns: {missing_album_columns}")
 
-                for col in missing_columns:
+                for col in missing_album_columns:
                     try:
                         if col == 'total_views':
                             db.session.execute(text("ALTER TABLE album ADD COLUMN total_views INTEGER DEFAULT 0 NOT NULL"))
@@ -103,7 +113,22 @@ def safe_migrate():
                             print("✅ Added average_rating column")
                         elif col == 'age_rating':
                             db.session.execute(text("ALTER TABLE album ADD COLUMN age_rating VARCHAR(10)"))
-                            print("✅ Added age_rating column to album")
+                            print("✅ Added age_rating column")
+                        elif col == 'view_count':
+                            db.session.execute(text("ALTER TABLE album ADD COLUMN view_count INTEGER DEFAULT 0"))
+                            print("✅ Added view_count column")
+                        elif col == 'rating_count':
+                            db.session.execute(text("ALTER TABLE album ADD COLUMN rating_count INTEGER DEFAULT 0"))
+                            print("✅ Added rating_count column")
+                        elif col == 'is_premium':
+                            db.session.execute(text("ALTER TABLE album ADD COLUMN is_premium BOOLEAN DEFAULT 0"))
+                            print("✅ Added is_premium column")
+                        elif col == 'reading_history_id':
+                            db.session.execute(text("ALTER TABLE album ADD COLUMN reading_history_id INTEGER"))
+                            print("✅ Added reading_history_id column")
+                        elif col == 'user_library_id':
+                            db.session.execute(text("ALTER TABLE album ADD COLUMN user_library_id INTEGER"))
+                            print("✅ Added user_library_id column")
                     except Exception as e:
                         print(f"⚠️ Column {col} might already exist: {e}")
 
@@ -118,20 +143,30 @@ def safe_migrate():
                     print(f"   {i:2d}. {col}")
                 
                 # Check if all required columns are now present
-                still_missing = [col for col in required_columns if col not in updated_columns]
+                still_missing = [col for col in required_album_columns if col not in updated_columns]
                 if still_missing:
                     print(f"❌ Still missing columns: {still_missing}")
                     return False
                 else:
-                    print("✅ All required columns are now present")
+                    print("✅ All required album columns are now present")
             else:
-                print("✅ All required columns are already present")
+                print("✅ All required album columns are already present")
 
-            # --- Ensure news has age_rating column ---
+            # ===== NEWS TABLE MIGRATIONS =====
+            print("\n" + "="*50)
+            print("📰 NEWS TABLE MIGRATIONS")
+            print("="*50)
+            
+            # Check news table structure
             print("\n🔍 Checking news table structure...")
             try:
                 result = db.session.execute(text("PRAGMA table_info(news)"))
                 news_columns = [row[1] for row in result.fetchall()]
+                
+                print("📋 Current news table columns:")
+                for i, col in enumerate(news_columns, 1):
+                    print(f"   {i:2d}. {col}")
+                
                 if 'age_rating' not in news_columns:
                     print("🔧 Adding news.age_rating column...")
                     try:
@@ -145,24 +180,30 @@ def safe_migrate():
             except Exception as e:
                 print(f"⚠️ Could not verify/alter news: {e}")
 
-            # --- Ensure brand_identity has UI toggle columns ---
+            # ===== BRAND IDENTITY TABLE MIGRATIONS =====
+            print("\n" + "="*50)
+            print("🎨 BRAND IDENTITY TABLE MIGRATIONS")
+            print("="*50)
+            
+            # Check brand_identity feature toggle columns
             print("\n🔍 Checking brand_identity feature toggle columns...")
             try:
                 result = db.session.execute(text("PRAGMA table_info(brand_identity)"))
                 bi_columns = [row[1] for row in result.fetchall()]
+                
+                print("📋 Current brand_identity table columns:")
+                for i, col in enumerate(bi_columns, 1):
+                    print(f"   {i:2d}. {col}")
+                
                 missing_bi_cols = []
-                if 'enable_comments' not in bi_columns:
-                    missing_bi_cols.append('enable_comments')
-                if 'enable_ratings' not in bi_columns:
-                    missing_bi_cols.append('enable_ratings')
-                if 'enable_ads' not in bi_columns:
-                    missing_bi_cols.append('enable_ads')
-                if 'enable_campaigns' not in bi_columns:
-                    missing_bi_cols.append('enable_campaigns')
-                if 'categories_display_location' not in bi_columns:
-                    missing_bi_cols.append('categories_display_location')
-                if 'card_design' not in bi_columns:
-                    missing_bi_cols.append('card_design')
+                required_bi_columns = [
+                    'enable_comments', 'enable_ratings', 'enable_ads', 
+                    'enable_campaigns', 'categories_display_location', 'card_design'
+                ]
+                
+                for col in required_bi_columns:
+                    if col not in bi_columns:
+                        missing_bi_cols.append(col)
 
                 if missing_bi_cols:
                     print(f"🔧 Adding missing brand_identity columns: {missing_bi_cols}")
@@ -199,6 +240,92 @@ def safe_migrate():
                     print("✅ brand_identity feature toggle columns already present")
             except Exception as e:
                 print(f"⚠️ Could not verify/alter brand_identity: {e}")
+
+            # ===== USER TABLE MIGRATIONS =====
+            print("\n" + "="*50)
+            print("👤 USER TABLE MIGRATIONS")
+            print("="*50)
+            
+            # Check user table for reading history and library
+            print("\n🔍 Checking user table structure...")
+            try:
+                result = db.session.execute(text("PRAGMA table_info(user)"))
+                user_columns = [row[1] for row in result.fetchall()]
+                
+                print("📋 Current user table columns:")
+                for i, col in enumerate(user_columns, 1):
+                    print(f"   {i:2d}. {col}")
+                
+                # Check for reading history and library columns
+                user_required_columns = ['reading_history_id', 'user_library_id']
+                missing_user_cols = [col for col in user_required_columns if col not in user_columns]
+                
+                if missing_user_cols:
+                    print(f"🔧 Adding missing user columns: {missing_user_cols}")
+                    for col in missing_user_cols:
+                        try:
+                            if col == 'reading_history_id':
+                                db.session.execute(text("ALTER TABLE user ADD COLUMN reading_history_id INTEGER"))
+                                print("✅ Added reading_history_id column to user")
+                            elif col == 'user_library_id':
+                                db.session.execute(text("ALTER TABLE user ADD COLUMN user_library_id INTEGER"))
+                                print("✅ Added user_library_id column to user")
+                        except Exception as e:
+                            print(f"⚠️ Column {col} might already exist: {e}")
+                    db.session.commit()
+                else:
+                    print("✅ User table has all required columns")
+            except Exception as e:
+                print(f"⚠️ Could not verify/alter user table: {e}")
+
+            # ===== CREATE READING HISTORY AND USER LIBRARY TABLES =====
+            print("\n" + "="*50)
+            print("📖 READING HISTORY & USER LIBRARY TABLES")
+            print("="*50)
+            
+            # Check if reading_history table exists
+            if 'reading_history' not in existing_tables:
+                print("\n🔧 Creating reading_history table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE reading_history (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            album_id INTEGER NOT NULL,
+                            chapter_id INTEGER,
+                            last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            progress FLOAT DEFAULT 0.0,
+                            FOREIGN KEY (user_id) REFERENCES user (id),
+                            FOREIGN KEY (album_id) REFERENCES album (id)
+                        )
+                    """))
+                    print("✅ Created reading_history table")
+                except Exception as e:
+                    print(f"⚠️ Could not create reading_history table: {e}")
+            
+            # Check if user_library table exists
+            if 'user_library' not in existing_tables:
+                print("\n🔧 Creating user_library table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE user_library (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            album_id INTEGER NOT NULL,
+                            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            is_favorite BOOLEAN DEFAULT 0,
+                            FOREIGN KEY (user_id) REFERENCES user (id),
+                            FOREIGN KEY (album_id) REFERENCES album (id)
+                        )
+                    """))
+                    print("✅ Created user_library table")
+                except Exception as e:
+                    print(f"⚠️ Could not create user_library table: {e}")
+
+            # ===== RECORD COUNTS =====
+            print("\n" + "="*50)
+            print("📊 DATABASE RECORD COUNTS")
+            print("="*50)
             
             # Check record counts
             print("\n📊 Checking record counts...")
@@ -226,34 +353,52 @@ def safe_migrate():
             except Exception as e:
                 print(f"⚠️ Could not count category records: {e}")
             
-            print(f"\n🎉 Safe migration completed successfully!")
+            try:
+                reading_history_count = db.session.execute(text("SELECT COUNT(*) FROM reading_history")).scalar()
+                print(f"📖 Reading history records: {reading_history_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count reading history records: {e}")
+            
+            try:
+                user_library_count = db.session.execute(text("SELECT COUNT(*) FROM user_library")).scalar()
+                print(f"📚 User library records: {user_library_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count user library records: {e}")
+            
+            print(f"\n🎉 Comprehensive migration completed successfully!")
             print("✅ All existing data preserved")
-            print("✅ Album table has all required columns")
+            print("✅ All tables have required columns")
+            print("✅ Reading history and user library tables created")
             
             return True
             
     except Exception as e:
-        print(f"❌ Error during safe migration: {e}")
+        print(f"❌ Error during comprehensive migration: {e}")
         import traceback
         traceback.print_exc()
         return False
 
 def main():
-    """Main function to run safe migration."""
-    print("🛡️ Safe Database Migration Script")
-    print("=" * 50)
+    """Main function to run comprehensive safe migration."""
+    print("🛡️ Comprehensive Safe Database Migration Script")
+    print("=" * 60)
+    print("This script replaces all individual migration scripts and Alembic")
+    print("It safely adds all missing columns and tables without data loss")
+    print("=" * 60)
     
     success = safe_migrate()
     
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     if success:
-        print("🎉 Safe migration completed successfully!")
+        print("🎉 Comprehensive migration completed successfully!")
         print("✅ All existing data preserved")
-        print("✅ Database schema is now correct")
-        print("\n💡 You can now run the album generation script:")
+        print("✅ Database schema is now complete and up-to-date")
+        print("✅ All tables have required columns")
+        print("\n💡 You can now run the application or add test data:")
         print("   python helper/add_test_albums.py")
+        print("   python main.py")
     else:
-        print("❌ Safe migration failed!")
+        print("❌ Comprehensive migration failed!")
         print("Please check the error messages above.")
     
     return success

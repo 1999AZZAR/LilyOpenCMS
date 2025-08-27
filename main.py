@@ -120,7 +120,7 @@ with app.app_context():
     def _is_migration_cli():
         try:
             argv = " ".join(sys.argv).lower()
-            return ("flask" in argv or "alembic" in argv) and any(x in argv for x in ["db", "migrate", "upgrade", "downgrade", "stamp", "revision"])
+            return ("flask" in argv) and any(x in argv for x in ["db", "migrate", "upgrade", "downgrade", "stamp", "revision"])
         except Exception:
             return False
     run_database_health_check()

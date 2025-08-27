@@ -50,7 +50,7 @@ The system uses a text-based configuration for Redis settings:
 
 ### Environment Setup
 - **Environment Variables**: See root README.md for complete `.env` configuration
-- **Database Setup**: Alembic migrations and seeding scripts
+- **Database Setup**: Safe migration system and seeding scripts
 - **Performance Setup**: Redis installation and optimization
 
 ## 🛠️ Troubleshooting

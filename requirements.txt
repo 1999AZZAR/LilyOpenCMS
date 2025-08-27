@@ -11,7 +11,7 @@ python-dotenv
 
 # Database
 SQLAlchemy
-alembic
+# alembic - Removed in favor of safe migration system
 
 # Image Processing
 Pillow
