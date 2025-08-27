@@ -241,7 +241,7 @@ See also: [Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATI
 ### **Advanced Features** (Months 4-6)
 | **Category** | **Features** | **Timeline** | **Priority** |
 |--------------|--------------|--------------|--------------|
-| **AI/ML Integration** | Content recommendation, Auto-tagging, Spam detection | 4-6 months | 🔶 **MEDIUM** |
+| **AI/ML Integration** | Content recommendation, Auto-tagging, Spam detection, AI image generation, AI content refinement | 4-6 months | 🔥 **HIGH** |
 | **Mobile App** | React Native app, Push notifications, Offline reading | 6-8 months | 🔶 **MEDIUM** |
 | **Internationalization** | Multi-language support, RTL languages, Localization | 3-4 months | 🔶 **MEDIUM** |
 | **Advanced Search** | Elasticsearch, Full-text search, Auto-complete | 2-3 months | 🔶 **MEDIUM** |
