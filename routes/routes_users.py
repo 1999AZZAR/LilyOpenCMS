@@ -1178,3 +1178,13 @@ def export_user_performance(user_id):
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment;filename=performance_{user.username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
     )
+
+
+@main_blueprint.route("/settings/users")
+@login_required
+def settings_users():
+    """User management page for admins."""
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    
+    return render_template('admin/settings/users_management.html', current_user=current_user)

@@ -28,7 +28,7 @@
         <i class="fas fa-bars text-3xl"></i>
     </button>
     <!-- Sidebar -->
-    <div id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-50" role="navigation" aria-label="Admin navigation">
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-[420px] bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-50" role="navigation" aria-label="Admin navigation">
         <div class="flex flex-col h-full">
             <!-- Logo -->
             <div class="p-8 border-b border-gray-200 bg-gradient-to-r from-gray-700 to-gray-800">
@@ -60,92 +60,243 @@
                         'id': 'content',
                         'title': 'Manajemen Konten',
                         'icon': 'fas fa-newspaper',
-                        'links': [
-                            {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'roles': ['su','admin','general']},
-                            {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'roles': ['su','admin','general']},
-                            {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'roles': ['su','admin','general']},
-                            {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'roles': ['su','admin','general']},
-                            {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'roles': ['su','admin','general']},
-                            {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'roles': ['admin','su']},
-                            {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'roles': ['su','admin','general']},
-                            {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'roles': ['admin','su']}
+                        'subgroups': [
+                            {
+                                'id': 'cerita',
+                                'title': 'Cerita',
+                                'icon': 'fas fa-newspaper',
+                                'links': [
+                                    {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'roles': ['su','admin','general']},
+                                    {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'roles': ['su','admin','general']}
+                                ]
+                            },
+                            {
+                                'id': 'album',
+                                'title': 'Album',
+                                'icon': 'fas fa-book-open',
+                                'links': [
+                                    {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'roles': ['su','admin','general']},
+                                    {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'roles': ['su','admin','general']},
+                                    {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'roles': ['su','admin','general']}
+                                ]
+                            },
+                            {
+                                'id': 'media',
+                                'title': 'Media',
+                                'icon': 'fas fa-photo-video',
+                                'links': [
+                                    {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'roles': ['su','admin','general']},
+                                    {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'roles': ['admin','su']}
+                                ]
+                            },
+                            {
+                                'id': 'kategori',
+                                'title': 'Kategori',
+                                'icon': 'fas fa-tags',
+                                'links': [
+                                    {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'roles': ['admin','su']}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'ads',
                         'title': 'Manajemen Iklan',
                         'icon': 'fas fa-ad',
-                        'links': [
-                            {'url': url_for('ads.admin_dashboard'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Iklan', 'roles': ['admin','su']},
-                            {'url': url_for('ads.campaigns_list'), 'icon': 'fas fa-bullhorn', 'label': 'Kampanye Iklan', 'roles': ['admin','su']},
-                            {'url': url_for('ads.ads_list'), 'icon': 'fas fa-ad', 'label': 'Kelola Iklan', 'roles': ['admin','su']},
-                            {'url': url_for('ads.placements_list'), 'icon': 'fas fa-map-marker-alt', 'label': 'Penempatan Iklan', 'roles': ['admin','su']},
-                            {'url': url_for('ads.analytics_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Analitik Iklan', 'roles': ['admin','su']}
+                        'subgroups': [
+                            {
+                                'id': 'ads-dashboard',
+                                'title': 'Dashboard',
+                                'icon': 'fas fa-tachometer-alt',
+                                'links': [
+                                    {'url': url_for('ads.admin_dashboard'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Iklan', 'roles': ['admin','su']}
+                                ]
+                            },
+                            {
+                                'id': 'ads-campaigns',
+                                'title': 'Kampanye',
+                                'icon': 'fas fa-bullhorn',
+                                'links': [
+                                    {'url': url_for('ads.campaigns_list'), 'icon': 'fas fa-bullhorn', 'label': 'Kampanye Iklan', 'roles': ['admin','su']},
+                                    {'url': url_for('ads.ads_list'), 'icon': 'fas fa-ad', 'label': 'Kelola Iklan', 'roles': ['admin','su']}
+                                ]
+                            },
+                            {
+                                'id': 'ads-analytics',
+                                'title': 'Analitik',
+                                'icon': 'fas fa-chart-line',
+                                'links': [
+                                    {'url': url_for('ads.placements_list'), 'icon': 'fas fa-map-marker-alt', 'label': 'Penempatan Iklan', 'roles': ['admin','su']},
+                                    {'url': url_for('ads.analytics_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Analitik Iklan', 'roles': ['admin','su']}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'engagement',
                         'title': 'Engagement & Feedback',
                         'icon': 'fas fa-comments',
-                        'links': [
-                            {'url': url_for('comments.admin_comments'), 'icon': 'fas fa-comments', 'label': 'Moderasi Komentar', 'roles': ['admin','su']},
-                            {'url': url_for('ratings.admin_ratings'), 'icon': 'fas fa-star', 'label': 'Manajemen Rating', 'roles': ['admin','su']},
-                            {'url': url_for('ratings.rating_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Rating', 'roles': ['admin','su']}
+                        'subgroups': [
+                            {
+                                'id': 'engagement-moderation',
+                                'title': 'Moderasi',
+                                'icon': 'fas fa-comments',
+                                'links': [
+                                    {'url': url_for('comments.admin_comments'), 'icon': 'fas fa-comments', 'label': 'Moderasi Komentar', 'roles': ['admin','su']}
+                                ]
+                            },
+                            {
+                                'id': 'engagement-ratings',
+                                'title': 'Rating',
+                                'icon': 'fas fa-star',
+                                'links': [
+                                    {'url': url_for('ratings.admin_ratings'), 'icon': 'fas fa-star', 'label': 'Manajemen Rating', 'roles': ['admin','su']},
+                                    {'url': url_for('ratings.rating_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Rating', 'roles': ['admin','su']}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'users',
                         'title': 'Manajemen Pengguna',
                         'icon': 'fas fa-users',
-                        'links': [
-                            {'url': url_for('main.user_account'), 'icon': 'fas fa-user', 'label': 'Manajemen Akun', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'roles': ['admin','su']}
+                        'subgroups': [
+                            {
+                                'id': 'users-accounts',
+                                'title': 'Akun',
+                                'icon': 'fas fa-user',
+                                'links': [
+                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'roles': ['admin','su']}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'brand',
                         'title': 'Brand & Identitas',
                         'icon': 'fas fa-palette',
-                        'links': [
-                            {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'roles': ['su']},
-                            {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'roles': ['admin','su']}
+                        'subgroups': [
+                            {
+                                'id': 'brand-identity',
+                                'title': 'Brand',
+                                'icon': 'fas fa-palette',
+                                'links': [
+                                    {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'roles': ['su']},
+                                    {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'roles': ['su']},
+                                    {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'roles': ['su']},
+                                    {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'roles': ['su']},
+                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'roles': ['su']}
+                                ]
+                            },
+                            {
+                                'id': 'brand-social',
+                                'title': 'Sosial',
+                                'icon': 'fas fa-share-alt',
+                                'links': [
+                                    {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'roles': ['admin','su']},
+                                    {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'roles': ['admin','su']}
+                                ]
+                            },
+                            {
+                                'id': 'brand-team',
+                                'title': 'Tim',
+                                'icon': 'fas fa-user-friends',
+                                'links': [
+                                    {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'roles': ['admin','su']}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'navigation',
                         'title': 'Navigasi & SEO',
                         'icon': 'fas fa-sitemap',
-                        'links': [
-                            {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'roles': ['admin','su']},
-                            {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'roles': ['admin','su']},
-                            {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'roles': ['admin','su']}
+                        'subgroups': [
+                            {
+                                'id': 'navigation-management',
+                                'title': 'Navigasi',
+                                'icon': 'fas fa-link',
+                                'links': [
+                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'roles': ['admin','su']}
+                                ]
+                            },
+                            {
+                                'id': 'navigation-seo',
+                                'title': 'SEO',
+                                'icon': 'fas fa-search',
+                                'links': [
+                                    {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'roles': ['admin','su']},
+                                    {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'roles': ['admin','su']},
+                                    {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'roles': ['admin','su']},
+                                    {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'roles': ['admin','su']}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'analytics',
                         'title': 'Analitik & Performa',
                         'icon': 'fas fa-chart-line',
-                        'links': [
-                            {'url': url_for('main.settings_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Dashboard Analitik', 'roles': ['su']},
-                            {'url': url_for('main.settings_performance'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Performa', 'roles': ['su']},
-                            {'url': url_for('main.settings_asset_optimization'), 'icon': 'fas fa-compress-arrows-alt', 'label': 'Optimasi Asset', 'roles': ['su']},
-                            {'url': url_for('main.settings_ssr_optimization'), 'icon': 'fas fa-server', 'label': 'Optimasi SSR', 'roles': ['su']}
+                        'subgroups': [
+                            {
+                                'id': 'analytics-dashboard',
+                                'title': 'Analitik',
+                                'icon': 'fas fa-chart-bar',
+                                'links': [
+                                    {'url': url_for('main.settings_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Dashboard Analitik', 'roles': ['su']},
+                                    {'url': url_for('main.settings_performance'), 'icon': 'fas fa-tachometer-alt', 'label': 'Dashboard Performa', 'roles': ['su']}
+                                ]
+                            },
+                            {
+                                'id': 'analytics-optimization',
+                                'title': 'Optimasi',
+                                'icon': 'fas fa-compress-arrows-alt',
+                                'links': [
+                                    {'url': url_for('main.settings_asset_optimization'), 'icon': 'fas fa-compress-arrows-alt', 'label': 'Optimasi Asset', 'roles': ['su']},
+                                    {'url': url_for('main.settings_ssr_optimization'), 'icon': 'fas fa-server', 'label': 'Optimasi SSR', 'roles': ['su']}
+                                ]
+                            }
                         ]
                     },
                     {
                         'id': 'legal',
                         'title': 'Legal & Kebijakan',
                         'icon': 'fas fa-shield-alt',
-                        'links': [
-                            {'url': url_for('main.settings_privacy_policy'), 'icon': 'fas fa-shield-alt', 'label': 'Kebijakan Privasi', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_media_guidelines'), 'icon': 'fas fa-book', 'label': 'Pedoman Media', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_pedomanhak'), 'icon': 'fas fa-handshake', 'label': 'Pedoman Hak', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_penyangkalan'), 'icon': 'fas fa-file', 'label': 'Penyangkalan', 'roles': ['admin','su']},
-                            {'url': url_for('main.settings_visi_misi'), 'icon': 'fas fa-braille', 'label': 'Visi Misi', 'roles': ['admin','su']}
+                        'subgroups': [
+                            {
+                                'id': 'legal-policies',
+                                'title': 'Kebijakan',
+                                'icon': 'fas fa-shield-alt',
+                                'links': [
+                                    {'url': url_for('main.settings_privacy_policy'), 'icon': 'fas fa-shield-alt', 'label': 'Kebijakan Privasi', 'roles': ['admin','su']},
+                                    {'url': url_for('main.settings_media_guidelines'), 'icon': 'fas fa-book', 'label': 'Pedoman Media', 'roles': ['admin','su']}
+                                ]
+                            },
+                            {
+                                'id': 'legal-documents',
+                                'title': 'Dokumen',
+                                'icon': 'fas fa-file',
+                                'links': [
+                                    {'url': url_for('main.settings_pedomanhak'), 'icon': 'fas fa-handshake', 'label': 'Pedoman Hak', 'roles': ['admin','su']},
+                                    {'url': url_for('main.settings_penyangkalan'), 'icon': 'fas fa-file', 'label': 'Penyangkalan', 'roles': ['admin','su']},
+                                    {'url': url_for('main.settings_visi_misi'), 'icon': 'fas fa-braille', 'label': 'Visi Misi', 'roles': ['admin','su']}
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'id': 'system',
+                        'title': 'Sistem & Keamanan',
+                        'icon': 'fas fa-cogs',
+                        'subgroups': [
+                            {
+                                'id': 'system-auth',
+                                'title': 'Autentikasi',
+                                'icon': 'fas fa-key',
+                                'links': [
+                                    {'url': url_for('main.pending_registrations'), 'icon': 'fas fa-user-clock', 'label': 'Registrasi Tertunda', 'roles': ['admin','su']}
+                                ]
+                            }
                         ]
                     },
                     {
@@ -168,15 +319,42 @@
                                     </div>
                                     <i class="fas fa-chevron-down text-sm transition-transform duration-300"></i>
                                 </button>
-                                <ul id="nav-group-{{ group.id }}" class="nav-group-content mt-3 space-y-2 ml-6">
-                                    {% for link in group.links %}
-                                        <li role="menuitem">
-                                            <a href="{{ link.url }}" class="{% if group.id == 'account' %}text-red-600 hover:text-red-500 hover:bg-red-50{% else %}text-gray-700 hover:text-gray-600 hover:bg-gray-100{% endif %} px-4 py-3 rounded-lg transition-all duration-300 flex items-center text-sm">
-                                                <i class="{{ link.icon }} mr-4 {% if group.id == 'account' %}text-red-500{% else %}text-gray-600{% endif %}"></i>{{ link.label }}
-                                            </a>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
+                                <div id="nav-group-{{ group.id }}" class="nav-group-content mt-3 space-y-3 ml-6">
+                                    {% if group.subgroups %}
+                                        <!-- Sub-groups -->
+                                        {% for subgroup in group.subgroups %}
+                                            <div class="nav-subgroup bg-white border border-gray-200 rounded-lg p-3" data-subgroup="{{ subgroup.id }}">
+                                                <button class="nav-subgroup-toggle w-full flex items-center justify-between text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md transition-all duration-300 text-sm" aria-expanded="true" aria-controls="nav-subgroup-{{ subgroup.id }}">
+                                                    <div class="flex items-center">
+                                                        <i class="{{ subgroup.icon }} mr-3 text-gray-500 text-sm"></i>
+                                                        <span class="font-medium">{{ subgroup.title }}</span>
+                                                    </div>
+                                                    <i class="fas fa-chevron-right text-xs transition-transform duration-300"></i>
+                                                </button>
+                                                <ul id="nav-subgroup-{{ subgroup.id }}" class="nav-subgroup-content mt-2 space-y-1 ml-6">
+                                                    {% for link in subgroup.links %}
+                                                        <li role="menuitem">
+                                                            <a href="{{ link.url }}" class="text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-2 rounded-md transition-all duration-300 flex items-center text-sm">
+                                                                <i class="{{ link.icon }} mr-3 text-gray-500"></i>{{ link.label }}
+                                                            </a>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <!-- Regular links -->
+                                        <ul class="space-y-2">
+                                            {% for link in group.links %}
+                                                <li role="menuitem">
+                                                    <a href="{{ link.url }}" class="{% if group.id == 'account' %}text-red-600 hover:text-red-500 hover:bg-red-50{% else %}text-gray-700 hover:text-gray-600 hover:bg-gray-100{% endif %} px-4 py-3 rounded-lg transition-all duration-300 flex items-center text-sm">
+                                                        <i class="{{ link.icon }} mr-4 {% if group.id == 'account' %}text-red-500{% else %}text-gray-600{% endif %}"></i>{{ link.label }}
+                                                    </a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </div>
                             </div>
                     {% endfor %}
                 </div>
@@ -317,20 +495,46 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     <script>
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        // Flash messages will be injected here by Jinja template engine
         document.addEventListener('DOMContentLoaded', function() {
-            {% for category, message in messages %}
-            showToast("{{ category }}", {{ message|tojson }});
-            {% endfor %}
+            // This will be populated by the server-side template processing
         });
+    </script>
+    <script id="flash-messages" type="application/json" style="display: none;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {
+            "messages": [
+                {% for category, message in messages %}
+                {"category": "{{ category }}", "message": {{ message|tojson }}}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }
         {% endwith %}
+    </script>
+    <script>
+        // Process flash messages from JSON
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashScript = document.getElementById('flash-messages');
+            if (flashScript && flashScript.textContent.trim()) {
+                try {
+                    const flashData = JSON.parse(flashScript.textContent);
+                    flashData.messages.forEach(function(msg) {
+                        showToast(msg.category, msg.message);
+                    });
+                } catch (e) {
+                    console.error('Error parsing flash messages:', e);
+                }
+            }
+        });
     </script>
     <script src="{{ url_for('static', filename='js/sidebar-toggle.js') }}"></script>
     <script>
-        // Navigation Group Toggle Functionality
+        // Navigation Group and Sub-group Toggle Functionality
         document.addEventListener('DOMContentLoaded', function() {
             const navGroupToggles = document.querySelectorAll('.nav-group-toggle');
+            const navSubgroupToggles = document.querySelectorAll('.nav-subgroup-toggle');
             
+            // Main group toggles
             navGroupToggles.forEach(toggle => {
                 toggle.addEventListener('click', function() {
                     const groupId = this.getAttribute('aria-controls');
@@ -351,32 +555,81 @@
                 });
             });
             
-            // Auto-expand group containing current page
+            // Sub-group toggles
+            navSubgroupToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const subgroupId = this.getAttribute('aria-controls');
+                    const content = document.getElementById(subgroupId);
+                    const chevron = this.querySelector('.fas.fa-chevron-right');
+                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                    
+                    // Toggle content visibility
+                    if (isExpanded) {
+                        content.style.display = 'none';
+                        this.setAttribute('aria-expanded', 'false');
+                        chevron.style.transform = 'rotate(-90deg)';
+                    } else {
+                        content.style.display = 'block';
+                        this.setAttribute('aria-expanded', 'true');
+                        chevron.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+            
+            // Auto-expand group and sub-group containing current page
             const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('.nav-group-content a');
+            const navLinks = document.querySelectorAll('.nav-group-content a, .nav-subgroup-content a');
             
             navLinks.forEach(link => {
                 if (link.getAttribute('href') === currentPath) {
+                    // Find the closest group and subgroup
+                    const subgroup = link.closest('.nav-subgroup');
                     const group = link.closest('.nav-group');
-                    const toggle = group.querySelector('.nav-group-toggle');
-                    const content = group.querySelector('.nav-group-content');
-                    const chevron = toggle.querySelector('.fas.fa-chevron-down');
                     
-                    // Ensure group is expanded
-                    content.style.display = 'block';
-                    toggle.setAttribute('aria-expanded', 'true');
-                    chevron.style.transform = 'rotate(0deg)';
+                    // Expand the main group
+                    if (group) {
+                        const groupToggle = group.querySelector('.nav-group-toggle');
+                        const groupContent = group.querySelector('.nav-group-content');
+                        const groupChevron = groupToggle.querySelector('.fas.fa-chevron-down');
+                        
+                        groupContent.style.display = 'block';
+                        groupToggle.setAttribute('aria-expanded', 'true');
+                        groupChevron.style.transform = 'rotate(0deg)';
+                    }
+                    
+                    // Expand the sub-group if it exists
+                    if (subgroup) {
+                        const subgroupToggle = subgroup.querySelector('.nav-subgroup-toggle');
+                        const subgroupContent = subgroup.querySelector('.nav-subgroup-content');
+                        const subgroupChevron = subgroupToggle.querySelector('.fas.fa-chevron-right');
+                        
+                        subgroupContent.style.display = 'block';
+                        subgroupToggle.setAttribute('aria-expanded', 'true');
+                        subgroupChevron.style.transform = 'rotate(0deg)';
+                    }
                     
                     // Highlight current link
                     link.classList.add('bg-gray-200', 'text-gray-900', 'active');
                     
                     // Add subtle animation to the group
-                    group.style.animation = 'pulse 2s ease-in-out';
+                    if (group) {
+                        group.style.animation = 'pulse 2s ease-in-out';
+                    }
                 }
             });
             
-            // Add keyboard navigation support
+            // Add keyboard navigation support for groups
             navGroupToggles.forEach(toggle => {
+                toggle.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
+            
+            // Add keyboard navigation support for sub-groups
+            navSubgroupToggles.forEach(toggle => {
                 toggle.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
@@ -390,45 +643,74 @@
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('sidebar-search');
             const navGroups = document.querySelectorAll('.nav-group');
-            const navLinks = document.querySelectorAll('.nav-group-content a');
+            const navSubgroups = document.querySelectorAll('.nav-subgroup');
+            const navLinks = document.querySelectorAll('.nav-group-content a, .nav-subgroup-content a');
             
             if (searchInput) {
                 searchInput.addEventListener('input', function() {
                     const searchTerm = this.value.toLowerCase().trim();
                     
                     if (searchTerm === '') {
-                        // Show all groups and links when search is empty
+                        // Show all groups, sub-groups and links when search is empty
                         navGroups.forEach(group => {
                             group.style.display = 'block';
-                            const links = group.querySelectorAll('.nav-group-content a');
-                            links.forEach(link => {
+                            const subgroups = group.querySelectorAll('.nav-subgroup');
+                            subgroups.forEach(subgroup => {
+                                subgroup.style.display = 'block';
+                                const links = subgroup.querySelectorAll('.nav-subgroup-content a');
+                                links.forEach(link => {
+                                    link.style.display = 'block';
+                                });
+                            });
+                            const directLinks = group.querySelectorAll('.nav-group-content > ul > li > a');
+                            directLinks.forEach(link => {
                                 link.style.display = 'block';
                             });
                         });
                         return;
                     }
                     
-                    // Hide all groups initially
+                    // Hide all groups and sub-groups initially
                     navGroups.forEach(group => {
                         group.style.display = 'none';
                     });
+                    navSubgroups.forEach(subgroup => {
+                        subgroup.style.display = 'none';
+                    });
                     
-                    // Show groups that have matching links
+                    // Show groups and sub-groups that have matching links
                     navLinks.forEach(link => {
                         const linkText = link.textContent.toLowerCase();
                         const linkUrl = link.getAttribute('href').toLowerCase();
                         
                         if (linkText.includes(searchTerm) || linkUrl.includes(searchTerm)) {
+                            const subgroup = link.closest('.nav-subgroup');
                             const group = link.closest('.nav-group');
-                            group.style.display = 'block';
                             
-                            // Highlight matching text
-                            const originalText = link.textContent;
-                            const highlightedText = originalText.replace(
-                                new RegExp(searchTerm, 'gi'),
-                                match => `<mark class="bg-blue-100 text-blue-900 px-1 rounded">${match}</mark>`
-                            );
-                            link.innerHTML = highlightedText;
+                            if (subgroup) {
+                                // Link is in a sub-group
+                                subgroup.style.display = 'block';
+                                group.style.display = 'block';
+                                
+                                // Highlight matching text
+                                const originalText = link.textContent;
+                                const highlightedText = originalText.replace(
+                                    new RegExp(searchTerm, 'gi'),
+                                    match => `<mark class="bg-blue-100 text-blue-900 px-1 rounded">${match}</mark>`
+                                );
+                                link.innerHTML = highlightedText;
+                            } else {
+                                // Link is directly in a group
+                                group.style.display = 'block';
+                                
+                                // Highlight matching text
+                                const originalText = link.textContent;
+                                const highlightedText = originalText.replace(
+                                    new RegExp(searchTerm, 'gi'),
+                                    match => `<mark class="bg-blue-100 text-blue-900 px-1 rounded">${match}</mark>`
+                                );
+                                link.innerHTML = highlightedText;
+                            }
                         } else {
                             // Hide non-matching links
                             link.style.display = 'none';
@@ -440,6 +722,18 @@
                         const groupTitle = group.querySelector('.nav-group-toggle span').textContent.toLowerCase();
                         if (groupTitle.includes(searchTerm)) {
                             group.style.display = 'block';
+                        }
+                    });
+                    
+                    // Show sub-groups even if they have hidden links but the sub-group title matches
+                    navSubgroups.forEach(subgroup => {
+                        const subgroupTitle = subgroup.querySelector('.nav-subgroup-toggle span').textContent.toLowerCase();
+                        if (subgroupTitle.includes(searchTerm)) {
+                            subgroup.style.display = 'block';
+                            const group = subgroup.closest('.nav-group');
+                            if (group) {
+                                group.style.display = 'block';
+                            }
                         }
                     });
                 });

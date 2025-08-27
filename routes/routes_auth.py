@@ -301,3 +301,13 @@ def delete_account():
     db.session.delete(current_user)
     db.session.commit()
     return jsonify({"message": "Account deleted successfully"}), 200
+
+
+@main_blueprint.route("/settings/pending-registrations")
+@login_required
+def pending_registrations():
+    """Pending registrations management page for admins."""
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    
+    return render_template('admin/settings/pending_registrations.html', current_user=current_user)
