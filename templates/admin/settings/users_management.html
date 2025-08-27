@@ -29,6 +29,9 @@
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-semibold text-amber-800">Semua Pengguna</h2>
       <div class="flex space-x-2">
+        <button id="create-user-btn" onclick="openCreateUserModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
+          <i class="fas fa-user-plus mr-2"></i>Buat Pengguna Baru
+        </button>
         <button id="bulk-actions-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium hidden">
           <i class="fas fa-tasks mr-2"></i>Aksi Massal
         </button>
@@ -106,6 +109,62 @@
           <div class="col-span-full text-amber-600" role="status">Memuat pengguna umum...</div>
         </div>
       </section>
+      
+      <!-- Pagination Controls -->
+      <div id="users-pagination" class="flex justify-center items-center space-x-2 mt-6" role="navigation" aria-label="Navigasi halaman pengguna">
+        <!-- Pagination will be dynamically inserted here -->
+      </div>
+      
+      <!-- User Statistics -->
+      <section aria-labelledby="user-stats-title" class="mt-8">
+        <h3 id="user-stats-title" class="text-xl font-bold text-amber-600 mb-4">Statistik Pengguna</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+            <div class="flex items-center">
+              <div class="p-2 bg-blue-100 rounded-lg">
+                <i class="fas fa-users text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-amber-600">Total Pengguna</p>
+                <p id="total-users-count" class="text-2xl font-bold text-amber-800">-</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+            <div class="flex items-center">
+              <div class="p-2 bg-green-100 rounded-lg">
+                <i class="fas fa-user-check text-green-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-amber-600">Aktif</p>
+                <p id="active-users-count" class="text-2xl font-bold text-amber-800">-</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+            <div class="flex items-center">
+              <div class="p-2 bg-yellow-100 rounded-lg">
+                <i class="fas fa-crown text-yellow-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-amber-600">Premium</p>
+                <p id="premium-users-count" class="text-2xl font-bold text-amber-800">-</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+            <div class="flex items-center">
+              <div class="p-2 bg-purple-100 rounded-lg">
+                <i class="fas fa-clock text-purple-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-amber-600">Menunggu</p>
+                <p id="pending-users-count" class="text-2xl font-bold text-amber-800">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
 </div>
@@ -142,6 +201,46 @@
         </div>
       </div>
     </div>
+    
+    <!-- Role Statistics -->
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold text-amber-700 mb-4">Statistik Peran</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <i class="fas fa-user-tag text-blue-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-amber-600">Total Peran</p>
+              <p id="total-roles-count" class="text-2xl font-bold text-amber-800">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <i class="fas fa-check-circle text-green-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-amber-600">Peran Aktif</p>
+              <p id="active-roles-count" class="text-2xl font-bold text-amber-800">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-purple-100 rounded-lg">
+              <i class="fas fa-shield-alt text-purple-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-amber-600">Total Izin</p>
+              <p id="total-permissions-count" class="text-2xl font-bold text-amber-800">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -160,8 +259,75 @@
       </div>
     </div>
 
+    <div class="mb-6 flex flex-wrap gap-4" role="search" aria-label="Filter pengguna yang menunggu persetujuan">
+      <div class="flex-1">
+        <label for="pending-search" class="sr-only">Cari pengguna yang menunggu</label>
+        <input type="text" id="pending-search" placeholder="Cari berdasarkan nama pengguna, email..." class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Cari pengguna yang menunggu persetujuan">
+      </div>
+      <div>
+        <label for="pending-date-filter" class="sr-only">Filter berdasarkan tanggal</label>
+        <select id="pending-date-filter" class="w-48 bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Filter berdasarkan tanggal pendaftaran">
+          <option value="">Semua Tanggal</option>
+          <option value="today">Hari Ini</option>
+          <option value="week">Minggu Ini</option>
+          <option value="month">Bulan Ini</option>
+        </select>
+      </div>
+    </div>
+
     <div id="pending-users" class="space-y-4">
       <div class="text-amber-600">Memuat pengguna yang menunggu persetujuan...</div>
+    </div>
+    
+    <!-- Pending Statistics -->
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold text-amber-700 mb-4">Statistik Menunggu</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-yellow-100 rounded-lg">
+              <i class="fas fa-clock text-yellow-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-amber-600">Total Menunggu</p>
+              <p id="total-pending-count" class="text-2xl font-bold text-amber-800">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <i class="fas fa-check text-green-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-amber-600">Disetujui Hari Ini</p>
+              <p id="approved-today-count" class="text-2xl font-bold text-amber-800">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-red-100 rounded-lg">
+              <i class="fas fa-times text-red-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-amber-600">Ditolak Hari Ini</p>
+              <p id="rejected-today-count" class="text-2xl font-bold text-amber-800">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <i class="fas fa-hourglass-half text-blue-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-amber-600">Rata-rata Waktu</p>
+              <p id="avg-approval-time" class="text-2xl font-bold text-amber-800">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -208,6 +374,33 @@
       <h3 class="text-lg font-semibold text-amber-700 mb-4">Papan Skor Performa</h3>
       <div id="performance-leaderboard" class="space-y-3">
         <div class="text-amber-600">Memuat papan skor...</div>
+      </div>
+    </div>
+    
+    <!-- Performance Charts -->
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold text-amber-700 mb-4">Grafik Performa</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <h4 class="text-md font-medium text-amber-700 mb-3">Aktivitas Pengguna</h4>
+          <div id="user-activity-chart" class="h-64 flex items-center justify-center text-amber-600">
+            Grafik aktivitas akan ditampilkan di sini
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <h4 class="text-md font-medium text-amber-700 mb-3">Distribusi Peran</h4>
+          <div id="role-distribution-chart" class="h-64 flex items-center justify-center text-amber-600">
+            Grafik distribusi peran akan ditampilkan di sini
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Activities -->
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold text-amber-700 mb-4">Aktivitas Terbaru</h3>
+      <div id="recent-activities" class="bg-white rounded-lg border border-amber-200 shadow-sm">
+        <div class="p-4 text-amber-600">Memuat aktivitas terbaru...</div>
       </div>
     </div>
   </main>
@@ -401,6 +594,163 @@
         </div>
     </div>
 </div>
+
+<!-- Create User Modal -->
+<div id="create-user-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="create-user-title" aria-modal="true">
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="create-user-title" class="text-xl font-semibold mb-6 text-amber-800">Buat Pengguna Baru</h2>
+        <form id="create-user-form" class="space-y-6" role="form" aria-label="Form buat pengguna">
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="new-username" class="block text-amber-700 font-medium mb-2">Nama Pengguna <span class="text-red-500">*</span></label>
+                    <input type="text" id="new-username" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="3" maxlength="50">
+                </div>
+                <div>
+                    <label for="new-email" class="block text-amber-700 font-medium mb-2">Email <span class="text-red-500">*</span></label>
+                    <input type="email" id="new-email" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                </div>
+                <div>
+                    <label for="new-password" class="block text-amber-700 font-medium mb-2">Password <span class="text-red-500">*</span></label>
+                    <input type="password" id="new-password" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+                </div>
+                <div>
+                    <label for="new-confirm-password" class="block text-amber-700 font-medium mb-2">Konfirmasi Password <span class="text-red-500">*</span></label>
+                    <input type="password" id="new-confirm-password" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+                </div>
+                <div>
+                    <label for="new-first-name" class="block text-amber-700 font-medium mb-2">Nama Depan</label>
+                    <input type="text" id="new-first-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                </div>
+                <div>
+                    <label for="new-last-name" class="block text-amber-700 font-medium mb-2">Nama Belakang</label>
+                    <input type="text" id="new-last-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                </div>
+            </div>
+
+            <div>
+                <label for="new-bio" class="block text-amber-700 font-medium mb-2">Bio</label>
+                <textarea id="new-bio" rows="3" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+            </div>
+
+            <!-- Role and Status -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="new-role" class="block text-amber-700 font-medium mb-2">Peran Sistem <span class="text-red-500">*</span></label>
+                    <select id="new-role" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Pilih peran pengguna">
+                        <option value="">Pilih Peran</option>
+                        <option value="su">Superuser</option>
+                        <option value="admin">Admin</option>
+                        <option value="general">Umum</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="new-custom-role" class="block text-amber-700 font-medium mb-2">Peran Kustom</label>
+                    <select id="new-custom-role" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        <option value="">Tidak ada peran kustom</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Status Toggles -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="flex items-center">
+                    <input type="checkbox" id="new-is-active" class="rounded border-amber-300 text-green-500 focus:ring-green-300" checked aria-label="Status aktif pengguna">
+                    <label for="new-is-active" class="ml-2 text-amber-700">Aktif</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="new-verified" class="rounded border-amber-300 text-purple-500 focus:ring-purple-300" checked aria-label="Status verifikasi pengguna">
+                    <label for="new-verified" class="ml-2 text-amber-700">Terverifikasi</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="new-is-premium" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" aria-label="Status premium pengguna">
+                    <label for="new-is-premium" class="ml-2 text-amber-700">Premium</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="new-send-welcome-email" class="rounded border-amber-300 text-blue-500 focus:ring-blue-300" checked aria-label="Kirim email selamat datang">
+                    <label for="new-send-welcome-email" class="ml-2 text-amber-700">Kirim Email Selamat Datang</label>
+                </div>
+            </div>
+
+            <!-- Premium Settings -->
+            <div id="premium-settings" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="new-premium-duration" class="block text-amber-700 font-medium mb-2">Durasi Premium</label>
+                        <select id="new-premium-duration" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            <option value="30">30 Hari</option>
+                            <option value="90">90 Hari</option>
+                            <option value="180">180 Hari</option>
+                            <option value="365" selected>1 Tahun</option>
+                            <option value="lifetime">Seumur Hidup</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="new-premium-features" class="block text-amber-700 font-medium mb-2">Fitur Premium</label>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="new-premium-ads-free" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" checked>
+                                <label for="new-premium-ads-free" class="ml-2 text-amber-700 text-sm">Bebas Iklan</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="new-premium-priority" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" checked>
+                                <label for="new-premium-priority" class="ml-2 text-amber-700 text-sm">Prioritas Support</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="new-premium-advanced" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" checked>
+                                <label for="new-premium-advanced" class="ml-2 text-amber-700 text-sm">Fitur Lanjutan</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
+                <button type="button" onclick="closeCreateUserModal()" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Batal buat pengguna">Batal</button>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Buat pengguna">Buat Pengguna</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div id="user-details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="user-details-title" aria-modal="true">
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="user-details-title" class="text-xl font-semibold mb-6 text-amber-800">Detail Pengguna</h2>
+        <div id="user-details-content" class="space-y-6">
+            <!-- User details will be loaded here -->
+        </div>
+        <div class="flex justify-end mt-6">
+            <button onclick="closeUserDetailsModal()" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-6 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Tutup detail pengguna">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Password Reset Modal -->
+<div id="password-reset-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="password-reset-title" aria-modal="true">
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-md w-full">
+        <h2 id="password-reset-title" class="text-xl font-semibold mb-6 text-amber-800">Reset Password</h2>
+        <form id="password-reset-form" class="space-y-4" role="form" aria-label="Form reset password">
+            <input type="hidden" id="reset-user-id">
+            <div>
+                <label for="new-password-reset" class="block text-amber-700 font-medium mb-2">Password Baru <span class="text-red-500">*</span></label>
+                <input type="password" id="new-password-reset" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+            </div>
+            <div>
+                <label for="confirm-password-reset" class="block text-amber-700 font-medium mb-2">Konfirmasi Password <span class="text-red-500">*</span></label>
+                <input type="password" id="confirm-password-reset" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="send-email-reset" class="rounded border-amber-300 text-blue-500 focus:ring-blue-300" checked>
+                <label for="send-email-reset" class="ml-2 text-amber-700">Kirim email notifikasi ke pengguna</label>
+            </div>
+            <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
+                <button type="button" onclick="closePasswordResetModal()" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Batal reset password">Batal</button>
+                <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all duration-300 shadow-md" aria-label="Reset password">Reset Password</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -412,6 +762,250 @@ window.currentUserData = {
     username: JSON.parse('{{ current_user.username | tojson | safe }}'),
     role: JSON.parse('{{ current_user.role.value | tojson | safe }}')
 };
+
+// Additional JavaScript functions for enhanced features
+document.addEventListener('DOMContentLoaded', function() {
+    // Premium settings toggle
+    const premiumToggle = document.getElementById('new-is-premium');
+    const premiumSettings = document.getElementById('premium-settings');
+    
+    if (premiumToggle && premiumSettings) {
+        premiumToggle.addEventListener('change', function() {
+            if (this.checked) {
+                premiumSettings.classList.remove('hidden');
+            } else {
+                premiumSettings.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Password confirmation validation
+    const newPassword = document.getElementById('new-password');
+    const confirmPassword = document.getElementById('new-confirm-password');
+    
+    if (newPassword && confirmPassword) {
+        function validatePassword() {
+            if (newPassword.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('Password tidak cocok');
+            } else {
+                confirmPassword.setCustomValidity('');
+            }
+        }
+        
+        newPassword.addEventListener('change', validatePassword);
+        confirmPassword.addEventListener('keyup', validatePassword);
+    }
+    
+    // Password reset confirmation validation
+    const resetPassword = document.getElementById('new-password-reset');
+    const confirmResetPassword = document.getElementById('confirm-password-reset');
+    
+    if (resetPassword && confirmResetPassword) {
+        function validateResetPassword() {
+            if (resetPassword.value !== confirmResetPassword.value) {
+                confirmResetPassword.setCustomValidity('Password tidak cocok');
+            } else {
+                confirmResetPassword.setCustomValidity('');
+            }
+        }
+        
+        resetPassword.addEventListener('change', validateResetPassword);
+        confirmResetPassword.addEventListener('keyup', validateResetPassword);
+    }
+    
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Remove active class from all buttons and contents
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-white', 'text-amber-800');
+                btn.classList.add('bg-amber-200', 'text-amber-700');
+            });
+            tabContents.forEach(content => content.classList.add('hidden'));
+            
+            // Add active class to clicked button and show target content
+            this.classList.add('active', 'bg-white', 'text-amber-800');
+            this.classList.remove('bg-amber-200', 'text-amber-700');
+            document.getElementById(targetTab + '-tab').classList.remove('hidden');
+        });
+    });
+});
+
+// Modal functions
+function openCreateUserModal() {
+    document.getElementById('create-user-modal').classList.remove('hidden');
+    document.getElementById('create-user-modal').classList.add('flex');
+}
+
+function closeCreateUserModal() {
+    document.getElementById('create-user-modal').classList.add('hidden');
+    document.getElementById('create-user-modal').classList.remove('flex');
+    document.getElementById('create-user-form').reset();
+    document.getElementById('premium-settings').classList.add('hidden');
+}
+
+function openUserDetailsModal(userId) {
+    // Load user details via API
+    fetch(`/api/users/${userId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('user-details-content').innerHTML = generateUserDetailsHTML(data);
+            document.getElementById('user-details-modal').classList.remove('hidden');
+            document.getElementById('user-details-modal').classList.add('flex');
+        })
+        .catch(error => {
+            console.error('Error loading user details:', error);
+            showToast('error', 'Gagal memuat detail pengguna');
+        });
+}
+
+function closeUserDetailsModal() {
+    document.getElementById('user-details-modal').classList.add('hidden');
+    document.getElementById('user-details-modal').classList.remove('flex');
+}
+
+function openPasswordResetModal(userId) {
+    document.getElementById('reset-user-id').value = userId;
+    document.getElementById('password-reset-modal').classList.remove('hidden');
+    document.getElementById('password-reset-modal').classList.add('flex');
+}
+
+function closePasswordResetModal() {
+    document.getElementById('password-reset-modal').classList.add('hidden');
+    document.getElementById('password-reset-modal').classList.remove('flex');
+    document.getElementById('password-reset-form').reset();
+}
+
+function generateUserDetailsHTML(user) {
+    return `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="text-lg font-semibold text-amber-700 mb-3">Informasi Dasar</h4>
+                <div class="space-y-2">
+                    <p><strong>Username:</strong> ${user.username}</p>
+                    <p><strong>Email:</strong> ${user.email || 'Tidak ada'}</p>
+                    <p><strong>Nama Lengkap:</strong> ${user.first_name || ''} ${user.last_name || ''}</p>
+                    <p><strong>Bio:</strong> ${user.bio || 'Tidak ada'}</p>
+                    <p><strong>Tanggal Bergabung:</strong> ${new Date(user.created_at).toLocaleDateString('id-ID')}</p>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-lg font-semibold text-amber-700 mb-3">Status & Peran</h4>
+                <div class="space-y-2">
+                    <p><strong>Peran Sistem:</strong> <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded text-sm">${user.role}</span></p>
+                    <p><strong>Peran Kustom:</strong> ${user.custom_role || 'Tidak ada'}</p>
+                    <p><strong>Status:</strong> <span class="px-2 py-1 ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded text-sm">${user.is_active ? 'Aktif' : 'Tidak Aktif'}</span></p>
+                    <p><strong>Verifikasi:</strong> <span class="px-2 py-1 ${user.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} rounded text-sm">${user.verified ? 'Terverifikasi' : 'Belum Terverifikasi'}</span></p>
+                    <p><strong>Premium:</strong> <span class="px-2 py-1 ${user.is_premium ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'} rounded text-sm">${user.is_premium ? 'Premium' : 'Standard'}</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-6">
+            <h4 class="text-lg font-semibold text-amber-700 mb-3">Aktivitas Terbaru</h4>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-gray-600">Aktivitas pengguna akan ditampilkan di sini</p>
+            </div>
+        </div>
+    `;
+}
+
+// Form submission handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Create user form
+    const createUserForm = document.getElementById('create-user-form');
+    if (createUserForm) {
+        createUserForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const userData = {
+                username: document.getElementById('new-username').value,
+                email: document.getElementById('new-email').value,
+                password: document.getElementById('new-password').value,
+                first_name: document.getElementById('new-first-name').value,
+                last_name: document.getElementById('new-last-name').value,
+                bio: document.getElementById('new-bio').value,
+                role: document.getElementById('new-role').value,
+                custom_role: document.getElementById('new-custom-role').value,
+                is_active: document.getElementById('new-is-active').checked,
+                verified: document.getElementById('new-verified').checked,
+                is_premium: document.getElementById('new-is-premium').checked,
+                send_welcome_email: document.getElementById('new-send-welcome-email').checked,
+                premium_duration: document.getElementById('new-premium-duration')?.value,
+                premium_features: {
+                    ads_free: document.getElementById('new-premium-ads-free')?.checked,
+                    priority_support: document.getElementById('new-premium-priority')?.checked,
+                    advanced_features: document.getElementById('new-premium-advanced')?.checked
+                }
+            };
+            
+            // Send API request to create user
+            fetch('/api/users/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Pengguna berhasil dibuat');
+                    closeCreateUserModal();
+                    // Refresh user list
+                    loadUsers();
+                } else {
+                    showToast('error', data.message || 'Gagal membuat pengguna');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating user:', error);
+                showToast('error', 'Gagal membuat pengguna');
+            });
+        });
+    }
+    
+    // Password reset form
+    const passwordResetForm = document.getElementById('password-reset-form');
+    if (passwordResetForm) {
+        passwordResetForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('reset-user-id').value;
+            const newPassword = document.getElementById('new-password-reset').value;
+            const sendEmail = document.getElementById('send-email-reset').checked;
+            
+            fetch(`/api/users/${userId}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    new_password: newPassword,
+                    send_email: sendEmail
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Password berhasil direset');
+                    closePasswordResetModal();
+                } else {
+                    showToast('error', data.message || 'Gagal reset password');
+                }
+            })
+            .catch(error => {
+                console.error('Error resetting password:', error);
+                showToast('error', 'Gagal reset password');
+            });
+        });
+    }
+});
 </script>
 <script src="{{ url_for('static', filename='js/users-management.js') }}"></script>
 {% endblock %}

@@ -1,8 +1,10 @@
 from routes import main_blueprint
 from .common_imports import *
-from models import User, News, Image, YouTubeVideo, UserActivity
+from models import User, News, Image, YouTubeVideo, UserActivity, CustomRole
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import or_, func
+from werkzeug.security import generate_password_hash
 
 @main_blueprint.route("/api/users", methods=["GET"])
 @login_required
@@ -11,33 +13,173 @@ def get_users():
     if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
         abort(403)
 
-    # Fetch all users with enhanced information
-    users = User.query.all()
-    return jsonify([{
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
-        "bio": user.bio,
-        "role": user.role.value if user.role else None,
-        "is_active": user.is_active,
-        "is_premium": user.is_premium,
-        "verified": user.verified,
-        "is_suspended": user.is_suspended,
-        "suspension_reason": user.suspension_reason,
-        "suspension_until": user.suspension_until.isoformat() if user.suspension_until else None,
-        "last_login": user.last_login.isoformat() if user.last_login else None,
-        "login_count": user.login_count,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-        "updated_at": user.updated_at.isoformat() if user.updated_at else None,
-        "custom_role": {
-            "id": user.custom_role.id,
-            "name": user.custom_role.name
-        } if user.custom_role else None,
-        "has_premium_access": user.has_premium_access,
-        "premium_expires_at": user.premium_expires_at.isoformat() if user.premium_expires_at else None
-    } for user in users])
+    # Get query parameters for filtering
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
+    role_filter = request.args.get('role', '')
+    status_filter = request.args.get('status', '')
+    verification_filter = request.args.get('verification', '')
+    
+    # Build query
+    query = User.query
+    
+    # Apply filters
+    if search:
+        query = query.filter(
+            or_(
+                User.username.ilike(f'%{search}%'),
+                User.email.ilike(f'%{search}%'),
+                User.first_name.ilike(f'%{search}%'),
+                User.last_name.ilike(f'%{search}%')
+            )
+        )
+    
+    if role_filter:
+        query = query.filter(User.role == UserRole(role_filter))
+    
+    if status_filter:
+        if status_filter == 'active':
+            query = query.filter(User.is_active == True)
+        elif status_filter == 'inactive':
+            query = query.filter(User.is_active == False)
+        elif status_filter == 'suspended':
+            query = query.filter(User.is_suspended == True)
+    
+    if verification_filter:
+        if verification_filter == 'verified':
+            query = query.filter(User.verified == True)
+        elif verification_filter == 'unverified':
+            query = query.filter(User.verified == False)
+    
+    # Pagination
+    per_page = 20
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+    
+    return jsonify({
+        "users": [{
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "bio": user.bio,
+            "role": user.role.value if user.role else None,
+            "is_active": user.is_active,
+            "is_premium": user.is_premium,
+            "verified": user.verified,
+            "is_suspended": user.is_suspended,
+            "suspension_reason": user.suspension_reason,
+            "suspension_until": user.suspension_until.isoformat() if user.suspension_until else None,
+            "last_login": user.last_login.isoformat() if user.last_login else None,
+            "login_count": user.login_count,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None,
+            "custom_role": {
+                "id": user.custom_role.id,
+                "name": user.custom_role.name
+            } if user.custom_role else None,
+            "has_premium_access": user.has_premium_access,
+            "premium_expires_at": user.premium_expires_at.isoformat() if user.premium_expires_at else None
+        } for user in users],
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total": pagination.total,
+            "pages": pagination.pages,
+            "has_next": pagination.has_next,
+            "has_prev": pagination.has_prev
+        }
+    })
+
+@main_blueprint.route("/api/users", methods=["POST"])
+@login_required
+def create_user():
+    """Create a new user with enhanced features."""
+    try:
+        # Only superusers and admins can create users
+        if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+            abort(403)
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Validate required fields
+        required_fields = ['username', 'email', 'password', 'role']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        # Check if username already exists
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({"error": "Username already exists"}), 400
+        
+        # Check if email already exists
+        if data.get('email') and User.query.filter_by(email=data['email']).first():
+            return jsonify({"error": "Email already exists"}), 400
+        
+        # Validate role
+        try:
+            role = UserRole(data['role'])
+        except ValueError:
+            return jsonify({"error": "Invalid role value"}), 400
+        
+        # Create user
+        user = User(
+            username=data['username'],
+            email=data.get('email'),
+            password_hash=generate_password_hash(data['password']),
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            bio=data.get('bio'),
+            role=role,
+            is_active=data.get('is_active', True),
+            verified=data.get('verified', True),
+            is_premium=data.get('is_premium', False),
+            has_premium_access=data.get('is_premium', False)
+        )
+        
+        # Set premium expiration if premium
+        if user.is_premium:
+            duration = data.get('premium_duration', 365)
+            if duration == 'lifetime':
+                user.premium_expires_at = None
+            else:
+                user.premium_expires_at = datetime.now(timezone.utc) + timedelta(days=int(duration))
+        
+        # Assign custom role if specified
+        if data.get('custom_role'):
+            custom_role = CustomRole.query.filter_by(name=data['custom_role']).first()
+            if custom_role:
+                user.custom_role = custom_role
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        # Send welcome email if requested
+        if data.get('send_welcome_email', False) and user.email:
+            # TODO: Implement email sending
+            pass
+        
+        return jsonify({
+            "success": True,
+            "message": "User created successfully",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role.value,
+                "is_active": user.is_active,
+                "verified": user.verified,
+                "is_premium": user.is_premium
+            }
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating user: {e}")
+        return jsonify({"error": "Failed to create user"}), 500
 
 
 @main_blueprint.route("/api/users/<int:user_id>/verify", methods=["PATCH"])
@@ -1179,6 +1321,184 @@ def export_user_performance(user_id):
         headers={"Content-Disposition": f"attachment;filename=performance_{user.username}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"}
     )
 
+
+@main_blueprint.route("/api/users/<int:user_id>/details", methods=["GET"])
+@login_required
+def get_user_details(user_id):
+    """Get detailed user information."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    user = User.query.get_or_404(user_id)
+    
+    return jsonify({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "bio": user.bio,
+        "role": user.role.value if user.role else None,
+        "custom_role": user.custom_role.name if user.custom_role else None,
+        "is_active": user.is_active,
+        "verified": user.verified,
+        "is_premium": user.is_premium,
+        "has_premium_access": user.has_premium_access,
+        "premium_expires_at": user.premium_expires_at.isoformat() if user.premium_expires_at else None,
+        "is_suspended": user.is_suspended,
+        "suspension_reason": user.suspension_reason,
+        "suspension_until": user.suspension_until.isoformat() if user.suspension_until else None,
+        "last_login": user.last_login.isoformat() if user.last_login else None,
+        "login_count": user.login_count,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "updated_at": user.updated_at.isoformat() if user.updated_at else None
+    })
+
+@main_blueprint.route("/api/users/<int:user_id>/reset-password", methods=["POST"])
+@login_required
+def reset_user_password(user_id):
+    """Reset user password."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Cannot reset superuser password unless you are a superuser
+    if user.role == UserRole.SUPERUSER and not current_user.is_owner():
+        abort(403)
+    
+    data = request.get_json()
+    if not data or not data.get('new_password'):
+        return jsonify({"error": "New password is required"}), 400
+    
+    # Update password
+    user.password_hash = generate_password_hash(data['new_password'])
+    db.session.commit()
+    
+    # Send email notification if requested
+    if data.get('send_email', False) and user.email:
+        # TODO: Implement email sending
+        pass
+    
+    return jsonify({
+        "success": True,
+        "message": "Password reset successfully"
+    })
+
+@main_blueprint.route("/api/users/stats", methods=["GET"])
+@login_required
+def get_user_stats():
+    """Get user statistics."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    # Get basic counts
+    total_users = User.query.count()
+    active_users = User.query.filter_by(is_active=True).count()
+    premium_users = User.query.filter_by(is_premium=True).count()
+    pending_users = User.query.filter_by(verified=False).count()
+    
+    # Get role distribution
+    role_counts = db.session.query(User.role, func.count(User.id)).group_by(User.role).all()
+    role_distribution = {role.value: count for role, count in role_counts}
+    
+    # Get recent registrations (last 30 days)
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    recent_registrations = User.query.filter(User.created_at >= thirty_days_ago).count()
+    
+    return jsonify({
+        "total_users": total_users,
+        "active_users": active_users,
+        "premium_users": premium_users,
+        "pending_users": pending_users,
+        "role_distribution": role_distribution,
+        "recent_registrations": recent_registrations
+    })
+
+
+
+@main_blueprint.route("/api/pending/stats", methods=["GET"])
+@login_required
+def get_pending_stats():
+    """Get pending registration statistics."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    # Get pending users
+    pending_users = User.query.filter_by(verified=False).all()
+    total_pending = len(pending_users)
+    
+    # Get today's approvals/rejections
+    today = datetime.now(timezone.utc).date()
+    approved_today = User.query.filter(
+        User.verified == True,
+        func.date(User.updated_at) == today
+    ).count()
+    
+    rejected_today = 0  # TODO: Implement rejection tracking
+    
+    # Calculate average approval time
+    approved_users = User.query.filter_by(verified=True).all()
+    total_approval_time = 0
+    count = 0
+    
+    for user in approved_users:
+        if user.created_at and user.updated_at:
+            approval_time = (user.updated_at - user.created_at).total_seconds() / 3600  # hours
+            total_approval_time += approval_time
+            count += 1
+    
+    avg_approval_time = round(total_approval_time / count, 1) if count > 0 else 0
+    
+    return jsonify({
+        "total_pending": total_pending,
+        "approved_today": approved_today,
+        "rejected_today": rejected_today,
+        "avg_approval_time": avg_approval_time
+    })
+
+@main_blueprint.route("/api/roles", methods=["GET"])
+@login_required
+def get_roles_backup():
+    """Get all custom roles (backup implementation)."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    try:
+        roles = CustomRole.query.all()
+        return jsonify([{
+            "id": role.id,
+            "name": role.name,
+            "description": role.description,
+            "is_active": role.is_active,
+            "permissions": [{"id": p.id, "name": p.name} for p in role.permissions],
+            "created_at": role.created_at.isoformat() if role.created_at else None
+        } for role in roles])
+    except Exception as e:
+        print(f"Error in get_roles: {e}")
+        return jsonify([])
+
+@main_blueprint.route("/api/permissions", methods=["GET"])
+@login_required
+def get_permissions_backup():
+    """Get all permissions (backup implementation)."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    try:
+        from models import Permission
+        permissions = Permission.query.all()
+        return jsonify([{
+            "id": perm.id,
+            "name": perm.name,
+            "description": perm.description,
+            "resource": perm.resource,
+            "action": perm.action,
+            "created_at": perm.created_at.isoformat() if perm.created_at else None
+        } for perm in permissions])
+    except Exception as e:
+        print(f"Error in get_permissions: {e}")
+        return jsonify([])
 
 @main_blueprint.route("/settings/users")
 @login_required

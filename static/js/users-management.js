@@ -18,6 +18,7 @@ class UsersManagement {
         this.bindEvents();
         this.initTabs();
         this.loadUsers();
+        this.loadRoleStats(); // Load role statistics
     }
 
     bindEvents() {
@@ -127,12 +128,15 @@ class UsersManagement {
         switch(tabName) {
             case 'users':
                 this.loadUsers();
+                this.loadUserStats();
                 break;
             case 'roles':
                 this.loadRoles();
+                this.loadRoleStats();
                 break;
             case 'pending':
                 this.loadPendingUsers();
+                this.loadPendingStats();
                 break;
             case 'performance':
                 this.loadPerformanceData();
@@ -165,14 +169,107 @@ class UsersManagement {
         
         const data = await response.json();
             
-            this.users = data;
-            this.currentPage = page;
+            // Handle new API response format with pagination
+            if (data.users && Array.isArray(data.users)) {
+                this.users = data.users;
+                this.pagination = data.pagination || {};
+                this.currentPage = page;
+            } else {
+                // Fallback for old format
+                this.users = Array.isArray(data) ? data : [];
+                this.pagination = {};
+                this.currentPage = page;
+            }
             
             this.renderUsers();
+            this.renderPagination();
+            this.loadUserStats(); // Load statistics after users
     } catch (error) {
             console.error('Error loading users:', error);
             this.showToast('error', 'Gagal memuat daftar pengguna');
             this.showErrorInContainers(error.message);
+        }
+    }
+
+    async loadUserStats() {
+        try {
+            const response = await fetch('/api/users/stats');
+            if (!response.ok) {
+                throw new Error('Failed to fetch user statistics');
+            }
+            
+            const stats = await response.json();
+            
+            // Update statistics display
+            const totalUsersElement = document.getElementById('total-users-count');
+            const activeUsersElement = document.getElementById('active-users-count');
+            const premiumUsersElement = document.getElementById('premium-users-count');
+            const pendingUsersElement = document.getElementById('pending-users-count');
+            
+            if (totalUsersElement) totalUsersElement.textContent = stats.total_users || 0;
+            if (activeUsersElement) activeUsersElement.textContent = stats.active_users || 0;
+            if (premiumUsersElement) premiumUsersElement.textContent = stats.premium_users || 0;
+            if (pendingUsersElement) pendingUsersElement.textContent = stats.pending_users || 0;
+            
+        } catch (error) {
+            console.error('Error loading user statistics:', error);
+        }
+    }
+
+    async loadRoleStats() {
+        try {
+            const response = await fetch('/api/roles');
+            if (!response.ok) {
+                throw new Error('Failed to fetch roles');
+            }
+            
+            const roles = await response.json();
+            
+            // Update role statistics
+            const totalRolesElement = document.getElementById('total-roles-count');
+            const activeRolesElement = document.getElementById('active-roles-count');
+            const totalPermissionsElement = document.getElementById('total-permissions-count');
+            
+            if (totalRolesElement) totalRolesElement.textContent = roles.length || 0;
+            if (activeRolesElement) {
+                const activeRoles = roles.filter(role => role.is_active).length;
+                activeRolesElement.textContent = activeRoles;
+            }
+            
+            // Load permissions count
+            const permissionsResponse = await fetch('/api/permissions');
+            if (permissionsResponse.ok) {
+                const permissions = await permissionsResponse.json();
+                if (totalPermissionsElement) totalPermissionsElement.textContent = permissions.length || 0;
+            }
+            
+        } catch (error) {
+            console.error('Error loading role statistics:', error);
+        }
+    }
+
+    async loadPendingStats() {
+        try {
+            const response = await fetch('/api/pending/stats');
+            if (!response.ok) {
+                throw new Error('Failed to fetch pending statistics');
+            }
+            
+            const stats = await response.json();
+            
+            // Update pending statistics
+            const totalPendingElement = document.getElementById('total-pending-count');
+            const approvedTodayElement = document.getElementById('approved-today-count');
+            const rejectedTodayElement = document.getElementById('rejected-today-count');
+            const avgApprovalTimeElement = document.getElementById('avg-approval-time');
+            
+            if (totalPendingElement) totalPendingElement.textContent = stats.total_pending || 0;
+            if (approvedTodayElement) approvedTodayElement.textContent = stats.approved_today || 0;
+            if (rejectedTodayElement) rejectedTodayElement.textContent = stats.rejected_today || 0;
+            if (avgApprovalTimeElement) avgApprovalTimeElement.textContent = `${stats.avg_approval_time || 0} jam`;
+            
+        } catch (error) {
+            console.error('Error loading pending statistics:', error);
         }
     }
 
@@ -277,6 +374,102 @@ class UsersManagement {
     return card;
 }
 
+renderPagination() {
+    const paginationContainer = document.getElementById('users-pagination');
+    if (!paginationContainer || !this.pagination) {
+        return;
+    }
+    
+    const { page, pages, has_next, has_prev } = this.pagination;
+    
+    if (pages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '<nav class="flex items-center space-x-2" aria-label="Navigasi halaman pengguna">';
+    
+    // Previous button
+    if (has_prev) {
+        paginationHTML += `
+            <button onclick="usersManagement.loadUsers(${page - 1})" 
+                    class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+    } else {
+        paginationHTML += `
+            <span class="px-3 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                <i class="fas fa-chevron-left"></i>
+            </span>
+        `;
+    }
+    
+    // Page numbers
+    const startPage = Math.max(1, page - 2);
+    const endPage = Math.min(pages, page + 2);
+    
+    if (startPage > 1) {
+        paginationHTML += `
+            <button onclick="usersManagement.loadUsers(1)" 
+                    class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors">
+                1
+            </button>
+        `;
+        if (startPage > 2) {
+            paginationHTML += '<span class="px-2 text-amber-600">...</span>';
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === page) {
+            paginationHTML += `
+                <span class="px-3 py-2 bg-amber-500 text-white rounded-lg font-semibold">
+                    ${i}
+                </span>
+            `;
+        } else {
+            paginationHTML += `
+                <button onclick="usersManagement.loadUsers(${i})" 
+                        class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors">
+                    ${i}
+                </button>
+            `;
+        }
+    }
+    
+    if (endPage < pages) {
+        if (endPage < pages - 1) {
+            paginationHTML += '<span class="px-2 text-amber-600">...</span>';
+        }
+        paginationHTML += `
+            <button onclick="usersManagement.loadUsers(${pages})" 
+                    class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors">
+                ${pages}
+            </button>
+        `;
+    }
+    
+    // Next button
+    if (has_next) {
+        paginationHTML += `
+            <button onclick="usersManagement.loadUsers(${page + 1})" 
+                    class="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+    } else {
+        paginationHTML += `
+            <span class="px-3 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                <i class="fas fa-chevron-right"></i>
+            </span>
+        `;
+    }
+    
+    paginationHTML += '</nav>';
+    paginationContainer.innerHTML = paginationHTML;
+}
+
     showErrorInContainers(errorMessage) {
         const adminContainer = document.getElementById('admin-users');
         const generalContainer = document.getElementById('general-users');
@@ -294,6 +487,18 @@ class UsersManagement {
     const editForm = document.getElementById('edit-user-form');
     if (editForm) {
             editForm.addEventListener('submit', (e) => this.handleEditUser(e));
+    }
+    
+    // Create user form
+    const createUserForm = document.getElementById('create-user-form');
+    if (createUserForm) {
+        createUserForm.addEventListener('submit', (e) => this.handleCreateUser(e));
+    }
+    
+    // Password reset form
+    const passwordResetForm = document.getElementById('password-reset-form');
+    if (passwordResetForm) {
+        passwordResetForm.addEventListener('submit', (e) => this.handlePasswordReset(e));
     }
     
     // Create role form
@@ -350,6 +555,74 @@ class UsersManagement {
             this.loadUsers(this.currentPage);
     } catch (error) {
             this.showToast('error', `Gagal memperbarui pengguna: ${error.message}`);
+    }
+}
+
+async handleCreateUser(e) {
+    e.preventDefault();
+    
+    const formData = {
+        username: document.getElementById('create-username').value.trim(),
+        email: document.getElementById('create-email').value.trim(),
+        password: document.getElementById('create-password').value,
+        first_name: document.getElementById('create-first-name').value.trim(),
+        last_name: document.getElementById('create-last-name').value.trim(),
+        bio: document.getElementById('create-bio').value.trim(),
+        role: document.getElementById('create-role').value,
+        custom_role: document.getElementById('create-custom-role').value || null,
+        is_active: document.getElementById('create-is-active').checked,
+        verified: document.getElementById('create-verified').checked,
+        is_premium: document.getElementById('create-is-premium').checked,
+        premium_duration: document.getElementById('create-premium-duration').value,
+        send_welcome_email: document.getElementById('create-send-email').checked
+    };
+    
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create user');
+        }
+        
+        const result = await response.json();
+        this.showToast('success', 'Pengguna berhasil dibuat!');
+        this.closeCreateUserModal();
+        this.loadUsers(1); // Reload users to show the new user
+        this.loadUserStats(); // Reload statistics
+    } catch (error) {
+        this.showToast('error', `Gagal membuat pengguna: ${error.message}`);
+    }
+}
+
+async handlePasswordReset(e) {
+    e.preventDefault();
+    
+    const formData = {
+        new_password: document.getElementById('reset-password').value,
+        send_email: document.getElementById('reset-send-email').checked
+    };
+    
+    try {
+        const response = await fetch(`/api/users/${this.currentUserId}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to reset password');
+        }
+        
+        this.showToast('success', 'Password berhasil direset!');
+        this.closePasswordResetModal();
+    } catch (error) {
+        this.showToast('error', `Gagal reset password: ${error.message}`);
     }
 }
 
@@ -1039,6 +1312,127 @@ class UsersManagement {
             showToast(type, message);
         }
     }
+
+    // Modal functions for new features
+    openCreateUserModal() {
+        const modal = document.getElementById('create-user-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
+    closeCreateUserModal() {
+        const modal = document.getElementById('create-user-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            // Reset form
+            const form = document.getElementById('create-user-form');
+            if (form) form.reset();
+        }
+    }
+
+    openUserDetailsModal(userId) {
+        this.currentUserId = userId;
+        const user = this.users.find(u => u.id === userId);
+        if (!user) {
+            this.showToast('error', 'User tidak ditemukan');
+            return;
+        }
+
+        // Generate user details HTML
+        const detailsHTML = this.generateUserDetailsHTML(user);
+        const detailsContainer = document.getElementById('user-details-content');
+        if (detailsContainer) {
+            detailsContainer.innerHTML = detailsHTML;
+        }
+
+        const modal = document.getElementById('user-details-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
+    closeUserDetailsModal() {
+        const modal = document.getElementById('user-details-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    openPasswordResetModal(userId) {
+        this.currentUserId = userId;
+        const modal = document.getElementById('password-reset-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Reset form
+            const form = document.getElementById('password-reset-form');
+            if (form) form.reset();
+        }
+    }
+
+    closePasswordResetModal() {
+        const modal = document.getElementById('password-reset-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    generateUserDetailsHTML(user) {
+        const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+        const displayName = fullName || user.username;
+        
+        return `
+            <div class="space-y-4">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full flex items-center justify-center">
+                        <span class="text-white font-semibold text-xl">${user.username.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-amber-800">${displayName}</h3>
+                        <p class="text-amber-600">@${user.username}</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-amber-700 mb-2">Informasi Dasar</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="font-medium">Email:</span> ${user.email || 'Tidak ada email'}</p>
+                            <p><span class="font-medium">Bio:</span> ${user.bio || 'Tidak ada bio'}</p>
+                            <p><span class="font-medium">Role:</span> ${user.role || 'Tidak ada role'}</p>
+                            <p><span class="font-medium">Custom Role:</span> ${user.custom_role?.name || 'Tidak ada'}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-amber-700 mb-2">Status</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="font-medium">Aktif:</span> ${user.is_active ? 'Ya' : 'Tidak'}</p>
+                            <p><span class="font-medium">Terverifikasi:</span> ${user.verified ? 'Ya' : 'Tidak'}</p>
+                            <p><span class="font-medium">Premium:</span> ${user.is_premium ? 'Ya' : 'Tidak'}</p>
+                            <p><span class="font-medium">Tersuspend:</span> ${user.is_suspended ? 'Ya' : 'Tidak'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-amber-700 mb-2">Aktivitas</h4>
+                    <div class="space-y-2 text-sm">
+                        <p><span class="font-medium">Login Terakhir:</span> ${user.last_login ? new Date(user.last_login).toLocaleString() : 'Tidak ada'}</p>
+                        <p><span class="font-medium">Jumlah Login:</span> ${user.login_count || 0}</p>
+                        <p><span class="font-medium">Dibuat:</span> ${user.created_at ? new Date(user.created_at).toLocaleString() : 'Tidak ada'}</p>
+                        <p><span class="font-medium">Diperbarui:</span> ${user.updated_at ? new Date(user.updated_at).toLocaleString() : 'Tidak ada'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Initialize when DOM is loaded
@@ -1123,6 +1517,43 @@ function closeDeleteRoleModal() {
 function approveUser(userId) {
     if (window.usersManagement) {
         window.usersManagement.approveUser(userId);
+    }
+}
+
+// New modal functions
+function openCreateUserModal() {
+    if (window.usersManagement) {
+        window.usersManagement.openCreateUserModal();
+    }
+}
+
+function closeCreateUserModal() {
+    if (window.usersManagement) {
+        window.usersManagement.closeCreateUserModal();
+    }
+}
+
+function openUserDetailsModal(userId) {
+    if (window.usersManagement) {
+        window.usersManagement.openUserDetailsModal(userId);
+    }
+}
+
+function closeUserDetailsModal() {
+    if (window.usersManagement) {
+        window.usersManagement.closeUserDetailsModal();
+    }
+}
+
+function openPasswordResetModal(userId) {
+    if (window.usersManagement) {
+        window.usersManagement.openPasswordResetModal(userId);
+    }
+}
+
+function closePasswordResetModal() {
+    if (window.usersManagement) {
+        window.usersManagement.closePasswordResetModal();
     }
 }
 

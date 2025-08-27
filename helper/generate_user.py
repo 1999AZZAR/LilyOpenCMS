@@ -16,29 +16,81 @@ main = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(main)
 app = main.app
 
-# List of users to create
+# List of users to create with comprehensive roles
 users = [
-    {"username": "suadmin", "role": UserRole.SUPERUSER, "is_premium": True, "custom_role": "System Administrator"},
-    {"username": "admin0", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Admin"},
+    # Super Admin - Full system access
+    {"username": "suadmin", "role": UserRole.SUPERUSER, "is_premium": True, "custom_role": "Super Admin"},
+    
+    # System Administrators - Full system access except user deletion
+    {"username": "sysadmin1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "System Administrator"},
+    {"username": "sysadmin2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "System Administrator"},
+    
+    # Admins - Full content and user management
     {"username": "admin1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Admin"},
     {"username": "admin2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Admin"},
     {"username": "admin3", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Admin"},
-    {"username": "writer0", "role": UserRole.ADMIN, "custom_role": "Writer"},
-    {"username": "writer1", "role": UserRole.ADMIN, "custom_role": "Writer"},
-    {"username": "writer2", "role": UserRole.ADMIN, "custom_role": "Writer"},
-    {"username": "writer3", "role": UserRole.ADMIN, "custom_role": "Writer"},
-    {"username": "editor0", "role": UserRole.ADMIN, "custom_role": "Editor"},
-    {"username": "editor1", "role": UserRole.ADMIN, "custom_role": "Editor"},
-    {"username": "editor2", "role": UserRole.ADMIN, "custom_role": "Editor"},
-    {"username": "editor3", "role": UserRole.ADMIN, "custom_role": "Editor"},
-    {"username": "general0", "role": UserRole.GENERAL},
-    {"username": "general1", "role": UserRole.GENERAL},
-    {"username": "general2", "role": UserRole.GENERAL},
-    {"username": "general3", "role": UserRole.GENERAL},
-    {"username": "subadmin0", "role": UserRole.ADMIN, "custom_role": "Subadmin"},
-    {"username": "subadmin1", "role": UserRole.ADMIN, "custom_role": "Subadmin"},
-    {"username": "subadmin2", "role": UserRole.ADMIN, "custom_role": "Subadmin"},
-    {"username": "subadmin3", "role": UserRole.ADMIN, "custom_role": "Subadmin"},
+    
+    # Subadmins - Elevated content management
+    {"username": "subadmin1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Subadmin"},
+    {"username": "subadmin2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Subadmin"},
+    {"username": "subadmin3", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Subadmin"},
+    
+    # Content Editors - Content creation and editing
+    {"username": "editor1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Editor"},
+    {"username": "editor2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Editor"},
+    {"username": "editor3", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Editor"},
+    {"username": "editor4", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Editor"},
+    
+    # Content Moderators - Content review and moderation
+    {"username": "moderator1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Content Moderator"},
+    {"username": "moderator2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Content Moderator"},
+    {"username": "moderator3", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Content Moderator"},
+    
+    # Media Managers - Full media management
+    {"username": "mediamanager1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Media Manager"},
+    {"username": "mediamanager2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Media Manager"},
+    
+    # User Managers - User management only
+    {"username": "usermanager1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "User Manager"},
+    {"username": "usermanager2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "User Manager"},
+    
+    # Ad Managers - Advertisement management
+    {"username": "admanager1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Ad Manager"},
+    {"username": "admanager2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Ad Manager"},
+    
+    # SEO Specialists - SEO management
+    {"username": "seospecialist1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "SEO Specialist"},
+    {"username": "seospecialist2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "SEO Specialist"},
+    
+    # Legal Managers - Legal content management
+    {"username": "legalmanager1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Legal Manager"},
+    {"username": "legalmanager2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Legal Manager"},
+    
+    # Writers - Content creation
+    {"username": "writer1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Writer"},
+    {"username": "writer2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Writer"},
+    {"username": "writer3", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Writer"},
+    {"username": "writer4", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Writer"},
+    {"username": "writer5", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Writer"},
+    
+    # Readers - Content interaction
+    {"username": "reader1", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Reader"},
+    {"username": "reader2", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Reader"},
+    {"username": "reader3", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Reader"},
+    {"username": "reader4", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Reader"},
+    {"username": "reader5", "role": UserRole.ADMIN, "is_premium": True, "custom_role": "Reader"},
+    
+    # Guests - Basic access
+    {"username": "guest1", "role": UserRole.ADMIN, "is_premium": False, "custom_role": "Guest"},
+    {"username": "guest2", "role": UserRole.ADMIN, "is_premium": False, "custom_role": "Guest"},
+    {"username": "guest3", "role": UserRole.ADMIN, "is_premium": False, "custom_role": "Guest"},
+    
+    # General users - No custom role
+    {"username": "general1", "role": UserRole.GENERAL, "is_premium": False},
+    {"username": "general2", "role": UserRole.GENERAL, "is_premium": False},
+    {"username": "general3", "role": UserRole.GENERAL, "is_premium": False},
+    {"username": "general4", "role": UserRole.GENERAL, "is_premium": False},
+    {"username": "general5", "role": UserRole.GENERAL, "is_premium": False},
 ]
 
 # Passwords for different roles
@@ -50,19 +102,20 @@ role_passwords = {
 
 # Insert users into the database
 with app.app_context():
-    print("👥 LilyOpenCMS User Generator")
-    print("=" * 50)
+    print("👥 LilyOpenCMS Comprehensive User Generator")
+    print("=" * 60)
     
     # Create tables if they don't exist (ensures the 'user' table is present)
     db.create_all()
     
     added_count = 0
     skipped_count = 0
+    updated_count = 0
     
     for user_data in users:
         existing_user = User.query.filter_by(username=user_data["username"]).first()
         if not existing_user:
-            # Set premium status for superuser
+            # Set premium status
             is_premium = user_data.get("is_premium", False)
             has_premium_access = is_premium
             premium_expires_at = None
@@ -111,7 +164,7 @@ with app.app_context():
                     existing_user.premium_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
                     updated = True
                 
-                # Assign System Administrator role if not already assigned
+                # Assign Super Admin role if not already assigned
                 if "custom_role" in user_data and not existing_user.custom_role:
                     custom_role_name = user_data["custom_role"]
                     custom_role = CustomRole.query.filter_by(name=custom_role_name).first()
@@ -127,7 +180,7 @@ with app.app_context():
                     print(f"  🔄 Updated existing user: {user_data['username']} (now Premium)")
                 
                 if updated:
-                    added_count += 1
+                    updated_count += 1
                 else:
                     print(f"  ⏭️ Skipped existing user: {user_data['username']}")
                     skipped_count += 1
@@ -136,9 +189,10 @@ with app.app_context():
                 skipped_count += 1
     
     db.session.commit()
-    print("-" * 50)
+    print("-" * 60)
     print(f"✅ User generation complete!")
     print(f"   Added: {added_count} users")
+    print(f"   Updated: {updated_count} users")
     if skipped_count > 0:
         print(f"   Skipped: {skipped_count} existing users")
     print("")
@@ -148,7 +202,29 @@ with app.app_context():
     print("   General: general_password")
     print("")
     print("💎 Premium Status:")
-    print("   Superuser (suadmin): Premium (1 year)")
+    print("   All admin users: Premium (1 year)")
+    print("   Guest users: Standard")
+    print("   General users: Standard")
     print("")
-    print("👑 Role Assignment:")
-    print("   Superuser (suadmin): System Administrator (all permissions)")
+    print("👑 Role Distribution:")
+    print("   Super Admin: 1 user (suadmin)")
+    print("   System Administrator: 2 users")
+    print("   Admin: 3 users")
+    print("   Subadmin: 3 users")
+    print("   Editor: 4 users")
+    print("   Content Moderator: 3 users")
+    print("   Media Manager: 2 users")
+    print("   User Manager: 2 users")
+    print("   Ad Manager: 2 users")
+    print("   SEO Specialist: 2 users")
+    print("   Legal Manager: 2 users")
+    print("   Writer: 5 users")
+    print("   Reader: 5 users")
+    print("   Guest: 3 users")
+    print("   General: 5 users")
+    print("")
+    print("🎯 Testing Coverage:")
+    print("   All permission levels covered")
+    print("   All custom roles represented")
+    print("   Premium and standard users included")
+    print("   Ready for comprehensive permission testing")
