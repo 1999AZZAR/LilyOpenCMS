@@ -1,5 +1,73 @@
 from routes import main_blueprint
 from .common_imports import *
+@main_blueprint.route('/settings/editor-writer')
+@login_required
+def editor_writer_management():
+    if not (current_user.role in [UserRole.SUPERUSER, UserRole.ADMIN] or (current_user.custom_role and current_user.custom_role.name.lower() in ['subadmin', 'editor'])):
+        abort(403)
+    # Provide basic data; frontend will fetch full lists via API
+    return render_template('admin/settings/editor_writer_management.html', current_user=current_user)
+
+@main_blueprint.route('/api/editor-writer/writers', methods=['GET'])
+@login_required
+def list_writers():
+    """List writers that can be assigned (GENERAL users + custom role 'writer')."""
+    q = request.args.get('q', '').strip()
+    # Base: all general users
+    query = User.query.filter(User.is_active == True)
+    # Simple filter: by role general or custom role writer
+    query = query.filter(or_(User.role == UserRole.GENERAL, and_(User.custom_role_id.isnot(None), CustomRole.name.ilike('%writer%'))))
+    if q:
+        like = f"%{q}%"
+        query = query.filter(or_(User.username.ilike(like), User.email.ilike(like)))
+    users = query.order_by(User.username.asc()).limit(50).all()
+    return jsonify([{"id": u.id, "username": u.username, "email": u.email} for u in users])
+
+@main_blueprint.route('/api/editor-writer/editors', methods=['GET'])
+@login_required
+def list_editors():
+    """List editors that can have writers assigned (ADMINs or custom role 'editor')."""
+    q = request.args.get('q', '').strip()
+    query = User.query.filter(User.is_active == True)
+    query = query.filter(or_(User.role == UserRole.ADMIN, and_(User.custom_role_id.isnot(None), CustomRole.name.ilike('%editor%'))))
+    if q:
+        like = f"%{q}%"
+        query = query.filter(or_(User.username.ilike(like), User.email.ilike(like)))
+    users = query.order_by(User.username.asc()).limit(50).all()
+    return jsonify([{"id": u.id, "username": u.username, "email": u.email} for u in users])
+
+@main_blueprint.route('/api/editor-writer/<int:editor_id>/assign', methods=['POST'])
+@login_required
+def assign_writers(editor_id):
+    if not (current_user.role in [UserRole.SUPERUSER, UserRole.ADMIN] or (current_user.custom_role and current_user.custom_role.name.lower() == 'subadmin') or current_user.id == editor_id):
+        abort(403)
+    editor = db.session.get(User, editor_id)
+    if not editor:
+        abort(404)
+    data = request.get_json() or {}
+    writer_ids = data.get('writer_ids', [])
+    if not isinstance(writer_ids, list):
+        return jsonify({"error": "writer_ids must be a list"}), 400
+    # Replace assignments atomically
+    try:
+        editor.assigned_writers = []
+        if writer_ids:
+            writers = User.query.filter(User.id.in_(writer_ids)).all()
+            for w in writers:
+                editor.assigned_writers.append(w)
+        db.session.commit()
+        return jsonify({"message": "Assignments updated", "writer_ids": [w.id for w in editor.assigned_writers]}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@main_blueprint.route('/api/editor-writer/<int:editor_id>/list', methods=['GET'])
+@login_required
+def list_editor_assignments(editor_id):
+    editor = db.session.get(User, editor_id)
+    if not editor:
+        abort(404)
+    return jsonify({"editor_id": editor.id, "writers": [{"id": w.id, "username": w.username, "email": w.email} for w in editor.assigned_writers]})
 from models import User, News, Image, YouTubeVideo, UserActivity, CustomRole
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.exc import SQLAlchemyError

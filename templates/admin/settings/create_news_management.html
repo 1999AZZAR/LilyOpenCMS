@@ -255,22 +255,30 @@
                                             <i class="fas fa-times mr-2"></i>Batal
                                         </button>
                                         
-                                        <!-- Save Draft Button -->
-                                        <button type="submit" name="save-draft" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 flex items-center justify-center" aria-label="Simpan sebagai draf">
-                                            <i class="fas fa-save mr-2"></i>Simpan sebagai Draf
+                                        <!-- Save Hidden Button -->
+                                        <button type="submit" name="save-draft" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 flex items-center justify-center" aria-label="Simpan dan tetap sembunyi">
+                                            <i class="fas fa-eye-slash mr-2"></i>Simpan Sembunyi
                                         </button>
                                         
-                                        <!-- Publish Button -->
-                                        <button type="submit" name="publish" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 flex items-center justify-center" aria-label="Terbitkan berita">
-                                            <i class="fas fa-paper-plane mr-2"></i>Terbitkan Artikel
+                                        <!-- Save and Show (Publish) Button -->
+                                        <button type="submit" name="publish" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 flex items-center justify-center" aria-label="Simpan dan tampilkan ke publik">
+                                            <i class="fas fa-eye mr-2"></i>Simpan & Tampilkan
                                         </button>
                                     </div>
                                     
                                     <!-- Help Text -->
-                                    <div class="text-center pt-4">
+                                    <div class="text-center pt-4 space-y-1">
                                         <p class="text-xs text-gray-500">
                                             <i class="fas fa-info-circle mr-1"></i>
-                                            Pastikan field wajib telah diisi
+                                            Pastikan field wajib telah diisi.
+                                        </p>
+                                        <p class="text-xs text-gray-500">
+                                            <i class="fas fa-eye-slash mr-1"></i>
+                                            <span>"Simpan Sembunyi" menyimpan artikel tetapi tidak menampilkannya ke publik.</span>
+                                        </p>
+                                        <p class="text-xs text-gray-500">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            <span>"Simpan & Tampilkan" menyimpan dan langsung menampilkan artikel ke publik.</span>
                                         </p>
                                     </div>
                                 </div>
@@ -358,6 +366,9 @@
 {# Load the main script for this page #}
 <script src="{{ url_for('static', filename='js/news-create.js') }}"></script>
 
+{# Provide server data to JS without inline Jinja in JS code #}
+<script id="news-meta" type="application/json">{{ news_id|default(None)|tojson }}</script>
+
 <script>
 // 2-Step Process Functionality - Simplified and Robust
 (function() {
@@ -374,6 +385,11 @@
     
     ready(function() {
         console.log('2-Step Process JavaScript loaded');
+        // Derive NEWS_ID and draft storage key (create vs edit)
+        const NEWS_ID_META = (function() {
+            try { const el = document.getElementById('news-meta'); return el ? JSON.parse(el.textContent) : null; } catch(e) { return null; }
+        })();
+        const DRAFT_KEY = NEWS_ID_META ? `news-draft-${NEWS_ID_META}` : 'news-draft-create';
         
         // Get elements
         const step1Content = document.getElementById('step-1-content');
@@ -630,7 +646,7 @@
                         ageRating: ageRating,
                         timestamp: new Date().toISOString()
                     };
-                    localStorage.setItem('news-draft', JSON.stringify(draft));
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
                     
                     // Show subtle indicator
                     const indicator = document.createElement('div');
@@ -706,7 +722,8 @@
             }
             
             // Load draft on page load
-            const savedDraft = localStorage.getItem('news-draft');
+            try { localStorage.removeItem('news-draft'); } catch(e) {}
+            const savedDraft = localStorage.getItem(DRAFT_KEY);
             if (savedDraft) {
                 try {
                     const draft = JSON.parse(savedDraft);
@@ -742,6 +759,25 @@
         
         // Initialize auto-save
         setupAutoSave();
+
+        // Hard reset fields in create mode to avoid lingering edit state
+        (function hardResetForCreate(){
+            if (NEWS_ID_META) return;
+            try {
+                const formEl = document.getElementById('add-news-form');
+                if (formEl && typeof formEl.reset === 'function') formEl.reset();
+                const idsToClear = ['news-title','news-writer','news-tagar','news-date','news-external-source'];
+                idsToClear.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+                const selCat = document.getElementById('news-category'); if (selCat) selCat.selectedIndex = 0;
+                const selAge = document.getElementById('news-age-rating'); if (selAge) selAge.selectedIndex = 0;
+                ['news-premium','news-main','news-is-premium'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+                const ta = document.getElementById('news-content'); if (ta) ta.value = '';
+                let sm = window.simplemde || window.addSimplemde; if (sm && typeof sm.value === 'function') { try { sm.value(''); } catch(_) {} }
+                if (typeof window.clearFeaturedImagePreview === 'function') window.clearFeaturedImagePreview();
+                const imgId = document.getElementById('news-image-id'); if (imgId) imgId.value = '';
+                try { localStorage.removeItem(DRAFT_KEY); } catch(_) {}
+            } catch(_) {}
+        })();
         
         // Handle featured image preview
         function setupFeaturedImagePreview() {
@@ -872,7 +908,7 @@
         if (form) {
             // Clear draft on successful submission - validation is handled by news-create.js
             form.addEventListener('submit', function(e) {
-                localStorage.removeItem('news-draft');
+                try { localStorage.removeItem(DRAFT_KEY); } catch(_) {}
             });
         }
         
@@ -1110,7 +1146,14 @@
 // Prefill editor when editing an existing article
 (function() {
     'use strict';
-    const NEWS_ID = {{ news_id if news_id is not none else 'null' }};
+    const NEWS_ID = (function() {
+        try {
+            const el = document.getElementById('news-meta');
+            return el ? JSON.parse(el.textContent) : null;
+        } catch (e) {
+            return null;
+        }
+    })();
     if (!NEWS_ID) return;
 
     function when(elGetter, predicate, cb, tries = 100, delay = 50) {

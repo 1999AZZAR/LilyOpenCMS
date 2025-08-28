@@ -6,33 +6,33 @@
   <!-- Add Image Form -->
   <main class="container mx-auto px-6 py-12" role="main">
     <!-- Image Processing Guidelines -->
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="image-guidelines-title">
-      <h2 id="image-guidelines-title" class="text-xl font-semibold mb-4 text-amber-800 flex items-center gap-2">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="image-guidelines-title">
+      <h2 id="image-guidelines-title" class="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
         <i class="fas fa-info-circle"></i>
         Panduan Unggah Gambar
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Format & Size -->
-        <div class="bg-white p-4 rounded-lg border border-amber-200">
-          <h3 class="font-semibold text-amber-700 mb-2 flex items-center gap-2">
-            <i class="fas fa-file-image text-amber-500"></i>
+        <div class="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+            <i class="fas fa-file-image text-gray-500"></i>
             Format & Ukuran
           </h3>
-          <ul class="text-sm text-amber-600 space-y-1">
+          <ul class="text-sm text-gray-700 space-y-1">
             <li><strong>Format:</strong> JPG, PNG, WebP, GIF</li>
             <li><strong>Ukuran Maksimal:</strong> 10 MB per file</li>
             <li><strong>Resolusi:</strong> Minimal 300x300px</li>
-            <li><strong>Resolusi Optimal:</strong> 1920x1080px</li>
+            <li><strong>Resolusi Optimal:</strong> 1920x1080px (berita), 1200x1600px (album)</li>
           </ul>
         </div>
         
         <!-- Aspect Ratio -->
-        <div class="bg-white p-4 rounded-lg border border-amber-200">
-          <h3 class="font-semibold text-amber-700 mb-2 flex items-center gap-2">
-            <i class="fas fa-crop-alt text-amber-500"></i>
+        <div class="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+            <i class="fas fa-crop-alt text-gray-500"></i>
             Rasio Aspek
           </h3>
-          <ul class="text-sm text-amber-600 space-y-1">
+          <ul class="text-sm text-gray-700 space-y-1">
             <li><strong>Portrait:</strong> 3:4 atau 4:5 (untuk album)</li>
             <li><strong>Landscape:</strong> 16:9 atau 4:3</li>
             <li><strong>Square:</strong> 1:1 (untuk thumbnail)</li>
@@ -41,41 +41,41 @@
         </div>
         
         <!-- Processing Info -->
-        <div class="bg-white p-4 rounded-lg border border-amber-200">
-          <h3 class="font-semibold text-amber-700 mb-2 flex items-center gap-2">
-            <i class="fas fa-cogs text-amber-500"></i>
+        <div class="bg-white p-4 rounded-lg border border-gray-200">
+          <h3 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+            <i class="fas fa-cogs text-gray-500"></i>
             Pemrosesan Otomatis
           </h3>
-          <ul class="text-sm text-amber-600 space-y-1">
+          <ul class="text-sm text-gray-700 space-y-1">
             <li><strong>Thumbnail:</strong> Dibuat otomatis (300x300px)</li>
             <li><strong>Optimasi:</strong> Kompresi otomatis</li>
-            <li><strong>Watermark:</strong> Opsional (dapat diaktifkan)</li>
-            <li><strong>CDN:</strong> Distribusi global</li>
+            <li><strong>Visibilitas Default:</strong> Unggahan Admin/Editor/Penulis disembunyikan; lainnya terlihat</li>
+            <li><strong>Berbagi Aset Admin:</strong> Gambar yang diunggah admin dapat dipakai semua pengguna</li>
           </ul>
         </div>
       </div>
       
       <!-- Best Practices -->
-      <div class="mt-6 bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 rounded-lg p-4">
-        <h3 class="font-semibold text-amber-700 mb-3 flex items-center gap-2">
-          <i class="fas fa-lightbulb text-amber-500"></i>
+      <div class="mt-6 bg-gradient-to-r from-gray-100 to-gray-200 border border-gray-200 rounded-lg p-4">
+        <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <i class="fas fa-lightbulb text-gray-500"></i>
           Tips Terbaik
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-amber-600">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
           <div>
-            <h4 class="font-medium text-amber-700 mb-2">Untuk Album:</h4>
+            <h4 class="font-medium text-gray-800 mb-2">Untuk Album:</h4>
             <ul class="space-y-1">
               <li>• Gunakan rasio portrait (3:4) untuk konsistensi</li>
-              <li>• Resolusi minimal 800x1200px</li>
+              <li>• Resolusi minimal 800x1200px (optimal 1200x1600px)</li>
               <li>• Hindari gambar horizontal</li>
               <li>• Pastikan kualitas tinggi</li>
             </ul>
           </div>
           <div>
-            <h4 class="font-medium text-amber-700 mb-2">Untuk Berita:</h4>
+            <h4 class="font-medium text-gray-800 mb-2">Untuk Berita:</h4>
             <ul class="space-y-1">
-              <li>• Gunakan rasio landscape (16:9)</li>
-              <li>• Resolusi minimal 1200x675px</li>
+              <li>• Gunakan rasio landscape (16:9) atau 4:3</li>
+              <li>• Resolusi minimal 1200x675px (optimal 1920x1080px)</li>
               <li>• Fokus pada subjek utama</li>
               <li>• Optimalkan untuk web</li>
             </ul>
@@ -84,48 +84,48 @@
       </div>
     </div>
 
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-image-title">
-      <h2 id="add-image-title" class="text-xl font-semibold mb-4 text-amber-800">Unggah Gambar Baru</h2>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-image-title">
+      <h2 id="add-image-title" class="text-xl font-semibold mb-4 text-gray-800">Unggah Gambar Baru</h2>
       <form id="add-image-form" class="space-y-4" role="form" aria-label="Form unggah gambar baru">
         <div>
-          <label class="block text-amber-700 font-medium mb-2" for="image-name">Nama Gambar</label>
+          <label class="block text-gray-700 font-medium mb-2" for="image-name">Nama Gambar</label>
           <input type="text" id="image-name"
-                 class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                 class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
                  placeholder="Nama gambar (opsional)" aria-label="Nama gambar">
         </div>
         <div>
-          <label class="block text-amber-700 font-medium mb-2" for="image-description">Deskripsi</label>
+          <label class="block text-gray-700 font-medium mb-2" for="image-description">Deskripsi</label>
           <textarea id="image-description"
-                    class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
                     placeholder="Deskripsi gambar (opsional)" aria-label="Deskripsi gambar"></textarea>
         </div>
         <div role="radiogroup" aria-label="Pilih sumber gambar">
-          <label class="block text-amber-700 font-medium mb-2">Sumber Gambar</label>
+          <label class="block text-gray-700 font-medium mb-2">Sumber Gambar</label>
           <div class="flex items-center space-x-4">
             <label class="inline-flex items-center">
-              <input type="radio" name="image-source" id="source-file" value="file" checked class="rounded border-amber-300 text-amber-500 focus:ring-amber-400" aria-label="Unggah dari berkas">
-              <span class="ml-2 text-amber-700">Berkas</span>
+              <input type="radio" name="image-source" id="source-file" value="file" checked class="rounded border-gray-300 text-gray-600 focus:ring-gray-300" aria-label="Unggah dari berkas">
+              <span class="ml-2 text-gray-700">Berkas</span>
             </label>
             <label class="inline-flex items-center">
-              <input type="radio" name="image-source" id="source-url" value="url" class="rounded border-amber-300 text-amber-500 focus:ring-amber-400" aria-label="Unggah dari URL">
-              <span class="ml-2 text-amber-700">URL</span>
+              <input type="radio" name="image-source" id="source-url" value="url" class="rounded border-gray-300 text-gray-600 focus:ring-gray-300" aria-label="Unggah dari URL">
+              <span class="ml-2 text-gray-700">URL</span>
             </label>
           </div>
         </div>
         <div id="file-input-group">
-          <label class="block text-amber-700 font-medium mb-2" for="image-file">Unggah Gambar</label>
+          <label class="block text-gray-700 font-medium mb-2" for="image-file">Unggah Gambar</label>
           <input type="file" id="image-file"
-                 class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                 class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
                  accept="image/*" aria-label="Pilih file gambar">
         </div>
         <div id="url-input-group" class="hidden">
-          <label class="block text-amber-700 font-medium mb-2" for="image-url">Atau masukkan tautan langsung</label>
+          <label class="block text-gray-700 font-medium mb-2" for="image-url">Atau masukkan tautan langsung</label>
           <input type="url" id="image-url"
-                 class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                 class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
                  placeholder="URL gambar (opsional)" aria-label="URL gambar">
         </div>
         <button type="submit"
-                class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md"
+                class="w-full bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md"
                 aria-label="Unggah gambar">
           Unggah Gambar
         </button>
@@ -133,29 +133,29 @@
     </div>
 
     <!-- Image Grid -->
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="uploaded-images-title">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="uploaded-images-title">
       <!-- Filter Controls -->
       <div class="mb-6 flex flex-wrap gap-4 items-center" role="group" aria-label="Filter gambar">
-          <h3 class="text-lg font-medium text-amber-800 mr-2">Filter:</h3>
+          <h3 class="text-lg font-medium text-gray-800 mr-2">Filter:</h3>
           <div>
-              <label for="filter-visibility" class="block text-sm font-medium text-amber-700 mb-1">Keterlihatan</label>
-              <select id="filter-visibility" name="visibility" class="form-select rounded-md border-amber-300 shadow-sm focus:border-amber-400 focus:ring focus:ring-amber-200 focus:ring-opacity-50 text-amber-700" aria-label="Filter berdasarkan keterlihatan">
+              <label for="filter-visibility" class="block text-sm font-medium text-gray-700 mb-1">Keterlihatan</label>
+              <select id="filter-visibility" name="visibility" class="form-select rounded-md border-gray-300 shadow-sm focus:border-gray-400 focus:ring focus:ring-gray-200 focus:ring-opacity-50 text-gray-700" aria-label="Filter berdasarkan keterlihatan">
                   <option value="all">Semua</option>
                   <option value="visible">Terlihat</option>
                   <option value="hidden">Tersembunyi</option>
               </select>
           </div>
           <div>
-              <label for="filter-description" class="block text-sm font-medium text-amber-700 mb-1">Deskripsi</label>
-              <select id="filter-description" name="description" class="form-select rounded-md border-amber-300 shadow-sm focus:border-amber-400 focus:ring focus:ring-amber-200 focus:ring-opacity-50 text-amber-700" aria-label="Filter berdasarkan deskripsi">
+              <label for="filter-description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+              <select id="filter-description" name="description" class="form-select rounded-md border-gray-300 shadow-sm focus:border-gray-400 focus:ring focus:ring-gray-200 focus:ring-opacity-50 text-gray-700" aria-label="Filter berdasarkan deskripsi">
                   <option value="all">Semua</option>
                   <option value="has">Punya Deskripsi</option>
                   <option value="no">Tanpa Deskripsi</option>
               </select>
           </div>
           <div>
-              <label for="filter-usage" class="block text-sm font-medium text-amber-700 mb-1">Penggunaan</label>
-              <select id="filter-usage" name="usage" class="form-select rounded-md border-amber-300 shadow-sm focus:border-amber-400 focus:ring focus:ring-amber-200 focus:ring-opacity-50 text-amber-700" aria-label="Filter berdasarkan penggunaan">
+              <label for="filter-usage" class="block text-sm font-medium text-gray-700 mb-1">Penggunaan</label>
+              <select id="filter-usage" name="usage" class="form-select rounded-md border-gray-300 shadow-sm focus:border-gray-400 focus:ring focus:ring-gray-200 focus:ring-opacity-50 text-gray-700" aria-label="Filter berdasarkan penggunaan">
                   <option value="all">Semua</option>
                   <option value="used">Digunakan</option>
                   <option value="unused">Tidak Digunakan</option>
@@ -163,17 +163,17 @@
           </div>
       </div>
 
-      <h2 id="uploaded-images-title" class="text-xl font-semibold mb-4 text-amber-800">Gambar Terunggah</h2>
+      <h2 id="uploaded-images-title" class="text-xl font-semibold mb-4 text-gray-800">Gambar Terunggah</h2>
       <div class="flex items-center justify-between mb-4">
         <div></div>
         <div class="flex items-center space-x-2">
-          <input type="checkbox" id="select-all-images" class="rounded border-amber-300 text-amber-500 focus:ring-amber-400" aria-label="Pilih semua gambar">
-          <label for="select-all-images" class="text-sm text-amber-700">Pilih Semua</label>
+          <input type="checkbox" id="select-all-images" class="rounded border-gray-300 text-gray-600 focus:ring-gray-300" aria-label="Pilih semua gambar">
+          <label for="select-all-images" class="text-sm text-gray-700">Pilih Semua</label>
         </div>
       </div>
       <!-- Bulk Actions Bar -->
-      <div id="bulk-actions-bar-img" class="hidden bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200 rounded-lg px-4 py-2 mb-4 flex items-center space-x-4">
-        <span class="text-amber-700 font-semibold"><span id="bulk-img-count">0</span> gambar dipilih</span>
+      <div id="bulk-actions-bar-img" class="hidden bg-gradient-to-r from-gray-100 to-gray-200 border border-gray-200 rounded-lg px-4 py-2 mb-4 flex items-center space-x-4">
+        <span class="text-gray-800 font-semibold"><span id="bulk-img-count">0</span> gambar dipilih</span>
         <button id="bulk-delete-btn-img" class="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md">Hapus</button>
         <button id="bulk-visibility-btn-img" class="px-3 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md">Ubah Visibilitas</button>
       </div>
@@ -181,16 +181,16 @@
       <div id="image-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
       <!-- Usage Modal -->
       <div id="usage-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" role="dialog" aria-labelledby="usage-modal-title" aria-modal="true">
-        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 p-0 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-amber-200">
-          <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-amber-100 to-yellow-100 border-b border-amber-200">
-            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-600">
+        <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-0 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200">
+          <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-gray-100 to-gray-200 border-b border-gray-200">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700">
               <i class="fas fa-link fa-lg"></i>
             </div>
-            <h3 id="usage-modal-title" class="text-xl font-bold text-amber-700">Penggunaan Gambar</h3>
-            <button type="button" id="close-usage-modal-btn" class="ml-auto bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-700 px-3 py-1 rounded-lg hover:from-amber-300 hover:to-yellow-300 focus:outline-none focus:ring-2 focus:ring-amber-300 font-semibold transition-all duration-300 shadow-md" aria-label="Tutup">Tutup</button>
+            <h3 id="usage-modal-title" class="text-xl font-bold text-gray-800">Penggunaan Gambar</h3>
+            <button type="button" id="close-usage-modal-btn" class="ml-auto bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 px-3 py-1 rounded-lg hover:from-gray-300 hover:to-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 font-semibold transition-all duration-300 shadow-md" aria-label="Tutup">Tutup</button>
           </div>
           <div class="px-6 py-5">
-            <div class="mb-2 text-amber-800 font-medium" id="usage-modal-filename"></div>
+            <div class="mb-2 text-gray-800 font-medium" id="usage-modal-filename"></div>
             <div id="usage-modal-list" class="mb-2 max-h-60 overflow-y-auto"></div>
           </div>
         </div>
@@ -202,55 +202,55 @@
 
     <!-- Edit Image Modal -->
     <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="edit-modal-title" aria-modal="true">
-      <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl w-full max-w-md">
-        <h2 id="edit-modal-title" class="text-xl font-semibold mb-4 text-amber-800">Edit Gambar</h2>
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-md">
+        <h2 id="edit-modal-title" class="text-xl font-semibold mb-4 text-gray-900">Edit Gambar</h2>
         <form id="edit-image-form" class="space-y-4" role="form" aria-label="Form edit gambar">
           <input type="hidden" id="edit-id">
           <div>
-            <label class="block text-amber-700 font-medium mb-2" for="edit-image-name">Nama Gambar</label>
+            <label class="block text-gray-700 font-medium mb-2" for="edit-image-name">Nama Gambar</label>
             <input type="text" id="edit-image-name"
-                   class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                   class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                    placeholder="Nama gambar (opsional)" aria-label="Nama gambar">
           </div>
           <div>
-            <label class="block text-amber-700 font-medium mb-2" for="edit-image-description">Deskripsi</label>
+            <label class="block text-gray-700 font-medium mb-2" for="edit-image-description">Deskripsi</label>
             <textarea id="edit-image-description"
-                      class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Deskripsi gambar (opsional)" aria-label="Deskripsi gambar"></textarea>
           </div>
           <div role="radiogroup" aria-label="Pilih sumber gambar">
-            <label class="block text-amber-700 font-medium mb-2">Sumber Gambar</label>
+            <label class="block text-gray-700 font-medium mb-2">Sumber Gambar</label>
             <div class="flex items-center space-x-4">
               <label class="inline-flex items-center">
-                <input type="radio" name="edit-image-source" id="edit-source-file" value="file" checked class="rounded border-amber-300 text-amber-500 focus:ring-amber-400" aria-label="Unggah dari berkas">
-                <span class="ml-2 text-amber-700">Berkas</span>
+                <input type="radio" name="edit-image-source" id="edit-source-file" value="file" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-400" aria-label="Unggah dari berkas">
+                <span class="ml-2 text-gray-700">Berkas</span>
               </label>
               <label class="inline-flex items-center">
-                <input type="radio" name="edit-image-source" id="edit-source-url" value="url" class="rounded border-amber-300 text-amber-500 focus:ring-amber-400" aria-label="Unggah dari URL">
-                <span class="ml-2 text-amber-700">URL</span>
+                <input type="radio" name="edit-image-source" id="edit-source-url" value="url" class="rounded border-gray-300 text-blue-600 focus:ring-blue-400" aria-label="Unggah dari URL">
+                <span class="ml-2 text-gray-700">URL</span>
               </label>
             </div>
           </div>
           <div id="edit-file-input-group">
-            <label class="block text-amber-700 font-medium mb-2" for="edit-image-file">Unggah Gambar Baru</label>
+            <label class="block text-gray-700 font-medium mb-2" for="edit-image-file">Unggah Gambar Baru</label>
             <input type="file" id="edit-image-file"
-                   class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                   class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                    accept="image/*" aria-label="Pilih file gambar baru">
           </div>
           <div id="edit-url-input-group" class="hidden">
-            <label class="block text-amber-700 font-medium mb-2" for="edit-image-url">Atau masukkan tautan langsung</label>
+            <label class="block text-gray-700 font-medium mb-2" for="edit-image-url">Atau masukkan tautan langsung</label>
             <input type="url" id="edit-image-url"
-                   class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+                   class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                    placeholder="URL gambar (opsional)" aria-label="URL gambar">
           </div>
           <div class="flex space-x-4" role="group" aria-label="Tombol aksi edit">
             <button type="submit"
-                    class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md"
                     aria-label="Simpan perubahan">
               Simpan Perubahan
             </button>
             <button type="button" onclick="closeEditModal()"
-                    class="flex-1 bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md"
                     aria-label="Batal edit">
               Batal
             </button>
@@ -262,9 +262,9 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="delete-modal-title" aria-modal="true">
-      <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl w-full max-w-md">
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-md">
         <h2 id="delete-modal-title" class="text-xl font-semibold mb-4 text-red-600">Hapus Gambar</h2>
-        <p class="text-amber-700 mb-6">Apakah Anda yakin ingin menghapus gambar ini?</p>
+        <p class="text-gray-700 mb-6">Apakah Anda yakin ingin menghapus gambar ini?</p>
         <div class="flex space-x-4" role="group" aria-label="Tombol konfirmasi hapus">
           <button id="confirm-delete-btn" onclick="confirmDelete()"
                   class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md"
@@ -272,7 +272,7 @@
             Hapus
           </button>
           <button onclick="closeDeleteModal()"
-                  class="flex-1 bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md"
+                  class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md"
                   aria-label="Batal hapus gambar">
             Batal
           </button>
@@ -285,18 +285,18 @@
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-5xl max-h-[95vh] flex flex-col items-center">
         <div class="relative shadow-xl rounded-lg overflow-hidden mb-4">
           <img id="modal-image-mgmt" src="" alt="" class="block w-full h-auto max-h-[80vh] object-contain">
-          <a id="modal-download-mgmt" href="#" download="image.jpg" class="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-lg hover:from-amber-600 hover:to-yellow-600 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300" aria-label="Unduh gambar" title="Unduh Gambar">
+          <a id="modal-download-mgmt" href="#" download="image.jpg" class="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-lg hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300" aria-label="Unduh gambar" title="Unduh Gambar">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
           </a>
-          <button onclick="closeImageModalMgmt()" class="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-800 rounded-full shadow-lg hover:from-amber-300 hover:to-yellow-300 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300" aria-label="Tutup gambar">
+          <button onclick="closeImageModalMgmt()" class="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 rounded-full shadow-lg hover:from-gray-300 hover:to-gray-400 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-300" aria-label="Tutup gambar">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
         <div class="flex items-center justify-center gap-4 mt-2" role="group" aria-label="Navigasi gambar">
-          <button id="modal-prev-mgmt" onclick="showPrevImageMgmt()" class="p-2 bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-800 rounded-full shadow-lg hover:from-amber-300 hover:to-yellow-300 focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300" aria-label="Gambar Sebelumnya" title="Sebelumnya">
+          <button id="modal-prev-mgmt" onclick="showPrevImageMgmt()" class="p-2 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 rounded-full shadow-lg hover:from-gray-300 hover:to-gray-400 focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300" aria-label="Gambar Sebelumnya" title="Sebelumnya">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
           </button>
-          <button id="modal-next-mgmt" onclick="showNextImageMgmt()" class="p-2 bg-gradient-to-r from-amber-200 to-yellow-200 text-amber-800 rounded-full shadow-lg hover:from-amber-300 hover:to-yellow-300 focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300" aria-label="Gambar Berikutnya" title="Berikutnya">
+          <button id="modal-next-mgmt" onclick="showNextImageMgmt()" class="p-2 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-800 rounded-full shadow-lg hover:from-gray-300 hover:to-gray-400 focus:outline-none focus:ring-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300" aria-label="Gambar Berikutnya" title="Berikutnya">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </button>
         </div>
@@ -304,29 +304,29 @@
     </div>
     <!-- Bulk Delete Confirmation Modal for Images -->
     <div id="bulk-delete-modal-img" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" role="dialog" aria-labelledby="bulk-delete-modal-img-title" aria-modal="true">
-      <div class="bg-gradient-to-br from-amber-50 to-yellow-50 p-6 rounded-lg shadow-xl w-full max-w-md border border-amber-200">
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
         <h3 id="bulk-delete-modal-img-title" class="text-xl font-semibold text-red-600 mb-4">Hapus Multiple Gambar</h3>
-        <p class="mb-4 text-amber-700">Apakah Anda yakin ingin menghapus <span id="bulk-delete-count-img" class="font-semibold">0</span> gambar yang dipilih?</p>
+        <p class="mb-4 text-gray-700">Apakah Anda yakin ingin menghapus <span id="bulk-delete-count-img" class="font-semibold">0</span> gambar yang dipilih?</p>
         <div class="bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-lg p-3 mb-4">
           <p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i> Tindakan ini tidak dapat dibatalkan!</p>
         </div>
         <div class="flex justify-end space-x-4" role="group" aria-label="Tombol konfirmasi hapus massal">
-          <button type="button" id="cancel-bulk-delete-btn-img" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Batal hapus massal">Batal</button>
+          <button type="button" id="cancel-bulk-delete-btn-img" class="bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal hapus massal">Batal</button>
           <button id="confirm-bulk-delete-btn-img" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md" aria-label="Konfirmasi hapus massal">Hapus Semua</button>
         </div>
       </div>
     </div>
     <!-- Bulk Visibility Confirmation Modal for Images -->
     <div id="bulk-visibility-modal-img" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" role="dialog" aria-labelledby="bulk-visibility-modal-img-title" aria-modal="true">
-      <div class="bg-gradient-to-br from-amber-50 to-yellow-50 p-6 rounded-lg shadow-xl w-full max-w-md border border-amber-200">
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
         <h3 id="bulk-visibility-modal-img-title" class="text-xl font-semibold text-blue-600 mb-4">Ubah Visibilitas Massal</h3>
-        <p class="mb-4 text-amber-700">Apa yang ingin Anda lakukan pada <span id="bulk-visibility-count-img" class="font-semibold">0</span> gambar yang dipilih?</p>
+        <p class="mb-4 text-gray-700">Apa yang ingin Anda lakukan pada <span id="bulk-visibility-count-img" class="font-semibold">0</span> gambar yang dipilih?</p>
         <div class="flex flex-col gap-3 mb-4">
           <button id="bulk-visibility-show-btn-img" class="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Tampilkan semua">Tampilkan Semua</button>
-          <button id="bulk-visibility-hide-btn-img" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Sembunyikan semua">Sembunyikan Semua</button>
+          <button id="bulk-visibility-hide-btn-img" class="w-full bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Sembunyikan semua">Sembunyikan Semua</button>
         </div>
         <div class="flex justify-end">
-          <button type="button" id="cancel-bulk-visibility-btn-img" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Batal">Batal</button>
+          <button type="button" id="cancel-bulk-visibility-btn-img" class="bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal">Batal</button>
         </div>
       </div>
     </div>

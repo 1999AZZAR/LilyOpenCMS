@@ -105,6 +105,15 @@ role_permission = db.Table(
 )
 
 
+# Association table for Editor ↔ Writer self-referential many-to-many
+editor_writer = db.Table(
+    "editor_writer",
+    db.Column("editor_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
+    db.Column("writer_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
+    db.UniqueConstraint("editor_id", "writer_id", name="uq_editor_writer_pair")
+)
+
+
 class UserActivity(db.Model):
     __tablename__ = "user_activity"
     
@@ -223,6 +232,16 @@ class User(db.Model, UserMixin):
     comment_likes = db.relationship("CommentLike", back_populates="user", lazy=True, cascade="all, delete-orphan")
     comment_reports = db.relationship("CommentReport", foreign_keys="CommentReport.user_id", back_populates="user", lazy=True, cascade="all, delete-orphan")
     resolved_reports = db.relationship("CommentReport", foreign_keys="CommentReport.resolved_by", back_populates="resolver", lazy=True)
+
+    # --- Editor ↔ Writer assignments (many-to-many self-referential) ---
+    assigned_writers = db.relationship(
+        "User",
+        secondary=editor_writer,
+        primaryjoin=(id == editor_writer.c.editor_id),
+        secondaryjoin=(id == editor_writer.c.writer_id),
+        backref=db.backref("assigned_editors", lazy="dynamic"),
+        lazy="dynamic"
+    )
 
     def set_password(self, password):
         """Hashes and sets the user's password."""

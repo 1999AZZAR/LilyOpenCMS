@@ -7,17 +7,17 @@
 {% block content %}
 <!-- Navigation Tabs -->
 <div class="mb-6">
-  <nav class="flex space-x-1 bg-amber-100 p-1 rounded-lg" role="tablist">
-    <button class="tab-button active bg-white text-amber-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
+  <nav class="flex space-x-1 bg-gray-100 p-1 rounded-lg" role="tablist">
+    <button class="tab-button active bg-white text-gray-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
       <i class="fas fa-chart-line mr-2"></i>Ringkasan
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="templates">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="templates">
       <i class="fas fa-file-code mr-2"></i>Templates
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="cache">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="cache">
       <i class="fas fa-memory mr-2"></i>Cache
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="settings">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="settings">
       <i class="fas fa-sliders-h mr-2"></i>Pengaturan
     </button>
   </nav>
@@ -25,11 +25,11 @@
 
 <!-- Overview Tab -->
 <div id="overview-tab" class="tab-content active">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Ringkasan Optimasi SSR</h2>
+      <h2 class="text-xl font-semibold text-gray-900">Ringkasan Optimasi SSR</h2>
       <div class="flex space-x-2">
-        <button id="refresh-ssr" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="refresh-ssr" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-sync-alt mr-2"></i>Segarkan
         </button>
         <button id="clear-ssr-cache" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
@@ -95,10 +95,10 @@
       </div>
 
       <!-- Avg Render Time -->
-      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-amber-500">
+      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <i class="fas fa-clock text-amber-600 text-2xl"></i>
+            <i class="fas fa-clock text-indigo-600 text-2xl"></i>
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Rata-rata Waktu</p>
@@ -106,8 +106,8 @@
           </div>
         </div>
         <div class="mt-4">
-          <span class="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
-            <i class="fas fa-tachometer-alt mr-1"></i>Performance
+          <span class="text-xs text-indigo-700 bg-indigo-100 px-2 py-1 rounded-full">
+            <i class="fas fa-tachometer-alt mr-1"></i>Performa
           </span>
         </div>
       </div>
@@ -116,7 +116,7 @@
     <!-- Performance Indicators -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6 border border-gray-200">
       <div class="flex items-center mb-4">
-        <i class="fas fa-chart-line text-amber-600 mr-3 text-xl"></i>
+        <i class="fas fa-chart-line text-blue-600 mr-3 text-xl"></i>
         <h3 class="text-lg font-semibold text-gray-800">Indikator Performa</h3>
       </div>
       
@@ -185,10 +185,10 @@
         <div class="text-xs text-gray-500 text-center">Cache Hit Rate: {{ ssr_stats.cache_hit_rate|default(0) }}%</div>
         
         {% if ssr_stats.avg_render_time|default(0) > 0.5 %}
-        <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <div class="flex items-center">
-            <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
-            <span class="text-yellow-700 text-sm">Rata-rata waktu render tinggi: {{ "%.3f"|format(ssr_stats.avg_render_time|default(0)) }}s</span>
+            <i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i>
+            <span class="text-amber-700 text-sm">Rata-rata waktu render tinggi: {{ "%.3f"|format(ssr_stats.avg_render_time|default(0)) }}s</span>
           </div>
         </div>
         {% endif %}
@@ -199,10 +199,10 @@
 
 <!-- Templates Tab -->
 <div id="templates-tab" class="tab-content hidden">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Manajemen Template</h2>
-      <button id="refresh-templates" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+      <h2 class="text-xl font-semibold text-gray-900">Manajemen Template</h2>
+      <button id="refresh-templates" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
         <i class="fas fa-sync-alt mr-2"></i>Segarkan
       </button>
     </div>
@@ -609,10 +609,10 @@
 
 <!-- Cache Tab -->
 <div id="cache-tab" class="tab-content hidden">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Manajemen Cache</h2>
-      <button id="refresh-cache" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+      <h2 class="text-xl font-semibold text-gray-900">Manajemen Cache</h2>
+      <button id="refresh-cache" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
         <i class="fas fa-sync-alt mr-2"></i>Segarkan
       </button>
     </div>
@@ -676,10 +676,10 @@
 
 <!-- Settings Tab -->
 <div id="settings-tab" class="tab-content hidden">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Pengaturan SSR</h2>
-      <button id="save-ssr-settings" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+      <h2 class="text-xl font-semibold text-gray-900">Pengaturan SSR</h2>
+      <button id="save-ssr-settings" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
         <i class="fas fa-save mr-2"></i>Simpan
       </button>
     </div>
@@ -689,22 +689,22 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Template Caching</label>
-          <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="enabled">Diaktifkan</option>
             <option value="disabled">Dinonaktifkan</option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Cache Duration</label>
-          <input type="number" value="300" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <input type="number" value="300" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Max Cache Size</label>
-          <input type="number" value="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <input type="number" value="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Auto Clear</label>
-          <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="enabled">Diaktifkan</option>
             <option value="disabled">Dinonaktifkan</option>
           </select>

@@ -20,8 +20,8 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <div class="flex items-center">
-                <div class="p-3 bg-amber-100 rounded-lg">
-                    <i class="fas fa-map-marker-alt text-amber-600 text-xl"></i>
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-map-marker-alt text-blue-600 text-xl"></i>
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Total Penempatan</p>
@@ -98,24 +98,24 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4">
                             <div>
-                                <div class="text-sm font-medium text-amber-900">{{ placement.name }}</div>
+                                <div class="text-sm font-medium text-gray-900">{{ placement.name }}</div>
                                 {% if placement.description %}
-                                <div class="text-sm text-amber-600 mt-1">{{ placement.description[:50] }}{% if placement.description|length > 50 %}...{% endif %}</div>
+                                <div class="text-sm text-gray-600 mt-1">{{ placement.description[:50] }}{% if placement.description|length > 50 %}...{% endif %}</div>
                                 {% endif %}
                             </div>
                         </td>
                         <td class="px-6 py-4">
                             {% if placement.ad %}
                             <div>
-                                <div class="text-sm font-medium text-amber-900">{{ placement.ad.title }}</div>
-                                <div class="text-xs text-amber-600">{{ placement.ad.ad_type|title }}</div>
+                                <div class="text-sm font-medium text-gray-900">{{ placement.ad.title }}</div>
+                                <div class="text-xs text-gray-600">{{ placement.ad.ad_type|title }}</div>
                             </div>
                             {% else %}
                             <span class="text-red-600 text-sm">Iklan tidak ditemukan</span>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-amber-600">
+                            <div class="text-sm text-gray-700">
                                 <span class="font-medium">{{ placement.page_type|title }}</span>
                                 {% if placement.page_specific %}
                                 <br><span class="text-xs">{{ placement.page_specific }}</span>
@@ -148,7 +148,7 @@
                                    title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button onclick="deletePlacement({{ placement.id }}, '{{ placement.name }}')"
+                                <button onclick="openDeletePlacementModal({{ placement.id }}, '{{ placement.name }}')"
                                         class="text-red-600 hover:text-red-900 transition-colors"
                                         title="Hapus">
                                     <i class="fas fa-trash"></i>
@@ -158,13 +158,13 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-amber-600">
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-700">
                             <div class="flex flex-col items-center">
-                                <i class="fas fa-map-marker-alt text-4xl mb-4 text-amber-300"></i>
+                                <i class="fas fa-map-marker-alt text-4xl mb-4 text-blue-300"></i>
                                 <p class="text-lg font-medium mb-2">Belum ada penempatan</p>
                                 <p class="text-sm">Buat penempatan pertama untuk mulai menampilkan iklan</p>
                                 <a href="{{ url_for('ads.create_placement') }}" 
-                                   class="mt-4 bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors">
+                                   class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                                     <i class="fas fa-plus mr-2"></i>Buat Penempatan
                                 </a>
                             </div>
@@ -177,34 +177,76 @@
     </div>
 </div>
 
+<!-- Confirm Delete Modal -->
+<div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="confirm-delete-title">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-xl w-full max-w-md">
+    <div class="p-6">
+      <div class="flex items-start">
+        <div class="flex-shrink-0 mr-3">
+          <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3 id="confirm-delete-title" class="text-lg font-semibold text-gray-900 mb-1">Hapus Penempatan?</h3>
+          <p id="confirm-delete-message" class="text-sm text-gray-700">Apakah Anda yakin ingin menghapus penempatan ini?</p>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end space-x-3">
+        <button id="confirm-delete-cancel" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300">Batal</button>
+        <button id="confirm-delete-confirm" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">Hapus</button>
+      </div>
+    </div>
+  </div>
+  <button class="absolute top-4 right-4 text-gray-300 hover:text-white" aria-label="Tutup" onclick="closeConfirmDeleteModal()">
+    <i class="fas fa-times text-xl"></i>
+  </button>
+  <span class="sr-only" role="status" aria-live="polite"></span>
+</div>
+
 <script>
-async function deletePlacement(placementId, placementName) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus penempatan "${placementName}"?`)) {
-        return;
+let __deleteTargetId = null;
+async function deletePlacement(placementId) {
+  try {
+    const response = await fetch(`/ads/placements/${placementId}/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await response.json();
+    if (result.success) {
+      showToast && showToast('success', 'Penempatan berhasil dihapus!');
+      setTimeout(() => { window.location.reload(); }, 1000);
+    } else {
+      (showToast && showToast('error', result.error || 'Terjadi kesalahan saat menghapus penempatan'));
     }
-
-    try {
-        const response = await fetch(`/ads/placements/${placementId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('success', 'Penempatan berhasil dihapus!');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showToast('error', result.error || 'Terjadi kesalahan saat menghapus penempatan');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('error', 'Terjadi kesalahan saat menghapus penempatan');
-    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast && showToast('error', 'Terjadi kesalahan saat menghapus penempatan');
+  }
 }
+
+function openDeletePlacementModal(placementId, placementName) {
+  __deleteTargetId = placementId;
+  const modal = document.getElementById('confirm-delete-modal');
+  const msg = document.getElementById('confirm-delete-message');
+  if (msg) msg.textContent = `Apakah Anda yakin ingin menghapus penempatan "${placementName}"?`;
+  modal.classList.remove('hidden');
+}
+
+function closeConfirmDeleteModal() {
+  const modal = document.getElementById('confirm-delete-modal');
+  modal.classList.add('hidden');
+  __deleteTargetId = null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cancelBtn = document.getElementById('confirm-delete-cancel');
+  const confirmBtn = document.getElementById('confirm-delete-confirm');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeConfirmDeleteModal);
+  if (confirmBtn) confirmBtn.addEventListener('click', async () => {
+    if (__deleteTargetId !== null) {
+      await deletePlacement(__deleteTargetId);
+    }
+    closeConfirmDeleteModal();
+  });
+});
 </script>
 {% endblock %} 

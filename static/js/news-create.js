@@ -530,11 +530,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         is_news: document.getElementById('news-premium').checked,
                         is_main_news: document.getElementById('news-main').checked,
                         is_premium: document.getElementById('news-is-premium').checked,
-                        is_visible: isPublishButton,
                         writer: document.getElementById('news-writer').value.trim(),
                         external_source: document.getElementById('news-external-source').value.trim(),
                         image_id: document.getElementById('news-image-id').value
                     };
+                    // Only set visibility when explicitly publishing; otherwise retain existing value on server
+                    if (isPublishButton) {
+                        jsonData.is_visible = true;
+                    }
                     
                     response = await fetch(`/api/news/${newsId}`, {
                         method: 'PUT',

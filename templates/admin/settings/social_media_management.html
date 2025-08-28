@@ -28,27 +28,27 @@
         </datalist>
 
         <!-- Add New Social Media Form -->
-        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-social-media-title">
-            <h2 id="add-social-media-title" class="text-xl font-semibold text-amber-800 mb-4 flex items-center">
-                <i class="fas fa-plus-circle mr-2 text-amber-600"></i>
+        <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-social-media-title">
+            <h2 id="add-social-media-title" class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-plus-circle mr-2 text-blue-600"></i>
                 Tambah Media Sosial Baru
             </h2>
             <form id="add-social-media-form" class="space-y-4" role="form" aria-label="Form tambah media sosial baru">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-amber-700 font-medium mb-2" for="new-platform-name">
+                        <label class="block text-gray-700 font-medium mb-2" for="new-platform-name">
                             <i class="fas fa-globe mr-1"></i>Nama Platform
                         </label>
-                        <input type="text" id="new-platform-name" name="name" list="platform-list" placeholder="Pilih atau ketik platform" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300" required aria-required="true" aria-label="Nama platform media sosial">
+                        <input type="text" id="new-platform-name" name="name" list="platform-list" placeholder="Pilih atau ketik platform" class="w-full bg-white border border-gray-300 text-gray-800 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" required aria-required="true" aria-label="Nama platform media sosial">
                     </div>
                     <div>
-                        <label class="block text-amber-700 font-medium mb-2" for="new-platform-url">
+                        <label class="block text-gray-700 font-medium mb-2" for="new-platform-url">
                             <i class="fas fa-link mr-1"></i>URL
                         </label>
-                        <input type="url" id="new-platform-url" name="url" placeholder="https://example.com" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300" required aria-required="true" aria-label="URL media sosial">
+                        <input type="url" id="new-platform-url" name="url" placeholder="https://example.com" class="w-full bg-white border border-gray-300 text-gray-800 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" required aria-required="true" aria-label="URL media sosial">
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md flex items-center justify-center" aria-label="Tambah media sosial baru">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md flex items-center justify-center" aria-label="Tambah media sosial baru">
                     <i class="fas fa-plus mr-2"></i>
                     Tambah Media Sosial
                 </button>
@@ -56,56 +56,56 @@
         </div>
 
         <!-- Existing Social Media Links -->
-        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="social-media-list-title">
-            <h2 id="social-media-list-title" class="text-xl font-semibold text-amber-800 mb-4 flex items-center">
-                <i class="fas fa-list mr-2 text-amber-600"></i>
+        <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="social-media-list-title">
+            <h2 id="social-media-list-title" class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-list mr-2 text-blue-600"></i>
                 Daftar Media Sosial
             </h2>
             <div id="social-media-list" class="grid grid-cols-1 lg:grid-cols-2 gap-6" role="list" aria-label="Daftar media sosial yang tersedia">
                 <!-- Social media items will be loaded here dynamically -->
             </div>
             <div id="empty-state" class="hidden text-center py-8">
-                <i class="fas fa-share-alt text-amber-400 text-4xl mb-4"></i>
-                <p class="text-amber-600 text-lg">Belum ada media sosial yang ditambahkan</p>
-                <p class="text-amber-500 text-sm mt-2">Mulai dengan menambahkan platform media sosial Anda di atas</p>
+                <i class="fas fa-share-alt text-blue-400 text-4xl mb-4"></i>
+                <p class="text-gray-600 text-lg">Belum ada media sosial yang ditambahkan</p>
+                <p class="text-gray-500 text-sm mt-2">Mulai dengan menambahkan platform media sosial Anda di atas</p>
             </div>
         </div>
     </main>
 
     <!-- Social Media Item Template -->
     <template id="social-media-template">
-        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 social-media-item" role="listitem">
+        <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 social-media-item" role="listitem">
             <form class="space-y-4" role="form" aria-label="Form edit media sosial">
                 <input type="hidden" name="id" class="social-media-id">
                 
                 <!-- Platform Icon and Name -->
                 <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-lg flex items-center justify-center mr-3">
+                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
                         <i class="fas fa-share-alt text-white text-lg platform-icon"></i>
                     </div>
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-amber-800 platform-name"></h3>
-                        <p class="text-amber-600 text-sm platform-url"></p>
+                        <h3 class="text-lg font-semibold text-gray-900 platform-name"></h3>
+                        <p class="text-gray-600 text-sm platform-url"></p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-amber-700 font-medium mb-2" for="platform-name-{id}">
+                        <label class="block text-gray-700 font-medium mb-2" for="platform-name-{id}">
                             <i class="fas fa-globe mr-1"></i>Nama Platform
                         </label>
-                        <input type="text" id="platform-name-{id}" name="name" list="platform-list" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300" required aria-required="true" aria-label="Nama platform media sosial">
+                        <input type="text" id="platform-name-{id}" name="name" list="platform-list" class="w-full bg-white border border-gray-300 text-gray-800 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" required aria-required="true" aria-label="Nama platform media sosial">
                     </div>
                     <div>
-                        <label class="block text-amber-700 font-medium mb-2" for="platform-url-{id}">
+                        <label class="block text-gray-700 font-medium mb-2" for="platform-url-{id}">
                             <i class="fas fa-link mr-1"></i>URL
                         </label>
-                        <input type="url" id="platform-url-{id}" name="url" class="w-full bg-white border border-amber-300 text-amber-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300" required aria-required="true" aria-label="URL media sosial">
+                        <input type="url" id="platform-url-{id}" name="url" class="w-full bg-white border border-gray-300 text-gray-800 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" required aria-required="true" aria-label="URL media sosial">
                     </div>
                 </div>
 
                 <div class="flex space-x-3 pt-2" role="group" aria-label="Tombol aksi media sosial">
-                    <button type="button" class="update-btn flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md flex items-center justify-center" aria-label="Perbarui media sosial">
+                    <button type="button" class="update-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md flex items-center justify-center" aria-label="Perbarui media sosial">
                         <i class="fas fa-save mr-2"></i>
                         Perbarui
                     </button>
@@ -120,19 +120,19 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-social-media-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="delete-social-media-title" aria-modal="true">
-        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-md">
             <div class="flex items-center mb-4">
                 <div class="w-12 h-12 bg-gradient-to-r from-red-200 to-pink-200 rounded-full flex items-center justify-center mr-4">
                     <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
                 </div>
                 <h3 id="delete-social-media-title" class="text-xl font-semibold text-red-600">Konfirmasi Hapus</h3>
             </div>
-            <p class="text-amber-700 mb-4">Apakah Anda yakin ingin menghapus media sosial ini?</p>
+            <p class="text-gray-700 mb-4">Apakah Anda yakin ingin menghapus media sosial ini?</p>
             <div class="bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-lg p-3 mb-4">
                 <p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i> Tindakan ini tidak dapat dibatalkan!</p>
             </div>
             <div class="flex justify-end space-x-4" role="group" aria-label="Tombol konfirmasi">
-                <button id="cancel-delete-btn" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Batal hapus media sosial">Batal</button>
+                <button id="cancel-delete-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal hapus media sosial">Batal</button>
                 <button id="confirm-delete-btn" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md" aria-label="Konfirmasi hapus media sosial">Hapus</button>
             </div>
         </div>

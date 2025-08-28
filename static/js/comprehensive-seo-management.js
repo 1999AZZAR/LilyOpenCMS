@@ -33,8 +33,8 @@ function initializeTabs() {
             
             // Remove active class from all buttons and contents
             tabButtons.forEach(btn => {
-                btn.classList.remove('active', 'bg-white', 'text-amber-800');
-                btn.classList.add('bg-amber-200', 'text-amber-700');
+                btn.classList.remove('active', 'bg-white', 'text-gray-800');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
             });
             
             tabContents.forEach(content => {
@@ -42,8 +42,8 @@ function initializeTabs() {
             });
             
             // Add active class to clicked button and corresponding content
-            this.classList.add('active', 'bg-white', 'text-amber-800');
-            this.classList.remove('bg-amber-200', 'text-amber-700');
+            this.classList.add('active', 'bg-white', 'text-gray-800');
+            this.classList.remove('bg-gray-200', 'text-gray-700');
             
             const targetContent = document.getElementById(`${targetTab}-tab`);
             if (targetContent) {
@@ -96,6 +96,16 @@ function initializeEventListeners() {
     // Confirmation modal events
     document.getElementById('cancel-confirmation').addEventListener('click', closeConfirmationModal);
     document.getElementById('confirm-action').addEventListener('click', executeConfirmedAction);
+
+    // Delegate individual inject buttons
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.inject-seo-btn');
+        if (btn) {
+            const id = btn.getAttribute('data-id');
+            const type = btn.getAttribute('data-type');
+            confirmAndInjectSingle(type, id);
+        }
+    });
 }
 
 function loadCategoryFilters() {
@@ -217,9 +227,14 @@ function renderArticlesTable(articles) {
                 ${article.og_title ? '✓' : '✗'}
             </td>
             <td class="px-6 py-4 text-sm font-medium">
-                <button class="edit-seo-btn text-amber-600 hover:text-amber-900 mr-3" data-id="${article.id}" data-type="article">
-                    <i class="fas fa-edit"></i>
-                </button>
+                <div class="inline-flex items-center gap-2">
+                    <button class="edit-seo-btn px-2 py-1 rounded-md text-blue-600 hover:text-blue-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${article.id}" data-type="article" title="Edit SEO" aria-label="Edit SEO">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="inject-seo-btn px-2 py-1 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${article.id}" data-type="article" title="Inject SEO" aria-label="Inject SEO">
+                        <i class="fas fa-magic"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -337,9 +352,14 @@ function renderAlbumsTable(albums) {
                 ${album.og_title ? '✓' : '✗'}
             </td>
             <td class="px-6 py-4 text-sm font-medium">
-                <button class="edit-seo-btn text-amber-600 hover:text-amber-900 mr-3" data-id="${album.id}" data-type="album">
-                    <i class="fas fa-edit"></i>
-                </button>
+                <div class="inline-flex items-center gap-2">
+                    <button class="edit-seo-btn px-2 py-1 rounded-md text-blue-600 hover:text-blue-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${album.id}" data-type="album" title="Edit SEO" aria-label="Edit SEO">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="inject-seo-btn px-2 py-1 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${album.id}" data-type="album" title="Inject SEO" aria-label="Inject SEO">
+                        <i class="fas fa-magic"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -457,9 +477,14 @@ function renderChaptersTable(chapters) {
                 ${chapter.og_title ? '✓' : '✗'}
             </td>
             <td class="px-6 py-4 text-sm font-medium">
-                <button class="edit-seo-btn text-amber-600 hover:text-amber-900 mr-3" data-id="${chapter.id}" data-type="chapter">
-                    <i class="fas fa-edit"></i>
-                </button>
+                <div class="inline-flex items-center gap-2">
+                    <button class="edit-seo-btn px-2 py-1 rounded-md text-blue-600 hover:text-blue-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${chapter.id}" data-type="chapter" title="Edit SEO" aria-label="Edit SEO">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="inject-seo-btn px-2 py-1 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${chapter.id}" data-type="chapter" title="Inject SEO" aria-label="Inject SEO">
+                        <i class="fas fa-magic"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -584,9 +609,14 @@ function renderRootTable(rootData) {
                 ${page.updated_at ? new Date(page.updated_at).toLocaleDateString('id-ID') : 'Belum diperbarui'}
             </td>
             <td class="px-6 py-4 text-sm font-medium">
-                <button class="edit-seo-btn text-amber-600 hover:text-amber-900 mr-3" data-id="${page.id}" data-type="root">
-                    <i class="fas fa-edit"></i>
-                </button>
+                <div class="inline-flex items-center gap-2">
+                    <button class="edit-seo-btn px-2 py-1 rounded-md text-blue-600 hover:text-blue-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${page.id}" data-type="root" title="Edit SEO" aria-label="Edit SEO">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="inject-seo-btn px-2 py-1 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" data-id="${page.id}" data-type="root" title="Inject SEO" aria-label="Inject SEO">
+                        <i class="fas fa-magic"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -1054,18 +1084,42 @@ function runSEOInjection(type) {
     const originalText = button.innerHTML;
     
     // Show confirmation dialog
-    const confirmed = confirm(
-        `⚠️ PERHATIAN: SEO Injection akan menghapus semua data SEO yang ada dan membuat ulang berdasarkan konten ${typeLabels[type]}.\n\n` +
-        'Ini akan:\n' +
-        '• Menghapus semua meta description, keywords, OG tags yang ada\n' +
-        '• Membuat ulang SEO data berdasarkan konten dengan pembersihan markdown\n' +
-        '• Mengatur is_seo_lock = false untuk semua item\n\n' +
-        `Apakah Anda yakin ingin melanjutkan untuk ${typeLabels[type]}?`
-    );
-    
-    if (!confirmed) {
-        return;
+    // Custom confirm modal using our confirmation modal instead of system confirm
+    const message = `⚠️ PERHATIAN: SEO Injection akan menghapus semua data SEO yang ada dan membuat ulang berdasarkan konten ${typeLabels[type]}.\n\n` +
+      'Ini akan:\n' +
+      '• Menghapus semua meta description, keywords, OG tags yang ada\n' +
+      '• Membuat ulang SEO data berdasarkan konten dengan pembersihan markdown\n' +
+      '• Mengatur is_seo_lock = false untuk semua item\n\n' +
+      `Apakah Anda yakin ingin melanjutkan untuk ${typeLabels[type]}?`;
+
+    const modal = document.getElementById('confirmation-modal');
+    if (modal) {
+        document.getElementById('confirmation-message').textContent = message;
+        modal.classList.remove('hidden');
+        // Temporarily override confirm action
+        const confirmBtn = document.getElementById('confirm-action');
+        const cancelBtn = document.getElementById('cancel-confirmation');
+        const originalConfirmHandler = confirmBtn.onclick;
+        const originalCancelHandler = cancelBtn.onclick;
+        confirmBtn.onclick = () => {
+            modal.classList.add('hidden');
+            // restore handlers
+            confirmBtn.onclick = originalConfirmHandler;
+            cancelBtn.onclick = originalCancelHandler;
+            proceedInjection();
+        };
+        cancelBtn.onclick = () => {
+            modal.classList.add('hidden');
+            confirmBtn.onclick = originalConfirmHandler;
+            cancelBtn.onclick = originalCancelHandler;
+        };
+        return; // wait for user choice
     }
+    
+    // Fallback to direct proceed if modal not found
+    proceedInjection();
+
+    function proceedInjection() {
     
     // Disable button and show loading state
     button.disabled = true;
@@ -1135,6 +1189,85 @@ function runSEOInjection(type) {
         // Re-enable button
         button.disabled = false;
         button.innerHTML = originalText;
+    });
+    }
+}
+
+function confirmAndInjectSingle(type, id) {
+    const typeLabels = {
+        'article': 'Artikel',
+        'album': 'Album',
+        'chapter': 'Bab',
+        'root': 'Halaman Root'
+    };
+    const modal = document.getElementById('confirmation-modal');
+    const message = `Injeksi SEO akan menghasilkan dan mengisi bidang SEO untuk ${typeLabels[type]}. Lanjutkan?`;
+    if (modal) {
+        document.getElementById('confirmation-message').textContent = message;
+        modal.classList.remove('hidden');
+        const confirmBtn = document.getElementById('confirm-action');
+        const cancelBtn = document.getElementById('cancel-confirmation');
+        const originalConfirm = confirmBtn.onclick;
+        const originalCancel = cancelBtn.onclick;
+        confirmBtn.onclick = () => {
+            modal.classList.add('hidden');
+            confirmBtn.onclick = originalConfirm;
+            cancelBtn.onclick = originalCancel;
+            injectSingle(type, id);
+        };
+        cancelBtn.onclick = () => {
+            modal.classList.add('hidden');
+            confirmBtn.onclick = originalConfirm;
+            cancelBtn.onclick = originalCancel;
+        };
+    } else {
+        injectSingle(type, id);
+    }
+}
+
+function injectSingle(type, id) {
+    const urlMap = {
+        'article': `/api/seo/articles/${id}/inject`,
+        'album': `/api/seo/albums/${id}/inject`,
+        'chapter': `/api/seo/chapters/${id}/inject`,
+        'root': `/api/seo/root/${id}/inject`
+    };
+    const labelMap = {
+        'article': 'Artikel',
+        'album': 'Album',
+        'chapter': 'Bab',
+        'root': 'Halaman Root'
+    };
+    const url = urlMap[type];
+    if (!url) return;
+    showToast(`Memproses injeksi SEO untuk ${labelMap[type]}...`, 'info');
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json().then(j => ({ ok: r.ok, body: j })))
+    .then(({ ok, body }) => {
+        if (!ok) throw new Error(body.error || 'Gagal injeksi');
+        showToast(body.message || 'SEO injected', 'success');
+        // Reload respective table
+        switch(type) {
+            case 'article':
+                loadArticlesData();
+                break;
+            case 'album':
+                loadAlbumsData();
+                break;
+            case 'chapter':
+                loadChaptersData();
+                break;
+            case 'root':
+                loadRootData();
+                break;
+        }
+    })
+    .catch(err => {
+        console.error('Inject error:', err);
+        showToast('Gagal injeksi SEO: ' + err.message, 'error');
     });
 }
 
@@ -1219,7 +1352,7 @@ function generatePaginationHTML(pagination, type) {
     
     // Previous button
     if (pagination.has_prev) {
-        html += `<button class="px-3 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors" onclick="load${type.charAt(0).toUpperCase() + type.slice(1)}Data(${pagination.current_page - 1})">
+        html += `<button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors" onclick="load${type.charAt(0).toUpperCase() + type.slice(1)}Data(${pagination.current_page - 1})">
             <i class="fas fa-chevron-left mr-1"></i>Previous
         </button>`;
     }
@@ -1230,7 +1363,7 @@ function generatePaginationHTML(pagination, type) {
     
     for (let i = startPage; i <= endPage; i++) {
         if (i === pagination.current_page) {
-            html += `<span class="px-3 py-1 bg-amber-600 text-white rounded font-medium">${i}</span>`;
+            html += `<span class="px-3 py-1 bg-blue-700 text-white rounded font-medium">${i}</span>`;
         } else {
             html += `<button class="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors" onclick="load${type.charAt(0).toUpperCase() + type.slice(1)}Data(${i})">${i}</button>`;
         }
@@ -1238,7 +1371,7 @@ function generatePaginationHTML(pagination, type) {
     
     // Next button
     if (pagination.has_next) {
-        html += `<button class="px-3 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors" onclick="load${type.charAt(0).toUpperCase() + type.slice(1)}Data(${pagination.current_page + 1})">
+        html += `<button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors" onclick="load${type.charAt(0).toUpperCase() + type.slice(1)}Data(${pagination.current_page + 1})">
             Next<i class="fas fa-chevron-right ml-1"></i>
         </button>`;
     }

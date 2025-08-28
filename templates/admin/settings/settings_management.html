@@ -172,7 +172,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Ads Dashboard -->
         <a href="{{ url_for('ads.admin_dashboard') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_manage_ads() %}hidden{% endif %}" role="article" aria-label="Dashboard Iklan">
-          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center" aria-hidden="true">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-slate-500 to-slate-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-tachometer-alt text-2xl text-white"></i>
           </div>
           <h3 class="text-xl font-bold mb-2 text-gray-800">Dashboard Iklan</h3>
@@ -276,7 +276,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- Comment Moderation Card (Only for Admin and Superuser) -->
         <a href="{{ url_for('comments.admin_comments') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300 {% if not can_moderate_comments() %}hidden{% endif %}" role="article" aria-label="Moderasi Komentar">
-          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center" aria-hidden="true">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-slate-500 to-slate-600 rounded-full flex items-center justify-center" aria-hidden="true">
               <i class="fas fa-comments text-2xl text-white"></i>
           </div>
           <h3 class="text-xl font-bold mb-2 text-gray-800">Moderasi Komentar</h3>

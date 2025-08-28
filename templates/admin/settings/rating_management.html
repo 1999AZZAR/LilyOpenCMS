@@ -9,33 +9,33 @@
 <div class="w-full">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-amber-800 mb-2">Manajemen Rating</h1>
-    <p class="text-amber-700">Kelola dan monitor rating pengguna di seluruh platform.</p>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Manajemen Rating</h1>
+    <p class="text-gray-700">Kelola dan monitor rating pengguna di seluruh platform.</p>
   </div>
 
   <!-- Filters -->
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6 mb-8">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6 mb-8">
     <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <div>
-        <label for="content_type" class="block text-sm font-medium text-amber-800 mb-2">Tipe Konten</label>
-        <select name="content_type" id="content_type" class="w-full px-3 py-2 border border-amber-200 rounded-md bg-white text-amber-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+        <label for="content_type" class="block text-sm font-medium text-gray-800 mb-2">Tipe Konten</label>
+        <select name="content_type" id="content_type" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           <option value="">Semua Tipe</option>
           <option value="news" {% if content_type == 'news' %}selected{% endif %}>News</option>
           <option value="album" {% if content_type == 'album' %}selected{% endif %}>Album</option>
         </select>
       </div>
       <div>
-        <label for="min_rating" class="block text-sm font-medium text-amber-800 mb-2">Rating Minimum</label>
+        <label for="min_rating" class="block text-sm font-medium text-gray-800 mb-2">Rating Minimum</label>
         <input type="number" name="min_rating" id="min_rating" min="1" max="5" value="{{ min_rating or '' }}" 
-               class="w-full px-3 py-2 border border-amber-200 rounded-md bg-white text-amber-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+               class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </div>
       <div>
-        <label for="max_rating" class="block text-sm font-medium text-amber-800 mb-2">Rating Maksimum</label>
+        <label for="max_rating" class="block text-sm font-medium text-gray-800 mb-2">Rating Maksimum</label>
         <input type="number" name="max_rating" id="max_rating" min="1" max="5" value="{{ max_rating or '' }}" 
-               class="w-full px-3 py-2 border border-amber-200 rounded-md bg-white text-amber-800 focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+               class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
       </div>
       <div class="flex items-end">
-        <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white px-4 py-2 rounded-md font-medium transition-all duration-300 shadow-md">
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-all duration-300 shadow-md">
           <i class="fas fa-filter mr-2"></i>Filter
         </button>
       </div>
@@ -43,24 +43,24 @@
   </div>
 
   <!-- Ratings List -->
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg">
-    <div class="p-6 border-b border-amber-200">
-      <h2 class="text-xl font-semibold text-amber-800">Rating ({{ ratings.total }})</h2>
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Rating ({{ ratings.total }})</h2>
     </div>
     
     {% if ratings.items %}
-    <div class="divide-y divide-amber-200">
+    <div class="divide-y divide-gray-200">
       {% for rating in ratings.items %}
       <div class="p-6" data-rating-id="{{ rating.id }}">
         <!-- Rating Header -->
         <div class="flex items-start justify-between mb-4">
           <div class="flex items-center space-x-3">
-            <div class="w-12 h-12 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full flex items-center justify-center">
+            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
               <span class="text-white font-semibold text-lg">{{ rating.user.username[0]|upper }}</span>
             </div>
             <div>
-              <div class="font-medium text-amber-800">{{ rating.user.username }}</div>
-              <div class="text-sm text-amber-600">
+              <div class="font-medium text-gray-900">{{ rating.user.username }}</div>
+              <div class="text-sm text-gray-600">
                 <i class="fas fa-clock mr-1"></i>{{ rating.created_at.strftime('%Y-%m-%d %H:%M') }}
                 {% if rating.content_type == 'news' %}
                   <i class="fas fa-newspaper ml-2 mr-1"></i>News #{{ rating.content_id }}
@@ -79,24 +79,24 @@
                   <i class="far fa-star text-gray-300 text-lg"></i>
                 {% endif %}
               {% endfor %}
-              <span class="ml-2 text-sm font-medium text-amber-800">{{ rating.rating_value }}/5</span>
+              <span class="ml-2 text-sm font-medium text-gray-900">{{ rating.rating_value }}/5</span>
             </div>
           </div>
         </div>
 
         <!-- Content Info -->
-        <div class="mb-4 bg-white rounded-lg p-4 border border-amber-200">
+        <div class="mb-4 bg-white rounded-lg p-4 border border-gray-200">
           {% if rating.content_type == 'news' %}
             {% set content = rating.get_content_object() %}
             {% if content %}
-              <div class="text-sm text-amber-600">
+              <div class="text-sm text-gray-700">
                 <i class="fas fa-newspaper mr-2"></i><strong>News:</strong> {{ content.title }}
               </div>
             {% endif %}
           {% else %}
             {% set content = rating.get_content_object() %}
             {% if content %}
-              <div class="text-sm text-amber-600">
+              <div class="text-sm text-gray-700">
                 <i class="fas fa-book mr-2"></i><strong>Album:</strong> {{ content.title }}
               </div>
             {% endif %}
@@ -105,7 +105,7 @@
 
         <!-- Action Buttons -->
         <div class="flex items-center space-x-3">
-          <button onclick="deleteRating({{ rating.id }})" class="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300 shadow-md">
+          <button onclick="openDeleteRatingModal({{ rating.id }})" class="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300 shadow-md">
             <i class="fas fa-trash mr-2"></i>Delete Rating
           </button>
         </div>
@@ -115,41 +115,52 @@
 
     <!-- Pagination -->
     {% if ratings.pages > 1 %}
-    <div class="p-6 border-t border-amber-200">
-      <div class="flex items-center justify-between">
-        <div class="text-sm text-amber-600">
-          Showing {{ ratings.items|length }} of {{ ratings.total }} ratings
+    <div class="p-6 border-t border-gray-200">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="text-sm text-gray-600">
+          Menampilkan {{ ratings.items|length }} dari {{ ratings.total }} rating
         </div>
-        <div class="flex items-center space-x-2">
-          {% if ratings.has_prev %}
-            <a href="{{ url_for('ratings.admin_ratings', page=ratings.prev_num, content_type=content_type, min_rating=min_rating, max_rating=max_rating) }}" 
-               class="px-4 py-2 text-sm border border-amber-200 rounded-lg hover:bg-amber-100 transition-all duration-300 text-amber-700">
-              <i class="fas fa-chevron-left mr-1"></i>Previous
-            </a>
-          {% endif %}
-          
-          <span class="px-4 py-2 text-sm text-amber-800 font-medium">
-            Page {{ ratings.page }} of {{ ratings.pages }}
-          </span>
-          
-          {% if ratings.has_next %}
-            <a href="{{ url_for('ratings.admin_ratings', page=ratings.next_num, content_type=content_type, min_rating=min_rating, max_rating=max_rating) }}" 
-               class="px-4 py-2 text-sm border border-amber-200 rounded-lg hover:bg-amber-100 transition-all duration-300 text-amber-700">
-              Next<i class="fas fa-chevron-right ml-1"></i>
-            </a>
-          {% endif %}
-        </div>
+        <nav class="inline-flex items-center space-x-1" role="navigation" aria-label="Pagination">
+          {# First & Prev #}
+          <a href="{{ url_for('ratings.admin_ratings', page=1, content_type=content_type, min_rating=min_rating, max_rating=max_rating) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ 1 == ratings.page and 'pointer-events-none text-gray-400 border-gray-200' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+             aria-label="Halaman pertama">«</a>
+          <a href="{{ url_for('ratings.admin_ratings', page=ratings.has_prev and ratings.prev_num or 1, content_type=content_type, min_rating=min_rating, max_rating=max_rating) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ not ratings.has_prev and 'pointer-events-none text-gray-400 border-gray-200' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+             aria-label="Sebelumnya">‹</a>
+
+          {# Page numbers with ellipses #}
+          {% set total_pages = ratings.pages %}
+          {% set current = ratings.page %}
+          {% for p in range(1, total_pages + 1) %}
+            {% if p == 1 or p == total_pages or (p >= current - 2 and p <= current + 2) %}
+              <a href="{{ url_for('ratings.admin_ratings', page=p, content_type=content_type, min_rating=min_rating, max_rating=max_rating) }}"
+                 class="px-3 py-2 text-sm border rounded-lg transition-colors {{ p == current and 'bg-blue-600 text-white border-blue-600 cursor-default' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+                 aria-current="{{ p == current and 'page' or undefined }}">{{ p }}</a>
+            {% elif p == current - 3 or p == current + 3 %}
+              <span class="px-2 text-gray-400">…</span>
+            {% endif %}
+          {% endfor %}
+
+          {# Next & Last #}
+          <a href="{{ url_for('ratings.admin_ratings', page=ratings.has_next and ratings.next_num or total_pages, content_type=content_type, min_rating=min_rating, max_rating=max_rating) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ not ratings.has_next and 'pointer-events-none text-gray-400 border-gray-200' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+             aria-label="Berikutnya">›</a>
+          <a href="{{ url_for('ratings.admin_ratings', page=total_pages, content_type=content_type, min_rating=min_rating, max_rating=max_rating) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ total_pages == ratings.page and 'pointer-events-none text-gray-400 border-gray-200' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+             aria-label="Halaman terakhir">»</a>
+        </nav>
       </div>
     </div>
     {% endif %}
     
     {% else %}
     <div class="p-12 text-center">
-      <div class="text-amber-400 mb-6">
+      <div class="text-blue-400 mb-6">
         <i class="fas fa-star text-6xl"></i>
       </div>
-      <h3 class="text-xl font-semibold text-amber-800 mb-2">Tidak Ada Rating</h3>
-      <p class="text-amber-600">Tidak ada rating yang ditemukan dengan filter saat ini.</p>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Tidak Ada Rating</h3>
+      <p class="text-gray-700">Tidak ada rating yang ditemukan dengan filter saat ini.</p>
     </div>
     {% endif %}
   </div>
@@ -157,35 +168,77 @@
   <!-- Analytics Link -->
   <div class="mt-8 text-center">
     <a href="{{ url_for('ratings.rating_analytics') }}" 
-       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white rounded-lg font-medium transition-all duration-300 shadow-md">
+       class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-300 shadow-md">
       <i class="fas fa-chart-bar mr-2"></i>Lihat Analitik
     </a>
   </div>
 </div>
 
 <script>
+let __deleteRatingId = null;
 async function deleteRating(ratingId) {
-  if (!confirm('Are you sure you want to delete this rating?')) {
-    return;
-  }
-  
   try {
     const response = await fetch(`/admin/ratings/${ratingId}/delete`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: { 'Content-Type': 'application/json' }
     });
-    
     if (response.ok) {
-      location.reload();
+      if (typeof showToast === 'function') showToast('success', 'Rating berhasil dihapus');
+      setTimeout(() => location.reload(), 800);
     } else {
-      alert('Failed to delete rating');
+      if (typeof showToast === 'function') showToast('error', 'Gagal menghapus rating');
     }
   } catch (error) {
     console.error('Error:', error);
-    alert('Failed to delete rating');
+    if (typeof showToast === 'function') showToast('error', 'Gagal menghapus rating');
   }
 }
+
+function openDeleteRatingModal(ratingId) {
+  __deleteRatingId = ratingId;
+  const modal = document.getElementById('confirm-delete-rating-modal');
+  modal.classList.remove('hidden');
+}
+
+function closeDeleteRatingModal() {
+  const modal = document.getElementById('confirm-delete-rating-modal');
+  modal.classList.add('hidden');
+  __deleteRatingId = null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cancelBtn = document.getElementById('cancel-delete-rating');
+  const confirmBtn = document.getElementById('confirm-delete-rating');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeDeleteRatingModal);
+  if (confirmBtn) confirmBtn.addEventListener('click', async () => {
+    if (__deleteRatingId !== null) await deleteRating(__deleteRatingId);
+    closeDeleteRatingModal();
+  });
+});
 </script>
+
+<!-- Confirm Delete Rating Modal -->
+<div id="confirm-delete-rating-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="confirm-delete-rating-title">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-xl w-full max-w-md">
+    <div class="p-6">
+      <div class="flex items-start">
+        <div class="flex-shrink-0 mr-3">
+          <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3 id="confirm-delete-rating-title" class="text-lg font-semibold text-gray-900 mb-1">Hapus Rating?</h3>
+          <p class="text-sm text-gray-700">Tindakan ini tidak dapat dibatalkan.</p>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end space-x-3">
+        <button id="cancel-delete-rating" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300">Batal</button>
+        <button id="confirm-delete-rating" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">Hapus</button>
+      </div>
+    </div>
+  </div>
+  <button class="absolute top-4 right-4 text-gray-300 hover:text-white" aria-label="Tutup" onclick="closeDeleteRatingModal()">
+    <i class="fas fa-times text-xl"></i>
+  </button>
+  <span class="sr-only" role="status" aria-live="polite"></span>
+</div>
 {% endblock %} 

@@ -177,9 +177,8 @@ class RatingSystem {
     }
     
     async removeRating() {
-        if (!confirm('Are you sure you want to remove your rating?')) {
-            return;
-        }
+        const proceed = await this.confirmModal('Hapus rating?', 'Tindakan ini akan menghapus rating Anda untuk konten ini.');
+        if (!proceed) return;
         
         // Prevent duplicate submissions
         if (this.isSubmitting) {
@@ -218,6 +217,31 @@ class RatingSystem {
         } finally {
             this.isSubmitting = false;
         }
+    }
+
+    confirmModal(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmation-modal');
+            const msgEl = document.getElementById('confirmation-message');
+            const confirmBtn = document.getElementById('confirm-action');
+            const cancelBtn = document.getElementById('cancel-confirmation');
+            if (modal && msgEl && confirmBtn && cancelBtn) {
+                msgEl.textContent = `${title} ${message ? '\n' + message : ''}`;
+                modal.classList.remove('hidden');
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    confirmBtn.removeEventListener('click', onConfirm);
+                    cancelBtn.removeEventListener('click', onCancel);
+                };
+                const onConfirm = () => { cleanup(); resolve(true); };
+                const onCancel = () => { cleanup(); resolve(false); };
+                confirmBtn.addEventListener('click', onConfirm, { once: true });
+                cancelBtn.addEventListener('click', onCancel, { once: true });
+            } else {
+                // Fallback
+                resolve(window.confirm(title));
+            }
+        });
     }
     
     renderRatingDisplay() {
@@ -445,11 +469,20 @@ class RatingSystem {
             showToast(message, type);
         } else {
             // Fallback to alert if toast system is not available
-            if (type === 'error') {
-                alert('Error: ' + message);
-            } else {
-                alert(message);
+            // Minimal fallback UI
+            const containerId = 'toast-container';
+            let container = document.getElementById(containerId);
+            if (!container) {
+                container = document.createElement('div');
+                container.id = containerId;
+                container.className = 'fixed top-5 right-5 space-y-2 z-50';
+                document.body.appendChild(container);
             }
+            const toast = document.createElement('div');
+            toast.className = `${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white px-4 py-2 rounded-lg shadow`;
+            toast.textContent = (type === 'error' ? 'Error: ' : '') + message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
     }
     

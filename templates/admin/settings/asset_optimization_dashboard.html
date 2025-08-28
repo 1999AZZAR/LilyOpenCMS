@@ -7,17 +7,17 @@
 {% block content %}
 <!-- Navigation Tabs -->
 <div class="mb-6">
-  <nav class="flex space-x-1 bg-amber-100 p-1 rounded-lg" role="tablist">
-    <button class="tab-button active bg-white text-amber-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
+  <nav class="flex space-x-1 bg-gray-100 p-1 rounded-lg" role="tablist">
+    <button class="tab-button active bg-white text-gray-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
       <i class="fas fa-chart-pie mr-2"></i>Ringkasan
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="management">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="management">
       <i class="fas fa-cogs mr-2"></i>Manajemen
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="optimization">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="optimization">
       <i class="fas fa-compress mr-2"></i>Optimasi
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="settings">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="settings">
       <i class="fas fa-sliders-h mr-2"></i>Pengaturan
     </button>
   </nav>
@@ -25,11 +25,11 @@
 
 <!-- Overview Tab -->
 <div id="overview-tab" class="tab-content active">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Ringkasan Optimasi Asset</h2>
+      <h2 class="text-xl font-semibold text-gray-900">Ringkasan Optimasi Asset</h2>
       <div class="flex space-x-2">
-        <button id="refresh-assets" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="refresh-assets" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-sync-alt mr-2"></i>Segarkan
         </button>
         <button id="precompile-assets" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
@@ -95,10 +95,10 @@
       </div>
 
       <!-- Static Folder -->
-      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-amber-500">
+      <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
         <div class="flex items-center">
           <div class="flex-shrink-0">
-            <i class="fas fa-folder text-amber-600 text-2xl"></i>
+            <i class="fas fa-folder text-indigo-600 text-2xl"></i>
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Folder Statis</p>
@@ -106,8 +106,8 @@
           </div>
         </div>
         <div class="mt-4">
-          <span class="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
-            <i class="fas fa-folder-open mr-1"></i>Active
+          <span class="text-xs text-indigo-700 bg-indigo-100 px-2 py-1 rounded-full">
+            <i class="fas fa-folder-open mr-1"></i>Aktif
           </span>
         </div>
       </div>
@@ -204,10 +204,10 @@
 
 <!-- Management Tab -->
 <div id="management-tab" class="tab-content hidden">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Manajemen Asset</h2>
-      <button id="refresh-management" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+      <h2 class="text-xl font-semibold text-gray-900">Manajemen Asset</h2>
+      <button id="refresh-management" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
         <i class="fas fa-sync-alt mr-2"></i>Segarkan
       </button>
     </div>
@@ -299,9 +299,9 @@
 
 <!-- Optimization Tab -->
 <div id="optimization-tab" class="tab-content hidden">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Optimasi Asset</h2>
+      <h2 class="text-xl font-semibold text-gray-900">Optimasi Asset</h2>
       <button id="run-optimization" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
         <i class="fas fa-play mr-2"></i>Jalankan Optimasi
       </button>
@@ -315,7 +315,7 @@
           <button id="precompile-assets-opt" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
             <i class="fas fa-compress mr-2"></i>Precompile Assets
           </button>
-          <button id="clear-asset-cache" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium">
+          <button id="clear-asset-cache" class="w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium">
             <i class="fas fa-trash mr-2"></i>Clear Asset Cache
           </button>
           <button id="regenerate-hashes" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium">
@@ -353,10 +353,10 @@
 
 <!-- Settings Tab -->
 <div id="settings-tab" class="tab-content hidden">
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg" role="main">
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Pengaturan Optimasi</h2>
-      <button id="save-settings" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+      <h2 class="text-xl font-semibold text-gray-900">Pengaturan Optimasi</h2>
+      <button id="save-settings" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
         <i class="fas fa-save mr-2"></i>Simpan
       </button>
     </div>
@@ -366,28 +366,28 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Kompresi CSS</label>
-          <select id="css-compression" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <select id="css-compression" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="enabled">Diaktifkan</option>
             <option value="disabled">Dinonaktifkan</option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Kompresi JavaScript</label>
-          <select id="js-compression" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <select id="js-compression" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="enabled">Diaktifkan</option>
             <option value="disabled">Dinonaktifkan</option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Optimasi Gambar</label>
-          <select id="image-optimization" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <select id="image-optimization" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="enabled">Diaktifkan</option>
             <option value="disabled">Dinonaktifkan</option>
           </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Cache Duration (seconds)</label>
-          <input type="number" id="cache-duration" value="31536000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <input type="number" id="cache-duration" value="31536000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
       </div>
     </div>

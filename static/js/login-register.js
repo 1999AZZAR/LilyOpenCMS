@@ -12,10 +12,31 @@ function showTab(tab) {
     document.getElementById('registerTab').classList.toggle('border-yellow-400', tab === 'register');
 }
 
+function showInlineToast(type, message) {
+    if (typeof showToast === 'function') {
+        showToast(type, message);
+        return;
+    }
+    // Minimal fallback if global showToast not available
+    const containerId = 'toast-container';
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        container.className = 'fixed top-5 right-5 space-y-2 z-50';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `${type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600'} text-white px-4 py-2 rounded-lg shadow`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
 function validateLoginForm() {
     const password = document.getElementById('loginPassword').value;
     if (password.length < 6) {
-    alert('Password must be at least 6 characters long');
+    showInlineToast('error', 'Password must be at least 6 characters long');
     return false;
     }
     return true;
@@ -27,17 +48,17 @@ function validateRegisterForm() {
     const username = document.getElementById('registerUsername').value;
 
     if (username.length < 3) {
-    alert('Username must be at least 3 characters long');
+    showInlineToast('error', 'Username must be at least 3 characters long');
     return false;
     }
 
     if (password.length < 6) {
-    alert('Password must be at least 6 characters long');
+    showInlineToast('error', 'Password must be at least 6 characters long');
     return false;
     }
 
     if (password !== confirmPassword) {
-    alert('Passwords do not match');
+    showInlineToast('error', 'Passwords do not match');
     return false;
     }
 

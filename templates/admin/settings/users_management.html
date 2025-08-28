@@ -7,17 +7,17 @@
 
 <!-- Navigation Tabs -->
 <div class="mb-6">
-  <nav class="flex space-x-1 bg-amber-100 p-1 rounded-lg" role="tablist">
-    <button class="tab-button active bg-white text-amber-800 px-4 py-2 rounded-md font-medium" data-tab="users">
+  <nav class="flex space-x-1 bg-gray-100 p-1 rounded-lg" role="tablist">
+    <button class="tab-button active bg-white text-gray-800 px-4 py-2 rounded-md font-medium" data-tab="users">
       <i class="fas fa-users mr-2"></i>Semua Pengguna
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="roles">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="roles">
       <i class="fas fa-user-tag mr-2"></i>Peran & Izin
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="pending">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="pending">
       <i class="fas fa-clock mr-2"></i>Menunggu Persetujuan
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="performance">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="performance">
       <i class="fas fa-chart-line mr-2"></i>Performa Pengguna
     </button>
   </nav>
@@ -25,14 +25,14 @@
 
 <!-- Users Tab -->
 <div id="users-tab" class="tab-content active">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Semua Pengguna</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Semua Pengguna</h2>
       <div class="flex space-x-2">
         <button id="create-user-btn" onclick="openCreateUserModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-user-plus mr-2"></i>Buat Pengguna Baru
         </button>
-        <button id="bulk-actions-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium hidden">
+        <button id="bulk-actions-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium hidden">
           <i class="fas fa-tasks mr-2"></i>Aksi Massal
         </button>
         <button id="export-users-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
@@ -42,8 +42,8 @@
     </div>
 
     <!-- Bulk Actions Panel -->
-    <div id="bulk-actions-panel" class="bg-white border border-amber-200 rounded-lg p-4 mb-4 hidden">
-      <h3 class="text-lg font-semibold text-amber-800 mb-3">Aksi Massal</h3>
+    <div id="bulk-actions-panel" class="bg-white border border-gray-200 rounded-lg p-4 mb-4 hidden">
+      <h3 class="text-lg font-semibold text-gray-800 mb-3">Aksi Massal</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <button id="bulk-activate" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
           <i class="fas fa-check mr-1"></i>Aktifkan
@@ -58,7 +58,7 @@
           <i class="fas fa-ban mr-1"></i>Suspend
         </button>
       </div>
-      <div class="mt-3 text-sm text-amber-600">
+      <div class="mt-3 text-sm text-gray-600">
         <span id="selected-count">0</span> pengguna dipilih
       </div>
     </div>
@@ -66,11 +66,11 @@
     <div class="mb-6 flex flex-wrap gap-4" role="search" aria-label="Filter dan pencarian pengguna">
       <div class="flex-1">
         <label for="search" class="sr-only">Cari pengguna</label>
-        <input type="text" id="search" placeholder="Cari berdasarkan nama pengguna, email..." class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Cari berdasarkan nama pengguna">
+        <input type="text" id="search" placeholder="Cari berdasarkan nama pengguna, email..." class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Cari berdasarkan nama pengguna">
       </div>
       <div>
         <label for="role-filter" class="sr-only">Filter berdasarkan peran</label>
-        <select id="role-filter" class="w-48 bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Filter berdasarkan peran pengguna">
+        <select id="role-filter" class="w-48 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan peran pengguna">
           <option value="">Semua Peran</option>
           <option value="su">Superuser</option>
           <option value="admin">Admin</option>
@@ -79,7 +79,7 @@
       </div>
       <div>
         <label for="status-filter" class="sr-only">Filter berdasarkan status</label>
-        <select id="status-filter" class="w-48 bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Filter berdasarkan status pengguna">
+        <select id="status-filter" class="w-48 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan status pengguna">
           <option value="">Semua Status</option>
           <option value="active">Aktif</option>
           <option value="inactive">Tidak Aktif</option>
@@ -88,7 +88,7 @@
       </div>
       <div>
         <label for="verification-filter" class="sr-only">Filter berdasarkan status verifikasi</label>
-        <select id="verification-filter" class="w-48 bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Filter berdasarkan status verifikasi pengguna">
+        <select id="verification-filter" class="w-48 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan status verifikasi pengguna">
           <option value="">Semua Status Verifikasi</option>
           <option value="verified">Terverifikasi</option>
           <option value="unverified">Belum Terverifikasi</option>
@@ -98,15 +98,15 @@
 
     <div class="space-y-8">
       <section aria-labelledby="admin-users-title">
-        <h3 id="admin-users-title" class="text-xl font-bold text-amber-600 mb-4">Pengguna Admin</h3>
+        <h3 id="admin-users-title" class="text-xl font-bold text-gray-700 mb-4">Pengguna Admin</h3>
         <div id="admin-users" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list" aria-label="Daftar pengguna admin">
-          <div class="col-span-full text-amber-600" role="status">Memuat pengguna admin...</div>
+          <div class="col-span-full text-gray-600" role="status">Memuat pengguna admin...</div>
         </div>
       </section>
       <section aria-labelledby="general-users-title">
-        <h3 id="general-users-title" class="text-xl font-bold text-amber-600 mb-4">Pengguna Umum</h3>
+        <h3 id="general-users-title" class="text-xl font-bold text-gray-700 mb-4">Pengguna Umum</h3>
         <div id="general-users" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list" aria-label="Daftar pengguna umum">
-          <div class="col-span-full text-amber-600" role="status">Memuat pengguna umum...</div>
+          <div class="col-span-full text-gray-600" role="status">Memuat pengguna umum...</div>
         </div>
       </section>
       
@@ -117,49 +117,49 @@
       
       <!-- User Statistics -->
       <section aria-labelledby="user-stats-title" class="mt-8">
-        <h3 id="user-stats-title" class="text-xl font-bold text-amber-600 mb-4">Statistik Pengguna</h3>
+        <h3 id="user-stats-title" class="text-xl font-bold text-gray-700 mb-4">Statistik Pengguna</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <div class="flex items-center">
               <div class="p-2 bg-blue-100 rounded-lg">
                 <i class="fas fa-users text-blue-600"></i>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-amber-600">Total Pengguna</p>
-                <p id="total-users-count" class="text-2xl font-bold text-amber-800">-</p>
+                <p class="text-sm font-medium text-gray-600">Total Pengguna</p>
+                <p id="total-users-count" class="text-2xl font-bold text-gray-900">-</p>
               </div>
             </div>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <div class="flex items-center">
               <div class="p-2 bg-green-100 rounded-lg">
                 <i class="fas fa-user-check text-green-600"></i>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-amber-600">Aktif</p>
-                <p id="active-users-count" class="text-2xl font-bold text-amber-800">-</p>
+                <p class="text-sm font-medium text-gray-600">Aktif</p>
+                <p id="active-users-count" class="text-2xl font-bold text-gray-900">-</p>
               </div>
             </div>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <div class="flex items-center">
               <div class="p-2 bg-yellow-100 rounded-lg">
                 <i class="fas fa-crown text-yellow-600"></i>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-amber-600">Premium</p>
-                <p id="premium-users-count" class="text-2xl font-bold text-amber-800">-</p>
+                <p class="text-sm font-medium text-gray-600">Premium</p>
+                <p id="premium-users-count" class="text-2xl font-bold text-gray-900">-</p>
               </div>
             </div>
           </div>
-          <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <div class="flex items-center">
               <div class="p-2 bg-purple-100 rounded-lg">
                 <i class="fas fa-clock text-purple-600"></i>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-amber-600">Menunggu</p>
-                <p id="pending-users-count" class="text-2xl font-bold text-amber-800">-</p>
+                <p class="text-sm font-medium text-gray-600">Menunggu</p>
+                <p id="pending-users-count" class="text-2xl font-bold text-gray-900">-</p>
               </div>
             </div>
           </div>
@@ -171,14 +171,14 @@
 
 <!-- Roles Tab -->
 <div id="roles-tab" class="tab-content hidden">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Peran & Izin</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Peran & Izin</h2>
       <div class="flex space-x-2">
         <button id="export-roles-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-download mr-2"></i>Ekspor
         </button>
-        <button id="create-role-btn" onclick="openCreateRoleModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="create-role-btn" onclick="openCreateRoleModal()" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-plus mr-2"></i>Buat Peran Baru
         </button>
       </div>
@@ -187,55 +187,55 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Custom Roles -->
       <div>
-        <h3 class="text-lg font-semibold text-amber-700 mb-4">Peran Kustom</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Peran Kustom</h3>
         <div id="custom-roles" class="space-y-3">
-          <div class="text-amber-600">Memuat peran...</div>
+          <div class="text-gray-600">Memuat peran...</div>
         </div>
       </div>
 
       <!-- Permissions -->
       <div>
-        <h3 class="text-lg font-semibold text-amber-700 mb-4">Izin Sistem</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Izin Sistem</h3>
         <div id="permissions" class="space-y-3">
-          <div class="text-amber-600">Memuat izin...</div>
+          <div class="text-gray-600">Memuat izin...</div>
         </div>
       </div>
     </div>
     
     <!-- Role Statistics -->
     <div class="mt-8">
-      <h3 class="text-lg font-semibold text-amber-700 mb-4">Statistik Peran</h3>
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Statistik Peran</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div class="flex items-center">
             <div class="p-2 bg-blue-100 rounded-lg">
               <i class="fas fa-user-tag text-blue-600"></i>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-amber-600">Total Peran</p>
-              <p id="total-roles-count" class="text-2xl font-bold text-amber-800">-</p>
+              <p class="text-sm font-medium text-gray-600">Total Peran</p>
+              <p id="total-roles-count" class="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div class="flex items-center">
             <div class="p-2 bg-green-100 rounded-lg">
               <i class="fas fa-check-circle text-green-600"></i>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-amber-600">Peran Aktif</p>
-              <p id="active-roles-count" class="text-2xl font-bold text-amber-800">-</p>
+              <p class="text-sm font-medium text-gray-600">Peran Aktif</p>
+              <p id="active-roles-count" class="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div class="flex items-center">
             <div class="p-2 bg-purple-100 rounded-lg">
               <i class="fas fa-shield-alt text-purple-600"></i>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-amber-600">Total Izin</p>
-              <p id="total-permissions-count" class="text-2xl font-bold text-amber-800">-</p>
+              <p class="text-sm font-medium text-gray-600">Total Izin</p>
+              <p id="total-permissions-count" class="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
@@ -246,9 +246,9 @@
 
 <!-- Pending Approvals Tab -->
 <div id="pending-tab" class="tab-content hidden">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Menunggu Persetujuan</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Menunggu Persetujuan</h2>
       <div class="flex space-x-2">
         <button id="bulk-approve-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-check mr-2"></i>Setujui Semua
@@ -262,11 +262,11 @@
     <div class="mb-6 flex flex-wrap gap-4" role="search" aria-label="Filter pengguna yang menunggu persetujuan">
       <div class="flex-1">
         <label for="pending-search" class="sr-only">Cari pengguna yang menunggu</label>
-        <input type="text" id="pending-search" placeholder="Cari berdasarkan nama pengguna, email..." class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Cari pengguna yang menunggu persetujuan">
+        <input type="text" id="pending-search" placeholder="Cari berdasarkan nama pengguna, email..." class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Cari pengguna yang menunggu persetujuan">
       </div>
       <div>
         <label for="pending-date-filter" class="sr-only">Filter berdasarkan tanggal</label>
-        <select id="pending-date-filter" class="w-48 bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Filter berdasarkan tanggal pendaftaran">
+        <select id="pending-date-filter" class="w-48 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan tanggal pendaftaran">
           <option value="">Semua Tanggal</option>
           <option value="today">Hari Ini</option>
           <option value="week">Minggu Ini</option>
@@ -276,54 +276,54 @@
     </div>
 
     <div id="pending-users" class="space-y-4">
-      <div class="text-amber-600">Memuat pengguna yang menunggu persetujuan...</div>
+      <div class="text-gray-600">Memuat pengguna yang menunggu persetujuan...</div>
     </div>
     
     <!-- Pending Statistics -->
     <div class="mt-8">
-      <h3 class="text-lg font-semibold text-amber-700 mb-4">Statistik Menunggu</h3>
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Statistik Menunggu</h3>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div class="flex items-center">
             <div class="p-2 bg-yellow-100 rounded-lg">
               <i class="fas fa-clock text-yellow-600"></i>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-amber-600">Total Menunggu</p>
-              <p id="total-pending-count" class="text-2xl font-bold text-amber-800">-</p>
+              <p class="text-sm font-medium text-gray-600">Total Menunggu</p>
+              <p id="total-pending-count" class="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div class="flex items-center">
             <div class="p-2 bg-green-100 rounded-lg">
               <i class="fas fa-check text-green-600"></i>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-amber-600">Disetujui Hari Ini</p>
-              <p id="approved-today-count" class="text-2xl font-bold text-amber-800">-</p>
+              <p class="text-sm font-medium text-gray-600">Disetujui Hari Ini</p>
+              <p id="approved-today-count" class="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div class="flex items-center">
             <div class="p-2 bg-red-100 rounded-lg">
               <i class="fas fa-times text-red-600"></i>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-amber-600">Ditolak Hari Ini</p>
-              <p id="rejected-today-count" class="text-2xl font-bold text-amber-800">-</p>
+              <p class="text-sm font-medium text-gray-600">Ditolak Hari Ini</p>
+              <p id="rejected-today-count" class="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div class="flex items-center">
             <div class="p-2 bg-blue-100 rounded-lg">
               <i class="fas fa-hourglass-half text-blue-600"></i>
             </div>
             <div class="ml-3">
-              <p class="text-sm font-medium text-amber-600">Rata-rata Waktu</p>
-              <p id="avg-approval-time" class="text-2xl font-bold text-amber-800">-</p>
+              <p class="text-sm font-medium text-gray-600">Rata-rata Waktu</p>
+              <p id="avg-approval-time" class="text-2xl font-bold text-gray-900">-</p>
             </div>
           </div>
         </div>
@@ -334,11 +334,11 @@
 
 <!-- Performance Tab -->
 <div id="performance-tab" class="tab-content hidden">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Performa Pengguna</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Performa Pengguna</h2>
       <div class="flex space-x-2">
-        <select id="performance-period" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg">
+        <select id="performance-period" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="7">7 Hari Terakhir</option>
           <option value="30" selected>30 Hari Terakhir</option>
           <option value="90">90 Hari Terakhir</option>
@@ -351,45 +351,45 @@
 
     <!-- Performance Summary -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white p-4 rounded-lg border border-amber-200">
-        <h3 class="text-sm font-medium text-amber-600">Total Pengguna Aktif</h3>
-        <p id="active-users-count" class="text-2xl font-bold text-amber-800">-</p>
+      <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h3 class="text-sm font-medium text-gray-600">Total Pengguna Aktif</h3>
+        <p id="active-users-count" class="text-2xl font-bold text-gray-900">-</p>
       </div>
-      <div class="bg-white p-4 rounded-lg border border-amber-200">
-        <h3 class="text-sm font-medium text-amber-600">Total Aktivitas</h3>
-        <p id="total-activities" class="text-2xl font-bold text-amber-800">-</p>
+      <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h3 class="text-sm font-medium text-gray-600">Total Aktivitas</h3>
+        <p id="total-activities" class="text-2xl font-bold text-gray-900">-</p>
       </div>
-      <div class="bg-white p-4 rounded-lg border border-amber-200">
-        <h3 class="text-sm font-medium text-amber-600">Konten Dibuat</h3>
-        <p id="total-content" class="text-2xl font-bold text-amber-800">-</p>
+      <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h3 class="text-sm font-medium text-gray-600">Konten Dibuat</h3>
+        <p id="total-content" class="text-2xl font-bold text-gray-900">-</p>
       </div>
-      <div class="bg-white p-4 rounded-lg border border-amber-200">
-        <h3 class="text-sm font-medium text-amber-600">Skor Engagement</h3>
-        <p id="avg-engagement" class="text-2xl font-bold text-amber-800">-</p>
+      <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h3 class="text-sm font-medium text-gray-600">Skor Engagement</h3>
+        <p id="avg-engagement" class="text-2xl font-bold text-gray-900">-</p>
       </div>
     </div>
 
     <!-- Performance Leaderboard -->
     <div>
-      <h3 class="text-lg font-semibold text-amber-700 mb-4">Papan Skor Performa</h3>
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Papan Skor Performa</h3>
       <div id="performance-leaderboard" class="space-y-3">
-        <div class="text-amber-600">Memuat papan skor...</div>
+        <div class="text-gray-600">Memuat papan skor...</div>
       </div>
     </div>
     
     <!-- Performance Charts -->
     <div class="mt-8">
-      <h3 class="text-lg font-semibold text-amber-700 mb-4">Grafik Performa</h3>
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Grafik Performa</h3>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
-          <h4 class="text-md font-medium text-amber-700 mb-3">Aktivitas Pengguna</h4>
-          <div id="user-activity-chart" class="h-64 flex items-center justify-center text-amber-600">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <h4 class="text-md font-medium text-gray-700 mb-3">Aktivitas Pengguna</h4>
+          <div id="user-activity-chart" class="h-64 flex items-center justify-center text-gray-600">
             Grafik aktivitas akan ditampilkan di sini
           </div>
         </div>
-        <div class="bg-white p-4 rounded-lg border border-amber-200 shadow-sm">
-          <h4 class="text-md font-medium text-amber-700 mb-3">Distribusi Peran</h4>
-          <div id="role-distribution-chart" class="h-64 flex items-center justify-center text-amber-600">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <h4 class="text-md font-medium text-gray-700 mb-3">Distribusi Peran</h4>
+          <div id="role-distribution-chart" class="h-64 flex items-center justify-center text-gray-600">
             Grafik distribusi peran akan ditampilkan di sini
           </div>
         </div>
@@ -398,9 +398,9 @@
     
     <!-- Recent Activities -->
     <div class="mt-8">
-      <h3 class="text-lg font-semibold text-amber-700 mb-4">Aktivitas Terbaru</h3>
-      <div id="recent-activities" class="bg-white rounded-lg border border-amber-200 shadow-sm">
-        <div class="p-4 text-amber-600">Memuat aktivitas terbaru...</div>
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Aktivitas Terbaru</h3>
+      <div id="recent-activities" class="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div class="p-4 text-gray-600">Memuat aktivitas terbaru...</div>
       </div>
     </div>
   </main>
@@ -408,71 +408,89 @@
 
 <!-- Enhanced Edit User Modal -->
 <div id="edit-user-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="edit-user-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 id="edit-user-title" class="text-xl font-semibold mb-6 text-amber-800">Edit Pengguna</h2>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="edit-user-title" class="text-xl font-semibold mb-6 text-gray-800">Edit Pengguna</h2>
         <form id="edit-user-form" class="space-y-6" role="form" aria-label="Form edit pengguna">
             <input type="hidden" id="edit-user-id">
             
             <!-- Basic Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="edit-username" class="block text-amber-700 font-medium mb-2">Nama Pengguna</label>
-                    <input type="text" id="edit-username" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true">
+                    <label for="edit-username" class="block text-gray-700 font-medium mb-2">Nama Pengguna</label>
+                    <input type="text" id="edit-username" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true">
                 </div>
                 <div>
-                    <label for="edit-email" class="block text-amber-700 font-medium mb-2">Email (Opsional)</label>
-                    <input type="email" id="edit-email" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Masukkan alamat email yang valid atau biarkan kosong">
+                    <label for="edit-email" class="block text-gray-700 font-medium mb-2">Email (Opsional)</label>
+                    <input type="email" id="edit-email" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Masukkan alamat email yang valid atau biarkan kosong">
                 </div>
                 <div>
-                    <label for="edit-first-name" class="block text-amber-700 font-medium mb-2">Nama Depan</label>
-                    <input type="text" id="edit-first-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="edit-first-name" class="block text-gray-700 font-medium mb-2">Nama Depan</label>
+                    <input type="text" id="edit-first-name" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label for="edit-last-name" class="block text-amber-700 font-medium mb-2">Nama Belakang</label>
-                    <input type="text" id="edit-last-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="edit-last-name" class="block text-gray-700 font-medium mb-2">Nama Belakang</label>
+                    <input type="text" id="edit-last-name" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div>
-                <label for="edit-bio" class="block text-amber-700 font-medium mb-2">Bio</label>
-                <textarea id="edit-bio" rows="3" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+                <label for="edit-bio" class="block text-gray-700 font-medium mb-2">Bio</label>
+                <textarea id="edit-bio" rows="3" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
 
             <!-- Role and Status -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="edit-role" class="block text-amber-700 font-medium mb-2">Peran Sistem</label>
-                    <select id="edit-role" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Pilih peran pengguna">
+                    <label for="edit-role" class="block text-gray-700 font-medium mb-2">Peran Sistem</label>
+                    <select id="edit-role" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Pilih peran pengguna">
                         <option value="su">Superuser</option>
                         <option value="admin">Admin</option>
                         <option value="general">Umum</option>
                     </select>
                 </div>
                 <div>
-                    <label for="edit-custom-role" class="block text-amber-700 font-medium mb-2">Peran Kustom</label>
-                    <select id="edit-custom-role" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="edit-custom-role" class="block text-gray-700 font-medium mb-2">Peran Kustom</label>
+                    <select id="edit-custom-role" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Tidak ada peran kustom</option>
                     </select>
+                </div>
+            </div>
+
+            <!-- Preferences (Per User) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-3">
+                    <div>
+                        <label for="edit-pref-ads" class="block text-gray-700 font-medium">Tampilkan Iklan untuk Pengguna</label>
+                        <p class="text-xs text-gray-500">Kontrol apakah pengguna melihat iklan</p>
+                    </div>
+                    <input type="checkbox" id="edit-pref-ads" class="rounded border-gray-300 text-blue-600 focus:ring-blue-300" aria-label="Preferensi iklan pengguna">
+                </div>
+                <div class="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-3">
+                    <div>
+                        <label for="edit-pref-campaigns" class="block text-gray-700 font-medium">Ikut Kampanye</label>
+                        <p class="text-xs text-gray-500">Aktifkan partisipasi pengguna pada kampanye</p>
+                    </div>
+                    <input type="checkbox" id="edit-pref-campaigns" class="rounded border-gray-300 text-blue-600 focus:ring-blue-300" aria-label="Preferensi kampanye pengguna">
                 </div>
             </div>
 
             <!-- Status Toggles -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="flex items-center">
-                    <input type="checkbox" id="edit-is-active" class="rounded border-amber-300 text-green-500 focus:ring-green-300" aria-label="Status aktif pengguna">
-                    <label for="edit-is-active" class="ml-2 text-amber-700">Aktif</label>
+                    <input type="checkbox" id="edit-is-active" class="rounded border-gray-300 text-green-600 focus:ring-green-300" aria-label="Status aktif pengguna">
+                    <label for="edit-is-active" class="ml-2 text-gray-700">Aktif</label>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" id="edit-verified" class="rounded border-amber-300 text-purple-500 focus:ring-purple-300" aria-label="Status verifikasi pengguna">
-                    <label for="edit-verified" class="ml-2 text-amber-700">Terverifikasi</label>
+                    <input type="checkbox" id="edit-verified" class="rounded border-gray-300 text-purple-600 focus:ring-purple-300" aria-label="Status verifikasi pengguna">
+                    <label for="edit-verified" class="ml-2 text-gray-700">Terverifikasi</label>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" id="edit-is-suspended" class="rounded border-amber-300 text-red-500 focus:ring-red-300" aria-label="Status suspend pengguna">
-                    <label for="edit-is-suspended" class="ml-2 text-amber-700">Tersuspend</label>
+                    <input type="checkbox" id="edit-is-suspended" class="rounded border-gray-300 text-red-600 focus:ring-red-300" aria-label="Status suspend pengguna">
+                    <label for="edit-is-suspended" class="ml-2 text-gray-700">Tersuspend</label>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" id="edit-is-premium" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" aria-label="Status premium pengguna">
-                    <label for="edit-is-premium" class="ml-2 text-amber-700">Premium</label>
+                    <input type="checkbox" id="edit-is-premium" class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-300" aria-label="Status premium pengguna">
+                    <label for="edit-is-premium" class="ml-2 text-gray-700">Premium</label>
                 </div>
             </div>
 
@@ -480,19 +498,19 @@
             <div id="suspension-details" class="hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="edit-suspension-reason" class="block text-amber-700 font-medium mb-2">Alasan Suspend</label>
-                        <input type="text" id="edit-suspension-reason" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        <label for="edit-suspension-reason" class="block text-gray-700 font-medium mb-2">Alasan Suspend</label>
+                        <input type="text" id="edit-suspension-reason" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label for="edit-suspension-until" class="block text-amber-700 font-medium mb-2">Suspend Sampai</label>
-                        <input type="datetime-local" id="edit-suspension-until" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        <label for="edit-suspension-until" class="block text-gray-700 font-medium mb-2">Suspend Sampai</label>
+                        <input type="datetime-local" id="edit-suspension-until" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
             </div>
 
             <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
-                <button type="button" onclick="closeEditUserModal()" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Batal edit pengguna">Batal</button>
-                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Simpan perubahan pengguna">Simpan</button>
+                <button type="button" onclick="closeEditUserModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal edit pengguna">Batal</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Simpan perubahan pengguna">Simpan</button>
             </div>
         </form>
     </div>
@@ -500,30 +518,30 @@
 
 <!-- Create Role Modal -->
 <div id="create-role-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="create-role-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 id="create-role-title" class="text-xl font-semibold mb-6 text-amber-800">Buat Peran Baru</h2>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="create-role-title" class="text-xl font-semibold mb-6 text-gray-800">Buat Peran Baru</h2>
         <form id="create-role-form" class="space-y-6" role="form" aria-label="Form buat peran">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="role-name" class="block text-amber-700 font-medium mb-2">Nama Peran</label>
-                    <input type="text" id="role-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true">
+                    <label for="role-name" class="block text-gray-700 font-medium mb-2">Nama Peran</label>
+                    <input type="text" id="role-name" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true">
                 </div>
                 <div>
-                    <label for="role-description" class="block text-amber-700 font-medium mb-2">Deskripsi</label>
-                    <input type="text" id="role-description" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="role-description" class="block text-gray-700 font-medium mb-2">Deskripsi</label>
+                    <input type="text" id="role-description" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div>
-                <label class="block text-amber-700 font-medium mb-2">Izin</label>
+                <label class="block text-gray-700 font-medium mb-2">Izin</label>
                 <div id="permissions-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
                     <!-- Permissions will be loaded here -->
                 </div>
             </div>
 
             <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
-                <button type="button" onclick="closeCreateRoleModal()" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Batal buat peran">Batal</button>
-                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Buat peran">Buat Peran</button>
+                <button type="button" onclick="closeCreateRoleModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal buat peran">Batal</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Buat peran">Buat Peran</button>
             </div>
         </form>
     </div>
@@ -531,35 +549,35 @@
 
 <!-- Edit Role Modal -->
 <div id="edit-role-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="edit-role-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 id="edit-role-title" class="text-xl font-semibold mb-6 text-amber-800">Edit Peran</h2>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="edit-role-title" class="text-xl font-semibold mb-6 text-gray-800">Edit Peran</h2>
         <form id="edit-role-form" class="space-y-6" role="form" aria-label="Form edit peran">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="edit-role-name" class="block text-amber-700 font-medium mb-2">Nama Peran</label>
-                    <input type="text" id="edit-role-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true">
+                    <label for="edit-role-name" class="block text-gray-700 font-medium mb-2">Nama Peran</label>
+                    <input type="text" id="edit-role-name" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true">
                 </div>
                 <div>
-                    <label for="edit-role-description" class="block text-amber-700 font-medium mb-2">Deskripsi</label>
-                    <input type="text" id="edit-role-description" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="edit-role-description" class="block text-gray-700 font-medium mb-2">Deskripsi</label>
+                    <input type="text" id="edit-role-description" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div class="flex items-center">
-                <input type="checkbox" id="edit-role-active" class="rounded border-amber-300 text-amber-500 focus:ring-amber-300" checked>
-                <label for="edit-role-active" class="ml-2 text-amber-700">Aktif</label>
+                <input type="checkbox" id="edit-role-active" class="rounded border-gray-300 text-blue-600 focus:ring-blue-300" checked>
+                <label for="edit-role-active" class="ml-2 text-gray-700">Aktif</label>
             </div>
 
             <div>
-                <label class="block text-amber-700 font-medium mb-2">Izin</label>
+                <label class="block text-gray-700 font-medium mb-2">Izin</label>
                 <div id="edit-permissions-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
                     <!-- Permissions will be loaded here -->
                 </div>
             </div>
 
             <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
-                <button type="button" onclick="closeEditRoleModal()" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Batal edit peran">Batal</button>
-                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Simpan perubahan peran">Simpan</button>
+                <button type="button" onclick="closeEditRoleModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal edit peran">Batal</button>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Simpan perubahan peran">Simpan</button>
             </div>
         </form>
     </div>
@@ -567,14 +585,14 @@
 
 <!-- Delete User Confirmation Modal -->
 <div id="delete-user-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" role="dialog" aria-labelledby="delete-user-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 p-6 rounded-lg shadow-xl w-full max-w-md border border-amber-200">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
         <h3 id="delete-user-title" class="text-xl font-semibold text-red-600 mb-4">Hapus Pengguna</h3>
-        <p class="mb-4 text-amber-700">Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <p class="mb-4 text-gray-700">Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.</p>
         <div class="bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-lg p-3 mb-4">
             <p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i> Tindakan ini tidak dapat dibatalkan!</p>
         </div>
         <div class="flex justify-end space-x-4" role="group" aria-label="Tombol konfirmasi hapus">
-            <button id="cancel-delete-user-btn" onclick="closeDeleteUserModal()" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Batal hapus pengguna">Batal</button>
+            <button id="cancel-delete-user-btn" onclick="closeDeleteUserModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal hapus pengguna">Batal</button>
             <button id="confirm-delete-user-btn" onclick="confirmDeleteUser()" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md" aria-label="Konfirmasi hapus pengguna">Hapus</button>
         </div>
     </div>
@@ -582,14 +600,14 @@
 
 <!-- Delete Role Confirmation Modal -->
 <div id="delete-role-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" role="dialog" aria-labelledby="delete-role-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 p-6 rounded-lg shadow-xl w-full max-w-md border border-amber-200">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
         <h3 id="delete-role-title" class="text-xl font-semibold text-red-600 mb-4">Hapus Peran</h3>
-        <p class="mb-4 text-amber-700">Apakah Anda yakin ingin menghapus peran ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <p class="mb-4 text-gray-700">Apakah Anda yakin ingin menghapus peran ini? Tindakan ini tidak dapat dibatalkan.</p>
         <div class="bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-lg p-3 mb-4">
             <p class="text-sm text-red-600"><i class="fas fa-exclamation-triangle mr-1"></i> Tindakan ini tidak dapat dibatalkan!</p>
         </div>
         <div class="flex justify-end space-x-4" role="group" aria-label="Tombol konfirmasi hapus">
-            <button id="cancel-delete-role-btn" onclick="closeDeleteRoleModal()" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Batal hapus peran">Batal</button>
+            <button id="cancel-delete-role-btn" onclick="closeDeleteRoleModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal hapus peran">Batal</button>
             <button id="confirm-delete-role-btn" onclick="confirmDeleteRole()" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md" aria-label="Konfirmasi hapus peran">Hapus</button>
         </div>
     </div>
@@ -597,47 +615,47 @@
 
 <!-- Create User Modal -->
 <div id="create-user-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="create-user-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 id="create-user-title" class="text-xl font-semibold mb-6 text-amber-800">Buat Pengguna Baru</h2>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="create-user-title" class="text-xl font-semibold mb-6 text-gray-800">Buat Pengguna Baru</h2>
         <form id="create-user-form" class="space-y-6" role="form" aria-label="Form buat pengguna">
             <!-- Basic Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="new-username" class="block text-amber-700 font-medium mb-2">Nama Pengguna <span class="text-red-500">*</span></label>
-                    <input type="text" id="new-username" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="3" maxlength="50">
+                    <label for="new-username" class="block text-gray-700 font-medium mb-2">Nama Pengguna <span class="text-red-500">*</span></label>
+                    <input type="text" id="new-username" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" minlength="3" maxlength="50">
                 </div>
                 <div>
-                    <label for="new-email" class="block text-amber-700 font-medium mb-2">Email <span class="text-red-500">*</span></label>
-                    <input type="email" id="new-email" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                    <label for="new-email" class="block text-gray-700 font-medium mb-2">Email <span class="text-red-500">*</span></label>
+                    <input type="email" id="new-email" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
                 </div>
                 <div>
-                    <label for="new-password" class="block text-amber-700 font-medium mb-2">Password <span class="text-red-500">*</span></label>
-                    <input type="password" id="new-password" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+                    <label for="new-password" class="block text-gray-700 font-medium mb-2">Password <span class="text-red-500">*</span></label>
+                    <input type="password" id="new-password" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" minlength="6">
                 </div>
                 <div>
-                    <label for="new-confirm-password" class="block text-amber-700 font-medium mb-2">Konfirmasi Password <span class="text-red-500">*</span></label>
-                    <input type="password" id="new-confirm-password" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+                    <label for="new-confirm-password" class="block text-gray-700 font-medium mb-2">Konfirmasi Password <span class="text-red-500">*</span></label>
+                    <input type="password" id="new-confirm-password" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" minlength="6">
                 </div>
                 <div>
-                    <label for="new-first-name" class="block text-amber-700 font-medium mb-2">Nama Depan</label>
-                    <input type="text" id="new-first-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="new-first-name" class="block text-gray-700 font-medium mb-2">Nama Depan</label>
+                    <input type="text" id="new-first-name" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label for="new-last-name" class="block text-amber-700 font-medium mb-2">Nama Belakang</label>
-                    <input type="text" id="new-last-name" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="new-last-name" class="block text-gray-700 font-medium mb-2">Nama Belakang</label>
+                    <input type="text" id="new-last-name" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div>
-                <label for="new-bio" class="block text-amber-700 font-medium mb-2">Bio</label>
-                <textarea id="new-bio" rows="3" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+                <label for="new-bio" class="block text-gray-700 font-medium mb-2">Bio</label>
+                <textarea id="new-bio" rows="3" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
             </div>
 
             <!-- Role and Status -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="new-role" class="block text-amber-700 font-medium mb-2">Peran Sistem <span class="text-red-500">*</span></label>
-                    <select id="new-role" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Pilih peran pengguna">
+                    <label for="new-role" class="block text-gray-700 font-medium mb-2">Peran Sistem <span class="text-red-500">*</span></label>
+                    <select id="new-role" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" aria-label="Pilih peran pengguna">
                         <option value="">Pilih Peran</option>
                         <option value="su">Superuser</option>
                         <option value="admin">Admin</option>
@@ -645,8 +663,8 @@
                     </select>
                 </div>
                 <div>
-                    <label for="new-custom-role" class="block text-amber-700 font-medium mb-2">Peran Kustom</label>
-                    <select id="new-custom-role" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <label for="new-custom-role" class="block text-gray-700 font-medium mb-2">Peran Kustom</label>
+                    <select id="new-custom-role" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Tidak ada peran kustom</option>
                     </select>
                 </div>
@@ -655,20 +673,20 @@
             <!-- Status Toggles -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="flex items-center">
-                    <input type="checkbox" id="new-is-active" class="rounded border-amber-300 text-green-500 focus:ring-green-300" checked aria-label="Status aktif pengguna">
-                    <label for="new-is-active" class="ml-2 text-amber-700">Aktif</label>
+                    <input type="checkbox" id="new-is-active" class="rounded border-gray-300 text-green-600 focus:ring-green-300" checked aria-label="Status aktif pengguna">
+                    <label for="new-is-active" class="ml-2 text-gray-700">Aktif</label>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" id="new-verified" class="rounded border-amber-300 text-purple-500 focus:ring-purple-300" checked aria-label="Status verifikasi pengguna">
-                    <label for="new-verified" class="ml-2 text-amber-700">Terverifikasi</label>
+                    <input type="checkbox" id="new-verified" class="rounded border-gray-300 text-purple-600 focus:ring-purple-300" checked aria-label="Status verifikasi pengguna">
+                    <label for="new-verified" class="ml-2 text-gray-700">Terverifikasi</label>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" id="new-is-premium" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" aria-label="Status premium pengguna">
-                    <label for="new-is-premium" class="ml-2 text-amber-700">Premium</label>
+                    <input type="checkbox" id="new-is-premium" class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-300" aria-label="Status premium pengguna">
+                    <label for="new-is-premium" class="ml-2 text-gray-700">Premium</label>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" id="new-send-welcome-email" class="rounded border-amber-300 text-blue-500 focus:ring-blue-300" checked aria-label="Kirim email selamat datang">
-                    <label for="new-send-welcome-email" class="ml-2 text-amber-700">Kirim Email Selamat Datang</label>
+                    <input type="checkbox" id="new-send-welcome-email" class="rounded border-gray-300 text-blue-600 focus:ring-blue-300" checked aria-label="Kirim email selamat datang">
+                    <label for="new-send-welcome-email" class="ml-2 text-gray-700">Kirim Email Selamat Datang</label>
                 </div>
             </div>
 
@@ -676,8 +694,8 @@
             <div id="premium-settings" class="hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="new-premium-duration" class="block text-amber-700 font-medium mb-2">Durasi Premium</label>
-                        <select id="new-premium-duration" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+                        <label for="new-premium-duration" class="block text-gray-700 font-medium mb-2">Durasi Premium</label>
+                        <select id="new-premium-duration" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="30">30 Hari</option>
                             <option value="90">90 Hari</option>
                             <option value="180">180 Hari</option>
@@ -686,19 +704,19 @@
                         </select>
                     </div>
                     <div>
-                        <label for="new-premium-features" class="block text-amber-700 font-medium mb-2">Fitur Premium</label>
+                        <label for="new-premium-features" class="block text-gray-700 font-medium mb-2">Fitur Premium</label>
                         <div class="space-y-2">
                             <div class="flex items-center">
-                                <input type="checkbox" id="new-premium-ads-free" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" checked>
-                                <label for="new-premium-ads-free" class="ml-2 text-amber-700 text-sm">Bebas Iklan</label>
+                                <input type="checkbox" id="new-premium-ads-free" class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-300" checked>
+                                <label for="new-premium-ads-free" class="ml-2 text-gray-700 text-sm">Bebas Iklan</label>
                             </div>
                             <div class="flex items-center">
-                                <input type="checkbox" id="new-premium-priority" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" checked>
-                                <label for="new-premium-priority" class="ml-2 text-amber-700 text-sm">Prioritas Support</label>
+                                <input type="checkbox" id="new-premium-priority" class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-300" checked>
+                                <label for="new-premium-priority" class="ml-2 text-gray-700 text-sm">Prioritas Support</label>
                             </div>
                             <div class="flex items-center">
-                                <input type="checkbox" id="new-premium-advanced" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-300" checked>
-                                <label for="new-premium-advanced" class="ml-2 text-amber-700 text-sm">Fitur Lanjutan</label>
+                                <input type="checkbox" id="new-premium-advanced" class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-300" checked>
+                                <label for="new-premium-advanced" class="ml-2 text-gray-700 text-sm">Fitur Lanjutan</label>
                             </div>
                         </div>
                     </div>
@@ -706,7 +724,7 @@
             </div>
 
             <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
-                <button type="button" onclick="closeCreateUserModal()" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Batal buat pengguna">Batal</button>
+                <button type="button" onclick="closeCreateUserModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal buat pengguna">Batal</button>
                 <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Buat pengguna">Buat Pengguna</button>
             </div>
         </form>
@@ -715,37 +733,37 @@
 
 <!-- User Details Modal -->
 <div id="user-details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="user-details-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 id="user-details-title" class="text-xl font-semibold mb-6 text-amber-800">Detail Pengguna</h2>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="user-details-title" class="text-xl font-semibold mb-6 text-gray-800">Detail Pengguna</h2>
         <div id="user-details-content" class="space-y-6">
             <!-- User details will be loaded here -->
         </div>
         <div class="flex justify-end mt-6">
-            <button onclick="closeUserDetailsModal()" class="bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 px-6 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Tutup detail pengguna">Tutup</button>
+            <button onclick="closeUserDetailsModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Tutup detail pengguna">Tutup</button>
         </div>
     </div>
 </div>
 
 <!-- Password Reset Modal -->
 <div id="password-reset-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="password-reset-title" aria-modal="true">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-xl max-w-md w-full">
-        <h2 id="password-reset-title" class="text-xl font-semibold mb-6 text-amber-800">Reset Password</h2>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-md w-full">
+        <h2 id="password-reset-title" class="text-xl font-semibold mb-6 text-gray-800">Reset Password</h2>
         <form id="password-reset-form" class="space-y-4" role="form" aria-label="Form reset password">
             <input type="hidden" id="reset-user-id">
             <div>
-                <label for="new-password-reset" class="block text-amber-700 font-medium mb-2">Password Baru <span class="text-red-500">*</span></label>
-                <input type="password" id="new-password-reset" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+                <label for="new-password-reset" class="block text-gray-700 font-medium mb-2">Password Baru <span class="text-red-500">*</span></label>
+                <input type="password" id="new-password-reset" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" minlength="6">
             </div>
             <div>
-                <label for="confirm-password-reset" class="block text-amber-700 font-medium mb-2">Konfirmasi Password <span class="text-red-500">*</span></label>
-                <input type="password" id="confirm-password-reset" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" minlength="6">
+                <label for="confirm-password-reset" class="block text-gray-700 font-medium mb-2">Konfirmasi Password <span class="text-red-500">*</span></label>
+                <input type="password" id="confirm-password-reset" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" minlength="6">
             </div>
             <div class="flex items-center">
-                <input type="checkbox" id="send-email-reset" class="rounded border-amber-300 text-blue-500 focus:ring-blue-300" checked>
-                <label for="send-email-reset" class="ml-2 text-amber-700">Kirim email notifikasi ke pengguna</label>
+                <input type="checkbox" id="send-email-reset" class="rounded border-gray-300 text-blue-600 focus:ring-blue-300" checked>
+                <label for="send-email-reset" class="ml-2 text-gray-700">Kirim email notifikasi ke pengguna</label>
             </div>
             <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
-                <button type="button" onclick="closePasswordResetModal()" class="w-full bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-400 hover:to-yellow-400 text-amber-800 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-300 shadow-md" aria-label="Batal reset password">Batal</button>
+                <button type="button" onclick="closePasswordResetModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal reset password">Batal</button>
                 <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-2 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all duration-300 shadow-md" aria-label="Reset password">Reset Password</button>
             </div>
         </form>
@@ -765,6 +783,38 @@ window.currentUserData = {
 
 // Additional JavaScript functions for enhanced features
 document.addEventListener('DOMContentLoaded', function() {
+    // Load and bind Global Ads Settings
+    (async function initAdsSettings(){
+        try {
+            const resp = await fetch('/api/settings/ads');
+            const data = await resp.json();
+            if (data && data.ads) {
+                const chk = document.getElementById('admin-show-ads');
+                if (chk) chk.checked = !!data.ads.show_ads;
+            }
+        } catch (e) { /* ignore */ }
+        const saveBtn = document.getElementById('save-ads-settings');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async function(){
+                try {
+                    const showAds = document.getElementById('admin-show-ads').checked;
+                    const resp = await fetch('/api/settings/ads', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ show_ads: showAds })
+                    });
+                    const result = await resp.json();
+                    if (resp.ok && result.success) {
+                        showToast && showToast('Pengaturan iklan disimpan', 'success');
+                    } else {
+                        showToast && showToast(result.message || 'Gagal menyimpan pengaturan', 'error');
+                    }
+                } catch (e) {
+                    showToast && showToast('Terjadi kesalahan', 'error');
+                }
+            });
+        }
+    })();
     // Premium settings toggle
     const premiumToggle = document.getElementById('new-is-premium');
     const premiumSettings = document.getElementById('premium-settings');
@@ -823,14 +873,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Remove active class from all buttons and contents
             tabButtons.forEach(btn => {
-                btn.classList.remove('active', 'bg-white', 'text-amber-800');
-                btn.classList.add('bg-amber-200', 'text-amber-700');
+                btn.classList.remove('active', 'bg-white', 'text-gray-800');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
             });
             tabContents.forEach(content => content.classList.add('hidden'));
             
             // Add active class to clicked button and show target content
-            this.classList.add('active', 'bg-white', 'text-amber-800');
-            this.classList.remove('bg-amber-200', 'text-amber-700');
+            this.classList.add('active', 'bg-white', 'text-gray-800');
+            this.classList.remove('bg-gray-200', 'text-gray-700');
             document.getElementById(targetTab + '-tab').classList.remove('hidden');
         });
     });
@@ -885,7 +935,7 @@ function generateUserDetailsHTML(user) {
     return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <h4 class="text-lg font-semibold text-amber-700 mb-3">Informasi Dasar</h4>
+                <h4 class="text-lg font-semibold text-gray-700 mb-3">Informasi Dasar</h4>
                 <div class="space-y-2">
                     <p><strong>Username:</strong> ${user.username}</p>
                     <p><strong>Email:</strong> ${user.email || 'Tidak ada'}</p>
@@ -895,9 +945,9 @@ function generateUserDetailsHTML(user) {
                 </div>
             </div>
             <div>
-                <h4 class="text-lg font-semibold text-amber-700 mb-3">Status & Peran</h4>
+                <h4 class="text-lg font-semibold text-gray-700 mb-3">Status & Peran</h4>
                 <div class="space-y-2">
-                    <p><strong>Peran Sistem:</strong> <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded text-sm">${user.role}</span></p>
+                    <p><strong>Peran Sistem:</strong> <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">${user.role}</span></p>
                     <p><strong>Peran Kustom:</strong> ${user.custom_role || 'Tidak ada'}</p>
                     <p><strong>Status:</strong> <span class="px-2 py-1 ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded text-sm">${user.is_active ? 'Aktif' : 'Tidak Aktif'}</span></p>
                     <p><strong>Verifikasi:</strong> <span class="px-2 py-1 ${user.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} rounded text-sm">${user.verified ? 'Terverifikasi' : 'Belum Terverifikasi'}</span></p>
@@ -906,7 +956,7 @@ function generateUserDetailsHTML(user) {
             </div>
         </div>
         <div class="mt-6">
-            <h4 class="text-lg font-semibold text-amber-700 mb-3">Aktivitas Terbaru</h4>
+            <h4 class="text-lg font-semibold text-gray-700 mb-3">Aktivitas Terbaru</h4>
             <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-gray-600">Aktivitas pengguna akan ditampilkan di sini</p>
             </div>

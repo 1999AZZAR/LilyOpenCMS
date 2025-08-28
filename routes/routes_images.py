@@ -43,6 +43,30 @@ def get_images():
     # Base query
     query = Image.query
 
+    # Scope by ownership based on role
+    # Superuser/Admin: unrestricted. Subadmin (custom role): unrestricted.
+    # Editor (custom role): own + assigned writers' images. Others: own only.
+    custom_name = (current_user.custom_role.name.lower() if getattr(current_user, 'custom_role', None) and current_user.custom_role.name else "")
+    is_admin_tier = current_user.role in [UserRole.SUPERUSER, UserRole.ADMIN] or custom_name == "subadmin"
+    if is_admin_tier:
+        pass
+    else:
+        # Join uploader to allow including admin-tier uploads for everyone
+        query = query.join(User, Image.user_id == User.id)
+        admin_uploader = or_(
+            User.role.in_([UserRole.SUPERUSER, UserRole.ADMIN]),
+            and_(User.custom_role_id.isnot(None), CustomRole.name.ilike('%subadmin%'))
+        )
+        if custom_name == "editor":
+            try:
+                writer_ids = [w.id for w in getattr(current_user, 'assigned_writers', [])]
+            except Exception:
+                writer_ids = []
+            allowed_ids = set(writer_ids + [current_user.id])
+            query = query.filter(or_(Image.user_id.in_(allowed_ids), admin_uploader))
+        else:
+            query = query.filter(or_(Image.user_id == current_user.id, admin_uploader))
+
     # Apply visibility filter
     if visibility_filter == 'visible':
         query = query.filter(Image.is_visible == True)
@@ -88,6 +112,7 @@ def upload_image():
     image_url = data.get("url")
     description = data.get("description", "")
     name = data.get("name", "")
+    is_visible_param = data.get("is_visible")
 
     if not file and not image_url:
         return jsonify({"error": "Either a file or a URL must be provided"}), 400
@@ -117,10 +142,22 @@ def upload_image():
     new_filepath = os.path.join(os.path.dirname(file_path), new_filename)
 
     # Save Image Record (only WebP version saved)
+    # Determine default visibility:
+    # - Admin-tier and Editor/Writer uploads default to hidden
+    # - Others default to visible
+    custom_name = (current_user.custom_role.name.lower() if getattr(current_user, 'custom_role', None) and current_user.custom_role.name else "")
+    is_editor_or_writer = custom_name in ["editor", "writer"]
+    is_admin_tier = current_user.role in [UserRole.SUPERUSER, UserRole.ADMIN] or custom_name == "subadmin"
+    if is_visible_param is not None:
+        default_visible = str(is_visible_param).lower() in ("true", "1", "on", "yes")
+    else:
+        default_visible = not (is_editor_or_writer or is_admin_tier)
+
     image = Image(
         filename=new_filename,
         filepath=new_filepath,
         description=description,
+        is_visible=default_visible,
         user_id=current_user.id,
     )
     db.session.add(image)
@@ -194,12 +231,26 @@ def update_image(image_id):
 @login_required
 def toggle_image_visibility(image_id):
     image = Image.query.get_or_404(image_id)
-    data = request.get_json()
+    # Accept JSON, form-encoded, or query param; support keys: is_visible or visible
+    data = request.get_json(silent=True) or {}
+    if not data and request.form:
+        data = {k: request.form.get(k) for k in ("is_visible", "visible") if k in request.form}
+    if not data and request.args:
+        data = {k: request.args.get(k) for k in ("is_visible", "visible") if k in request.args}
 
-    if "is_visible" not in data:
-        return jsonify({"error": "is_visible field is required"}), 400
-
-    image.is_visible = data["is_visible"]
+    val = data.get("is_visible") if "is_visible" in data else data.get("visible")
+    if val is None:
+        # Fallback: toggle when no explicit value provided
+        image.is_visible = not bool(image.is_visible)
+        db.session.commit()
+        return jsonify({"message": "Visibility toggled", "is_visible": image.is_visible}), 200
+    if isinstance(val, str):
+        val_norm = val.strip().lower()
+        image.is_visible = val_norm in ("true", "1", "on", "yes")
+    elif isinstance(val, bool):
+        image.is_visible = val
+    else:
+        return jsonify({"error": "is_visible must be boolean or boolean-like string"}), 400
     db.session.commit()
 
     return jsonify({"message": "Visibility updated successfully"}), 200

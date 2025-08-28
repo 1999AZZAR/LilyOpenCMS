@@ -601,7 +601,7 @@ class NavigationManager {
         if (typeof showToast === 'function') {
             showToast('success', message);
         } else {
-            alert(message);
+            this.inlineToast('success', message);
         }
     }
     
@@ -609,8 +609,24 @@ class NavigationManager {
         if (typeof showToast === 'function') {
             showToast('error', message);
         } else {
-            alert('Error: ' + message);
+            this.inlineToast('error', 'Error: ' + message);
         }
+    }
+
+    inlineToast(type, message) {
+        const containerId = 'toast-container';
+        let container = document.getElementById(containerId);
+        if (!container) {
+            container = document.createElement('div');
+            container.id = containerId;
+            container.className = 'fixed top-5 right-5 space-y-2 z-50';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = `${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white px-4 py-2 rounded-lg shadow`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
 }
 

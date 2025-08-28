@@ -8,7 +8,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
 | GET    | `/api/news`                              | Yes  | List news articles (with filters)           |
-| POST   | `/api/news`                              | Yes  | Create a new article (accepts: title, content, category, date, age_rating, is_news, is_main_news, is_premium, is_visible, writer, external_source, image_id; optional `album_id` for chapter context) |
+| POST   | `/api/news`                              | Yes  | Create a new article (accepts: title, content, category, date, age_rating, is_news, is_main_news, is_premium, is_visible, writer, external_source, image_id; optional `album_id` for chapter context). Note: default visibility is hidden (is_visible=false) unless explicitly published. |
 | GET    | `/api/news/<news_id>`                    | Yes  | Get article details                         |
 | PUT    | `/api/news/<news_id>`                    | Yes  | Update article (same fields as POST)       |
 | DELETE | `/api/news/<news_id>`                    | Yes  | Delete article                              |
@@ -18,7 +18,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/api/news/<news_id>/share-data`         | No   | Get share counts for a news article         |
 | GET    | `/api/search/news`                       | No   | Unified news search API (supports: q, category, category_name, tag, sort, type, page, per_page) - type options: general, news, articles, utama - sort options: newest, oldest, popular, least-popular |
 
-> Admin Create/Edit Flow: Use `/settings/create_news` with optional `news_id` to edit. If `album_id` is present, successful create/edit redirects back to `/admin/albums/<album_id>/chapters`; otherwise redirects to `/settings/manage_news`. 
+> Admin Create/Edit Flow: Use `/settings/create_news` with optional `news_id` to edit. If `album_id` is present, successful create/edit redirects back to `/admin/albums/<album_id>/chapters`; otherwise redirects to `/settings/manage_news`. In edit mode, saving keeps the current visibility unless explicitly changed (e.g., Publish action).
 
 ## Premium Content
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -146,6 +146,10 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/images/bulk-visibility`            | Yes  | Bulk update image visibility                |
 | GET    | `/api/images/<image_id>/usage`           | Yes  | Get image usage statistics                  |
 
+> Image visibility & scoping rules:
+> - Default upload visibility: Uploads by custom roles Writer/Editor default to hidden; uploads by others default to visible (can be overridden via is_visible form value).
+> - Picker scoping: Superuser/Admin/Subadmin see all images; Editor sees own and assigned writers’ images; others see only their own images.
+
 ## Videos (YouTube)
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
@@ -197,6 +201,15 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | DELETE | `/api/permissions/<permission_id>`       | Yes  | Delete permission                           |
 | PUT    | `/api/users/<user_id>/role`              | Yes  | Update user's role                          |
 | POST   | `/api/roles/bulk/export`                 | Yes  | Bulk export roles                           |
+
+## Editor ↔ Writer Management
+| Method | Endpoint                                   | Auth | Description                                 |
+|--------|--------------------------------------------|------|---------------------------------------------|
+| GET    | `/settings/editor-writer`                  | Yes  | Management page to assign writers to editors |
+| GET    | `/api/editor-writer/editors`               | Yes  | List available editors (Admin or custom role Editor) |
+| GET    | `/api/editor-writer/writers`               | Yes  | List available writers (General or custom role Writer) |
+| GET    | `/api/editor-writer/<editor_id>/list`      | Yes  | Get writers assigned to an editor           |
+| POST   | `/api/editor-writer/<editor_id>/assign`    | Yes  | Replace assigned writers for an editor      |
 
 ## Permission Management System
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -460,6 +473,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/settings/create_news`                  | Yes  | Create/Edit news page (optional `news_id`, optional `album_id` for chapter context) |
 | GET    | `/settings/manage_news`                  | Yes  | Manage news page                            |
 | GET    | `/settings/albums`                       | Yes  | Album management page                       |
+| GET    | `/settings/editor-writer`                | Yes  | Editor ↔ Writer management page             |
 
 ## Admin Sidebar & Quick Toggles
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -475,6 +489,11 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 
 > Legacy: `/settings/create_news_management` now 302-redirects to `/settings/create_news` (query params preserved).
 | GET/POST| `/settings/privacy-policy`              | Yes  | Privacy policy management                   |
+### Quick Toggles Behavior (Unified)
+- Ads: persisted via `GET/POST /api/settings/ads` (JSON: `{ ads: { show_ads: bool } }` on GET; `{ show_ads: bool }` on POST). UI in sidebar and `settings_management.html` reflect and update the same value. LocalStorage mirrors the latest value as a UI fallback only.
+- Campaigns: stored in shared `localStorage` key `toggle-campaigns`; sidebar and `settings_management.html` are synchronized across pages. Backend persistence can be added later.
+- Comments/Ratings: UI-only toggles stored in `localStorage` (`toggle-comments`, `toggle-ratings`).
+- Removed: global ads toggle block from `users_management.html` to avoid duplication.
 | GET/POST| `/settings/media-guidelines`            | Yes  | Media guidelines management                 |
 | GET/POST| `/settings/visi-misi`                   | Yes  | Visi-misi management                       |
 | GET/POST| `/settings/pedomanhak`                  | Yes  | Pedoman hak management                      |

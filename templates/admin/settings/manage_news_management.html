@@ -40,47 +40,47 @@
                     </div>
                     <div class="flex flex-col flex-1">
                         <label for="popularity-filter" class="text-sm font-medium text-gray-700 mb-1">Popularitas</label>
-                        <select id="popularity-filter" class="bg-white border border-gray-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan popularitas">
+                        <select id="popularity-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan popularitas">
                             <option value="">Semua</option>
                             <option value="most_popular">Paling Populer</option>
                             <option value="least_popular">Paling Tidak Populer</option>
                         </select>
                     </div>
                     <div class="flex flex-col flex-1">
-                        <label for="share-count-filter" class="text-sm font-medium text-amber-700 mb-1">Jumlah Dibagikan</label>
-                        <select id="share-count-filter" class="bg-white border border-gray-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan jumlah dibagikan">
+                        <label for="share-count-filter" class="text-sm font-medium text-gray-700 mb-1">Jumlah Dibagikan</label>
+                        <select id="share-count-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan jumlah dibagikan">
                             <option value="">Semua</option>
                             <option value="most_shared">Paling Banyak</option>
                             <option value="least_shared">Paling Sedikit</option>
                         </select>
                     </div>
                     <div class="flex flex-col flex-1">
-                        <label for="filter-featured-image" class="text-sm font-medium text-amber-700 mb-1">Gambar Unggulan</label>
-                        <select id="filter-featured-image" class="bg-white border border-gray-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan gambar unggulan">
+                        <label for="filter-featured-image" class="text-sm font-medium text-gray-700 mb-1">Gambar Unggulan</label>
+                        <select id="filter-featured-image" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan gambar unggulan">
                             <option value="">Semua</option>
                             <option value="has_image">Dengan Gambar</option>
                             <option value="no_image">Tanpa Gambar</option>
                         </select>
                     </div>
                     <div class="flex flex-col flex-1">
-                        <label for="filter-external-link" class="text-sm font-medium text-amber-700 mb-1">Tautan Eksternal</label>
-                        <select id="filter-external-link" class="bg-white border border-gray-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan tautan eksternal">
+                        <label for="filter-external-link" class="text-sm font-medium text-gray-700 mb-1">Tautan Eksternal</label>
+                        <select id="filter-external-link" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan tautan eksternal">
                             <option value="">Semua</option>
                             <option value="has_link">Dengan Link</option>
                             <option value="no_link">Tanpa Link</option>
                         </select>
                     </div>
                     <div class="flex flex-col flex-1">
-                        <label for="archived-filter" class="text-sm font-medium text-amber-700 mb-1">Status Arsip</label>
-                        <select id="archived-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Filter berdasarkan status arsip">
+                        <label for="archived-filter" class="text-sm font-medium text-gray-700 mb-1">Status Arsip</label>
+                        <select id="archived-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan status arsip">
                             <option value="">Semua</option>
                             <option value="active">Aktif</option>
                             <option value="archived">Arsip</option>
                         </select>
                     </div>
                     <div class="flex flex-col flex-1" style="display: none;">
-                        <label for="user-filter" class="text-sm font-medium text-amber-700 mb-1">Pengguna</label>
-                        <select id="user-filter" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Filter berdasarkan pengguna">
+                        <label for="user-filter" class="text-sm font-medium text-gray-700 mb-1">Pengguna</label>
+                        <select id="user-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan pengguna">
                             <option value="">Semua</option>
                             <option value="owned">Dimiliki</option>
                             <option value="by_admin">Oleh Admin</option>
@@ -96,11 +96,14 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 id="news-list-title" class="text-xl font-semibold text-gray-800">Cerita &amp; Artikel</h2>
                 <div class="flex items-center space-x-2">
-                    <input type="checkbox" id="select-all-news" class="rounded border-amber-300 text-blue-600 focus:ring-amber-400" aria-label="Pilih semua cerita">
-                    <label for="select-all-news" class="text-sm text-amber-700">Pilih Semua</label>
+                    <input type="checkbox" id="select-all-news" class="rounded border-gray-300 text-blue-600 focus:ring-blue-400" aria-label="Pilih semua cerita">
+                    <label for="select-all-news" class="text-sm text-gray-700">Pilih Semua</label>
                     <button type="button" id="open-usage-info" class="ml-3 bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" title="Info penggunaan dalam album">
                         <i class="fas fa-info-circle mr-1"></i>Info Penggunaan
                     </button>
+                    <a href="{{ url_for('main.create_news') }}" class="ml-3 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm inline-flex items-center" aria-label="Buat cerita atau artikel baru" title="Buat baru">
+                        <i class="fas fa-plus mr-1"></i>Buat Baru
+                    </a>
                 </div>
             </div>
             
@@ -108,10 +111,10 @@
             <div id="bulk-actions-bar" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4" role="toolbar" aria-label="Aksi massal">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2">
-                        <span id="selected-count" class="text-sm font-medium text-amber-700">0 dipilih</span>
+                        <span id="selected-count" class="text-sm font-medium text-gray-800">0 dipilih</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <select id="bulk-category-select" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Pilih kategori untuk aksi massal">
+                        <select id="bulk-category-select" class="bg-white border border-gray-300 text-gray-800 p-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Pilih kategori untuk aksi massal">
                             <option value="">Ubah Kategori...</option>
                         </select>
                         <button id="bulk-toggle-visibility" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Toggle visibilitas yang dipilih">
@@ -159,7 +162,7 @@
             <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg w-full max-w-7xl max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="edit-modal-title" class="text-xl font-semibold text-gray-800">Edit Postingan</h2>
-                    <button onclick="closeEditModal()" class="text-amber-700 hover:text-gray-900 p-2 rounded-full bg-blue-100 hover:bg-blue-200" aria-label="Tutup modal edit">
+                    <button onclick="closeEditModal()" class="text-gray-700 hover:text-gray-900 p-2 rounded-full bg-gray-100 hover:bg-gray-200" aria-label="Tutup modal edit">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -170,19 +173,19 @@
                     <!-- Content Section (3/4) -->
                     <div class="flex-1 lg:w-3/4">
                         <div class="h-full flex flex-col overflow-hidden">
-                            <label class="block text-amber-700 font-medium mb-2" for="edit-news-content">Konten (Markdown)</label>
+                            <label class="block text-gray-800 font-medium mb-2" for="edit-news-content">Konten (Markdown)</label>
                             <div id="simplemde-wrapper" class="flex flex-col flex-1 overflow-hidden" role="textbox" aria-label="Editor konten berita">
-                                <div id="custom-toolbar" class="flex flex-wrap gap-3 bg-white border border-amber-300 p-2 rounded-t-lg mb-2" role="toolbar" aria-label="Toolbar editor">
-                                    <button type="button" data-cmd="bold" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Tebal"><i class="fa fa-bold" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="italic" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Miring"><i class="fa fa-italic" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="heading" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Heading"><i class="fa fa-header" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="quote" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Kutipan"><i class="fa fa-quote-left" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="unordered-list" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Daftar tidak berurutan"><i class="fa fa-list-ul" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="ordered-list" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Daftar berurutan"><i class="fa fa-list-ol" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="link" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Tautan"><i class="fa fa-link" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="image" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Gambar"><i class="fa fa-image" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="preview" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Pratinjau"><i class="fa fa-eye" aria-hidden="true"></i></button>
-                                    <button type="button" data-cmd="guide" class="bg-white border border-amber-300 text-amber-700 p-2 rounded-lg hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Panduan Markdown"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
+                                <div id="custom-toolbar" class="flex flex-wrap gap-3 bg-white border border-gray-300 p-2 rounded-t-lg mb-2" role="toolbar" aria-label="Toolbar editor">
+                                    <button type="button" data-cmd="bold" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Tebal"><i class="fa fa-bold" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="italic" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Miring"><i class="fa fa-italic" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="heading" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Heading"><i class="fa fa-header" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="quote" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Kutipan"><i class="fa fa-quote-left" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="unordered-list" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Daftar tidak berurutan"><i class="fa fa-list-ul" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="ordered-list" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Daftar berurutan"><i class="fa fa-list-ol" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="link" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Tautan"><i class="fa fa-link" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="image" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Gambar"><i class="fa fa-image" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="preview" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Pratinjau"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                                    <button type="button" data-cmd="guide" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Panduan Markdown"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
                                 </div>
                                 <textarea id="edit-news-content" class="custom-mde flex-1" placeholder="Tulis artikel Anda di sini:\n- Mulai dengan pengantar yang menarik.\n- Gunakan judul, daftar, atau teks tebal untuk struktur.\n- Klik toolbar untuk opsi pemformatan atau 'Panduan' untuk bantuan Markdown." aria-label="Editor konten berita"></textarea>
                             </div>
@@ -191,57 +194,57 @@
                     <!-- Info Section (1/4) -->
                     <div class="lg:w-1/4 space-y-4" role="complementary" aria-label="Informasi berita">
                         <div>
-                            <label class="block text-amber-700 font-medium mb-2" for="edit-news-title">Judul</label>
-                            <input type="text" id="edit-news-title" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Judul artikel">
+                            <label class="block text-gray-800 font-medium mb-2" for="edit-news-title">Judul</label>
+                            <input type="text" id="edit-news-title" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" required aria-required="true" aria-label="Judul artikel">
                         </div>
                         <div>
-                            <label class="block text-amber-700 font-medium mb-2" for="edit-news-writer">Penulis</label>
-                            <input type="text" id="edit-news-writer" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="misalnya, John Doe" aria-label="Penulis artikel">
+                            <label class="block text-gray-800 font-medium mb-2" for="edit-news-writer">Penulis</label>
+                            <input type="text" id="edit-news-writer" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="misalnya, John Doe" aria-label="Penulis artikel">
                         </div>
                         <div>
-                            <label class="block text-amber-700 font-medium mb-2" for="edit-news-tagar">Tag (dipisahkan dengan koma)</label>
-                            <input type="text" id="edit-news-tagar" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="misalnya, teknologi, olahraga, bisnis" aria-label="Tag artikel">
+                            <label class="block text-gray-800 font-medium mb-2" for="edit-news-tagar">Tag (dipisahkan dengan koma)</label>
+                            <input type="text" id="edit-news-tagar" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="misalnya, teknologi, olahraga, bisnis" aria-label="Tag artikel">
                         </div>
                         <div>
-                            <label class="block text-amber-700 font-medium mb-2" for="edit-news-date">Tanggal</label>
-                            <input type="date" id="edit-news-date" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Tanggal artikel">
+                            <label class="block text-gray-800 font-medium mb-2" for="edit-news-date">Tanggal</label>
+                            <input type="date" id="edit-news-date" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" required aria-required="true" aria-label="Tanggal artikel">
                         </div>
                         <div>
-                            <label class="block text-amber-700 font-medium mb-2" for="edit-news-category">Kategori</label>
-                            <select id="edit-news-category" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Kategori artikel">
+                            <label class="block text-gray-800 font-medium mb-2" for="edit-news-category">Kategori</label>
+                            <select id="edit-news-category" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" required aria-required="true" aria-label="Kategori artikel">
                                 <option value="" disabled selected>Pilih kategori...</option>
                             </select>
                         </div>
                         <div class="space-y-2" role="group" aria-label="Pengaturan tampilan berita">
                             <div class="flex items-center">
-                                <input type="checkbox" id="edit-news-premium" class="rounded border-amber-300 text-blue-600 focus:ring-amber-400" aria-label="Tampilkan di halaman Artikel">
-                                <label class="ml-2 text-amber-700 font-medium" for="edit-news-premium">Tampilkan di halaman Artikel</label>
+                                <input type="checkbox" id="edit-news-premium" class="rounded border-gray-300 text-blue-600 focus:ring-blue-400" aria-label="Tampilkan di halaman Artikel">
+                                <label class="ml-2 text-gray-800 font-medium" for="edit-news-premium">Tampilkan di halaman Artikel</label>
                             </div>
                             <p class="text-sm text-gray-600 ml-8">Centang agar cerita muncul di halaman Artikel</p>
                             <div class="flex items-center">
-                                <input type="checkbox" id="edit-news-main" class="rounded border-amber-300 text-blue-600 focus:ring-amber-400" aria-label="Tampilkan di carousel utama">
-                                <label class="ml-2 text-amber-700 font-medium" for="edit-news-main">Tampilkan di carousel utama</label>
+                                <input type="checkbox" id="edit-news-main" class="rounded border-gray-300 text-blue-600 focus:ring-blue-400" aria-label="Tampilkan di carousel utama">
+                                <label class="ml-2 text-gray-800 font-medium" for="edit-news-main">Tampilkan di carousel utama</label>
                             </div>
                             <p class="text-sm text-gray-600 ml-8">Centang untuk menampilkan di carousel utama (5 cerita terbaru)</p>
                             <div class="flex items-center">
-                                <input type="checkbox" id="edit-news-is-premium" class="rounded border-amber-300 text-yellow-500 focus:ring-yellow-400" aria-label="Konten Premium">
-                                <label class="ml-2 text-amber-700 font-medium" for="edit-news-is-premium">Konten Premium</label>
+                                <input type="checkbox" id="edit-news-is-premium" class="rounded border-gray-300 text-yellow-600 focus:ring-yellow-400" aria-label="Konten Premium">
+                                <label class="ml-2 text-gray-800 font-medium" for="edit-news-is-premium">Konten Premium</label>
                             </div>
                             <p class="text-sm text-gray-600 ml-8">Centang untuk menandai sebagai konten premium</p>
                         </div>
                         <div>
-                            <label class="block text-amber-700 font-medium mb-2" for="edit-news-external-source">Sumber Eksternal</label>
-                            <input type="url" id="edit-news-external-source" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="https://example.com/sumber (opsional)" aria-label="Sumber eksternal URL">
+                            <label class="block text-gray-800 font-medium mb-2" for="edit-news-external-source">Sumber Eksternal</label>
+                            <input type="url" id="edit-news-external-source" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="https://example.com/sumber (opsional)" aria-label="Sumber eksternal URL">
                         </div>
                         
                         <div id="image-header-section-edit" role="group" aria-label="Pilihan gambar unggulan">
-                            <label class="block text-amber-700 font-medium mb-2">Gambar Unggulan</label>
+                            <label class="block text-gray-800 font-medium mb-2">Gambar Unggulan</label>
                             <input type="hidden" id="edit-news-image-id">
                             <div class="flex items-center gap-x-2">
                                 <button type="button" onclick="openImageGalleryEdit()" class="flex-grow bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-2 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Pilih gambar unggulan">
                                     Pilih Gambar Unggulan
                                 </button>
-                                <button type="button" id="clear-featured-image-edit-btn" title="Hapus Gambar Unggulan" class="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Hapus gambar unggulan"><i class="fas fa-times" aria-hidden="true"></i></button>
+                                <button type="button" id="clear-featured-image-edit-btn" title="Hapus Gambar Unggulan" class="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Hapus gambar unggulan"><i class="fas fa-times" aria-hidden="true"></i></button>
                             </div>
                             <img id="featured-preview-edit" src="" class="w-full h-32 object-cover rounded-lg mt-2 hidden" alt="Pratinjau gambar unggulan">
                         </div>
@@ -284,8 +287,8 @@
             <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
                 <h2 id="image-insert-title" class="text-xl font-semibold mb-4 text-gray-800">Pilih Gambar Unggulan</h2>
                 <div class="mb-4" role="radiogroup" aria-label="Pilih sumber gambar">
-                    <label class="inline-flex items-center"><input type="radio" name="image-source-edit" value="library" checked class="form-radio text-blue-600" aria-label="Pilih dari perpustakaan"><span class="ml-2 text-amber-700">Perpustakaan</span></label>
-                    <label class="inline-flex items-center ml-4"><input type="radio" name="image-source-edit" value="url" class="form-radio text-amber-500" aria-label="Gunakan URL eksternal"><span class="ml-2 text-amber-700">URL Eksternal</span></label>
+                    <label class="inline-flex items-center"><input type="radio" name="image-source-edit" value="library" checked class="form-radio text-blue-600" aria-label="Pilih dari perpustakaan"><span class="ml-2 text-gray-700">Perpustakaan</span></label>
+                    <label class="inline-flex items-center ml-4"><input type="radio" name="image-source-edit" value="url" class="form-radio text-blue-600" aria-label="Gunakan URL eksternal"><span class="ml-2 text-gray-700">URL Eksternal</span></label>
                 </div>
                 <div id="image-library-section-edit" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" role="list" aria-label="Daftar gambar perpustakaan"></div>
                 <!-- Pagination for Content Image Library -->
@@ -293,12 +296,12 @@
                     <!-- Content image pagination will be generated here -->
                 </div>
                 <div id="image-url-section-edit" class="hidden space-y-4 mb-4">
-                    <input id="image-url-input-edit" type="url" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg" placeholder="URL Gambar" aria-label="URL gambar">
-                    <input id="image-alt-input-edit" type="text" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg" placeholder="Alt text (opsional)" aria-label="Teks alternatif gambar">
+                    <input id="image-url-input-edit" type="url" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg" placeholder="URL Gambar" aria-label="URL gambar">
+                    <input id="image-alt-input-edit" type="text" class="w-full bg-white border border-gray-300 text-gray-800 p-2 rounded-lg" placeholder="Alt text (opsional)" aria-label="Teks alternatif gambar">
                 </div>
                 <div class="flex space-x-4" role="group" aria-label="Tombol aksi gambar">
-                    <button id="insert-image-btn-edit" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Sisipkan gambar">Sisipkan</button>
-                    <button id="close-image-insert-edit" class="flex-1 bg-white border border-amber-300 text-amber-700 py-3 rounded-lg hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300" aria-label="Tutup dialog">Tutup</button>
+                    <button id="insert-image-btn-edit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Sisipkan gambar">Sisipkan</button>
+                    <button id="close-image-insert-edit" class="flex-1 bg-white border border-gray-300 text-gray-800 py-3 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300" aria-label="Tutup dialog">Tutup</button>
                 </div>
             </div>
         </div>

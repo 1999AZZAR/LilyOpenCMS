@@ -278,6 +278,21 @@ def safe_migrate():
             except Exception as e:
                 print(f"⚠️ Could not verify/alter user table: {e}")
 
+            # ===== EDITOR ↔ WRITER LINK TABLE =====
+            print("\n" + "="*50)
+            print("🧩 EDITOR ↔ WRITER LINK TABLE")
+            print("="*50)
+            try:
+                if 'editor_writer' not in existing_tables:
+                    print("🔧 Creating editor_writer link table...")
+                    from models import editor_writer
+                    editor_writer.create(db.engine)
+                    print("✅ Created editor_writer table")
+                else:
+                    print("✅ editor_writer table already exists")
+            except Exception as e:
+                print(f"⚠️ Could not create/verify editor_writer table: {e}")
+
             # ===== CREATE READING HISTORY AND USER LIBRARY TABLES =====
             print("\n" + "="*50)
             print("📖 READING HISTORY & USER LIBRARY TABLES")

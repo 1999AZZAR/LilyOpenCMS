@@ -158,8 +158,21 @@ def get_news_api():
         else:  # 'all' for ADMIN defaults to owned + general users' news
             query = query.filter(News.user_id.in_(allowed_user_ids))
 
-    else:  # UserRole.GENERAL
-        query = query.filter(News.user_id == current_user.id)
+    else:  # Non-admin tier users: restrict to owned, with editor exceptions
+        # If user has a custom role of Subadmin, allow all
+        custom_name = (current_user.custom_role.name.lower() if current_user.custom_role and current_user.custom_role.name else "")
+        if custom_name == "subadmin":
+            pass  # no restriction
+        elif custom_name == "editor":
+            # Editors can see their own and their assigned writers' content
+            try:
+                writer_ids = [w.id for w in current_user.assigned_writers] if hasattr(current_user, 'assigned_writers') else []
+            except Exception:
+                writer_ids = []
+            allowed_ids = set(writer_ids + [current_user.id])
+            query = query.filter(News.user_id.in_(allowed_ids))
+        else:
+            query = query.filter(News.user_id == current_user.id)
 
     # --- Exclude archived news by default ---
     archived_filter = request.args.get("archived", "")
@@ -328,7 +341,8 @@ def create_news_api():
     is_news = data.get("is_news", "false").lower() == "true"
     is_premium = data.get("is_premium", "false").lower() == "true"
     is_main_news = data.get("is_main_news", "false").lower() == "true"
-    is_visible = data.get("is_visible", "true").lower() == "true"  # Default to visible
+    # Default visibility to hidden unless explicitly published
+    is_visible = data.get("is_visible", "false").lower() == "true"
 
     # --- Create the News object ---
     try:
@@ -950,7 +964,20 @@ def owned_news():
     has_link_filter = request.args.get("has_link", "") # 'has_link' or 'no_link'
 
     # --- Base query for owned news ---
-    query = News.query.filter(News.user_id == current_user.id)
+    # Editors can also see assigned writers; subadmins see all
+    query = News.query
+    custom_name = (current_user.custom_role.name.lower() if current_user.custom_role and current_user.custom_role.name else "")
+    if current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN or custom_name == "subadmin":
+        pass  # no restriction
+    elif custom_name == "editor":
+        try:
+            writer_ids = [w.id for w in current_user.assigned_writers] if hasattr(current_user, 'assigned_writers') else []
+        except Exception:
+            writer_ids = []
+        allowed_ids = set(writer_ids + [current_user.id])
+        query = query.filter(News.user_id.in_(allowed_ids))
+    else:
+        query = query.filter(News.user_id == current_user.id)
 
     # --- Apply filters ---
     if search_query:

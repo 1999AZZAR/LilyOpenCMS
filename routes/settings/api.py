@@ -247,38 +247,53 @@ def api_get_cache_status():
         # Try to get cache status from optimizations module
         try:
             from optimizations.cache_config import cache
-            import redis
+            # Detect RedisCache vs SimpleCache
+            client = None
+            # Flask-Caching Redis backend often exposes underlying client via cache.cache._client
+            if hasattr(cache, 'cache') and hasattr(cache.cache, '_client'):
+                client = cache.cache._client
+            # Some wrappers may expose 'client' directly
+            elif hasattr(cache, 'client'):
+                client = cache.client
             
-            # Get Redis connection info
-            redis_client = cache.cache._client
-            info = redis_client.info()
-            
-            # Calculate cache statistics
-            total_keys = info.get('db0', {}).get('keys', 0)
-            memory_usage = info.get('used_memory_human', '0B')
-            hit_rate = info.get('keyspace_hits', 0)
-            miss_rate = info.get('keyspace_misses', 0)
-            total_requests = hit_rate + miss_rate
-            
-            if total_requests > 0:
-                hit_percentage = (hit_rate / total_requests) * 100
-                miss_percentage = (miss_rate / total_requests) * 100
+            if client is not None:
+                info = client.info()
+                total_keys = info.get('db0', {}).get('keys', 0)
+                memory_usage = info.get('used_memory_human', '0B')
+                hit_rate = info.get('keyspace_hits', 0)
+                miss_rate = info.get('keyspace_misses', 0)
+                total_requests = hit_rate + miss_rate
+                hit_percentage = (hit_rate / total_requests) * 100 if total_requests > 0 else 0
+                miss_percentage = (miss_rate / total_requests) * 100 if total_requests > 0 else 0
+                return jsonify({
+                    'success': True,
+                    'cache_status': {
+                        'total_keys': total_keys,
+                        'memory_usage': memory_usage,
+                        'hit_rate': round(hit_percentage, 1),
+                        'miss_rate': round(miss_percentage, 1),
+                        'total_requests': total_requests,
+                        'hit_count': hit_rate,
+                        'miss_count': miss_rate,
+                        'backend': 'redis'
+                    }
+                })
             else:
-                hit_percentage = 0
-                miss_percentage = 0
-            
-            return jsonify({
-                'success': True,
-                'cache_status': {
-                    'total_keys': total_keys,
-                    'memory_usage': memory_usage,
-                    'hit_rate': round(hit_percentage, 1),
-                    'miss_rate': round(miss_percentage, 1),
-                    'total_requests': total_requests,
-                    'hit_count': hit_rate,
-                    'miss_count': miss_rate
-                }
-            })
+                # SimpleCache or other in-memory backend
+                return jsonify({
+                    'success': True,
+                    'cache_status': {
+                        'total_keys': 0,
+                        'memory_usage': 'N/A',
+                        'hit_rate': 0.0,
+                        'miss_rate': 0.0,
+                        'total_requests': 0,
+                        'hit_count': 0,
+                        'miss_count': 0,
+                        'backend': 'simple',
+                        'status': 'Simple in-memory cache (no stats)'
+                    }
+                })
         except ImportError:
             # Fallback if cache module is not available
             return jsonify({
@@ -291,14 +306,14 @@ def api_get_cache_status():
                     'total_requests': 0,
                     'hit_count': 0,
                     'miss_count': 0,
+                    'backend': 'none',
                     'status': 'Cache module not available'
                 }
             })
         except Exception as cache_error:
-            # Fallback if Redis is not available
+            # Graceful fallback if Redis is not available
             return jsonify({
-                'success': False,
-                'message': f'Error getting cache status: {str(cache_error)}',
+                'success': True,
                 'cache_status': {
                     'total_keys': 0,
                     'memory_usage': '0B',
@@ -307,9 +322,10 @@ def api_get_cache_status():
                     'total_requests': 0,
                     'hit_count': 0,
                     'miss_count': 0,
+                    'backend': 'unknown',
                     'status': f'Cache not available: {str(cache_error)}'
                 }
-            }), 503
+            })
     except Exception as e:
         return jsonify({
             'success': False,
@@ -651,7 +667,7 @@ def api_optimize_database():
         abort(403)
     
     try:
-        from sqlalchemy import text
+        from sqlalchemy import text, inspect
         from models import db
         
         # Get tables to optimize - include all relevant tables
@@ -664,9 +680,14 @@ def api_optimize_database():
             'visi_misi', 'penyangkalan', 'pedoman_hak', 'user_subscriptions',
             'share_logs'
         ]
+        # Only analyze tables that actually exist
+        inspector = inspect(db.engine)
+        existing_tables = set(inspector.get_table_names())
         optimized_tables = []
         
         for table in tables:
+            if table not in existing_tables:
+                continue
             try:
                 # Analyze table
                 db.session.execute(text(f"ANALYZE {table}"))
@@ -969,3 +990,52 @@ def api_get_performance_summary():
             'success': False,
             'message': f'Error getting performance summary: {str(e)}'
         }), 500
+
+
+# Admin Ads Settings (global)
+@main_blueprint.route("/api/settings/ads", methods=["GET"])
+@login_required
+def api_get_ads_settings():
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    try:
+        import os, json
+        settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+        data = {}
+        if os.path.exists(settings_path):
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+        ads = data.get('ads', { 'show_ads': True })
+        return jsonify({ 'success': True, 'ads': ads })
+    except Exception as e:
+        return jsonify({ 'success': False, 'message': str(e), 'ads': { 'show_ads': True } })
+
+
+@main_blueprint.route("/api/settings/ads", methods=["POST"])
+@login_required
+def api_set_ads_settings():
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    try:
+        import os, json
+        payload = request.get_json() or {}
+        show_ads = bool(payload.get('show_ads', True))
+        settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+        data = {}
+        if os.path.exists(settings_path):
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+        data['ads'] = { 'show_ads': show_ads }
+        with open(settings_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return jsonify({ 'success': True, 'message': 'Pengaturan iklan disimpan', 'ads': data['ads'] })
+    except Exception as e:
+        return jsonify({ 'success': False, 'message': str(e) }), 500

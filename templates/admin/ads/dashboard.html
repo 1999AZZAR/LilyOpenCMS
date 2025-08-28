@@ -69,6 +69,36 @@
         </div>
     </div>
 
+    <!-- Admin Preferences: Ads & Campaigns -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Display Preferences</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex items-center justify-between border border-gray-200 rounded-lg p-4">
+                <div>
+                    <p class="font-medium text-gray-900">Tampilkan Iklan (Global)</p>
+                    <p class="text-sm text-gray-600">Kendalikan tampilan iklan di situs</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="ads-global-toggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+            <div class="flex items-center justify-between border border-gray-200 rounded-lg p-4">
+                <div>
+                    <p class="font-medium text-gray-900">Aktifkan Kampanye (Global)</p>
+                    <p class="text-sm text-gray-600">Nonaktifkan untuk menghentikan semua kampanye</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="campaigns-global-toggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+        </div>
+        <div class="flex justify-end mt-4">
+            <button id="save-ads-campaigns" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Simpan Preferensi</button>
+        </div>
+    </div>
+
     <!-- Performance Stats -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">
@@ -166,3 +196,42 @@
     </div>
 </div>
 {% endblock %} 
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    // Load current global settings
+    try {
+        const adsResp = await fetch('/api/settings/ads');
+        const adsData = await adsResp.json();
+        if (adsData && adsData.ads) {
+            document.getElementById('ads-global-toggle').checked = !!adsData.ads.show_ads;
+        }
+    } catch (e) { /* ignore */ }
+    // Campaigns global (placeholder: reuse ads endpoint until campaigns endpoint exists)
+    try {
+        const camp = localStorage.getItem('global_campaigns_enabled');
+        document.getElementById('campaigns-global-toggle').checked = camp === null ? true : camp === 'true';
+    } catch (e) {}
+
+    document.getElementById('save-ads-campaigns').addEventListener('click', async function() {
+        try {
+            const showAds = document.getElementById('ads-global-toggle').checked;
+            const resp = await fetch('/api/settings/ads', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ show_ads: showAds })
+            });
+            const result = await resp.json();
+            const campaignsEnabled = document.getElementById('campaigns-global-toggle').checked;
+            localStorage.setItem('global_campaigns_enabled', campaignsEnabled ? 'true' : 'false');
+            if (resp.ok && result.success) {
+                if (typeof showToast === 'function') showToast('Preferensi disimpan', 'success');
+            } else {
+                if (typeof showToast === 'function') showToast(result.message || 'Gagal menyimpan preferensi', 'error');
+            }
+        } catch (e) {
+            if (typeof showToast === 'function') showToast('Terjadi kesalahan', 'error');
+        }
+    });
+});
+</script>
+{% endblock %}

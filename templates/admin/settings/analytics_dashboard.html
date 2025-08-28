@@ -9,17 +9,17 @@
 
 <!-- Navigation Tabs -->
 <div class="mb-6">
-  <nav class="flex space-x-1 bg-amber-100 p-1 rounded-lg" role="tablist">
-    <button class="tab-button active bg-white text-amber-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
+  <nav class="flex space-x-1 bg-gray-100 p-1 rounded-lg" role="tablist">
+    <button class="tab-button active bg-white text-gray-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
       <i class="fas fa-chart-line mr-2"></i>Ringkasan
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="content">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="content">
       <i class="fas fa-file-alt mr-2"></i>Analitik Konten
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="activity">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="activity">
       <i class="fas fa-list-alt mr-2"></i>Log Aktivitas
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="performance">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="performance">
       <i class="fas fa-server mr-2"></i>Performa Sistem
     </button>
   </nav>
@@ -27,15 +27,15 @@
 
 <!-- Overview Tab -->
 <div id="overview-tab" class="tab-content active">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Ringkasan Dashboard</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Ringkasan Dashboard</h2>
       <div class="flex space-x-2">
-        <button id="refresh-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-sync-alt mr-2"></i>Segarkan
         </button>
         <div class="relative">
-          <select id="period-selector" class="bg-white border border-amber-300 text-amber-700 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <select id="period-selector" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="7">7 Hari Terakhir</option>
             <option value="30" selected>30 Hari Terakhir</option>
             <option value="90">90 Hari Terakhir</option>
@@ -121,13 +121,13 @@
 
     <!-- Weekly Summary -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h3 class="text-lg font-semibold text-amber-800 mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
         <i class="fas fa-calendar-week mr-2"></i>Ringkasan Minggu Ini
       </h3>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="text-center p-4 bg-amber-50 rounded-lg">
-          <div class="text-2xl font-bold text-amber-600" id="weekly-news">-</div>
-          <div class="text-sm text-amber-700">Berita Dibuat</div>
+        <div class="text-center p-4 bg-blue-50 rounded-lg">
+          <div class="text-2xl font-bold text-blue-600" id="weekly-news">-</div>
+          <div class="text-sm text-blue-700">Berita Dibuat</div>
         </div>
         <div class="text-center p-4 bg-green-50 rounded-lg">
           <div class="text-2xl font-bold text-green-600" id="weekly-images">-</div>
@@ -146,7 +146,7 @@
 
     <!-- Export Reports -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="text-lg font-semibold text-amber-800 mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
         <i class="fas fa-download mr-2"></i>Ekspor Laporan
       </h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -169,16 +169,16 @@
 
 <!-- Content Analytics Tab -->
 <div id="content-tab" class="tab-content">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Performa Konten</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Performa Konten</h2>
     </div>
 
     <!-- Content Performance Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
       <!-- News Analytics -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-amber-900 mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
           <i class="fas fa-newspaper mr-2 text-blue-600"></i>Artikel Berita
         </h3>
         <div class="space-y-4">
@@ -197,7 +197,7 @@
 
       <!-- Image Analytics -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-amber-900 mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
           <i class="fas fa-image mr-2 text-green-600"></i>Gambar
         </h3>
         <div class="space-y-4">
@@ -216,7 +216,7 @@
 
       <!-- Video Analytics -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-amber-900 mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
           <i class="fas fa-video mr-2 text-purple-600"></i>Video
         </h3>
         <div class="space-y-4">
@@ -251,9 +251,9 @@
 
 <!-- Activity Logs Tab -->
 <div id="activity-tab" class="tab-content">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Aktivitas Terbaru</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Aktivitas Terbaru</h2>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
@@ -269,13 +269,13 @@
 
 <!-- System Performance Tab -->
 <div id="performance-tab" class="tab-content">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Performa Sistem</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Performa Sistem</h2>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="text-lg font-semibold text-amber-900 mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
         <i class="fas fa-server mr-2 text-red-600"></i>Performa Server
       </h3>
       <div class="space-y-4">

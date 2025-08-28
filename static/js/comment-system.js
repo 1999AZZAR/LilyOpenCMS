@@ -358,9 +358,8 @@ class CommentSystem {
     }
     
     async deleteComment(commentId) {
-        if (!confirm('Are you sure you want to delete this comment?')) {
-            return;
-        }
+        const confirmed = await this.confirmModal('Hapus komentar?', 'Tindakan ini tidak dapat dibatalkan.');
+        if (!confirmed) return;
         
         try {
             const response = await fetch(`/api/comments/${commentId}`, {
@@ -382,6 +381,30 @@ class CommentSystem {
             console.error('Error deleting comment:', error);
             this.showError('Failed to delete comment');
         }
+    }
+
+    confirmModal(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmation-modal');
+            const msgEl = document.getElementById('confirmation-message');
+            const confirmBtn = document.getElementById('confirm-action');
+            const cancelBtn = document.getElementById('cancel-confirmation');
+            if (modal && msgEl && confirmBtn && cancelBtn) {
+                msgEl.textContent = `${title} ${message ? '\n' + message : ''}`;
+                modal.classList.remove('hidden');
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    confirmBtn.removeEventListener('click', onConfirm);
+                    cancelBtn.removeEventListener('click', onCancel);
+                };
+                const onConfirm = () => { cleanup(); resolve(true); };
+                const onCancel = () => { cleanup(); resolve(false); };
+                confirmBtn.addEventListener('click', onConfirm, { once: true });
+                cancelBtn.addEventListener('click', onCancel, { once: true });
+            } else {
+                resolve(window.confirm(title));
+            }
+        });
     }
     
     async likeComment(commentId, isLike) {
@@ -477,12 +500,42 @@ class CommentSystem {
     }
     
     showReportForm(commentId) {
-        const reason = prompt('Report reason (spam, inappropriate, harassment, offensive, other):');
-        if (!reason) return;
-        
-        const description = prompt('Additional details (optional):');
-        
-        this.submitReport(commentId, reason, description);
+        // Use a lightweight inline modal for report details
+        const existing = document.getElementById('report-modal');
+        if (existing) existing.remove();
+        const wrapper = document.createElement('div');
+        wrapper.id = 'report-modal';
+        wrapper.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] flex items-center justify-center p-4';
+        wrapper.innerHTML = `
+            <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md">
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Laporkan Komentar</h3>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alasan</label>
+                    <select id="report-reason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="spam">Spam</option>
+                        <option value="inappropriate">Tidak Pantas</option>
+                        <option value="harassment">Pelecehan</option>
+                        <option value="offensive">Menyinggung</option>
+                        <option value="other">Lainnya</option>
+                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mt-3 mb-1">Detail (opsional)</label>
+                    <textarea id="report-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tambahkan detail tambahan..."></textarea>
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button id="report-cancel" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Batal</button>
+                        <button id="report-submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Kirim</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(wrapper);
+        const close = () => wrapper.remove();
+        wrapper.addEventListener('click', (e) => { if (e.target === wrapper) close(); });
+        document.getElementById('report-cancel').addEventListener('click', close);
+        document.getElementById('report-submit').addEventListener('click', () => {
+            const reason = document.getElementById('report-reason').value;
+            const description = document.getElementById('report-description').value;
+            close();
+            this.submitReport(commentId, reason, description);
+        });
     }
     
     async submitReport(commentId, reason, description) {

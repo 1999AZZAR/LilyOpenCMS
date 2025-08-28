@@ -9,17 +9,17 @@
 <div class="w-full">
   <!-- Header -->
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-amber-800 mb-2">Analitik Rating</h1>
-    <p class="text-amber-700">Analitik komprehensif dan insight untuk sistem rating.</p>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Analitik Rating</h1>
+    <p class="text-gray-700">Analitik komprehensif dan insight untuk sistem rating.</p>
   </div>
 
   <!-- Overview Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-amber-600">Total Rating</p>
-          <p class="text-2xl font-bold text-amber-800">{{ analytics.total_ratings }}</p>
+          <p class="text-sm font-medium text-gray-600">Total Rating</p>
+          <p class="text-2xl font-bold text-gray-900">{{ analytics.total_ratings }}</p>
         </div>
         <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
           <i class="fas fa-star text-white text-lg"></i>
@@ -27,11 +27,11 @@
       </div>
     </div>
 
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-amber-600">Rata-rata Rating</p>
-          <p class="text-2xl font-bold text-amber-800">{{ "%.2f"|format(analytics.overall_average_rating) }}</p>
+          <p class="text-sm font-medium text-gray-600">Rata-rata Rating</p>
+          <p class="text-2xl font-bold text-gray-900">{{ "%.2f"|format(analytics.overall_average_rating) }}</p>
         </div>
         <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
           <i class="fas fa-chart-line text-white text-lg"></i>
@@ -39,11 +39,11 @@
       </div>
     </div>
 
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-amber-600">Rating News</p>
-          <p class="text-2xl font-bold text-amber-800">{{ analytics.news_ratings }}</p>
+          <p class="text-sm font-medium text-gray-600">Rating News</p>
+          <p class="text-2xl font-bold text-gray-900">{{ analytics.news_ratings }}</p>
         </div>
         <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
           <i class="fas fa-newspaper text-white text-lg"></i>
@@ -51,11 +51,11 @@
       </div>
     </div>
 
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-amber-600">Rating Album</p>
-          <p class="text-2xl font-bold text-amber-800">{{ analytics.album_ratings }}</p>
+          <p class="text-sm font-medium text-gray-600">Rating Album</p>
+          <p class="text-2xl font-bold text-gray-900">{{ analytics.album_ratings }}</p>
         </div>
         <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
           <i class="fas fa-book text-white text-lg"></i>
@@ -66,13 +66,13 @@
 
   <!-- Rating Distribution -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
-      <h3 class="text-lg font-semibold text-amber-800 mb-4">Distribusi Rating</h3>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Distribusi Rating</h3>
       <div class="space-y-4">
         {% for rating, count in analytics.distribution.items() %}
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
-            <span class="text-sm font-medium text-amber-800">{{ rating }} Star{{ 's' if rating != 1 else '' }}</span>
+            <span class="text-sm font-medium text-gray-900">{{ rating }} Star{{ 's' if rating != 1 else '' }}</span>
             <div class="flex items-center space-x-1">
               {% for i in range(1, 6) %}
                 {% if i <= rating %}
@@ -86,17 +86,17 @@
           <div class="flex items-center space-x-3">
             <div class="w-32 bg-gray-200 rounded-full h-3">
               {% set percentage = (count / analytics.total_ratings * 100) if analytics.total_ratings > 0 else 0 %}
-              <div class="bg-gradient-to-r from-yellow-400 to-yellow-500 h-3 rounded-full" style="width: {{ percentage }}%"></div>
+              <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full" style="width: {{ percentage }}%"></div>
             </div>
-            <span class="text-sm font-medium text-amber-800 w-12 text-right">{{ count }}</span>
+            <span class="text-sm font-medium text-gray-900 w-12 text-right">{{ count }}</span>
           </div>
         </div>
         {% endfor %}
       </div>
     </div>
 
-    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg p-6">
-      <h3 class="text-lg font-semibold text-amber-800 mb-4">Rata-rata per Tipe Konten</h3>
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Rata-rata per Tipe Konten</h3>
       <div class="space-y-4">
         <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
           <div class="flex items-center space-x-3">
@@ -104,12 +104,12 @@
               <i class="fas fa-newspaper text-white text-sm"></i>
             </div>
             <div>
-              <p class="font-medium text-amber-800">Artikel News</p>
-              <p class="text-sm text-amber-600">{{ analytics.news_ratings }} ratings</p>
+              <p class="font-medium text-gray-900">Artikel News</p>
+              <p class="text-sm text-gray-600">{{ analytics.news_ratings }} ratings</p>
             </div>
           </div>
           <div class="text-right">
-            <p class="text-lg font-bold text-amber-800">{{ "%.2f"|format(analytics.news_average) }}</p>
+            <p class="text-lg font-bold text-gray-900">{{ "%.2f"|format(analytics.news_average) }}</p>
             <div class="flex items-center space-x-1">
               {% for i in range(1, 6) %}
                 {% if i <= analytics.news_average %}
@@ -128,12 +128,12 @@
               <i class="fas fa-book text-white text-sm"></i>
             </div>
             <div>
-              <p class="font-medium text-amber-800">Album</p>
-              <p class="text-sm text-amber-600">{{ analytics.album_ratings }} ratings</p>
+              <p class="font-medium text-gray-900">Album</p>
+              <p class="text-sm text-gray-600">{{ analytics.album_ratings }} ratings</p>
             </div>
           </div>
           <div class="text-right">
-            <p class="text-lg font-bold text-amber-800">{{ "%.2f"|format(analytics.album_average) }}</p>
+            <p class="text-lg font-bold text-gray-900">{{ "%.2f"|format(analytics.album_average) }}</p>
             <div class="flex items-center space-x-1">
               {% for i in range(1, 6) %}
                 {% if i <= analytics.album_average %}
@@ -152,12 +152,12 @@
               <i class="fas fa-chart-line text-white text-sm"></i>
             </div>
             <div>
-              <p class="font-medium text-amber-800">Album (Weighted)</p>
-              <p class="text-sm text-amber-600">{{ analytics.albums_with_weighted_ratings }} albums</p>
+              <p class="font-medium text-gray-900">Album (Weighted)</p>
+              <p class="text-sm text-gray-600">{{ analytics.albums_with_weighted_ratings }} albums</p>
             </div>
           </div>
           <div class="text-right">
-            <p class="text-lg font-bold text-amber-800">{{ "%.2f"|format(analytics.weighted_album_average) }}</p>
+            <p class="text-lg font-bold text-gray-900">{{ "%.2f"|format(analytics.weighted_album_average) }}</p>
             <div class="flex items-center space-x-1">
               {% for i in range(1, 6) %}
                 {% if i <= analytics.weighted_album_average %}
@@ -175,13 +175,13 @@
 
   <!-- Weighted Album Ratings -->
   {% if analytics.weighted_album_stats %}
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg mb-8">
-    <div class="p-6 border-b border-amber-200">
-      <h3 class="text-lg font-semibold text-amber-800">Album Ratings (Weighted)</h3>
-      <p class="text-sm text-amber-600 mt-1">Rating berdasarkan popularitas chapter dengan algoritma weighted</p>
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg mb-8">
+    <div class="p-6 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">Album Ratings (Weighted)</h3>
+      <p class="text-sm text-gray-600 mt-1">Rating berdasarkan popularitas chapter dengan algoritma weighted</p>
     </div>
     
-    <div class="divide-y divide-amber-200">
+    <div class="divide-y divide-gray-200">
       {% for album in analytics.weighted_album_stats %}
       <div class="p-6">
         <div class="flex items-start justify-between">
@@ -190,8 +190,8 @@
               <i class="fas fa-book text-white text-lg"></i>
             </div>
             <div>
-              <div class="font-medium text-amber-800">{{ album.album_title }}</div>
-              <div class="text-sm text-amber-600">
+              <div class="font-medium text-gray-900">{{ album.album_title }}</div>
+              <div class="text-sm text-gray-600">
                 {{ album.total_chapters_rated }} chapters rated • {{ album.total_ratings }} total ratings
               </div>
             </div>
@@ -204,7 +204,7 @@
                 <i class="far fa-star text-gray-300 text-lg"></i>
               {% endif %}
             {% endfor %}
-            <span class="ml-2 text-sm font-medium text-amber-800">{{ "%.2f"|format(album.weighted_average) }}/5</span>
+            <span class="ml-2 text-sm font-medium text-gray-900">{{ "%.2f"|format(album.weighted_average) }}/5</span>
           </div>
         </div>
       </div>
@@ -214,23 +214,23 @@
   {% endif %}
 
   <!-- Recent Ratings -->
-  <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-lg shadow-lg">
-    <div class="p-6 border-b border-amber-200">
-      <h3 class="text-lg font-semibold text-amber-800">Rating Terbaru</h3>
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg">
+    <div class="p-6 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">Rating Terbaru</h3>
     </div>
     
     {% if analytics.recent_ratings %}
-    <div class="divide-y divide-amber-200">
+    <div class="divide-y divide-gray-200">
       {% for rating in analytics.recent_ratings %}
       <div class="p-6">
         <div class="flex items-start justify-between">
           <div class="flex items-center space-x-3">
-            <div class="w-12 h-12 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full flex items-center justify-center">
+            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
               <span class="text-white font-semibold text-lg">{{ rating.user.username[0]|upper }}</span>
             </div>
             <div>
-              <div class="font-medium text-amber-800">{{ rating.user.username }}</div>
-              <div class="text-sm text-amber-600">
+              <div class="font-medium text-gray-900">{{ rating.user.username }}</div>
+              <div class="text-sm text-gray-600">
                 <i class="fas fa-clock mr-1"></i>{{ rating.created_at.strftime('%Y-%m-%d %H:%M') }}
                 {% if rating.content_type == 'news' %}
                   <i class="fas fa-newspaper ml-2 mr-1"></i>News #{{ rating.content_id }}
@@ -248,19 +248,59 @@
                 <i class="far fa-star text-gray-300 text-lg"></i>
               {% endif %}
             {% endfor %}
-            <span class="ml-2 text-sm font-medium text-amber-800">{{ rating.rating_value }}/5</span>
+            <span class="ml-2 text-sm font-medium text-gray-900">{{ rating.rating_value }}/5</span>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
+    {% if analytics.recent_pages and analytics.recent_pages > 1 %}
+    <div class="p-6 border-t border-gray-200">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="text-sm text-gray-600">
+          {% if analytics.recent_total %}
+          Menampilkan {{ analytics.recent_ratings|length }} dari {{ analytics.recent_total }} rating terbaru
+          {% else %}
+          Navigasi rating terbaru
+          {% endif %}
+        </div>
+        <nav class="inline-flex items-center space-x-1" role="navigation" aria-label="Pagination">
+          <a href="{{ url_for('ratings.rating_analytics', page=1) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ 1 == (analytics.recent_page or 1) and 'pointer-events-none text-gray-400 border-gray-200' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+             aria-label="Halaman pertama">«</a>
+          <a href="{{ url_for('ratings.rating_analytics', page=(analytics.recent_page > 1) and (analytics.recent_page - 1) or 1) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ (analytics.recent_page and analytics.recent_page > 1) and 'text-gray-700 border-gray-300 hover:bg-gray-100' or 'pointer-events-none text-gray-400 border-gray-200' }}"
+             aria-label="Sebelumnya">‹</a>
+
+          {% set total_pages = analytics.recent_pages %}
+          {% set current = analytics.recent_page or 1 %}
+          {% for p in range(1, total_pages + 1) %}
+            {% if p == 1 or p == total_pages or (p >= current - 2 and p <= current + 2) %}
+              <a href="{{ url_for('ratings.rating_analytics', page=p) }}"
+                 class="px-3 py-2 text-sm border rounded-lg transition-colors {{ p == current and 'bg-blue-600 text-white border-blue-600 cursor-default' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+                 aria-current="{{ p == current and 'page' or undefined }}">{{ p }}</a>
+            {% elif p == current - 3 or p == current + 3 %}
+              <span class="px-2 text-gray-400">…</span>
+            {% endif %}
+          {% endfor %}
+
+          <a href="{{ url_for('ratings.rating_analytics', page=(analytics.recent_page < total_pages) and (analytics.recent_page + 1) or total_pages) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ (analytics.recent_page and analytics.recent_page < total_pages) and 'text-gray-700 border-gray-300 hover:bg-gray-100' or 'pointer-events-none text-gray-400 border-gray-200' }}"
+             aria-label="Berikutnya">›</a>
+          <a href="{{ url_for('ratings.rating_analytics', page=total_pages) }}"
+             class="px-3 py-2 text-sm border rounded-lg transition-colors {{ total_pages == current and 'pointer-events-none text-gray-400 border-gray-200' or 'text-gray-700 border-gray-300 hover:bg-gray-100' }}"
+             aria-label="Halaman terakhir">»</a>
+        </nav>
+      </div>
+    </div>
+    {% endif %}
     {% else %}
     <div class="p-12 text-center">
-      <div class="text-amber-400 mb-6">
+      <div class="text-blue-400 mb-6">
         <i class="fas fa-star text-6xl"></i>
       </div>
-      <h3 class="text-xl font-semibold text-amber-800 mb-2">Tidak Ada Rating</h3>
-      <p class="text-amber-600">Tidak ada rating terbaru yang ditemukan.</p>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Tidak Ada Rating</h3>
+      <p class="text-gray-600">Tidak ada rating terbaru yang ditemukan.</p>
     </div>
     {% endif %}
   </div>
@@ -268,7 +308,7 @@
   <!-- Back to Management -->
   <div class="mt-8 text-center">
     <a href="{{ url_for('ratings.admin_ratings') }}" 
-       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white rounded-lg font-medium transition-all duration-300 shadow-md">
+       class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-300 shadow-md">
       <i class="fas fa-arrow-left mr-2"></i>Kembali ke Manajemen Rating
     </a>
   </div>

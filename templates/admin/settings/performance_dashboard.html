@@ -9,17 +9,17 @@
 
 <!-- Navigation Tabs -->
 <div class="mb-6">
-  <nav class="flex space-x-1 bg-amber-100 p-1 rounded-lg" role="tablist">
-    <button class="tab-button active bg-white text-amber-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
+  <nav class="flex space-x-1 bg-gray-100 p-1 rounded-lg" role="tablist">
+    <button class="tab-button active bg-white text-gray-800 px-4 py-2 rounded-md font-medium" data-tab="overview">
       <i class="fas fa-chart-line mr-2"></i>Ringkasan
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="routes">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="routes">
       <i class="fas fa-route mr-2"></i>Performa Rute
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="database">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="database">
       <i class="fas fa-database mr-2"></i>Database
     </button>
-    <button class="tab-button bg-amber-200 text-amber-700 px-4 py-2 rounded-md font-medium" data-tab="cache">
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="cache">
       <i class="fas fa-memory mr-2"></i>Cache
     </button>
   </nav>
@@ -27,11 +27,11 @@
 
 <!-- Overview Tab -->
 <div id="overview-tab" class="tab-content active">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Ringkasan Performa Sistem</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Ringkasan Performa Sistem</h2>
       <div class="flex space-x-2">
-        <button id="refresh-performance" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="refresh-performance" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-sync-alt mr-2"></i>Segarkan
         </button>
         <button id="clear-cache" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
@@ -234,10 +234,10 @@
 
 <!-- Routes Performance Tab -->
 <div id="routes-tab" class="tab-content hidden">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Performa Rute</h2>
-      <button id="refresh-routes" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+      <h2 class="text-xl font-semibold text-gray-800">Performa Rute</h2>
+      <button id="refresh-routes" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
         <i class="fas fa-sync-alt mr-2"></i>Segarkan
       </button>
     </div>
@@ -283,9 +283,9 @@
 
 <!-- Database Tab -->
 <div id="database-tab" class="tab-content hidden">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Performa Database</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Performa Database</h2>
       <div class="flex space-x-2">
         <button id="optimize-database" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-cogs mr-2"></i>Optimize DB
@@ -299,7 +299,7 @@
         <button id="list-backups" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-list mr-2"></i>List Backups
         </button>
-        <button id="refresh-database" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="refresh-database" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-sync-alt mr-2"></i>Refresh
         </button>
       </div>
@@ -482,14 +482,14 @@
 
 <!-- Cache Tab -->
 <div id="cache-tab" class="tab-content hidden">
-  <main class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-xl font-semibold text-amber-800">Performa Cache</h2>
+      <h2 class="text-xl font-semibold text-gray-800">Performa Cache</h2>
       <div class="flex space-x-2">
         <button id="invalidate-news-cache" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-newspaper mr-2"></i>Invalidate News
         </button>
-        <button id="invalidate-albums-cache" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="invalidate-albums-cache" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-book mr-2"></i>Invalidate Albums
         </button>
         <button id="invalidate-chapters-cache" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium">
@@ -501,7 +501,7 @@
         <button id="clear-all-cache" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-trash mr-2"></i>Clear All
         </button>
-        <button id="refresh-cache" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="refresh-cache" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-sync-alt mr-2"></i>Refresh
         </button>
       </div>

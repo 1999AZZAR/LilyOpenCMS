@@ -83,46 +83,46 @@
                         'id': 'content',
                         'title': 'Manajemen Konten',
                         'icon': 'fas fa-newspaper',
-                        'visible': can_manage_content(),
+                        'visible': can_manage_content() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'cerita',
                                 'title': 'Cerita',
                                 'icon': 'fas fa-newspaper',
-                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete', 'publish']),
+                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete', 'publish']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'visible': has_permission('news', 'create')},
-                                    {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'visible': has_any_permission('news', ['read', 'update', 'delete', 'publish'])}
+                                    {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'visible': has_permission('news', 'create') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'visible': has_any_permission('news', ['read', 'update', 'delete', 'publish']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'album',
                                 'title': 'Album',
                                 'icon': 'fas fa-book-open',
-                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete']),
+                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'visible': has_permission('news', 'read')},
-                                    {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'visible': has_permission('news', 'read')},
-                                    {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'visible': has_permission('news', 'read')}
+                                    {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'visible': has_permission('news', 'read') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'visible': has_permission('news', 'read') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'visible': has_permission('news', 'read') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'media',
                                 'title': 'Media',
                                 'icon': 'fas fa-photo-video',
-                                'visible': has_any_permission('images', ['read', 'create', 'update', 'delete']) or has_any_permission('videos', ['read', 'create', 'update', 'delete']),
+                                'visible': has_any_permission('images', ['read', 'create', 'update', 'delete']) or has_any_permission('videos', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'visible': has_any_permission('images', ['read', 'create', 'update', 'delete'])},
-                                    {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'visible': has_any_permission('videos', ['read', 'create', 'update', 'delete'])}
+                                    {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'visible': has_any_permission('images', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'visible': has_any_permission('videos', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'kategori',
                                 'title': 'Kategori',
                                 'icon': 'fas fa-tags',
-                                'visible': can_manage_categories(),
+                                'visible': can_manage_categories() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'visible': can_manage_categories()}
+                                    {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'visible': can_manage_categories() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
                                 ]
                             }
                         ]
@@ -131,7 +131,7 @@
                         'id': 'ads',
                         'title': 'Manajemen Iklan',
                         'icon': 'fas fa-ad',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
+                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'ads-dashboard',
@@ -168,7 +168,7 @@
                         'id': 'engagement',
                         'title': 'Engagement & Feedback',
                         'icon': 'fas fa-comments',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
+                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'engagement-moderation',
@@ -195,7 +195,7 @@
                         'id': 'users',
                         'title': 'Manajemen Pengguna',
                         'icon': 'fas fa-users',
-                        'visible': can_manage_users(),
+                        'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'users-accounts',
@@ -203,7 +203,16 @@
                                 'icon': 'fas fa-user',
                                 'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': can_manage_users()}
+                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                ]
+                            },
+                            {
+                                'id': 'users-editor-writer',
+                                'title': 'Editor ↔ Penulis',
+                                'icon': 'fas fa-user-edit',
+                                'visible': True,
+                                'links': [
+                                    {'url': url_for('main.editor_writer_management'), 'icon': 'fas fa-user-edit', 'label': 'Relasi Editor-Penulis', 'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER or (current_user.custom_role and current_user.custom_role.name.lower() in ['subadmin','editor'])}
                                 ]
                             },
                             {
@@ -221,38 +230,38 @@
                         'id': 'brand',
                         'title': 'Brand & Identitas',
                         'icon': 'fas fa-palette',
-                        'visible': can_manage_settings(),
+                        'visible': can_manage_settings() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'brand-identity',
                                 'title': 'Brand',
                                 'icon': 'fas fa-palette',
-                                'visible': current_user.is_owner(),
+                                'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'visible': current_user.is_owner()},
-                                    {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'visible': current_user.is_owner()},
-                                    {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'visible': current_user.is_owner()},
-                                    {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'visible': current_user.is_owner()},
-                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'visible': current_user.is_owner()}
+                                    {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'brand-social',
                                 'title': 'Sosial',
                                 'icon': 'fas fa-share-alt',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
-                                    {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
+                                    {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'brand-team',
                                 'title': 'Tim',
                                 'icon': 'fas fa-user-friends',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
+                                    {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
                                 ]
                             }
                         ]
@@ -261,27 +270,27 @@
                         'id': 'navigation',
                         'title': 'Navigasi & SEO',
                         'icon': 'fas fa-sitemap',
-                        'visible': can_manage_settings(),
+                        'visible': can_manage_settings() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'navigation-management',
                                 'title': 'Navigasi',
                                 'icon': 'fas fa-link',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
+                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'navigation-seo',
                                 'title': 'SEO',
                                 'icon': 'fas fa-search',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
+                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
-                                    {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
-                                    {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN},
-                                    {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN}
+                                    {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
                                 ]
                             }
                         ]
@@ -290,7 +299,7 @@
                         'id': 'analytics',
                         'title': 'Analitik & Performa',
                         'icon': 'fas fa-chart-line',
-                        'visible': current_user.is_owner(),
+                        'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'analytics-dashboard',
@@ -318,7 +327,7 @@
                         'id': 'legal',
                         'title': 'Legal & Kebijakan',
                         'icon': 'fas fa-shield-alt',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN,
+                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'legal-policies',
@@ -853,39 +862,125 @@
             }
         });
 
-        // Quick Toggles Functionality
+        // Quick Toggles Functionality (unified across sidebar and settings pages)
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize toggles from localStorage
-            const toggles = ['comments', 'ratings', 'ads', 'campaigns'];
-            
-            toggles.forEach(toggle => {
-                const toggleElement = document.getElementById(`sidebar-toggle-${toggle}`);
-                if (toggleElement) {
-                    // Load saved state
-                    const savedState = localStorage.getItem(`toggle-${toggle}`);
-                    if (savedState === 'true') {
-                        toggleElement.checked = true;
-                        toggleElement.classList.add('bg-blue-500');
-                    }
-                    
-                    // Add change event listener
-                    toggleElement.addEventListener('change', function() {
-                        if (this.checked) {
-                            this.classList.add('bg-blue-500');
-                            localStorage.setItem(`toggle-${toggle}`, 'true');
-                        } else {
-                            this.classList.remove('bg-blue-500');
-                            localStorage.setItem(`toggle-${toggle}`, 'false');
-                        }
-                        
-                        // Dispatch custom event for other components to listen to
-                        const event = new CustomEvent('toggleChanged', {
-                            detail: { toggle: toggle, enabled: this.checked }
-                        });
-                        document.dispatchEvent(event);
+            // Helpers to get elements possibly present on different pages
+            const el = id => document.getElementById(id);
+
+            // COMMENTS and RATINGS remain UI-only (localStorage)
+            function initUiOnlyToggle(key) {
+                const sidebar = el(`sidebar-toggle-${key}`);
+                const saved = localStorage.getItem(`toggle-${key}`) === 'true';
+                if (sidebar) {
+                    sidebar.checked = saved;
+                    sidebar.classList.toggle('bg-blue-500', saved);
+                    sidebar.addEventListener('change', function() {
+                        const enabled = this.checked;
+                        this.classList.toggle('bg-blue-500', enabled);
+                        localStorage.setItem(`toggle-${key}`, String(enabled));
+                        document.dispatchEvent(new CustomEvent('toggleChanged', { detail: { toggle: key, enabled } }));
                     });
                 }
-            });
+                // Cross-page mirror elements (settings cards)
+                const cardToggle = el(`toggle-${key}-enable`);
+                if (cardToggle) {
+                    cardToggle.checked = saved;
+                    cardToggle.classList.toggle('bg-blue-500', saved);
+                    cardToggle.addEventListener('change', function() {
+                        const enabled = this.checked;
+                        this.classList.toggle('bg-blue-500', enabled);
+                        localStorage.setItem(`toggle-${key}`, String(enabled));
+                        if (sidebar) { sidebar.checked = enabled; sidebar.classList.toggle('bg-blue-500', enabled); }
+                        document.dispatchEvent(new CustomEvent('toggleChanged', { detail: { toggle: key, enabled } }));
+                    });
+                }
+            }
+
+            initUiOnlyToggle('comments');
+            initUiOnlyToggle('ratings');
+
+            // ADS uses backend persistence at /api/settings/ads
+            const sidebarAds = el('sidebar-toggle-ads');
+            const cardAds = el('toggle-ads-enable');
+
+            async function fetchAdsSetting() {
+                try {
+                    const rsp = await fetch('/api/settings/ads');
+                    if (!rsp.ok) throw new Error('fetch failed');
+                    const data = await rsp.json();
+                    return !!(data && data.ads && data.ads.show_ads);
+                } catch (e) {
+                    // Fallback to localStorage
+                    const saved = localStorage.getItem('toggle-ads');
+                    return saved === 'true';
+                }
+            }
+
+            function setAdsUi(enabled) {
+                if (sidebarAds) { sidebarAds.checked = enabled; sidebarAds.classList.toggle('bg-blue-500', enabled); }
+                if (cardAds) { cardAds.checked = enabled; cardAds.classList.toggle('bg-blue-500', enabled); }
+                localStorage.setItem('toggle-ads', String(enabled));
+                document.dispatchEvent(new CustomEvent('toggleChanged', { detail: { toggle: 'ads', enabled } }));
+            }
+
+            async function saveAdsSetting(enabled, revertOnFailEl) {
+                try {
+                    const rsp = await fetch('/api/settings/ads', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ show_ads: enabled })
+                    });
+                    const res = await rsp.json();
+                    if (!rsp.ok || !res.success) throw new Error(res.message || 'save failed');
+                    setAdsUi(enabled);
+                } catch (e) {
+                    // Revert UI
+                    const current = !(revertOnFailEl && revertOnFailEl.checked);
+                    setAdsUi(current);
+                    if (typeof showToast === 'function') {
+                        showToast('error', 'Gagal menyimpan pengaturan iklan');
+                    }
+                }
+            }
+
+            // Initialize ADS from backend
+            (async () => { setAdsUi(await fetchAdsSetting()); })();
+
+            if (sidebarAds) {
+                sidebarAds.addEventListener('change', function() {
+                    saveAdsSetting(this.checked, this);
+                });
+            }
+            if (cardAds) {
+                cardAds.addEventListener('change', function() {
+                    saveAdsSetting(this.checked, this);
+                });
+            }
+
+            // CAMPAIGNS uses shared localStorage across pages (no backend yet)
+            const sidebarCampaigns = el('sidebar-toggle-campaigns');
+            const cardCampaigns = el('toggle-campaigns-enable');
+            const savedCampaigns = localStorage.getItem('toggle-campaigns') === 'true';
+
+            function setCampaignsUi(enabled) {
+                if (sidebarCampaigns) { sidebarCampaigns.checked = enabled; sidebarCampaigns.classList.toggle('bg-blue-500', enabled); }
+                if (cardCampaigns) { cardCampaigns.checked = enabled; cardCampaigns.classList.toggle('bg-blue-500', enabled); }
+                localStorage.setItem('toggle-campaigns', String(enabled));
+                document.dispatchEvent(new CustomEvent('toggleChanged', { detail: { toggle: 'campaigns', enabled } }));
+            }
+
+            setCampaignsUi(savedCampaigns);
+
+            if (sidebarCampaigns) {
+                sidebarCampaigns.addEventListener('change', function() {
+                    setCampaignsUi(this.checked);
+                });
+            }
+            if (cardCampaigns) {
+                cardCampaigns.addEventListener('change', function() {
+                    setCampaignsUi(this.checked);
+                });
+            }
         });
     </script>
     {% block extra_scripts %}{% endblock %}

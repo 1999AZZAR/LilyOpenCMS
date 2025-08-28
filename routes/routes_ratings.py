@@ -11,6 +11,21 @@ ratings_bp = Blueprint('ratings', __name__)
 def get_ratings(content_type, content_id):
     """Get rating statistics for a specific content (news or album)."""
     try:
+        # Pagination params for Recent Ratings on analytics page
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+        if per_page and per_page > 100:
+            per_page = 100
+        # Pagination params for Recent Ratings on analytics page
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+        if per_page and per_page > 100:
+            per_page = 100
+        # Pagination params for recent ratings
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+        if per_page > 100:
+            per_page = 100
         # Validate content type
         if content_type not in ['news', 'album']:
             return jsonify({'error': 'Invalid content type'}), 400
@@ -292,6 +307,12 @@ def delete_rating(content_type, content_id):
 def get_rating_stats():
     """Get overall rating statistics."""
     try:
+        # Pagination params for Recent Ratings on analytics page
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+        if per_page and per_page > 100:
+            per_page = 100
+
         # Get overall statistics
         total_ratings = Rating.query.count()
         
@@ -501,6 +522,15 @@ def rating_analytics():
         return redirect(url_for('main.index'))
     
     try:
+        # Pagination params for Recent Ratings on analytics page
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+        if per_page and per_page > 100:
+            per_page = 100
+
+        # Optional cap for weighted albums to avoid heavy processing
+        weighted_albums_limit = request.args.get('wa_limit', default=10, type=int)
+
         # Get overall statistics
         total_ratings = Rating.query.count()
         
@@ -540,12 +570,20 @@ def rating_analytics():
                 })
                 total_weighted_rating += weighted_stats['weighted_average']
                 albums_with_weighted_ratings += 1
+
+        # Sort by weighted_average desc and cap the list to reduce payload size
+        if weighted_album_stats:
+            weighted_album_stats.sort(key=lambda a: a['weighted_average'], reverse=True)
+            if weighted_albums_limit and weighted_albums_limit > 0:
+                weighted_album_stats = weighted_album_stats[:weighted_albums_limit]
         
         # Calculate average weighted rating
         avg_weighted_album_rating = round(total_weighted_rating / albums_with_weighted_ratings, 2) if albums_with_weighted_ratings > 0 else 0.0
         
-        # Get recent ratings
-        recent_ratings = Rating.query.order_by(Rating.created_at.desc()).limit(10).all()
+        # Get recent ratings (paginated)
+        recent_query = Rating.query.order_by(Rating.created_at.desc())
+        recent_pagination = recent_query.paginate(page=page, per_page=per_page, error_out=False)
+        recent_ratings = recent_pagination.items
         
         analytics_data = {
             'total_ratings': total_ratings,
@@ -558,7 +596,10 @@ def rating_analytics():
             'weighted_album_average': avg_weighted_album_rating,
             'albums_with_weighted_ratings': albums_with_weighted_ratings,
             'weighted_album_stats': weighted_album_stats,
-            'recent_ratings': recent_ratings  # Keep as Rating objects, not dictionaries
+            'recent_ratings': recent_ratings,  # Keep as Rating objects, not dictionaries
+            'recent_page': recent_pagination.page,
+            'recent_pages': recent_pagination.pages,
+            'recent_total': recent_pagination.total
         }
         
         return render_template(
