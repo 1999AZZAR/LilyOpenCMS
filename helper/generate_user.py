@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 
 # Add the parent directory to the Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -93,12 +93,24 @@ users = [
     {"username": "general5", "role": UserRole.GENERAL, "is_premium": False},
 ]
 
+import random
+
 # Passwords for different roles
 role_passwords = {
     UserRole.SUPERUSER: generate_password_hash("suladang"),
     UserRole.ADMIN: generate_password_hash("admin_password"),
     UserRole.GENERAL: generate_password_hash("general_password")
 }
+
+def make_birthdate(min_age: int, max_age: int) -> date:
+    """Generate a safe random birthdate ensuring age between bounds."""
+    today = date.today()
+    age = random.randint(min_age, max_age)
+    year = today.year - age
+    month = random.randint(1, 12)
+    # Use safe day to avoid month length issues
+    day = random.randint(1, 28)
+    return date(year, month, day)
 
 # Insert users into the database
 with app.app_context():
@@ -124,6 +136,12 @@ with app.app_context():
                 # Set premium to expire in 1 year from now
                 premium_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
             
+            # Ensure adults for admins and superuser; mixed for others
+            if user_data["role"] in (UserRole.SUPERUSER, UserRole.ADMIN):
+                user_birthdate = make_birthdate(30, 55)
+            else:
+                user_birthdate = make_birthdate(16, 45)
+
             new_user = User(
                 username=user_data["username"],
                 password_hash=role_passwords[user_data["role"]],
@@ -133,6 +151,7 @@ with app.app_context():
                 is_premium=is_premium,
                 has_premium_access=has_premium_access,
                 premium_expires_at=premium_expires_at,
+                birthdate=user_birthdate,
             )
             db.session.add(new_user)
             db.session.flush()  # Flush to get the user ID
@@ -162,6 +181,10 @@ with app.app_context():
                     existing_user.is_premium = True
                     existing_user.has_premium_access = True
                     existing_user.premium_expires_at = datetime.now(timezone.utc) + timedelta(days=365)
+                    updated = True
+                # Ensure adult birthdate for superuser
+                if not existing_user.birthdate:
+                    existing_user.birthdate = make_birthdate(35, 55)
                     updated = True
                 
                 # Assign Super Admin role if not already assigned

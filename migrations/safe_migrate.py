@@ -257,7 +257,7 @@ def safe_migrate():
                     print(f"   {i:2d}. {col}")
                 
                 # Check for reading history and library columns
-                user_required_columns = ['reading_history_id', 'user_library_id']
+                user_required_columns = ['reading_history_id', 'user_library_id', 'birthdate']
                 missing_user_cols = [col for col in user_required_columns if col not in user_columns]
                 
                 if missing_user_cols:
@@ -270,6 +270,9 @@ def safe_migrate():
                             elif col == 'user_library_id':
                                 db.session.execute(text("ALTER TABLE user ADD COLUMN user_library_id INTEGER"))
                                 print("✅ Added user_library_id column to user")
+                            elif col == 'birthdate':
+                                db.session.execute(text("ALTER TABLE user ADD COLUMN birthdate DATE"))
+                                print("✅ Added birthdate column to user")
                         except Exception as e:
                             print(f"⚠️ Column {col} might already exist: {e}")
                     db.session.commit()

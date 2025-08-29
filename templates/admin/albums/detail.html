@@ -1,8 +1,8 @@
 {% extends "admin_base.html" %}
 
-{% block title %}{{ album.title }} - Album Detail - Admin{% endblock %}
+{% block title %}{{ album.title }} - Buku/Seri Detail - Admin{% endblock %}
 {% block hero_title %}{{ album.title }}{% endblock %}
-{% block hero_desc %}Detail album dan manajemen bab{% endblock %}
+{% block hero_desc %}Detail buku/seri dan manajemen bab{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -18,7 +18,7 @@
             <li>
                 <div class="flex items-center">
                     <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-                    <a href="{{ url_for('albums.list_albums') }}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Album</a>
+                    <a href="{{ url_for('albums.list_albums') }}" class="text-sm font-medium text-gray-700 hover:text-blue-600">Buku/Seri</a>
                 </div>
             </li>
             <li aria-current="page">
@@ -36,7 +36,7 @@
             <div class="flex items-start space-x-6">
                 <div class="flex-shrink-0">
                     {% if album.cover_image and album.cover_image.filepath %}
-                    <img src="{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}" alt="Album Cover" class="w-32 h-40 object-cover rounded-lg shadow-md">
+                    <img src="{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}" alt="Buku/Seri Cover" class="w-32 h-40 object-cover rounded-lg shadow-md">
                     {% else %}
                     <div class="w-32 h-40 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg shadow-md flex items-center justify-center">
                         <i class="fas fa-book-open text-4xl text-blue-500"></i>

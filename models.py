@@ -167,6 +167,8 @@ class User(db.Model, UserMixin):
     is_suspended = db.Column(db.Boolean, default=False, nullable=False)
     suspension_reason = db.Column(db.Text, nullable=True)
     suspension_until = db.Column(db.DateTime, nullable=True)
+    # Birthdate for age-based access control
+    birthdate = db.Column(db.Date, nullable=True, index=True)
     
     # Use timezone-aware default
     created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
@@ -305,6 +307,62 @@ class User(db.Model, UserMixin):
         else:
             return self.username
 
+    # ---- Age helpers ----
+    def get_age(self) -> int:
+        """Return the user's age in whole years, or -1 if unknown."""
+        if not self.birthdate:
+            return -1
+        try:
+            today = datetime.now(timezone.utc).date()
+            years = today.year - self.birthdate.year
+            # Adjust if birthday has not occurred yet this year
+            if (today.month, today.day) < (self.birthdate.month, self.birthdate.day):
+                years -= 1
+            return max(years, 0)
+        except Exception:
+            return -1
+
+    @staticmethod
+    def min_age_for_rating(age_rating: str) -> int:
+        """Map content rating string to minimum age requirement (years).
+
+        Known values: SU,P,A,3+,7+,13+,17+,18+,21+
+        - SU/P/A default to 0
+        """
+        if not age_rating:
+            return 0
+        normalized = age_rating.upper().replace(" ", "")
+        if normalized in {"R/13+", "R13+"}:
+            normalized = "13+"
+        if normalized in {"D/17+", "D17+"}:
+            normalized = "17+"
+        mapping = {
+            "SU": 0,
+            "P": 0,
+            "A": 0,
+            "3+": 3,
+            "7+": 7,
+            "13+": 13,
+            "17+": 17,
+            "18+": 18,
+            "21+": 21,
+        }
+        return mapping.get(normalized, 0)
+
+    def can_access_age_rating(self, age_rating: str) -> bool:
+        """Return True if user's age satisfies the rating requirement.
+
+        If birthdate unknown, return False for restrictive ratings (>=13+), True for SU/P/A.
+        """
+        min_age = self.min_age_for_rating(age_rating)
+        if min_age <= 0:
+            return True
+        age = self.get_age()
+        if age < 0:
+            # Unknown age: conservative default
+            return False
+        return age >= min_age
+
     def to_dict(self):
         """Convert user to dictionary for JSON serialization."""
         return {
@@ -328,7 +386,9 @@ class User(db.Model, UserMixin):
             "suspension_until": self.suspension_until.isoformat() if self.suspension_until else None,
             "has_premium_access": self.has_premium_access,
             "premium_expires_at": self.premium_expires_at.isoformat() if self.premium_expires_at else None,
-            "ad_preferences": self.ad_preferences
+            "ad_preferences": self.ad_preferences,
+            "birthdate": self.birthdate.isoformat() if self.birthdate else None,
+            "age": self.get_age(),
         }
 
 

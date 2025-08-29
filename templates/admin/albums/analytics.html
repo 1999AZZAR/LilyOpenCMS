@@ -1,7 +1,7 @@
 {% extends "admin_base.html" %}
 
-{% block title %}Analisis Album - Admin{% endblock %}
-{% block hero_title %}Analisis Album{% endblock %}
+{% block title %}Analisis Buku/Seri - Admin{% endblock %}
+{% block hero_title %}Analisis Buku/Seri{% endblock %}
 {% block hero_desc %}Insights dan statistik performa{% endblock %}
 
 {% block content %}
@@ -32,7 +32,7 @@
                     <i class="fas fa-book-open text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Album</p>
+                    <p class="text-sm font-medium text-gray-600">Total Buku/Seri</p>
                     <p class="text-2xl font-semibold text-gray-900">{{ total_albums }}</p>
                 </div>
             </div>
@@ -79,7 +79,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Top Performing Albums -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Album Terbaik</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Buku/Seri Terbaik</h3>
             <div class="space-y-4">
                 {% for album in top_albums %}
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

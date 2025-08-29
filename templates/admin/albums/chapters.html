@@ -6,6 +6,32 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
+    <!-- Explanation Section -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-blue-900 mb-2">Mengelola Bab Buku/Seri</h3>
+                <p class="text-blue-800 mb-3">
+                    <strong>{{ album.title }}</strong> adalah buku/seri yang berisi kumpulan artikel sebagai bab. 
+                    Setiap artikel yang Anda tambahkan akan menjadi bab dalam buku/seri ini.
+                </p>
+                <div class="bg-white rounded-lg p-4 border border-blue-100">
+                    <h4 class="font-semibold text-blue-900 mb-2">Cara Kerja:</h4>
+                    <ul class="text-blue-800 space-y-1 text-sm">
+                        <li>• <strong>Artikel Tersedia:</strong> Menampilkan semua artikel yang Anda miliki (diterbitkan dan draft)</li>
+                        <li>• <strong>Menambah Bab:</strong> Klik "Tambah" pada artikel untuk menjadikannya bab</li>
+                        <li>• <strong>Mengatur Urutan:</strong> Gunakan tombol panah untuk mengatur urutan bab</li>
+                        <li>• <strong>Visibilitas Bab:</strong> Setiap bab memiliki visibilitas independen dari artikel sumber</li>
+                        <li>• <strong>Melihat Sumber:</strong> Klik ikon link untuk melihat artikel sumber di tab baru</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Breadcrumb -->
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -117,31 +143,40 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            {% if chapter.news and chapter.news.is_visible %}
+                            {% if chapter.is_visible %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 <i class="fas fa-check mr-1"></i>Diterbitkan
                             </span>
                             {% else %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                <i class="fas fa-clock mr-1"></i>Draft/Draft
+                                <i class="fas fa-clock mr-1"></i>Draft
                             </span>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
+                            <div class="flex space-x-3">
                                 <button onclick="editChapter({{ chapter.id }})" 
-                                        class="text-indigo-600 hover:text-indigo-900" title="Edit Bab">
-                                    <i class="fas fa-edit"></i>
+                                        class="inline-flex items-center justify-center w-8 h-8 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors" 
+                                        title="Edit Bab">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                                <button onclick="toggleChapterVisibility({{ chapter.id }}, {{ chapter.is_visible|tojson }})" 
+                                        class="inline-flex items-center justify-center w-8 h-8 {% if chapter.is_visible %}text-green-600 hover:text-green-900 hover:bg-green-50{% else %}text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50{% endif %} rounded-lg transition-colors" 
+                                        title="{% if chapter.is_visible %}Hide Chapter{% else %}Show Chapter{% endif %}">
+                                    <i class="fas {% if chapter.is_visible %}fa-eye-slash{% else %}fa-eye{% endif %} text-sm"></i>
                                 </button>
                                 {% if chapter.news %}
                                 <a href="{{ url_for('main.news_detail', news_id=chapter.news.id, news_title=safe_title(chapter.news.title)) }}" 
-                                   class="text-blue-600 hover:text-blue-900" title="View Source Article">
-                                    <i class="fas fa-external-link-alt"></i>
+                                   target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" 
+                                   title="View Source Article (Opens in new tab)">
+                                    <i class="fas fa-external-link-alt text-sm"></i>
                                 </a>
                                 {% endif %}
                                 <button onclick="removeChapter({{ chapter.id }})" 
-                                        class="text-red-600 hover:text-red-900" title="Hapus Bab">
-                                    <i class="fas fa-trash"></i>
+                                        class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" 
+                                        title="Hapus Bab">
+                                    <i class="fas fa-trash text-sm"></i>
                                 </button>
                             </div>
                         </td>
@@ -174,31 +209,120 @@
     <!-- Available Articles -->
     <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Artikel Tersedia</h2>
-        <p class="text-gray-600 mb-4">Pilih artikel untuk ditambahkan sebagai bab ke album ini.</p>
+        <p class="text-gray-600 mb-4">Pilih artikel untuk ditambahkan sebagai bab ke album ini. Menampilkan semua artikel yang Anda miliki (diterbitkan dan draft).</p>
         
-        <div class="mb-4">
-            <input type="text" id="article-search" placeholder="Search articles..." 
-                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="mb-4 flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+                <input type="text" id="article-search" placeholder="Search articles..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex items-center space-x-2">
+                <label for="per-page" class="text-sm font-medium text-gray-700">Show:</label>
+                <select id="per-page" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="6" {% if request.args.get('per_page', '12') == '6' %}selected{% endif %}>6 per page</option>
+                    <option value="12" {% if request.args.get('per_page', '12') == '12' %}selected{% endif %}>12 per page</option>
+                    <option value="24" {% if request.args.get('per_page', '12') == '24' %}selected{% endif %}>24 per page</option>
+                    <option value="48" {% if request.args.get('per_page', '12') == '48' %}selected{% endif %}>48 per page</option>
+                </select>
+            </div>
         </div>
         
         <div id="available-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for article in available_news %}
             <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
                 <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-sm font-medium text-gray-900 line-clamp-2">{{ article.title }}</h3>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-medium text-gray-900 line-clamp-2">{{ article.title }}</h3>
+                        <div class="flex items-center mt-1">
+                            {% if article.is_visible %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                                <i class="fas fa-check mr-1"></i>Published
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mr-2">
+                                <i class="fas fa-clock mr-1"></i>Draft
+                            </span>
+                            {% endif %}
+                            <span class="text-xs text-gray-500">{{ article.category.name if article.category else 'Uncategorized' }}</span>
+                        </div>
+                    </div>
                     <button onclick="addArticleAsChapter({{ article.id }})" 
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors">
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors ml-2">
                         <i class="fas fa-plus mr-1"></i>Tambah
                     </button>
                 </div>
                 <p class="text-xs text-gray-500 mb-2">{{ article.description[:100] + '...' if article.description and article.description|length > 100 else article.description or 'No description' }}</p>
                 <div class="flex justify-between items-center text-xs text-gray-400">
-                    <span>{{ article.category.name if article.category else 'Uncategorized' }}</span>
                     <span>{{ article.created_at.strftime('%Y-%m-%d') if article.created_at else 'Unknown date' }}</span>
+                    <span>by {{ article.user.username if article.user else 'Unknown' }}</span>
                 </div>
             </div>
             {% endfor %}
         </div>
+        
+        <!-- Pagination -->
+        {% if pagination and pagination.pages > 1 %}
+        <div class="mt-6 flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+                Showing {{ pagination.items|length }} of {{ pagination.total }} articles
+                {% if pagination.total > pagination.per_page %}
+                (Page {{ pagination.page }} of {{ pagination.pages }})
+                {% endif %}
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Previous Page -->
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=pagination.prev_num, search=request.args.get('search', '')) }}" 
+                   class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Previous
+                </a>
+                {% else %}
+                <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-300 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed">
+                    <i class="fas fa-chevron-left mr-1"></i>
+                    Previous
+                </span>
+                {% endif %}
+                
+                <!-- Page Numbers -->
+                <div class="flex items-center space-x-1">
+                    {% for page_num in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                        {% if page_num %}
+                            {% if page_num != pagination.page %}
+                            <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=page_num, search=request.args.get('search', '')) }}" 
+                               class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
+                                {{ page_num }}
+                            </a>
+                            {% else %}
+                            <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg">
+                                {{ page_num }}
+                            </span>
+                            {% endif %}
+                        {% else %}
+                        <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-400">
+                            ...
+                        </span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <!-- Next Page -->
+                {% if pagination.has_next %}
+                <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=pagination.next_num, search=request.args.get('search', '')) }}" 
+                   class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
+                    Next
+                    <i class="fas fa-chevron-right ml-1"></i>
+                </a>
+                {% else %}
+                <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-300 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed">
+                    Next
+                    <i class="fas fa-chevron-right ml-1"></i>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         
         {% if not available_news %}
         <div class="text-center py-8">
@@ -476,6 +600,39 @@ function removeChapter(chapterId) {
     );
 }
 
+function toggleChapterVisibility(chapterId, currentVisibility) {
+    const action = currentVisibility ? 'hide' : 'show';
+    const message = currentVisibility ? 
+        'Apakah Anda yakin ingin menyembunyikan bab ini?' : 
+        'Apakah Anda yakin ingin menampilkan bab ini?';
+    
+    showConfirmModal(
+        `${currentVisibility ? 'Sembunyikan' : 'Tampilkan'} Bab`,
+        message,
+        () => {
+            fetch(`/admin/albums/{{ album.id }}/chapters/${chapterId}/toggle-visibility`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ is_visible: !currentVisibility })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengubah visibilitas bab');
+            });
+        }
+    );
+}
+
 function moveChapter(chapterId, direction) {
     fetch(`/admin/albums/{{ album.id }}/chapters/${chapterId}/move`, {
         method: 'POST',
@@ -518,6 +675,44 @@ document.getElementById('article-search').addEventListener('input', function(e) 
             article.style.display = 'none';
         }
     });
+});
+
+// Add search parameter to pagination links
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('article-search');
+    const perPageSelect = document.getElementById('per-page');
+    const paginationLinks = document.querySelectorAll('.pagination-link');
+    
+    // Update pagination links to include search term and per_page
+    function updatePaginationLinks() {
+        const searchTerm = searchInput.value;
+        const perPage = perPageSelect.value;
+        
+        paginationLinks.forEach(link => {
+            const url = new URL(link.href);
+            if (searchTerm) {
+                url.searchParams.set('search', searchTerm);
+            } else {
+                url.searchParams.delete('search');
+            }
+            url.searchParams.set('per_page', perPage);
+            link.href = url.toString();
+        });
+    }
+    
+    // Update links when search term changes
+    searchInput.addEventListener('input', updatePaginationLinks);
+    
+    // Update links when per-page changes
+    perPageSelect.addEventListener('change', function() {
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('per_page', this.value);
+        currentUrl.searchParams.delete('page'); // Reset to page 1
+        window.location.href = currentUrl.toString();
+    });
+    
+    // Initial update
+    updatePaginationLinks();
 });
 </script>
 {% endblock %}

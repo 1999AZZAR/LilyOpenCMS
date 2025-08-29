@@ -1,3 +1,5 @@
+mammoth==1.6.0
+python-docx==1.1.2
 # Core Flask Framework
 Flask
 Flask-SQLAlchemy

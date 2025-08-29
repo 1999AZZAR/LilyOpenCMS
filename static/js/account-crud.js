@@ -222,9 +222,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${news.total_shares !== undefined ? `<span class="mx-2">|</span><span><i class="fas fa-share-alt mr-1"></i> ${news.total_shares}</span>` : ''}
                         </div>
                     </div>
-                    <div class="mt-4 flex space-x-2 justify-end">
-                        <button onclick="toggleVisibility(${news.id}, ${!news.is_visible})" class="w-8 h-8 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="${news.is_visible ? 'Sembunyikan artikel' : 'Tampilkan artikel'}" title="${news.is_visible ? 'Sembunyikan' : 'Tampilkan'}"><i class="fas fa-${news.is_visible ? 'eye-slash' : 'eye'}"></i></button>
-                        <button data-news-id="${news.id}" class="delete-owned-news-btn w-8 h-8 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Hapus artikel" title="Hapus"><i class="fas fa-trash"></i></button>
+                    <div class="mt-4 flex space-x-3 justify-end">
+                        <a href="/settings/create_news?news_id=${news.id}" class="w-8 h-8 flex items-center justify-center bg-green-100 hover:bg-green-200 text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-green-300 transition-colors" aria-label="Edit artikel" title="Edit" target="_blank">
+                            <i class="fas fa-edit text-sm"></i>
+                        </a>
+                        <button onclick="toggleVisibility(${news.id}, ${!news.is_visible})" class="w-8 h-8 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors" aria-label="${news.is_visible ? 'Sembunyikan artikel' : 'Tampilkan artikel'}" title="${news.is_visible ? 'Sembunyikan' : 'Tampilkan'}">
+                            <i class="fas fa-${news.is_visible ? 'eye-slash' : 'eye'} text-sm"></i>
+                        </button>
+                        <button data-news-id="${news.id}" class="delete-owned-news-btn w-8 h-8 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300 transition-colors" aria-label="Hapus artikel" title="Hapus">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
                     </div>
                 </div>
             </div>

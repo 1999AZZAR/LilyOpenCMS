@@ -303,6 +303,193 @@ def delete_account():
     return jsonify({"message": "Account deleted successfully"}), 200
 
 
+@main_blueprint.route("/api/account/stats", methods=["GET"])
+@login_required
+def account_stats():
+    """Get comprehensive account statistics for the current user."""
+    try:
+        from models import News, Album, AlbumChapter, Comment, Rating
+        
+        # Get user's news/articles
+        user_news = News.query.filter_by(user_id=current_user.id).all()
+        total_articles = len(user_news)
+        visible_articles = len([n for n in user_news if n.is_visible])
+        total_reads = sum(n.read_count or 0 for n in user_news)
+        
+        # Get user's albums/books
+        user_albums = Album.query.filter_by(user_id=current_user.id).all()
+        total_albums = len(user_albums)
+        
+        # Get total chapters from user's albums
+        album_ids = [album.id for album in user_albums]
+        total_chapters = AlbumChapter.query.filter(AlbumChapter.album_id.in_(album_ids)).count() if album_ids else 0
+        
+        # Get user's comments
+        total_comments = Comment.query.filter_by(user_id=current_user.id).count()
+        
+        return jsonify({
+            "total_articles": total_articles,
+            "visible_articles": visible_articles,
+            "total_reads": total_reads,
+            "total_albums": total_albums,
+            "total_chapters": total_chapters,
+            "total_comments": total_comments
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@main_blueprint.route("/api/account/albums", methods=["GET"])
+@login_required
+def account_albums():
+    """Get user's albums with pagination and filtering."""
+    try:
+        from models import Album, Category
+        
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 12, type=int)
+        search = request.args.get('search', '').strip()
+        status = request.args.get('status', '').strip()
+        album_type = request.args.get('type', '').strip()
+        
+        # Base query for user's albums
+        query = Album.query.filter_by(user_id=current_user.id)
+        
+        # Apply filters
+        if search:
+            query = query.filter(Album.title.ilike(f'%{search}%'))
+        
+        if status:
+            if status == 'visible':
+                query = query.filter(Album.is_visible == True)
+            elif status == 'hidden':
+                query = query.filter(Album.is_visible == False)
+            elif status == 'archived':
+                query = query.filter(Album.is_archived == True)
+        
+        if album_type:
+            if album_type == 'premium':
+                query = query.filter(Album.is_premium == True)
+            elif album_type == 'regular':
+                query = query.filter(Album.is_premium == False)
+        
+        # Get paginated results
+        pagination = query.order_by(Album.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        albums_data = []
+        for album in pagination.items:
+            albums_data.append({
+                'id': album.id,
+                'title': album.title,
+                'category': album.category.name if album.category else 'Uncategorized',
+                'is_visible': album.is_visible,
+                'is_premium': album.is_premium,
+                'is_archived': album.is_archived,
+                'total_chapters': album.total_chapters or 0,
+                'created_at': album.created_at.strftime('%Y-%m-%d') if album.created_at else None
+            })
+        
+        return jsonify({
+            'albums': albums_data,
+            'total': pagination.total,
+            'pagination': {
+                'page': page,
+                'pages': pagination.pages,
+                'per_page': per_page,
+                'has_prev': pagination.has_prev,
+                'has_next': pagination.has_next
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@main_blueprint.route("/api/account/comments", methods=["GET"])
+@login_required
+def account_comments():
+    """Get user's recent comments."""
+    try:
+        from models import Comment, News
+        
+        # Get user's recent comments
+        comments = Comment.query.filter_by(user_id=current_user.id)\
+            .order_by(Comment.created_at.desc())\
+            .limit(10)\
+            .all()
+        
+        comments_data = []
+        for comment in comments:
+            # Get the article title
+            article_title = "Unknown Article"
+            if comment.content_type == 'news' and comment.content_id:
+                article = News.query.get(comment.content_id)
+                if article:
+                    article_title = article.title
+            
+            comments_data.append({
+                'id': comment.id,
+                'content': comment.content,
+                'article_title': article_title,
+                'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M') if comment.created_at else None,
+                'is_approved': comment.is_approved
+            })
+        
+        return jsonify({
+            'comments': comments_data
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@main_blueprint.route("/api/account/activity", methods=["GET"])
+@login_required
+def account_activity():
+    """Get user's recent activity."""
+    try:
+        from models import UserActivity, News, Album
+        
+        # Get user's recent activities
+        activities = UserActivity.query.filter_by(user_id=current_user.id)\
+            .order_by(UserActivity.created_at.desc())\
+            .limit(10)\
+            .all()
+        
+        activities_data = []
+        for activity in activities:
+            # Create human-readable descriptions
+            description = activity.description or activity.activity_type
+            
+            # Add more context based on activity type
+            if activity.activity_type == 'create_news':
+                description = f"Membuat artikel: {activity.description}"
+            elif activity.activity_type == 'update_news':
+                description = f"Mengupdate artikel: {activity.description}"
+            elif activity.activity_type == 'create_album':
+                description = f"Membuat buku/seri: {activity.description}"
+            elif activity.activity_type == 'update_album':
+                description = f"Mengupdate buku/seri: {activity.description}"
+            elif activity.activity_type == 'login':
+                description = "Login ke sistem"
+            elif activity.activity_type == 'logout':
+                description = "Logout dari sistem"
+            
+            activities_data.append({
+                'id': activity.id,
+                'action': activity.activity_type.replace('_', ' ').title(),
+                'description': description,
+                'created_at': activity.created_at.strftime('%Y-%m-%d %H:%M') if activity.created_at else None
+            })
+        
+        return jsonify({
+            'activities': activities_data
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @main_blueprint.route("/settings/pending-registrations")
 @login_required
 def pending_registrations():

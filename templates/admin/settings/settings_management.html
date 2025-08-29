@@ -85,6 +85,9 @@
       <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="legal">
         <i class="fas fa-shield-alt mr-2"></i>Legal & Kebijakan
       </button>
+      <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300" data-tab="tools">
+        <i class="fas fa-tools mr-2"></i>Tools & Utilitas
+      </button>
       <button class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-transparent hover:text-gray-800 hover:border-gray-300 transition-all duration-300 hidden" data-tab="results" id="results-tab-btn">
         <i class="fas fa-search mr-2"></i>Hasil Pencarian
       </button>
@@ -541,6 +544,20 @@
           </div>
           <h3 class="text-xl font-bold mb-2 text-gray-800">Optimasi SSR</h3>
           <p class="text-gray-600">Server-side rendering dan caching.</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Tools & Utilities Tab -->
+    <div class="tab-content" id="tools-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- DOCX Upload Tool Card -->
+        <a href="{{ url_for('main.tools_docx_upload') }}" class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center hover:shadow-xl transition-all duration-300" role="article" aria-label="Upload DOCX ke News">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center" aria-hidden="true">
+              <i class="fas fa-file-word text-2xl text-white"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2 text-gray-800">Upload DOCX ke News</h3>
+          <p class="text-gray-600">Upload dokumen DOCX dan konversi ke artikel.</p>
         </a>
       </div>
     </div>

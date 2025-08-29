@@ -1,5 +1,11 @@
 from routes import main_blueprint
 from .common_imports import *
+import io
+import re
+try:
+    import mammoth  # .docx to HTML/text
+except Exception:
+    mammoth = None
 @main_blueprint.route("/api/news/<int:news_id>", methods=["GET"])
 @login_required
 def get_single_news_api(news_id):
@@ -487,6 +493,339 @@ def create_news_api():
         return jsonify(
             {"error": "An internal error occurred while creating the news article."}
         ), 500
+
+
+@main_blueprint.route("/api/news/upload-docx", methods=["POST"])
+@login_required
+def upload_docx_create_news_api():
+    """Upload a .docx file and create a News item from its contents.
+
+    Form fields:
+    - file: .docx file (required)
+    - title: optional (fallback to first non-empty heading or filename)
+    - category: category_id (required)
+    - date: ISO date or YYYY-MM-DD (required)
+    - is_news, is_premium, is_visible, is_main_news: optional flags
+    - age_rating: optional, same normalization as standard create
+    - preview: if present/truthy, do not create; return parsed content for preview
+    """
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+    if mammoth is None:
+        return jsonify({"error": "mammoth is not installed on server"}), 500
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    file = request.files["file"]
+    if not file or not file.filename.lower().endswith(".docx"):
+        return jsonify({"error": "File must be a .docx"}), 400
+
+    # Read file bytes
+    docx_bytes = file.read()
+    if not docx_bytes:
+        return jsonify({"error": "Uploaded file is empty"}), 400
+
+    # Convert .docx to HTML using mammoth, then strip to text
+    try:
+        result = mammoth.convert_to_html(io.BytesIO(docx_bytes))
+        html = (result.value or "").strip()
+        # Prefer first <h1>/<h2> as title if title not provided
+        heading_match = re.search(r"<h[12][^>]*>(.*?)</h[12]>", html, re.IGNORECASE | re.DOTALL)
+        derived_title = None
+        if heading_match:
+            derived_title = re.sub(r"<[^>]+>", "", heading_match.group(1)).strip()
+
+        # Extract possible metadata lines from early paragraphs
+        # Tags line patterns in Indonesian
+        tag_patterns = [r"\bTag(?:ar)?\s*:\s*(?P<value>.+)", r"\bKata\s*Kunci\s*:\s*(?P<value>.+)"]
+        meta_description = None
+        tags_value = None
+        summary_value = None
+
+        # Find first few paragraphs
+        paragraphs = re.findall(r"<p[^>]*>(.*?)</p>", html, re.IGNORECASE | re.DOTALL)
+        cleaned_paragraphs = []
+        for idx, p in enumerate(paragraphs[:8]):
+            # Plain text for checks
+            p_text = re.sub(r"<[^>]+>", "", p).strip()
+            if not tags_value:
+                for pat in tag_patterns:
+                    m = re.search(pat, p_text, re.IGNORECASE)
+                    if m:
+                        try:
+                            tags_value = m.group('value').strip()
+                        except IndexError:
+                            # Fallback to last captured group if named not available
+                            tags_value = m.group(m.lastindex).strip() if m.lastindex else None
+                        break
+            # Summary line like "Ringkasan:" or "Ringkasan -"
+            if summary_value is None:
+                sm = re.search(r"^\s*Ringkasan\s*[:\-]\s*(?P<sum>.+)$", p_text, re.IGNORECASE)
+                if sm:
+                    summary_value = sm.group('sum').strip()
+            if not meta_description and len(p_text) >= 40 and not re.search(r"\b(Tag(ar)?|Kata\s*Kunci)\s*:", p_text, re.IGNORECASE):
+                meta_description = p_text
+            cleaned_paragraphs.append(p_text)
+
+        # Remove explicit metadata and title from HTML content
+        content_html = html
+        
+        # Remove tags line paragraph - more aggressive removal
+        if tags_value:
+            # Remove any paragraph containing tag/keyword information
+            content_html = re.sub(r"<p[^>]*>[^<]*?(Tag(?:ar)?|Kata\s*Kunci)\s*:[\s\S]*?</p>", "", content_html, flags=re.IGNORECASE)
+            # Also remove if it's in a div or other container
+            content_html = re.sub(r"<div[^>]*>[^<]*?(Tag(?:ar)?|Kata\s*Kunci)\s*:[\s\S]*?</div>", "", content_html, flags=re.IGNORECASE)
+            # Remove any line containing tag information regardless of HTML structure
+            content_html = re.sub(r"[^<]*?(Tag(?:ar)?|Kata\s*Kunci)\s*:[\s\S]*?(?=<[^>]*>)", "", content_html, flags=re.IGNORECASE)
+            # Remove any span or other inline elements containing tag info
+            content_html = re.sub(r"<span[^>]*>[^<]*?(Tag(?:ar)?|Kata\s*Kunci)\s*:[\s\S]*?</span>", "", content_html, flags=re.IGNORECASE)
+            # Remove any strong/b tags containing tag info
+            content_html = re.sub(r"<strong[^>]*>[^<]*?(Tag(?:ar)?|Kata\s*Kunci)\s*:[\s\S]*?</strong>", "", content_html, flags=re.IGNORECASE)
+            content_html = re.sub(r"<b[^>]*>[^<]*?(Tag(?:ar)?|Kata\s*Kunci)\s*:[\s\S]*?</b>", "", content_html, flags=re.IGNORECASE)
+            # Remove any content that starts with tag information
+            content_html = re.sub(r"(?:<[^>]*>)?[^<]*?(Tag(?:ar)?|Kata\s*Kunci)\s*:[\s\S]*?(?:</[^>]*>)?", "", content_html, flags=re.IGNORECASE)
+        
+        # Remove summary line paragraph (Ringkasan: ...)
+        if summary_value:
+            content_html = re.sub(r"<p[^>]*>\s*<strong>\s*Ringkasan\s*[:\-]\s*</strong>\s*[\s\S]*?</p>", "", content_html, flags=re.IGNORECASE)
+            content_html = re.sub(r"<p[^>]*>\s*Ringkasan\s*[:\-][\s\S]*?</p>", "", content_html, flags=re.IGNORECASE)
+        
+        # Remove the first short guidance line if template text present (heuristic)
+        content_html = re.sub(r"<p[^>]*>\s*Ringkasan\s+singkat[\s\S]*?</p>", "", content_html, flags=re.IGNORECASE)
+        
+        # Remove the first H1/H2 title if present to avoid duplicating in content
+        try:
+            if heading_match:
+                # Remove the first heading block (h1 or h2) only once
+                content_html = re.sub(r"\s*<h[12][^>]*>[\s\S]*?</h[12]>\s*", "", content_html, count=1, flags=re.IGNORECASE)
+        except Exception:
+            pass
+        
+        # Normalize empty paragraphs and excessive breaks
+        content_html = re.sub(r"<p[^>]*>\s*(?:&nbsp;|\u00A0|\s)*</p>", "", content_html, flags=re.IGNORECASE)
+        # Collapse multiple consecutive breaks/empty tags
+        content_html = re.sub(r"(\s*<br\s*/?>\s*){3,}", "<br><br>", content_html, flags=re.IGNORECASE)
+
+        # Convert HTML to Markdown for better content formatting
+        def html_to_markdown(html_content):
+            """Convert HTML to Markdown format with improved formatting"""
+            if not html_content:
+                return ""
+            
+            # Convert common HTML tags to Markdown
+            markdown = html_content
+            
+            # Clean up HTML entities first
+            markdown = markdown.replace('&quot;', '"')
+            markdown = markdown.replace('&amp;', '&')
+            markdown = markdown.replace('&lt;', '<')
+            markdown = markdown.replace('&gt;', '>')
+            markdown = markdown.replace('&nbsp;', ' ')
+            markdown = markdown.replace('\u00A0', ' ')
+            
+            # Headings - ensure proper spacing
+            markdown = re.sub(r'<h1[^>]*>(.*?)</h1>', r'\n\n# \1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<h2[^>]*>(.*?)</h2>', r'\n\n## \1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<h3[^>]*>(.*?)</h3>', r'\n\n### \1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<h4[^>]*>(.*?)</h4>', r'\n\n#### \1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<h5[^>]*>(.*?)</h5>', r'\n\n##### \1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<h6[^>]*>(.*?)</h6>', r'\n\n###### \1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            
+            # Bold and italic - handle nested formatting
+            markdown = re.sub(r'<strong[^>]*>(.*?)</strong>', r'**\1**', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<b[^>]*>(.*?)</b>', r'**\1**', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<em[^>]*>(.*?)</em>', r'*\1*', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<i[^>]*>(.*?)</i>', r'*\1*', markdown, flags=re.IGNORECASE | re.DOTALL)
+            
+            # Links
+            markdown = re.sub(r'<a[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>', r'[\2](\1)', markdown, flags=re.IGNORECASE | re.DOTALL)
+            
+            # Lists - better formatting
+            markdown = re.sub(r'<ul[^>]*>(.*?)</ul>', r'\n\1\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<ol[^>]*>(.*?)</ol>', r'\n\1\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<li[^>]*>(.*?)</li>', r'- \1\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            
+            # Paragraphs and line breaks - better spacing
+            markdown = re.sub(r'<p[^>]*>(.*?)</p>', r'\1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<br\s*/?>', r'\n', markdown, flags=re.IGNORECASE)
+            
+            # Blockquotes
+            markdown = re.sub(r'<blockquote[^>]*>(.*?)</blockquote>', r'\n> \1\n\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            
+            # Code blocks
+            markdown = re.sub(r'<pre[^>]*>(.*?)</pre>', r'\n```\n\1\n```\n', markdown, flags=re.IGNORECASE | re.DOTALL)
+            markdown = re.sub(r'<code[^>]*>(.*?)</code>', r'`\1`', markdown, flags=re.IGNORECASE | re.DOTALL)
+            
+            # Remove any remaining HTML tags
+            markdown = re.sub(r'<[^>]+>', '', markdown)
+            
+            # Clean up whitespace and formatting
+            markdown = re.sub(r'\n{4,}', '\n\n\n', markdown)  # Max 3 consecutive newlines
+            markdown = re.sub(r' +', ' ', markdown)  # Single spaces
+            markdown = re.sub(r'\n +', '\n', markdown)  # Remove leading spaces after newlines
+            markdown = re.sub(r' +\n', '\n', markdown)  # Remove trailing spaces before newlines
+            
+            # Ensure proper spacing around headings
+            markdown = re.sub(r'([^\n])\n#', r'\1\n\n#', markdown)
+            markdown = re.sub(r'([^\n])\n##', r'\1\n\n##', markdown)
+            markdown = re.sub(r'([^\n])\n###', r'\1\n\n###', markdown)
+            
+            # Clean up list formatting
+            markdown = re.sub(r'\n- ([^\n]+)\n([^-])', r'\n- \1\n\n\2', markdown)
+            
+            return markdown.strip()
+        
+        # Convert HTML to Markdown
+        content_markdown = html_to_markdown(content_html)
+        
+        # Immediate cleanup: remove tag content right after conversion
+        if tags_value:
+            # Remove the specific tag line that might have been converted to markdown
+            content_markdown = re.sub(r'^\*\*Tag(?:ar)?/Kata Kunci:\*\*.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^\*\*Tag(?:ar)?:\*\*.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^\*\*Kata Kunci:\*\*.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            # Also remove without bold formatting
+            content_markdown = re.sub(r'^Tag(?:ar)?/Kata Kunci:.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^Tag(?:ar)?:.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^Kata Kunci:.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+        
+        # Final cleanup: remove any remaining tag/keyword content from markdown
+        if tags_value:
+            # Remove specific tag line patterns - more targeted approach
+            # Remove lines that are clearly tag metadata lines
+            content_markdown = re.sub(r'^\*\*Tag(?:ar)?/Kata Kunci:\*\*.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^\*\*Tag(?:ar)?:\*\*.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^\*\*Kata Kunci:\*\*.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^Tag(?:ar)?/Kata Kunci:.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^Tag(?:ar)?:.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^Kata Kunci:.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            
+            # Remove lines that contain tag information but are not part of actual content
+            # This is more conservative - only remove lines that are clearly tag metadata
+            content_markdown = re.sub(r'^.*?\*\*Tag(?:ar)?/Kata Kunci:\*\*.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            content_markdown = re.sub(r'^.*?Tag(?:ar)?/Kata Kunci:.*$', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+            
+            # CRITICAL: Remove the tag line that appears at the beginning of content
+            # This targets the specific pattern we see in the output
+            if tags_value:
+                # Remove the first line if it contains only the tag values
+                tag_pattern = re.escape(tags_value.strip())
+                content_markdown = re.sub(rf'^{tag_pattern}\s*\n', '', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+                # Also remove if it's followed by double newlines (markdown heading)
+                content_markdown = re.sub(rf'^{tag_pattern}\s*\n\n', '\n\n', content_markdown, flags=re.IGNORECASE | re.MULTILINE)
+        
+        # Clean up any resulting empty lines
+        content_markdown = re.sub(r'\n{3,}', '\n\n', content_markdown)
+        content_markdown = content_markdown.strip()
+        
+        # Also create a plain text fallback
+        plain_text = re.sub(r"<br\s*/?>", "\n", content_html)
+        plain_text = re.sub(r"<[^>]+>", "", plain_text)
+        content_text = re.sub(r"\n{3,}", "\n\n", plain_text).strip()
+    except Exception as e:
+        current_app.logger.error(f"Error parsing DOCX: {e}", exc_info=True)
+        return jsonify({"error": "Failed to parse .docx"}), 400
+
+    data = request.form
+    title = (data.get("title") or derived_title or (file.filename.rsplit(".", 1)[0])).strip()
+    category_id_str = (data.get("category") or "").strip()
+    date_str = (data.get("date") or "").strip()
+
+    # Preview mode: don't require category/date; just return parsed content
+    preview_flag = str(data.get("preview", "")).lower() in ("1","true","yes","on")
+    if preview_flag:
+        return jsonify({
+            "success": True,
+            "title": title,
+            "content": content_markdown or content_html or html,
+            "meta_description": (summary_value or meta_description),
+            "tags": tags_value
+        })
+
+    if not title or not category_id_str or not date_str or not content_text:
+        return jsonify({"error": "Missing required fields: title, category, date, file content"}), 400
+
+    # Normalize age_rating similar to create_news_api
+    age_rating = (data.get("age_rating") or "").strip()
+    allowed_ratings = {"SU","P","A","3+","7+","13+","17+","18+","21+"}
+    if age_rating:
+        normalized = age_rating.upper().replace(" ", "")
+        if normalized in {"R/13+","R13+"}: normalized = "13+"
+        if normalized in {"D/17+","D17+"}: normalized = "17+"
+        if normalized not in allowed_ratings:
+            return jsonify({"error": f"Invalid age_rating: {age_rating}"}), 400
+        age_rating = normalized
+    else:
+        is_premium_flag = str(data.get("is_premium", "")).lower() in ("on","true","1")
+        age_rating = "17+" if is_premium_flag else "SU"
+
+    # Parse category/date
+    try:
+        category_id = int(category_id_str)
+    except ValueError:
+        return jsonify({"error": f"Invalid category id: {category_id_str}"}), 400
+    category = Category.query.get(category_id)
+    if not category:
+        return jsonify({"error": f"Category with id '{category_id}' not found"}), 400
+
+    try:
+        try:
+            news_date = datetime.fromisoformat(date_str)
+        except ValueError:
+            news_date = datetime.strptime(date_str, "%Y-%m-%d")
+        if news_date.tzinfo is None:
+            news_date = news_date.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use ISO or YYYY-MM-DD"}), 400
+
+    # Accept checkbox values: on/true/1
+    is_news = str(data.get("is_news", "true")).lower() in ("on","true","1")
+    is_premium = str(data.get("is_premium", "false")).lower() in ("on","true","1")
+    is_main_news = str(data.get("is_main_news", "false")).lower() in ("on","true","1")
+    is_visible = str(data.get("is_visible", "false")).lower() in ("on","true","1")
+
+    try:
+        news = News(
+            title=title,
+            content=content_markdown or content_html or content_text,
+            tagar=((data.get("tagar") or tags_value or "").strip() or None),
+            date=news_date,
+            read_count=0,
+            category_id=category.id,
+            is_news=is_news,
+            is_premium=is_premium,
+            is_main_news=is_main_news,
+            is_visible=is_visible,
+            is_archived=False,
+            user_id=current_user.id,
+            writer=data.get("writer", "").strip() or current_user.username,
+            external_source=data.get("external_source", "").strip() or None,
+            age_rating=age_rating,
+        )
+        db.session.add(news)
+        db.session.commit()
+        # If meta_description parsed and model supports it, set it
+        try:
+            if hasattr(news, 'meta_description'):
+                if summary_value:
+                    news.meta_description = summary_value[:500]
+                elif meta_description:
+                    news.meta_description = meta_description[:500]
+        except Exception:
+            pass
+        news.seo_score = news.calculate_seo_score()
+        news.last_seo_audit = datetime.now(timezone.utc)
+        db.session.commit()
+        return jsonify({"success": True, "news": news.to_dict()}), 201
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error creating news from docx: {e}", exc_info=True)
+        return jsonify({"error": "Database error while saving parsed news"}), 500
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Unexpected error creating news from docx: {e}", exc_info=True)
+        return jsonify({"error": "Internal error while creating news from docx"}), 500
 
 
 @main_blueprint.route("/api/news/<int:news_id>", methods=["GET"])

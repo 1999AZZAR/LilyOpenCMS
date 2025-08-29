@@ -17,6 +17,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/news/<news_id>/track-share`        | No   | Track a share action for a news article     |
 | GET    | `/api/news/<news_id>/share-data`         | No   | Get share counts for a news article         |
 | GET    | `/api/search/news`                       | No   | Unified news search API (supports: q, category, category_name, tag, sort, type, page, per_page) - type options: general, news, articles, utama - sort options: newest, oldest, popular, least-popular |
+| POST   | `/api/news/upload-docx`                  | Yes  | Upload DOCX file and convert to news article (accepts: file, title, category, date, age_rating, writer, external_source) |
 
 > Admin Create/Edit Flow: Use `/settings/create_news` with optional `news_id` to edit. If `album_id` is present, successful create/edit redirects back to `/admin/albums/<album_id>/chapters`; otherwise redirects to `/settings/manage_news`. In edit mode, saving keeps the current visibility unless explicitly changed (e.g., Publish action).
 
@@ -66,7 +67,8 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST    | `/admin/albums/<album_id>/chapters/<chapter_id>/edit`        | Yes  | Edit chapter (JSON) |
 | POST    | `/admin/albums/<album_id>/chapters/<chapter_id>/remove`      | Yes  | Remove chapter (JSON) - **FIXED: Updates album total_chapters count** |
 | POST    | `/admin/albums/<album_id>/chapters/<chapter_id>/move`        | Yes  | Move chapter up/down in order (JSON) |
-| GET     | `/admin/albums/api/search-news`                              | Yes  | Search visible news to add as chapters (JSON) |
+| POST    | `/admin/albums/<album_id>/chapters/<chapter_id>/toggle-visibility` | Yes  | Toggle chapter visibility (JSON) |
+| GET     | `/admin/albums/api/search-news`                              | Yes  | Search owned news to add as chapters (JSON) - **UPDATED: Shows all owned articles regardless of visibility** |
 | GET     | `/admin/albums/api/album-stats/<album_id>`                   | Yes  | Get album statistics (JSON) |
 | GET     | `/admin/albums/<album_id>/data`                              | Yes  | Get album data for edit modal (JSON) |
 | GET     | `/admin/albums/<album_id>/chapters/data`                     | Yes  | Get chapters data for modal (JSON) |
@@ -474,6 +476,9 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/settings/manage_news`                  | Yes  | Manage news page                            |
 | GET    | `/settings/albums`                       | Yes  | Album management page                       |
 | GET    | `/settings/editor-writer`                | Yes  | Editor ↔ Writer management page             |
+| GET    | `/admin/tools/docx-upload`               | Yes  | DOCX upload tool page                       |
+| GET    | `/admin/tools/docx-template`             | Yes  | Download DOCX template file                 |
+| GET    | `/admin/tools/docx-contoh`               | Yes  | Download example DOCX file                  |
 
 ## Admin Sidebar & Quick Toggles
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -514,10 +519,12 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 ## User Account Management API
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| POST   | `/api/user/profile`                      | Yes  | Update user profile information             |
-| POST   | `/api/user/change-password`              | Yes  | Change user password                        |
-| POST   | `/api/user/preferences`                  | Yes  | Update user preferences (ad settings, etc.) |
-| POST   | `/api/user/delete-account`               | Yes  | Delete user account                         |
+| POST   | `/api/account/change-password`           | Yes  | Change user password                        |
+| DELETE | `/api/account/delete`                    | Yes  | Delete user account                         |
+| GET    | `/api/account/stats`                     | Yes  | Get comprehensive account statistics (articles, albums, chapters, comments) |
+| GET    | `/api/account/albums`                    | Yes  | Get user's albums with pagination and filtering |
+| GET    | `/api/account/comments`                  | Yes  | Get user's recent comments                  |
+| GET    | `/api/account/activity`                  | Yes  | Get user's recent activity                  |
 
 ## Public/Pages
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -552,7 +559,16 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 
 ### **Recent Backend Updates**
 
-#### **Album Chapter Management System Fixes**
+#### **Album Chapter Management System Enhancements**
+- **Owned Articles Display**: Updated to show all owned articles (published and draft) regardless of visibility status
+- **Chapter Visibility Management**: Added independent chapter visibility control separate from article visibility
+- **Enhanced Action Buttons**: Larger, properly spaced buttons with hover effects and new tab opening for source articles
+- **Comprehensive Pagination**: 12 articles per page with search integration and per-page selector (6, 12, 24, 48)
+- **Role-Based Article Filtering**: Admins see all articles, editors see assigned writers' articles, others see only their own
+- **Chapter Visibility Toggle**: New endpoint `/admin/albums/<album_id>/chapters/<chapter_id>/toggle-visibility` for show/hide functionality
+- **Search Persistence**: Search terms maintained across pagination with proper URL parameter handling
+- **Enhanced Article Display**: Shows visibility status, category, author, and creation date for each article
+- **Chapter Reader Compatibility**: Chapters can be displayed regardless of source article visibility status
 - **Chapter Count Updates**: Fixed album total_chapters count not updating when adding/removing chapters
 - **Database Consistency**: Added proper album.update_chapter_count() calls after chapter operations
 - **Relationship Loading**: Fixed SQLAlchemy relationship loading using album.chapters instead of separate queries
@@ -641,6 +657,21 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **URL Pattern Detection**: Automatic detection of news articles (`/news/<id>/<title>`) and albums (`/album/<id>/<title>`)
 - **Content-Specific Overrides**: News and album SEO fields override root SEO settings
 - **Template Integration**: Updated `base.html` to use unified `seo_data` structure
+
+#### **Enhanced Account Management System**
+- **Comprehensive Statistics API**: New `/api/account/stats` endpoint providing total articles, visible articles, total reads, albums, chapters, and comments
+- **Albums Management API**: New `/api/account/albums` endpoint with pagination, search, and filtering (status, type)
+- **Comments Overview API**: New `/api/account/comments` endpoint showing user's recent comments with article context
+- **Activity Tracking API**: New `/api/account/activity` endpoint displaying user's recent activities with human-readable descriptions
+- **Enhanced UI Components**: Updated account management page with comprehensive statistics, albums listing, and activity tracking
+- **Real-time Updates**: Refresh buttons for all data sections with proper error handling
+- **Responsive Design**: Consistent gray/blue color scheme with edit buttons on all cards
+- **Frontend Integration**: Complete JavaScript integration with debounced search and pagination controls
+- **Error Handling**: Robust error handling with user-friendly messages and fallback mechanisms
+- **Backend Implementation**: Complete backend support with proper authentication and user-specific data filtering
+- **Database Integration**: Efficient queries with proper model relationships and pagination support
+- **Security Features**: Role-based access control and user-specific data isolation
+- **API Documentation**: Comprehensive endpoint documentation with proper categorization
 - **SEO Override Blocks**: Enhanced `reader.html` and `album_detail.html` with content-specific SEO blocks
 - **Proper OG Types**: Articles use `og:type=article`, albums use `og:type=book`
 - **Fallback System**: Root SEO provides sensible defaults when content-specific SEO is not available
@@ -780,4 +811,15 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Comprehensive Test Suite**: 12 test files with 100% core system coverage
 - **Error Handling**: Robust error handling with graceful fallbacks
 - **Input Validation**: Enhanced validation for all user inputs
-- **Security Headers**: Implementation of security best practices 
+- **Security Headers**: Implementation of security best practices
+
+### **DOCX Upload Tool System**
+- **DOCX to News Conversion**: Complete API endpoint (`/api/news/upload-docx`) for uploading and converting DOCX files to news articles
+- **Content Processing**: Mammoth library integration for DOCX parsing with HTML-to-Markdown conversion
+- **Content Cleanup**: Aggressive regex patterns to remove tags, keywords, and metadata from parsed content
+- **Smart Formatting**: Intelligent Markdown formatting with proper heading, list, and paragraph structure
+- **File Downloads**: Template and example DOCX file serving (`/admin/tools/docx-template`, `/admin/tools/docx-contoh`)
+- **User Experience**: Success toast notifications, form clearing, and dynamic file selection feedback
+- **Organized Structure**: Clean folder organization (`templates/admin/tools/docx_uploader/`, `static/js/tools/docx_uploader/`)
+- **Code Separation**: HTML and JavaScript properly separated into individual files
+- **Extensible Framework**: Foundation for future admin tools with organized structure 

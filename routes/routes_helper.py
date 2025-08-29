@@ -136,6 +136,121 @@ def process_single_image(file_path):
         return f"Processing error: {str(e)}"
 
 
+@main_blueprint.route("/admin/tools/docx-upload")
+@login_required
+def tools_docx_upload():
+    """Admin tool to upload DOCX files and convert them to News articles."""
+    if not current_user.verified:
+        flash("Akun Anda harus diverifikasi untuk mengakses tools ini.", "error")
+        return redirect(url_for("main.admin_dashboard"))
+    
+    # Get categories for the form
+    categories = Category.query.order_by(Category.name).all()
+    
+    # Get today's date for default value
+    from datetime import date
+    today = date.today().isoformat()
+    
+    return render_template(
+                    "admin/tools/docx_uploader/index.html",
+        categories=categories,
+        today=today,
+        title="Upload DOCX ke News"
+    )
+
+
+@main_blueprint.route("/admin/tools/docx-template", methods=["GET"])
+@login_required
+def download_docx_template():
+    """Serve a downloadable DOCX template for writers (Indonesian)."""
+    if not current_user.verified:
+        flash("Akun Anda harus diverifikasi untuk mengakses tools ini.", "error")
+        return redirect(url_for("main.admin_dashboard"))
+
+    from docx import Document
+    from docx.shared import Pt, Inches
+    from io import BytesIO
+
+    doc = Document()
+
+    # Title style
+    title = doc.add_heading("Judul Artikel (H1)", level=1)
+
+    # Metadata guidance
+    doc.add_paragraph("Ringkasan singkat (opsional, 1-2 kalimat) untuk meta deskripsi.")
+    doc.add_paragraph("Tag/Kata Kunci (opsional): pisahkan dengan koma, maksimal 5.")
+
+    # Content sections
+    doc.add_heading("Subjudul Utama (H2)", level=2)
+    doc.add_paragraph(
+        "Tulis paragraf pembuka di sini. Gunakan paragraf pendek, jelas, dan mudah dibaca.")
+
+    doc.add_heading("Subjudul Tambahan (H2)", level=2)
+    doc.add_paragraph("Gunakan daftar jika diperlukan:")
+    ul = doc.add_paragraph()
+    ul.style = 'List Bullet'
+    ul.add_run(" Poin penting 1")
+    doc.add_paragraph(" Poin penting 2", style='List Bullet')
+
+    doc.add_paragraph("Tambahkan kutipan jika diperlukan:")
+    quote = doc.add_paragraph()
+    quote.style = 'Intense Quote'
+    quote.add_run("\"Kutipan penting terkait topik.\"")
+
+    doc.add_heading("Gambar (Opsional)", level=2)
+    doc.add_paragraph(
+        "Anda dapat menyisipkan gambar di sini. Pastikan mencantumkan sumber jika diambil dari pihak ketiga.")
+
+    doc.add_heading("Catatan untuk Penulis", level=3)
+    doc.add_paragraph(
+        "- Gunakan bahasa Indonesia yang baik dan benar.\n"
+        "- Hindari kalimat terlalu panjang.\n"
+        "- Gunakan subjudul untuk memecah topik.\n"
+        "- Sertakan sumber/referensi jika mengutip data.\n"
+        "- Jika konten sensitif (dewasa), mohon beri catatan di awal dokumen.")
+
+    # Footer guidance
+    doc.add_paragraph()
+    doc.add_paragraph(
+        "Template ini akan diproses otomatis menjadi artikel News. Judul H1 akan menjadi judul artikel. "
+        "Gunakan H2/H3 untuk struktur yang jelas.")
+
+    # Prepare response
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="Template_Artikel_News.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+
+
+@main_blueprint.route("/admin/tools/docx-contoh", methods=["GET"])
+@login_required
+def download_docx_contoh():
+    """Serve the example DOCX file for writers to see how the format should look."""
+    if not current_user.verified:
+        flash("Akun Anda harus diverifikasi untuk mengakses tools ini.", "error")
+        return redirect(url_for("main.admin_dashboard"))
+
+    # Path to the example DOCX file
+    contoh_path = os.path.join(current_app.root_path, "templates", "admin", "tools", "docx_uploader", "contoh.docx")
+    
+    if not os.path.exists(contoh_path):
+        flash("File contoh tidak ditemukan.", "error")
+        return redirect(url_for("main.tools_docx_upload"))
+
+    return send_file(
+        contoh_path,
+        as_attachment=True,
+        download_name="Contoh_Artikel_News.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+
+
 # Helper function (keep as before)
 def add_url_to_sitemap(urlset, loc, lastmod=None, changefreq=None, priority=None):
     """Adds a <url> element to the <urlset> ElementTree object."""

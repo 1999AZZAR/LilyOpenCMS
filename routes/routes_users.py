@@ -207,6 +207,17 @@ def create_user():
             is_premium=data.get('is_premium', False),
             has_premium_access=data.get('is_premium', False)
         )
+
+        # Optional birthdate (ISO date string YYYY-MM-DD)
+        birthdate_str = data.get('birthdate')
+        if birthdate_str:
+            try:
+                # Accept date-only (YYYY-MM-DD); ignore time if provided
+                if 'T' in birthdate_str:
+                    birthdate_str = birthdate_str.split('T', 1)[0]
+                user.birthdate = datetime.strptime(birthdate_str, "%Y-%m-%d").date()
+            except ValueError:
+                return jsonify({"error": "Invalid birthdate format, expected YYYY-MM-DD"}), 400
         
         # Set premium expiration if premium
         if user.is_premium:
@@ -240,7 +251,9 @@ def create_user():
                 "role": user.role.value,
                 "is_active": user.is_active,
                 "verified": user.verified,
-                "is_premium": user.is_premium
+                "is_premium": user.is_premium,
+                "birthdate": user.birthdate.isoformat() if user.birthdate else None,
+                "age": user.get_age()
             }
         }), 201
         
@@ -379,6 +392,17 @@ def update_user(user_id):
             user.bio = data["bio"] if data["bio"] else None
         if "social_links" in data:
             user.social_links = data["social_links"]
+        if "birthdate" in data:
+            bd = data["birthdate"]
+            if bd:
+                try:
+                    if 'T' in bd:
+                        bd = bd.split('T', 1)[0]
+                    user.birthdate = datetime.strptime(bd, "%Y-%m-%d").date()
+                except ValueError:
+                    return jsonify({"error": "Invalid birthdate format, expected YYYY-MM-DD"}), 400
+            else:
+                user.birthdate = None
         
         # Update role (only superusers can change roles)
         if "role" in data and current_user.is_owner():
@@ -806,7 +830,9 @@ def bulk_export_users():
                 "name": user.custom_role.name
             } if user.custom_role else None,
             "has_premium_access": user.has_premium_access,
-            "premium_expires_at": user.premium_expires_at.isoformat() if user.premium_expires_at else None
+            "premium_expires_at": user.premium_expires_at.isoformat() if user.premium_expires_at else None,
+            "birthdate": user.birthdate.isoformat() if user.birthdate else None,
+            "age": user.get_age()
         } for user in users]
         return jsonify({
             "users": user_data,
@@ -825,7 +851,8 @@ def bulk_export_users():
         writer.writerow([
             "ID", "Username", "Email", "First Name", "Last Name", "Bio",
             "Role", "Custom Role", "Is Active", "Is Suspended", "Verified", 
-            "Premium", "Login Count", "Last Login", "Created At", "Suspension Reason"
+            "Premium", "Login Count", "Last Login", "Created At", "Suspension Reason",
+            "Birthdate", "Age"
         ])
         
         # Write user data
@@ -840,7 +867,9 @@ def bulk_export_users():
                 "Yes" if user.is_premium else "No",
                 user.login_count, user.last_login.isoformat() if user.last_login else "",
                 user.created_at.isoformat(),
-                user.suspension_reason or ""
+                user.suspension_reason or "",
+                user.birthdate.isoformat() if user.birthdate else "",
+                user.get_age()
             ])
         
         output.seek(0)
@@ -1419,7 +1448,9 @@ def get_user_details(user_id):
         "last_login": user.last_login.isoformat() if user.last_login else None,
         "login_count": user.login_count,
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "updated_at": user.updated_at.isoformat() if user.updated_at else None
+        "updated_at": user.updated_at.isoformat() if user.updated_at else None,
+        "birthdate": user.birthdate.isoformat() if user.birthdate else None,
+        "age": user.get_age()
     })
 
 @main_blueprint.route("/api/users/<int:user_id>/reset-password", methods=["POST"])

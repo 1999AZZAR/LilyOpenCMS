@@ -1,0 +1,167 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-file-word text-blue-600 mr-3"></i>
+                Upload DOCX ke News
+            </h1>
+            <p class="text-gray-600">
+                Upload dokumen Word (.docx) dan konversi otomatis menjadi artikel News dengan metadata yang sesuai.
+            </p>
+            <div class="mt-3 flex space-x-3">
+                <a href="/admin/tools/docx-template" class="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md border border-gray-300">
+                    <i class="fas fa-download mr-2"></i>
+                    Unduh Template DOCX (Panduan Penulisan)
+                </a>
+                <a href="/admin/tools/docx-contoh" class="inline-flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-md border border-blue-300">
+                    <i class="fas fa-file-word mr-2"></i>
+                    Unduh Contoh DOCX
+                </a>
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <form id="docxUploadForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <!-- File Upload -->
+                <div class="space-y-2">
+                    <label for="docxFile" class="block text-sm font-medium text-gray-700">
+                        <i class="fas fa-file-upload mr-2"></i>
+                        Pilih File DOCX
+                    </label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors duration-200">
+                        <div class="space-y-1 text-center">
+                            <i class="fas fa-file-word text-4xl text-gray-400 mb-4"></i>
+                            <div class="text-sm text-gray-600">
+                                <label for="docxFile" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                    <span>Pilih file DOCX</span>
+                                    <input id="docxFile" name="file" type="file" accept=".docx" class="sr-only" required>
+                                </label>
+                            </div>
+                            <p class="text-xs text-gray-500">DOCX hingga 10MB</p>
+                        </div>
+                    </div>
+                    <div id="fileInfo" class="mt-3 p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-word text-gray-400 mr-3 text-lg"></i>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-600">File yang dipilih:</p>
+                                    <p id="fileName" class="text-base font-bold text-gray-700">Belum ada file dipilih</p>
+                                </div>
+                            </div>
+                            <button type="button" id="removeFile" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 hidden">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Title -->
+                    <div class="space-y-2">
+                        <label for="title" class="block text-sm font-medium text-gray-700">
+                            <i class="fas fa-heading mr-2"></i>
+                            Judul Artikel
+                        </label>
+                        <input type="text" id="title" name="title" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Judul artikel (opsional, akan diambil dari dokumen)">
+                    </div>
+
+                    <!-- Category -->
+                    <div class="space-y-2">
+                        <label for="category" class="block text-sm font-medium text-gray-700">
+                            <i class="fas fa-tags mr-2"></i>
+                            Kategori
+                        </label>
+                        <select id="category" name="category" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih kategori</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="space-y-2">
+                        <label for="date" class="block text-sm font-medium text-gray-700">
+                            <i class="fas fa-calendar mr-2"></i>
+                            Tanggal Publikasi
+                        </label>
+                        <input type="date" id="date" name="date" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               value="{{ today }}">
+                    </div>
+
+                    <!-- Age Rating -->
+                    <div class="space-y-2">
+                        <label for="ageRating" class="block text-sm font-medium text-gray-700">
+                            <i class="fas fa-user-shield mr-2"></i>
+                            Rating Usia
+                        </label>
+                        <select id="ageRating" name="age_rating"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Auto-detect dari konten</option>
+                            <option value="SU">SU - Semua Umur</option>
+                            <option value="P">P - Pendampingan</option>
+                            <option value="A">A - Anak-anak</option>
+                            <option value="3+">3+ - 3 tahun ke atas</option>
+                            <option value="7+">7+ - 7 tahun ke atas</option>
+                            <option value="13+">13+ - 13 tahun ke atas</option>
+                            <option value="17+">17+ - 17 tahun ke atas</option>
+                            <option value="18+">18+ - 18 tahun ke atas</option>
+                            <option value="21+">21+ - 21 tahun ke atas</option>
+                        </select>
+                    </div>
+
+                    <!-- Writer -->
+                    <div class="space-y-2">
+                        <label for="writer" class="block text-sm font-medium text-gray-700">
+                            <i class="fas fa-user mr-2"></i>
+                            Penulis
+                        </label>
+                        <input type="text" id="writer" name="writer" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Nama penulis (opsional, default: username)">
+                    </div>
+
+                    <!-- External Source -->
+                    <div class="space-y-2">
+                        <label for="externalSource" class="block text-sm font-medium text-gray-700">
+                            <i class="fas fa-link mr-2"></i>
+                            Sumber Eksternal
+                        </label>
+                        <input type="url" id="externalSource" name="external_source" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="https://contoh.com (opsional)">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <button type="submit" id="submitBtn"
+                            class="px-6 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-upload mr-2"></i>
+                        Upload & Buat Artikel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/tools/docx_uploader/index.js') }}"></script>
+{% endblock %}

@@ -2,10 +2,34 @@
 
 {% block title %}Album Dashboard - Admin{% endblock %}
 {% block hero_title %}Album Dashboard{% endblock %}
-{% block hero_desc %}Mengelola album cerita dan artikel Anda{% endblock %}
+{% block hero_desc %}Mengelola buku/seri cerita dan artikel Anda{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
+    <!-- Explanation Section -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-blue-900 mb-2">Apa itu Album?</h3>
+                <p class="text-blue-800 mb-3">
+                    <strong>Album</strong> adalah istilah yang kami gunakan untuk <strong>buku atau seri cerita</strong>. 
+                    Setiap album berisi kumpulan artikel yang saling terkait, seperti bab-bab dalam sebuah buku atau episode dalam seri.
+                </p>
+                <div class="bg-white rounded-lg p-4 border border-blue-100">
+                    <h4 class="font-semibold text-blue-900 mb-2">Contoh Album:</h4>
+                    <ul class="text-blue-800 space-y-1 text-sm">
+                        <li>• <strong>Novel:</strong> "Petualangan di Hutan" - Setiap bab adalah artikel terpisah</li>
+                        <li>• <strong>Seri Artikel:</strong> "Panduan Memasak" - Setiap resep adalah artikel terpisah</li>
+                        <li>• <strong>Cerita Bersambung:</strong> "Misteri Kota Tua" - Setiap episode adalah artikel terpisah</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">
@@ -14,7 +38,7 @@
                     <i class="fas fa-book-open text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Album</p>
+                    <p class="text-sm font-medium text-gray-600">Total Buku/Seri</p>
                     <p class="text-2xl font-semibold text-gray-900">{{ total_albums }}</p>
                 </div>
             </div>
@@ -26,7 +50,7 @@
                     <i class="fas fa-eye text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Album Terlihat</p>
+                    <p class="text-sm font-medium text-gray-600">Buku/Seri Terlihat</p>
                     <p class="text-2xl font-semibold text-gray-900">{{ visible_albums }}</p>
                 </div>
             </div>
@@ -38,7 +62,7 @@
                     <i class="fas fa-crown text-2xl"></i>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Album Premium</p>
+                    <p class="text-sm font-medium text-gray-600">Buku/Seri Premium</p>
                     <p class="text-2xl font-semibold text-gray-900">{{ premium_albums }}</p>
                 </div>
             </div>
@@ -60,10 +84,10 @@
     <!-- Performance Stats -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Gambaran Album</h3>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Gambaran Buku/Seri</h3>
             <div class="space-y-4">
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Album Selesai</span>
+                    <span class="text-gray-600">Buku/Seri Selesai</span>
                     <span class="font-semibold">{{ completed_albums }}</span>
                 </div>
                 <div class="flex justify-between">
@@ -71,11 +95,11 @@
                     <span class="font-semibold">{{ hiatus_albums }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Album Arsip</span>
+                    <span class="text-gray-600">Buku/Seri Arsip</span>
                     <span class="font-semibold">{{ archived_albums }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Rata-rata Bab per Album</span>
+                    <span class="text-gray-600">Rata-rata Bab per Buku/Seri</span>
                     <span class="font-semibold">{{ "%.1f"|format(avg_chapters_per_album) }}</span>
                 </div>
             </div>
@@ -85,13 +109,13 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Aksi Cepat</h3>
             <div class="space-y-3">
                 <a href="{{ url_for('albums.create_album') }}" class="block w-full bg-blue-600 text-white text-center py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    <i class="fas fa-plus mr-2"></i>Buat Album Baru
+                    <i class="fas fa-plus mr-2"></i>Buat Buku/Seri Baru
                 </a>
                 <a href="{{ url_for('albums.list_albums') }}" class="block w-full bg-green-600 text-white text-center py-3 px-4 rounded-lg hover:bg-green-700 transition-colors font-medium">
-                    <i class="fas fa-list mr-2"></i>Lihat Semua Album
+                    <i class="fas fa-list mr-2"></i>Lihat Semua Buku/Seri
                 </a>
                 <a href="{{ url_for('albums.list_albums') }}" class="block w-full bg-purple-600 text-white text-center py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors font-medium">
-                    <i class="fas fa-edit mr-2"></i>Mengelola Album
+                    <i class="fas fa-edit mr-2"></i>Mengelola Buku/Seri
                 </a>
                 <a href="{{ url_for('albums.analytics') }}" class="block w-full bg-orange-600 text-white text-center py-3 px-4 rounded-lg hover:bg-orange-700 transition-colors font-medium">
                     <i class="fas fa-chart-bar mr-2"></i>Lihat Analisis

@@ -486,11 +486,34 @@ def news_detail(news_id, news_title):
     news_item = News.query.get_or_404(news_id)
 
     # Check visibility *before* doing anything else
+    # Allow admin access regardless of visibility status
     if not news_item.is_visible:
-        current_app.logger.warning(
-            f"Attempt to access non-visible news item ID: {news_id}"
-        )
-        abort(404)
+        # Check if user is admin or accessing from admin context
+        is_admin_access = False
+        if current_user.is_authenticated:
+            # Allow if user is admin/superuser
+            if current_user.role in [UserRole.ADMIN, UserRole.SUPERUSER]:
+                is_admin_access = True
+            # Allow if user is the author
+            elif news_item.user_id == current_user.id:
+                is_admin_access = True
+            # Allow if user has custom role with news permissions
+            elif current_user.custom_role and current_user.custom_role.is_active:
+                for permission in current_user.custom_role.permissions:
+                    if permission.resource == "news" and permission.action in ["read", "update", "delete"]:
+                        is_admin_access = True
+                        break
+        
+        # Check if accessing from admin referer
+        referer = request.headers.get('Referer', '')
+        if '/admin/' in referer or '/settings/' in referer:
+            is_admin_access = True
+        
+        if not is_admin_access:
+            current_app.logger.warning(
+                f"Attempt to access non-visible news item ID: {news_id}"
+            )
+            abort(404)
 
     # --- Premium Content Processing ---
     # Check if content is premium
@@ -623,11 +646,34 @@ def news_detail_legacy(news_id):
     news_item = News.query.get_or_404(news_id)
     
     # Check visibility before redirecting
+    # Allow admin access regardless of visibility status
     if not news_item.is_visible:
-        current_app.logger.warning(
-            f"Attempt to access non-visible news item ID: {news_id}"
-        )
-        abort(404)
+        # Check if user is admin or accessing from admin context
+        is_admin_access = False
+        if current_user.is_authenticated:
+            # Allow if user is admin/superuser
+            if current_user.role in [UserRole.ADMIN, UserRole.SUPERUSER]:
+                is_admin_access = True
+            # Allow if user is the author
+            elif news_item.user_id == current_user.id:
+                is_admin_access = True
+            # Allow if user has custom role with news permissions
+            elif current_user.custom_role and current_user.custom_role.is_active:
+                for permission in current_user.custom_role.permissions:
+                    if permission.resource == "news" and permission.action in ["read", "update", "delete"]:
+                        is_admin_access = True
+                        break
+        
+        # Check if accessing from admin referer
+        referer = request.headers.get('Referer', '')
+        if '/admin/' in referer or '/settings/' in referer:
+            is_admin_access = True
+        
+        if not is_admin_access:
+            current_app.logger.warning(
+                f"Attempt to access non-visible news item ID: {news_id}"
+            )
+            abort(404)
     
     # Generate the safe title for the URL using the top-level function
     safe_title_result = safe_title(news_item.title)

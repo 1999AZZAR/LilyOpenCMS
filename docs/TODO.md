@@ -4,14 +4,14 @@
 
 | **Category** | **Completed** | **In Progress** | **Pending** | **Total** |
 |--------------|---------------|-----------------|-------------|-----------|
-| **Core Features** | 49 | 0 | 0 | 49 |
-| **Admin Area** | 26 | 0 | 0 | 26 |
+| **Core Features** | 51 | 0 | 0 | 51 |
+| **Admin Area** | 27 | 0 | 0 | 27 |
 | **Security & Performance** | 15 | 0 | 5 | 20 |
 | **Ads System** | 6 | 0 | 0 | 6 |
-| **Advanced Features** | 9 | 0 | 11 | 20 |
+| **Advanced Features** | 10 | 0 | 10 | 20 |
 | **Documentation & Testing** | 6 | 0 | 4 | 10 |
 | **Infrastructure** | 4 | 0 | 6 | 10 |
-| **Total** | **115** | **0** | **26** | **141** |
+| **Total** | **119** | **0** | **24** | **143** |
 
 ---
 
@@ -20,6 +20,7 @@
 ### 🎯 **Core Content Management**
 | **Feature** | **Status** | **Completion Date** | **Child Steps Completed** |
 |-------------|------------|-------------------|---------------------------|
+| **Album Chapters Management Enhancement** | ✅ **COMPLETED** | 2025-08-29 | • **NEW: Owned articles display regardless of visibility** - Shows all owned articles (published and draft) instead of only visible articles<br>• **NEW: Chapter visibility management** - Independent chapter visibility control separate from article visibility<br>• **NEW: Enhanced action buttons** - Larger, properly spaced buttons with hover effects and new tab opening for source articles<br>• **NEW: Comprehensive pagination** - 12 articles per page with search integration and per-page selector (6, 12, 24, 48)<br>• **NEW: Role-based article filtering** - Admins see all articles, editors see assigned writers' articles, others see only their own<br>• **NEW: Chapter visibility toggle** - Eye/eye-slash button to show/hide chapters independently<br>• **NEW: Search persistence** - Search terms maintained across pagination with proper URL parameter handling<br>• **NEW: Enhanced article display** - Shows visibility status, category, author, and creation date for each article<br>• **NEW: Chapter reader compatibility** - Chapters can be displayed regardless of source article visibility status |
 | **Editor ↔ Writer Assignment System** | ✅ **COMPLETED** | 2025-08-29 | • New many-to-many editor_writer link table (auto-created via safe_migrate)<br>• Backend APIs: list editors/writers, get assignments, assign writers<br>• UI page `settings/editor_writer_management.html` with two-column picker<br>• Role gating: Admin/Superuser/Subadmin manage; Editors can manage their own<br>• Custom toast integration and search support |
 | **News Default Hidden Visibility** | ✅ **COMPLETED** | 2025-08-29 | • Create endpoint defaults `is_visible=false`<br>• Edit flow preserves visibility unless publishing<br>• Create page buttons renamed: “Simpan Sembunyi” and “Simpan & Tampilkan” with descriptions |
 | **User-Aware Image Picker & Upload Defaults** | ✅ **COMPLETED** | 2025-08-29 | • `/api/images` GET scoped by role/custom role (admin/su/subadmin: all; editor: own + writers; others: own)<br>• Upload default visibility: Writer/Editor → hidden; others → visible (overridable) |
@@ -59,7 +60,9 @@
 | **Permission Management System** | ✅ **COMPLETED** | 2025-08-28 | • **NEW: Centralized permission system with routes/utils/permission_manager.py**<br>• **NEW: Role management system with routes/utils/role_manager.py**<br>• **NEW: Flask context processor for template integration**<br>• **NEW: 20+ permission helper functions (can_access_admin, can_manage_users, etc.)**<br>• **NEW: Resource-based permissions (16 resources, 12 actions each)**<br>• **NEW: Role hierarchy with proper inheritance (Superuser: 100, Admin: 80, General: 10)**<br>• **NEW: Custom role support with permission inheritance**<br>• **NEW: Template safety with all functions available in Jinja2**<br>• **NEW: Package organization with proper exports**<br>• **NEW: Comprehensive documentation and security considerations** |
 | **Admin Sidebar Enhancement** | ✅ **COMPLETED** | 2025-08-28 | • **NEW: Sub-group navigation with collapsible hierarchical structure**<br>• **NEW: Permission-based visibility for all sidebar items**<br>• **NEW: Quick toggles system for comments, ratings, ads, and campaigns**<br>• **NEW: LocalStorage persistence for toggle states**<br>• **NEW: Advanced search functionality with highlighting**<br>• **NEW: Auto-expansion logic for current page groups**<br>• **NEW: Responsive design with mobile optimization**<br>• **NEW: Accessibility features (ARIA labels, keyboard navigation)**<br>• **NEW: Modern toggle switch styling with animations**<br>• **NEW: Comprehensive JavaScript event handling** |
 | **Quick Toggles Synchronization** | ✅ **COMPLETED** | 2025-08-29 | • **UPDATED: Ads toggle now persisted via backend `/api/settings/ads`**<br>• **UPDATED: Campaigns toggle standardized via shared localStorage**<br>• **NEW: Sidebar quick toggles and `settings_management.html` cards mirror each other**<br>• **REMOVED: Redundant global ads toggle from `users_management.html` to avoid confusion** |
+| **DOCX Upload Tool System** | ✅ **COMPLETED** | 2025-01-08 | • **NEW: DOCX to News conversion API endpoint (`/api/news/upload-docx`)**<br>• **NEW: Admin UI tool under "Tools & Utilitas" section with modern interface**<br>• **NEW: Mammoth library integration for DOCX parsing and HTML conversion**<br>• **NEW: Automatic title extraction from document content or filename**<br>• **NEW: Age rating inference from content analysis**<br>• **NEW: Aggressive content cleanup to remove tags/keywords from parsed content**<br>• **NEW: Smart Markdown formatting with HTML-to-Markdown conversion**<br>• **NEW: Template and example DOCX file downloads for users**<br>• **NEW: Success toast notifications and form clearing on upload**<br>• **NEW: File selection feedback with dynamic styling**<br>• **NEW: Organized folder structure (`templates/admin/tools/docx_uploader/`, `static/js/tools/docx_uploader/`)**<br>• **NEW: Clean separation of HTML and JavaScript files**<br>• **NEW: Integration with existing News creation workflow and metadata**<br>• **NEW: Extensible tools framework for future utility additions** |
 | **Settings Management Integration** | ✅ **COMPLETED** | 2025-08-28 | • **NEW: Updated settings_management.html to use permission system**<br>• **NEW: Replaced role-based checks with permission-based checks**<br>• **NEW: Added missing cards (pending registrations, brand management, album analytics)**<br>• **NEW: Consistent permission structure across all cards**<br>• **NEW: Enhanced user experience with proper access control**<br>• **NEW: Complete menu coverage matching sidebar navigation**<br>• **NEW: Visual consistency and organized layout**<br>• **NEW: Permission-aware card visibility** |
+| **Enhanced Account Management System** | ✅ **COMPLETED** | 2025-08-30 | • **NEW: Comprehensive backend API endpoints (`/api/account/stats`, `/api/account/albums`, `/api/account/comments`, `/api/account/activity`)**<br>• **NEW: Complete account statistics (total articles, visible articles, total reads, albums, chapters, comments)**<br>• **NEW: Albums management with pagination, search, and filtering (status, type)**<br>• **NEW: Recent comments overview with article context and approval status**<br>• **NEW: Activity tracking with human-readable descriptions and timestamps**<br>• **NEW: Enhanced UI with consistent gray/blue color scheme and edit buttons**<br>• **NEW: Real-time updates with refresh buttons for all data sections**<br>• **NEW: Frontend JavaScript integration with debounced search and pagination**<br>• **NEW: Role-based access control and user-specific data filtering**<br>• **NEW: Efficient database queries with proper model relationships**<br>• **NEW: Comprehensive error handling and fallback mechanisms**<br>• **NEW: Security features with authentication and data isolation**<br>• **NEW: Complete API documentation and endpoint categorization** |
 
 ### 🎯 **Reader Features & User Experience**
 | **Feature** | **Status** | **Completion Date** | **Child Steps Completed** |
@@ -312,10 +315,10 @@ See also: [Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATI
 ### **Feature Completion**
 | **Phase** | **Target** | **Completed** | **Progress** |
 |-----------|------------|---------------|-------------|
-| **Phase 1** | 16 features | 26 features | 163% |
+| **Phase 1** | 16 features | 27 features | 169% |
 | **Phase 2** | 12 features | 2 features | 17% |
 | **Phase 3** | 12 features | 0 features | 0% |
-| **Overall** | 40 features | 29 features | 73% |
+| **Overall** | 40 features | 30 features | 75% |
 
 ---
 
@@ -371,6 +374,6 @@ See also: [Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATI
 
 ---
 
-*Last Updated: 2025-08-29*  
+*Last Updated: 2025-08-30*  
 *LilyOpenCMS Development Team*  
-*Progress: 115/141 features completed (82%)* 
+*Progress: 119/143 features completed (83%)* 

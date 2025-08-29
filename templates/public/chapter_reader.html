@@ -1,3 +1,10 @@
+{# 
+  Jinja2 Template File - NOT JavaScript/TypeScript
+  This file contains Jinja2 template syntax and should be ignored by JavaScript/TypeScript linters
+  File extension: .html
+  Template engine: Jinja2
+  Linter should skip this file entirely
+#}
 {% extends 'base.html' %}
 
 {% block title %}
@@ -107,17 +114,44 @@
           </header>
 
           <!-- Featured Image -->
-          {% if news.image %}
-          <figure id="featured-image-trigger" class="w-full aspect-video mb-8 lg:mb-10 overflow-hidden rounded-lg bg-secondary shadow-md cursor-pointer group" role="figure" aria-label="Featured image" aria-describedby="featured-image-caption">
-            <figcaption id="featured-image-caption" class="sr-only">{{ news.title | default('Featured image') | e }}</figcaption>
-            {% set img_src = url_for('static', filename='pic/placeholder.png') %}
-            {% set img_alt = news.title | default('Gambar Berita') | e %}
-            {% if news.image.url %}
-              {% set img_src = news.image.url %}
-            {% elif news.image.filepath %}
-              {% set rel_path = news.image.filepath.split('static/')[-1] %}
-              {% set img_src = url_for('static', filename=rel_path) %}
-            {% endif %}
+          {%- set has_chapter_image = news.image -%}
+          {%- set has_album_image = album.image -%}
+          {%- if has_chapter_image or has_album_image -%}
+          <figure id="featured-image-trigger" 
+                  class="w-full aspect-video mb-8 lg:mb-10 overflow-hidden rounded-lg bg-secondary shadow-md cursor-pointer group" 
+                  role="figure" 
+                  aria-label="Featured image" 
+                  aria-describedby="featured-image-caption">
+            
+            <figcaption id="featured-image-caption" class="sr-only">
+              {%- if has_chapter_image -%}
+                {{- news.title | default('Featured image') | e -}}
+              {%- else -%}
+                {{- album.title | default('Album image') | e -}}
+              {%- endif -%}
+            </figcaption>
+            
+            {%- set img_src = url_for('static', filename='pic/placeholder.png') -%}
+            {%- set img_alt = 'Gambar Berita' -%}
+            
+            {%- if has_chapter_image -%}
+              {%- if news.image.url -%}
+                {%- set img_src = news.image.url -%}
+              {%- elif news.image.filepath -%}
+                {%- set rel_path = news.image.filepath.split('static/')[-1] -%}
+                {%- set img_src = url_for('static', filename=rel_path) -%}
+              {%- endif -%}
+              {%- set img_alt = news.title | default('Gambar Bab') | e -%}
+            {%- elif has_album_image -%}
+              {%- if album.image.url -%}
+                {%- set img_src = album.image.url -%}
+              {%- elif album.image.filepath -%}
+                {%- set rel_path = album.image.filepath.split('static/')[-1] -%}
+                {%- set img_src = url_for('static', filename=rel_path) -%}
+              {%- endif -%}
+              {%- set img_alt = album.title | default('Gambar Album') | e -%}
+            {%- endif -%}
+            
             <div class="relative w-full h-full">
                 <img src="{{ url_for('static', filename='pic/placeholder.png') }}"
                      data-src="{{ img_src }}"
@@ -126,7 +160,7 @@
                      onerror="this.onerror=null; this.src='{{ url_for('static', filename='pic/placeholder.png') | e }}'; this.classList.add('loaded');">
             </div>
           </figure>
-          {% endif %}
+          {%- endif -%}
 
           <!-- Premium Content Stats -->
           {% if is_premium_content %}

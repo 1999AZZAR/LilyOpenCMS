@@ -279,6 +279,7 @@ function displayNews(news) {
                     </div>
                 </div>
                 <div class="mt-4 flex space-x-2 justify-end">
+                    <a href="/news/${article.id}" target="_blank" rel="noopener" class="p-2 bg-white hover:bg-gray-100 text-gray-700 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Lihat artikel" title="Lihat di tab baru"><i class="fas fa-external-link-alt"></i></a>
                     <button onclick="openEditModal(${article.id})" class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="Edit artikel" title="Edit"><i class="fas fa-edit"></i></button>
                     <button onclick="openUsageInfo(${article.id})" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Info penggunaan" title="Info Penggunaan"><i class="fas fa-info-circle"></i></button>
                     <button onclick="toggleVisibility(${article.id}, ${!article.is_visible})" class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="${article.is_visible ? 'Sembunyikan artikel' : 'Tampilkan artikel'}" title="${article.is_visible ? 'Sembunyikan' : 'Tampilkan'}"><i class="fas fa-${article.is_visible ? 'eye-slash' : 'eye'}"></i></button>

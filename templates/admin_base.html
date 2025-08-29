@@ -206,6 +206,7 @@
                                     {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
+
                             {
                                 'id': 'users-editor-writer',
                                 'title': 'Editor ↔ Penulis',
@@ -352,13 +353,30 @@
                             }
                         ]
                     },
-
+                    {
+                        'id': 'tools',
+                        'title': 'Tools & Utilitas',
+                        'icon': 'fas fa-tools',
+                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
+                        'subgroups': [
+                            {
+                                'id': 'tools-content',
+                                'title': 'Konten',
+                                'icon': 'fas fa-file-alt',
+                                'visible': True,
+                                'links': [
+                                    {'url': url_for('main.tools_docx_upload'), 'icon': 'fas fa-file-word', 'label': 'Upload DOCX ke News', 'visible': True}
+                                ]
+                            }
+                        ]
+                    },
                     {
                         'id': 'account',
                         'title': 'Akun & Sistem',
                         'icon': 'fas fa-user-cog',
                         'visible': True,
                         'links': [
+                            {'url': url_for('main.user_account'), 'icon': 'fas fa-user', 'label': 'Akun Saya', 'visible': True},
                             {'url': url_for('main.logout'), 'icon': 'fas fa-sign-out-alt', 'label': 'Logout (' + current_user.username + ')', 'visible': True}
                         ]
                     }

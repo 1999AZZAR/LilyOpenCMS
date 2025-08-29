@@ -505,16 +505,52 @@ def manage_chapters(album_id):
         # Ensure the chapters relationship is loaded
         chapters = album.chapters
         
-        # Get available news articles for adding as chapters
-        available_news = News.query.filter_by(is_visible=True)\
-                                  .filter(~News.id.in_([c.news_id for c in chapters if c.news_id]))\
-                                  .order_by(News.created_at.desc())\
-                                  .limit(50).all()
+        # Get available news articles for adding as chapters (owned by current user regardless of visibility)
+        # Build query for owned news based on user role
+        news_query = News.query
+        
+        # Apply ownership filter based on user role
+        custom_name = (current_user.custom_role.name.lower() if current_user.custom_role and current_user.custom_role.name else "")
+        if current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN or custom_name == "subadmin":
+            pass  # no restriction - can see all articles
+        elif custom_name == "editor":
+            try:
+                writer_ids = [w.id for w in current_user.assigned_writers] if hasattr(current_user, 'assigned_writers') else []
+            except Exception:
+                writer_ids = []
+            allowed_ids = set(writer_ids + [current_user.id])
+            news_query = news_query.filter(News.user_id.in_(allowed_ids))
+        else:
+            news_query = news_query.filter(News.user_id == current_user.id)
+        
+        # Exclude articles already used in chapters
+        news_query = news_query.filter(~News.id.in_([c.news_id for c in chapters if c.news_id]))
+        
+        # Get search parameter
+        search_query = request.args.get('search', '').strip()
+        if search_query:
+            news_query = news_query.filter(News.title.ilike(f'%{search_query}%'))
+        
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 12, type=int)  # Show 12 articles per page
+        # Ensure per_page is within reasonable bounds
+        per_page = max(1, min(per_page, 100))  # Between 1 and 100
+        
+        # Apply pagination
+        pagination = news_query.order_by(News.created_at.desc()).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        available_news = pagination.items
         
         return render_template('admin/albums/chapters.html',
                              album=album,
                              chapters=chapters,
-                             available_news=available_news)
+                             available_news=available_news,
+                             pagination=pagination)
     
     except Exception as e:
         logger.error(f"Error loading chapters management: {e}")
@@ -702,6 +738,33 @@ def move_chapter(album_id, chapter_id):
         return jsonify({'success': False, 'message': 'Error moving chapter'})
 
 
+@albums_bp.route('/<int:album_id>/chapters/<int:chapter_id>/toggle-visibility', methods=['POST'])
+@login_required
+@admin_required
+def toggle_chapter_visibility(album_id, chapter_id):
+    """Toggle chapter visibility"""
+    try:
+        data = request.get_json()
+        is_visible = data.get('is_visible')
+        
+        if not isinstance(is_visible, bool):
+            return jsonify({'success': False, 'message': 'Invalid visibility value'})
+        
+        chapter = AlbumChapter.query.filter_by(id=chapter_id, album_id=album_id).first()
+        if not chapter:
+            return jsonify({'success': False, 'message': 'Chapter not found'})
+        
+        chapter.is_visible = is_visible
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': f'Chapter {"shown" if is_visible else "hidden"} successfully'})
+        
+    except Exception as e:
+        logger.error(f"Error toggling chapter visibility: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Error updating chapter visibility'})
+
+
 # =============================================================================
 # ANALYTICS
 # =============================================================================
@@ -801,7 +864,22 @@ def search_news():
         page = request.args.get('page', 1, type=int)
         per_page = 20
         
-        news_query = News.query.filter_by(is_visible=True)
+        # Build query for owned news based on user role
+        news_query = News.query
+        
+        # Apply ownership filter based on user role
+        custom_name = (current_user.custom_role.name.lower() if current_user.custom_role and current_user.custom_role.name else "")
+        if current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN or custom_name == "subadmin":
+            pass  # no restriction - can see all articles
+        elif custom_name == "editor":
+            try:
+                writer_ids = [w.id for w in current_user.assigned_writers] if hasattr(current_user, 'assigned_writers') else []
+            except Exception:
+                writer_ids = []
+            allowed_ids = set(writer_ids + [current_user.id])
+            news_query = news_query.filter(News.user_id.in_(allowed_ids))
+        else:
+            news_query = news_query.filter(News.user_id == current_user.id)
         
         if query:
             news_query = news_query.filter(News.title.ilike(f'%{query}%'))
@@ -817,7 +895,9 @@ def search_news():
                 'id': article.id,
                 'title': article.title,
                 'created_at': article.created_at.strftime('%Y-%m-%d') if article.created_at else '',
-                'category': article.category.name if article.category else 'Uncategorized'
+                'category': article.category.name if article.category else 'Uncategorized',
+                'is_visible': article.is_visible,
+                'author': article.user.username if article.user else 'Unknown'
             })
         
         return jsonify({'success': True, 'results': results})
