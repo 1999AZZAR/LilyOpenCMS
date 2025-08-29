@@ -57,6 +57,14 @@ def update_user_profile():
             current_user.email = data['email']
         if 'bio' in data:
             current_user.bio = data['bio']
+        if 'birthdate' in data:
+            if data['birthdate']:
+                try:
+                    current_user.birthdate = datetime.strptime(data['birthdate'], "%Y-%m-%d").date()
+                except ValueError:
+                    return jsonify({"message": "Format tanggal lahir tidak valid"}), 400
+            else:
+                current_user.birthdate = None
         
         db.session.commit()
         return jsonify({"message": "Profil berhasil diperbarui"}), 200
@@ -143,10 +151,4 @@ def delete_user_account():
         return jsonify({"message": "Gagal menghapus akun"}), 500
 
 
-@main_blueprint.route("/settings/users")
-@login_required
-def settings_users():
-    # Allow access to ADMIN and SUPERUSER
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
-        abort(403)  # Only admins and superusers can access this page
-    return render_template('admin/settings/users_management.html')
+# Removed duplicate settings_users route - using the one in routes_users.py

@@ -261,7 +261,7 @@ def login():
                 return redirect(next_page)
             if user.role in [UserRole.ADMIN, UserRole.SUPERUSER] or user.is_owner():
                 return redirect(url_for("main.settings_dashboard"))
-            return redirect(url_for("main.user_dashboard"))
+            return redirect("/dashboard")
 
         flash("Invalid credentials", "error")
         return render_template("public/login.html")
@@ -487,6 +487,89 @@ def account_activity():
             'activities': activities_data
         })
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def get_user_dashboard_url(user):
+    """Get the appropriate dashboard URL based on user role."""
+    if user.role in [UserRole.ADMIN, UserRole.SUPERUSER] or user.is_owner():
+        return url_for("main.settings_dashboard")
+    return "/dashboard"
+
+@main_blueprint.route("/api/account/profile", methods=["GET"])
+@login_required
+def account_profile():
+    """Get current user's profile data."""
+    try:
+        return jsonify({
+            'username': current_user.username,
+            'email': current_user.email,
+            'full_name': current_user.get_full_name(),
+            'first_name': current_user.first_name,
+            'last_name': current_user.last_name,
+            'birthdate': current_user.birthdate.isoformat() if current_user.birthdate else None,
+            'age': current_user.get_age() if current_user.birthdate else None,
+            'role': current_user.role.value if current_user.role else None,
+            'custom_role_name': current_user.custom_role.name if current_user.custom_role else None,
+            'created_at': current_user.created_at.isoformat() if current_user.created_at else None,
+            'last_login': current_user.last_login.isoformat() if current_user.last_login else None
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@main_blueprint.route("/api/account/profile", methods=["PUT"])
+@login_required
+def update_account_profile():
+    """Update current user's profile data."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Update allowed fields
+        if 'full_name' in data:
+            full_name = data['full_name'].strip()
+            # Split full name into first and last name
+            name_parts = full_name.split(' ', 1)
+            if len(name_parts) > 1:
+                current_user.first_name = name_parts[0].strip()
+                current_user.last_name = name_parts[1].strip()
+            else:
+                current_user.first_name = full_name
+                current_user.last_name = None
+        
+        if 'birthdate' in data:
+            if data['birthdate']:
+                try:
+                    # Handle both ISO format and YYYY-MM-DD format
+                    birthdate_str = data['birthdate']
+                    if 'T' in birthdate_str:
+                        birthdate_str = birthdate_str.split('T', 1)[0]
+                    current_user.birthdate = datetime.strptime(birthdate_str, "%Y-%m-%d").date()
+                except ValueError:
+                    return jsonify({"error": "Invalid birthdate format, expected YYYY-MM-DD"}), 400
+            else:
+                current_user.birthdate = None
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Profile updated successfully',
+            'profile': {
+                'username': current_user.username,
+                'email': current_user.email,
+                'full_name': current_user.get_full_name(),
+                'first_name': current_user.first_name,
+                'last_name': current_user.last_name,
+                'birthdate': current_user.birthdate.isoformat() if current_user.birthdate else None,
+                'age': current_user.get_age() if current_user.birthdate else None,
+                'role': current_user.role.value if current_user.role else None,
+                'custom_role_name': current_user.custom_role.name if current_user.custom_role else None
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 

@@ -196,6 +196,14 @@ def inject_permission_functions():
         has_custom_role
     )
     
+    def get_user_dashboard_url(user):
+        """Get the appropriate dashboard URL based on user role."""
+        from flask import url_for
+        from models import UserRole
+        if user.role in [UserRole.ADMIN, UserRole.SUPERUSER] or user.is_owner():
+            return url_for("main.settings_dashboard")
+        return "/dashboard"
+    
     return {
         'can_access_admin': can_access_admin,
         'can_manage_users': can_manage_users,
@@ -218,7 +226,8 @@ def inject_permission_functions():
         'is_superuser': is_superuser,
         'is_admin': is_admin,
         'is_admin_tier': is_admin_tier,
-        'has_custom_role': has_custom_role
+        'has_custom_role': has_custom_role,
+        'get_user_dashboard_url': get_user_dashboard_url
     }
 
 @app.context_processor

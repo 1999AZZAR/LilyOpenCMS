@@ -47,6 +47,13 @@
                         <textarea id="bio" name="bio" rows="3" 
                                   class="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">{{ current_user.bio or '' }}</textarea>
                     </div>
+                    <div>
+                        <label for="birthdate" class="block text-sm font-medium mb-2">Tanggal Lahir</label>
+                        <input type="date" id="birthdate" name="birthdate" 
+                               value="{{ current_user.birthdate.strftime('%Y-%m-%d') if current_user.birthdate else '' }}"
+                               class="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <p class="text-sm text-muted-foreground mt-1">Tanggal lahir Anda (opsional)</p>
+                    </div>
                     <div class="flex gap-3">
                         <button type="submit" class="button button-primary">Simpan Perubahan</button>
                         <button type="button" onclick="resetProfileForm()" class="button button-outline">Reset</button>
@@ -140,6 +147,26 @@
                             {% endif %}
                         </span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Tanggal Lahir</span>
+                        <span class="font-medium">
+                            {% if current_user.birthdate %}
+                                {{ current_user.birthdate.strftime('%d %b %Y') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Usia</span>
+                        <span class="font-medium">
+                            {% if current_user.birthdate %}
+                                {{ current_user.get_age() }} tahun
+                            {% else %}
+                                -
+                            {% endif %}
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -147,7 +174,7 @@
             <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
                 <h2 class="text-lg font-semibold mb-4">Aksi Cepat</h2>
                 <div class="space-y-3">
-                    <a href="{{ url_for('main.user_dashboard') }}" class="block w-full text-left p-3 border border-border rounded-lg hover:border-primary transition-colors">
+                    <a href="{{ get_user_dashboard_url(current_user) }}" class="block w-full text-left p-3 border border-border rounded-lg hover:border-primary transition-colors">
                         <div class="flex items-center gap-3">
                             <i class="fas fa-tachometer-alt text-primary"></i>
                             <span>Dashboard</span>
@@ -214,22 +241,53 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         const formData = new FormData(profileForm);
+        
+        // Validate birthdate
+        const birthdate = formData.get('birthdate');
+        if (birthdate) {
+            const selectedDate = new Date(birthdate);
+            const today = new Date();
+            if (selectedDate > today) {
+                showToast('Tanggal lahir tidak boleh di masa depan', 'error');
+                return;
+            }
+        }
         try {
-            const response = await fetch('/api/user/profile', {
-                method: 'POST',
+            // Try the new account profile endpoint first
+            let response = await fetch('/api/account/profile', {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    first_name: formData.get('first_name'),
-                    last_name: formData.get('last_name'),
-                    email: formData.get('email'),
-                    bio: formData.get('bio')
+                    full_name: `${formData.get('first_name')} ${formData.get('last_name')}`.trim(),
+                    birthdate: formData.get('birthdate') || null
                 })
             });
             
+            // If the new endpoint fails, try the legacy user profile endpoint
+            if (!response.ok) {
+                response = await fetch('/api/user/profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        first_name: formData.get('first_name'),
+                        last_name: formData.get('last_name'),
+                        email: formData.get('email'),
+                        bio: formData.get('bio'),
+                        birthdate: formData.get('birthdate') || null
+                    })
+                });
+            }
+            
             if (response.ok) {
                 showToast('Profil berhasil diperbarui', 'success');
+                // Refresh the page to show updated data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
                 const error = await response.json();
                 showToast(error.message || 'Gagal memperbarui profil', 'error');

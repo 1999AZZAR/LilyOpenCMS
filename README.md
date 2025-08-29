@@ -4,7 +4,10 @@ A comprehensive Flask-based content management system with advanced SEO features
 
 ## 🚀 Features
 
-### 🔧 Recent System Improvements (2025-08-29)
+### 🔧 Recent System Improvements (2025-08-30)
+- **✅ Smart Routing System**: Role-based dashboard routing (admin/superuser/owner → `/settings`, general users → `/dashboard`)
+- **✅ Template Context Integration**: Added `get_user_dashboard_url()` function to Flask template context processors
+- **✅ Consistent Navigation Experience**: All dashboard links now use smart routing for seamless navigation
 - **✅ Enhanced User Management System**: Advanced user listing with pagination, search, and filtering
 - **✅ User Creation API**: Admin user creation with role assignment and premium status
 - **✅ User Statistics Dashboard**: Real-time user statistics and role distribution
@@ -41,6 +44,8 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **CDN Ready**: Optimized for content delivery networks
 
 ### 👥 User & Permission System
+- **Smart Routing System**: Role-based dashboard routing (admin/superuser/owner → `/settings`, general users → `/dashboard`)
+- **Template Context Integration**: Automatic dashboard selection based on user role
 - **Enhanced User Management**: Advanced user listing with pagination, search, and filtering
 - **User Creation System**: Admin user creation with role assignment and premium status
 - **User Statistics Dashboard**: Real-time user statistics and role distribution
@@ -496,6 +501,14 @@ chmod +x optimizations/setup_redis.sh
 - **SUPERUSER**: Full system access with all permissions
 - **ADMIN**: Content and user management with limited system access
 - **GENERAL**: Basic content creation and personal management
+
+### Smart Routing System
+- **Role-Based Navigation**: Automatic dashboard routing based on user role
+- **Admin/Superuser/Owner**: Redirected to `/settings` (admin dashboard)
+- **General Users**: Redirected to `/dashboard` (reader dashboard)
+- **Template Integration**: All dashboard links use smart routing via `get_user_dashboard_url()` function
+- **Login Integration**: Login redirects use the same smart routing logic
+- **Consistent Experience**: Seamless navigation across all templates
 
 ### Permission System
 - **Enhanced User Management**: Advanced user listing with pagination, search, and filtering

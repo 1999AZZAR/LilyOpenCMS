@@ -465,6 +465,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 |--------|------------------------------------------|------|---------------------------------------------|
 | GET    | `/settings`                              | Yes  | Admin settings dashboard (admin-tier users) |
 | GET    | `/dashboard`                             | Yes  | General user dashboard (reader dashboard)   |
+| GET    | `/login`                                 | No   | Login page with smart routing (redirects to appropriate dashboard based on user role) |
 | GET    | `/settings/account`                      | Yes  | Account settings page (admin/superuser)     |
 | GET    | `/account/settings`                      | Yes  | User account settings page (general users)  |
 | GET    | `/settings/users`                        | Yes  | User management page                        |
@@ -525,6 +526,8 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/api/account/albums`                    | Yes  | Get user's albums with pagination and filtering |
 | GET    | `/api/account/comments`                  | Yes  | Get user's recent comments                  |
 | GET    | `/api/account/activity`                  | Yes  | Get user's recent activity                  |
+| GET    | `/api/account/profile`                   | Yes  | Get current user's profile data (username, email, full_name, first_name, last_name, birthdate, age, role, custom_role_name, created_at, last_login) |
+| PUT    | `/api/account/profile`                   | Yes  | Update current user's profile data (full_name, birthdate) - full_name is split into first_name and last_name |
 
 ## Public/Pages
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -558,6 +561,15 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 > **Note:** All endpoints are listed, including those for admin/settings, public pages, and all CRUD operations. For endpoints with multiple methods (e.g., GET/POST), both are shown. Bulk and utility endpoints are included for completeness. The new Albums section includes all album and chapter management endpoints.
 
 ### **Recent Backend Updates**
+
+#### **Smart Routing System Implementation**
+- **Role-Based Navigation**: Automatic dashboard routing based on user role (admin/superuser/owner → `/settings`, general users → `/dashboard`)
+- **Template Context Integration**: Added `get_user_dashboard_url()` function to Flask template context processors
+- **Consistent User Experience**: All dashboard links now use smart routing for seamless navigation
+- **Template Updates**: Updated `base.html` and `user_account_settings.html` to use smart routing
+- **Login Integration**: Login redirects now use the same smart routing logic for consistency
+- **Mobile Navigation**: Mobile menu also uses smart routing for dashboard links
+- **Backward Compatibility**: Existing functionality preserved while adding smart routing
 
 #### **Album Chapter Management System Enhancements**
 - **Owned Articles Display**: Updated to show all owned articles (published and draft) regardless of visibility status

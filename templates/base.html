@@ -224,7 +224,7 @@
                     <button type="submit" class="ml-2 px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 text-sm">Cari</button>
                 </form>
                 {% if current_user.is_authenticated %}
-                     <a href="{{ url_for('main.settings_dashboard') }}" title="Pengaturan Akun" class="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-full hover:bg-accent"> 
+                     <a href="{{ get_user_dashboard_url(current_user) }}" title="Pengaturan Akun" class="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-full hover:bg-accent"> 
                         <i class="fa-solid fa-circle-user fa-fw text-xl"></i>
                      </a>
                      <a href="{{ url_for('main.logout') }}" title="Keluar" class="text-muted-foreground hover:text-primary transition-colors p-1.5 rounded-full hover:bg-accent"> 
@@ -406,7 +406,7 @@
                  {% if current_user.is_authenticated %}
                     <ul class="list-none p-0 m-0 space-y-6"> {# Further Increased spacing #}
                         <li> {# Account/Logout links keep the same spacing as main menu #}
-                            <a href="{{ url_for('main.settings_dashboard') }}" class="mobile-nav-link flex items-center gap-3 text-lg py-3 px-3 rounded-md hover:bg-accent">
+                            <a href="{{ get_user_dashboard_url(current_user) }}" class="mobile-nav-link flex items-center gap-3 text-lg py-3 px-3 rounded-md hover:bg-accent">
                                 <i class="fa-solid fa-circle-user"></i>
                                 <span>Akun Saya</span>
                             </a>
