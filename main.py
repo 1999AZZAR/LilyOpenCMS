@@ -23,7 +23,7 @@ JAKARTA = ZoneInfo("Asia/Jakarta")
 from sqlalchemy import func, and_, text
 from sqlalchemy.exc import OperationalError
 
-from models import db, User, Category, News, UserRole, default_utcnow
+from models import db, User, Category, CategoryGroup, News, UserRole, default_utcnow
 
 # Import performance optimization modules
 from optimizations import (
@@ -233,12 +233,28 @@ def inject_permission_functions():
 @app.context_processor
 def inject_global_search_filters():
     all_categories = []
+    grouped_categories = []
     unique_sorted_tags = []
     logger = logging.getLogger(__name__)
 
     try:
-        # Use optimized query with caching
-        all_categories = Category.query.order_by(Category.name).all()
+        # Use optimized query with caching for flat categories (backward compatibility)
+        all_categories = Category.query.filter_by(is_active=True).order_by(Category.display_order).all()
+        
+        # Get grouped categories for new hierarchical display
+        groups = CategoryGroup.query.filter_by(is_active=True).order_by(CategoryGroup.display_order).all()
+        for group in groups:
+            group_categories = Category.query.filter_by(
+                group_id=group.id, 
+                is_active=True
+            ).order_by(Category.display_order).all()
+            
+            if group_categories:  # Only include groups with categories
+                grouped_categories.append({
+                    "group": group,
+                    "categories": group_categories
+                })
+        
         tag_strings_tuples = (
             db.session.query(News.tagar)
             .filter(and_(News.tagar.isnot(None), News.tagar != ""))
@@ -262,6 +278,7 @@ def inject_global_search_filters():
             f"❌ Error fetching global filters (categories/tags): {e}", exc_info=True
         )
         all_categories = []
+        grouped_categories = []
         unique_sorted_tags = []
 
     current_query = request.args.get("q", "")
@@ -270,6 +287,7 @@ def inject_global_search_filters():
 
     return dict(
         all_categories=all_categories,
+        grouped_categories=grouped_categories,
         all_tags=unique_sorted_tags,
         current_query=current_query,
         current_category=current_category,

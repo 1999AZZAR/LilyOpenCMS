@@ -20,7 +20,37 @@ spec.loader.exec_module(main)
 app = main.app
 db = main.db
 
-from models import News, Category, User, Image
+from models import News, Category, User, Image, BrandIdentity
+from sqlalchemy import text
+
+def get_seo_injection_settings():
+    """Get SEO injection settings from the database."""
+    try:
+        result = db.session.execute(text('SELECT website_name, website_url, website_description, website_language, organization_name, organization_logo, organization_description FROM seo_injection_settings LIMIT 1'))
+        row = result.fetchone()
+        if row:
+            return {
+                'website_name': row[0] or 'LilyOpenCMS',
+                'website_url': row[1] or 'https://lilycms.com',
+                'website_description': row[2] or '',
+                'website_language': row[3] or 'id',
+                'organization_name': row[4] or 'LilyOpenCMS',
+                'organization_logo': row[5] or '',
+                'organization_description': row[6] or ''
+            }
+    except Exception as e:
+        print(f"Warning: Could not load SEO injection settings: {e}")
+    
+    # Fallback to default values
+    return {
+        'website_name': 'LilyOpenCMS',
+        'website_url': 'https://lilycms.com',
+        'website_description': '',
+        'website_language': 'id',
+        'organization_name': 'LilyOpenCMS',
+        'organization_logo': '',
+        'organization_description': ''
+    }
 
 def clean_markdown_content(content):
     """Clean markdown content and extract plain text for SEO with enhanced filtering."""
@@ -114,10 +144,15 @@ def extract_images_from_content(content):
     
     return images
 
-def normalize_image_url(image_url, base_url="https://lilycms.com"):
+def normalize_image_url(image_url, base_url=None):
     """Normalize image URL to handle internal vs external links."""
     if not image_url:
         return None
+    
+    # Get actual settings from database
+    if base_url is None:
+        seo_settings = get_seo_injection_settings()
+        base_url = seo_settings['website_url']
     
     # If it's already a full URL
     if image_url.startswith(('http://', 'https://')):
@@ -132,6 +167,48 @@ def normalize_image_url(image_url, base_url="https://lilycms.com"):
         return urljoin(base_url, '/' + image_url)
     
     return image_url
+
+def get_seo_settings():
+    """Get SEO settings from BrandIdentity."""
+    try:
+        brand_info = BrandIdentity.query.first()
+        settings = {}
+        
+        if brand_info and brand_info.seo_settings:
+            # Load settings from the dedicated seo_settings field
+            if isinstance(brand_info.seo_settings, dict):
+                settings = brand_info.seo_settings
+            else:
+                # Handle case where it might be stored as JSON string
+                try:
+                    settings = json.loads(brand_info.seo_settings) if isinstance(brand_info.seo_settings, str) else {}
+                except:
+                    settings = {}
+        
+        return settings
+    except Exception as e:
+        print(f"Warning: Could not load SEO settings: {e}")
+        return {}
+
+def get_website_url(brand_info=None, settings=None):
+    """Get website URL from brand info, settings, or use default."""
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    
+    # First check settings
+    if settings and settings.get("website_url"):
+        return settings["website_url"]
+    
+    # Then check brand info website_url field
+    if brand_info and brand_info.website_url:
+        return brand_info.website_url
+    
+    # Use SEO injection settings
+    if seo_settings['website_url']:
+        return seo_settings['website_url']
+    
+    # Default fallback
+    return "https://lilycms.com"
 
 def get_best_image_for_seo(news_item):
     """Get the best image for SEO from news item."""
@@ -148,8 +225,12 @@ def get_best_image_for_seo(news_item):
         # Use the first image found
         return normalize_image_url(content_images[0]['url'])
     
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    base_url = seo_settings['website_url']
+    
     # Default image
-    return "https://lilycms.com/static/pic/placeholder.png"
+    return f"{base_url}/static/pic/placeholder.png"
 
 def generate_seo_slug(title):
     """Generate SEO-friendly slug from title."""
@@ -172,6 +253,15 @@ def generate_seo_slug(title):
 
 def generate_schema_markup(news_item):
     """Generate JSON-LD structured data for the news article."""
+    # Get website URL
+    brand_info = BrandIdentity.query.first()
+    seo_settings = get_seo_settings()
+    website_url = get_website_url(brand_info, seo_settings)
+    
+    # Get actual settings from database
+    seo_injection_settings = get_seo_injection_settings()
+    brand_name = brand_info.brand_name if brand_info else seo_injection_settings['website_name']
+    
     schema = {
         "@context": "https://schema.org",
         "@type": "NewsArticle",
@@ -183,17 +273,17 @@ def generate_schema_markup(news_item):
         },
         "publisher": {
             "@type": "Organization",
-            "name": "LilyOpenCMS",
-            "url": "https://lilycms.com"
+            "name": brand_name,
+            "url": website_url
         },
         "datePublished": news_item.date.isoformat() if news_item.date else None,
         "dateModified": news_item.updated_at.isoformat() if news_item.updated_at else None,
         "inLanguage": "id",
         "genre": news_item.category.name if news_item.category else None,
-        "url": f"/news/{news_item.id}",
+        "url": f"{website_url}/news/{news_item.id}",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": f"https://lilycms.com/news/{news_item.id}"
+            "@id": f"{website_url}/news/{news_item.id}"
         }
     }
     
@@ -246,8 +336,34 @@ def calculate_seo_score(news_item):
     
     return min(score, 100)
 
+def get_seo_settings():
+    """Get SEO settings from BrandIdentity."""
+    try:
+        from models import BrandIdentity
+        brand_info = BrandIdentity.query.first()
+        if brand_info and brand_info.seo_settings:
+            if isinstance(brand_info.seo_settings, dict):
+                return brand_info.seo_settings
+            else:
+                return json.loads(brand_info.seo_settings) if isinstance(brand_info.seo_settings, str) else {}
+    except Exception as e:
+        print(f"Warning: Could not load SEO settings: {e}")
+    return {}
+
+def apply_template(template, variables):
+    """Apply variables to a template string."""
+    if not template:
+        return ""
+    
+    result = template
+    for key, value in variables.items():
+        if value:
+            result = result.replace(f"{{{key}}}", str(value))
+    
+    return result
+
 def generate_meta_description(news_item):
-    """Generate meta description from news content."""
+    """Generate meta description from news content using templates."""
     if news_item.meta_description:
         # Use existing meta description if available
         desc = news_item.meta_description.strip()
@@ -255,70 +371,159 @@ def generate_meta_description(news_item):
             desc = desc[:157] + "..."
         return desc
     
-    # Generate from content
+    # Get SEO settings
+    seo_settings = get_seo_settings()
+    article_template = seo_settings.get('article_meta_description', '{excerpt} - Read the full article on {brand_name}.')
+    
+    # Generate excerpt from content
     clean_content = clean_markdown_content(news_item.content)
-    if clean_content:
-        # Use first 160 characters of cleaned content
-        desc = clean_content[:160]
-        if len(clean_content) > 160:
-            desc = desc[:157] + "..."
-        return desc
+    excerpt = clean_content[:150] + "..." if len(clean_content) > 150 else clean_content
     
-    # Fallback to title and category
-    parts = [news_item.title]
-    if news_item.category:
-        parts.append(f"Category: {news_item.category.name}")
+    # Get brand name
+    brand_name = "LilyOpenCMS"  # Default
+    try:
+        from models import BrandIdentity
+        brand_info = BrandIdentity.query.first()
+        if brand_info and brand_info.brand_name:
+            brand_name = brand_info.brand_name
+    except:
+        pass
     
-    desc = " - ".join(parts)
-    if len(desc) > 160:
-        desc = desc[:157] + "..."
+    # Apply template
+    variables = {
+        'excerpt': excerpt,
+        'title': news_item.title,
+        'category': news_item.category.name if news_item.category else '',
+        'brand_name': brand_name
+    }
+    
+    desc = apply_template(article_template, variables)
+    
+    # Fallback if template didn't work
+    if not desc or desc == article_template:
+        # Generate from content
+        if clean_content:
+            desc = clean_content[:160]
+            if len(clean_content) > 160:
+                desc = desc[:157] + "..."
+        else:
+            # Fallback to title and category
+            parts = [news_item.title]
+            if news_item.category:
+                parts.append(f"Category: {news_item.category.name}")
+            desc = " - ".join(parts)
+            if len(desc) > 160:
+                desc = desc[:157] + "..."
+    
     return desc
 
 def generate_meta_keywords(news_item):
-    """Generate meta keywords from news content."""
-    keywords = []
+    """Generate meta keywords from news content using templates."""
+    # Get SEO settings
+    seo_settings = get_seo_settings()
+    article_template = seo_settings.get('article_meta_keywords', '{category}, {title_keywords}, news, article, {brand_name}')
     
-    # Add title words
+    # Generate title keywords
+    title_keywords = []
     if news_item.title:
         title_words = [word.lower() for word in news_item.title.split() if len(word) > 2]
-        keywords.extend(title_words[:5])
+        title_keywords = title_words[:5]
     
-    # Add category
-    if news_item.category:
-        keywords.append(news_item.category.name.lower())
+    # Get category
+    category = news_item.category.name.lower() if news_item.category else ''
     
-    # Add content keywords
-    if news_item.content:
-        clean_content = clean_markdown_content(news_item.content)
-        # Extract meaningful words (3+ characters)
-        content_words = [word.lower() for word in clean_content.split() if len(word) > 3]
-        # Get most common words (simple approach)
-        word_freq = {}
-        for word in content_words:
-            word_freq[word] = word_freq.get(word, 0) + 1
+    # Get brand name
+    brand_name = "LilyOpenCMS"  # Default
+    try:
+        from models import BrandIdentity
+        brand_info = BrandIdentity.query.first()
+        if brand_info and brand_info.brand_name:
+            brand_name = brand_info.brand_name
+    except:
+        pass
+    
+    # Apply template
+    variables = {
+        'category': category,
+        'title_keywords': ', '.join(title_keywords),
+        'brand_name': brand_name
+    }
+    
+    keywords = apply_template(article_template, variables)
+    
+    # Fallback if template didn't work
+    if not keywords or keywords == article_template:
+        # Generate keywords manually
+        keywords_list = []
         
-        # Add top 3 most frequent words
-        sorted_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-        keywords.extend([word for word, freq in sorted_words[:3]])
+        # Add title words
+        if news_item.title:
+            title_words = [word.lower() for word in news_item.title.split() if len(word) > 2]
+            keywords_list.extend(title_words[:5])
+        
+        # Add category
+        if news_item.category:
+            keywords_list.append(news_item.category.name.lower())
+        
+        # Add content keywords
+        if news_item.content:
+            clean_content = clean_markdown_content(news_item.content)
+            # Extract meaningful words (3+ characters)
+            content_words = [word.lower() for word in clean_content.split() if len(word) > 3]
+            # Get most common words (simple approach)
+            word_freq = {}
+            for word in content_words:
+                word_freq[word] = word_freq.get(word, 0) + 1
+            
+            # Add top 3 most frequent words
+            sorted_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
+            keywords_list.extend([word for word, freq in sorted_words[:3]])
+        
+        # Add news-specific keywords
+        if news_item.is_main_news:
+            keywords_list.extend(["main", "featured", "breaking"])
+        if news_item.is_premium:
+            keywords_list.extend(["premium", "exclusive"])
+        if news_item.is_archived:
+            keywords_list.extend(["archived", "historical"])
+        
+        # Add content type keywords
+        keywords_list.extend(["news", "article", "content", "information"])
+        
+        # Remove duplicates and limit
+        unique_keywords = list(dict.fromkeys(keywords_list))[:10]
+        keywords = ", ".join(unique_keywords)
     
-    # Add news-specific keywords
-    if news_item.is_main_news:
-        keywords.extend(["main", "featured", "breaking"])
-    if news_item.is_premium:
-        keywords.extend(["premium", "exclusive"])
-    if news_item.is_archived:
-        keywords.extend(["archived", "historical"])
-    
-    # Add content type keywords
-    keywords.extend(["news", "article", "content", "information"])
-    
-    # Remove duplicates and limit
-    unique_keywords = list(dict.fromkeys(keywords))[:10]
-    return ", ".join(unique_keywords)
+    return keywords
 
 def generate_open_graph_data(news_item):
-    """Generate Open Graph data for the news article."""
-    og_title = news_item.og_title or news_item.title
+    """Generate Open Graph data for the news article using templates."""
+    # Get SEO settings
+    seo_settings = get_seo_settings()
+    article_template = seo_settings.get('article_og_title', '{title} - {brand_name}')
+    
+    # Get brand name
+    brand_name = "LilyOpenCMS"  # Default
+    try:
+        from models import BrandIdentity
+        brand_info = BrandIdentity.query.first()
+        if brand_info and brand_info.brand_name:
+            brand_name = brand_info.brand_name
+    except:
+        pass
+    
+    # Apply template for OG title
+    variables = {
+        'title': news_item.title,
+        'brand_name': brand_name
+    }
+    
+    og_title = apply_template(article_template, variables)
+    
+    # Fallback if template didn't work
+    if not og_title or og_title == article_template:
+        og_title = news_item.og_title or news_item.title
+    
     og_description = news_item.og_description or generate_meta_description(news_item)
     og_image = news_item.og_image
     
@@ -394,6 +599,32 @@ def inject_news_seo():
                 news_item.seo_slug = generate_seo_slug(news_item.title)
                 print(f"   ✅ Generated SEO slug: {news_item.seo_slug}")
                 
+                # Generate meta title using template
+                seo_settings = get_seo_settings()
+                article_title_template = seo_settings.get('article_meta_title', '{title} - {brand_name}')
+                
+                # Get brand name
+                brand_name = "LilyOpenCMS"  # Default
+                try:
+                    from models import BrandIdentity
+                    brand_info = BrandIdentity.query.first()
+                    if brand_info and brand_info.brand_name:
+                        brand_name = brand_info.brand_name
+                except:
+                    pass
+                
+                # Apply template for meta title
+                variables = {
+                    'title': news_item.title,
+                    'category': news_item.category.name if news_item.category else '',
+                    'brand_name': brand_name
+                }
+                
+                news_item.meta_title = apply_template(article_title_template, variables)
+                if not news_item.meta_title or news_item.meta_title == article_title_template:
+                    news_item.meta_title = f"{news_item.title} - {brand_name}"
+                print(f"   ✅ Generated meta title: {news_item.meta_title}")
+                
                 # Generate meta description
                 news_item.meta_description = generate_meta_description(news_item)
                 print(f"   ✅ Generated meta description: {news_item.meta_description[:50]}...")
@@ -418,13 +649,17 @@ def inject_news_seo():
                 news_item.schema_markup = generate_schema_markup(news_item)
                 print(f"   ✅ Generated schema markup")
                 
+                # Get website URL for canonical URL
+                brand_info = BrandIdentity.query.first()
+                website_url = get_website_url(brand_info, seo_settings)
+                
                 # Set default values
                 news_item.meta_author = news_item.author.get_full_name() if news_item.author else "Unknown Author"
                 news_item.meta_language = "id"
                 news_item.meta_robots = "index, follow"
                 news_item.twitter_card = "summary_large_image"
                 news_item.structured_data_type = "NewsArticle"
-                news_item.canonical_url = f"https://lilycms.com/news/{news_item.id}"
+                news_item.canonical_url = f"{website_url}/news/{news_item.id}"
                 
                 # Calculate SEO score
                 news_item.seo_score = calculate_seo_score(news_item)

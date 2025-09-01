@@ -354,6 +354,145 @@ def get_user_role():
         }
     )
 
+@main_blueprint.route("/api/user/request-account-deletion", methods=["POST"])
+@login_required
+def request_account_deletion():
+    """
+    Request account deletion - sets user to inactive and marks for admin approval.
+    Only general users can request deletion.
+    """
+    if current_user.role != UserRole.GENERAL:
+        return jsonify({"error": "Only general users can request account deletion"}), 403
+    
+    try:
+        # Set user to inactive and mark for deletion
+        current_user.is_active = False
+        current_user.deletion_requested_at = datetime.utcnow()
+        current_user.deletion_requested = True
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Account deletion request submitted successfully. Your account has been deactivated and is pending admin approval."
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error requesting account deletion for user {current_user.id}: {e}")
+        return jsonify({"error": "Failed to submit deletion request"}), 500
+
+@main_blueprint.route("/api/users/deletion-requests", methods=["GET"])
+@login_required
+def get_deletion_requests():
+    """
+    Get all pending account deletion requests (admin only).
+    """
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    try:
+        # Get users with pending deletion requests
+        deletion_requests = User.query.filter_by(
+            deletion_requested=True,
+            is_active=False
+        ).order_by(User.deletion_requested_at.desc()).all()
+        
+        requests_data = []
+        for user in deletion_requests:
+            requests_data.append({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "deletion_requested_at": user.deletion_requested_at.isoformat() if user.deletion_requested_at else None,
+                "role": user.role.value,
+                "custom_role": user.custom_role.name if user.custom_role else None
+            })
+        
+        return jsonify({
+            "success": True,
+            "deletion_requests": requests_data,
+            "total": len(requests_data)
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching deletion requests: {e}")
+        return jsonify({"error": "Failed to fetch deletion requests"}), 500
+
+@main_blueprint.route("/api/users/<int:user_id>/approve-deletion", methods=["POST"])
+@login_required
+def approve_account_deletion(user_id):
+    """
+    Approve account deletion request and permanently delete the user (admin only).
+    """
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Verify this is a pending deletion request
+        if not user.deletion_requested or user.is_active:
+            return jsonify({"error": "User does not have a pending deletion request"}), 400
+        
+        # Cannot delete superusers unless you are a superuser
+        if user.role == UserRole.SUPERUSER and not current_user.is_owner():
+            return jsonify({"error": "Cannot delete superuser"}), 403
+        
+        # Cannot delete yourself
+        if user.id == current_user.id:
+            return jsonify({"error": "Cannot delete your own account"}), 403
+        
+        # Permanently delete the user
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Account deletion approved and user '{user.username}' has been permanently deleted."
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error approving account deletion for user {user_id}: {e}")
+        return jsonify({"error": "Failed to approve account deletion"}), 500
+
+@main_blueprint.route("/api/users/<int:user_id>/reject-deletion", methods=["POST"])
+@login_required
+def reject_account_deletion(user_id):
+    """
+    Reject account deletion request and reactivate the user (admin only).
+    """
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Verify this is a pending deletion request
+        if not user.deletion_requested or user.is_active:
+            return jsonify({"error": "User does not have a pending deletion request"}), 400
+        
+        # Reactivate user and clear deletion request
+        user.is_active = True
+        user.deletion_requested = False
+        user.deletion_requested_at = None
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Account deletion request rejected. User '{user.username}' has been reactivated."
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error rejecting account deletion for user {user_id}: {e}")
+        return jsonify({"error": "Failed to reject account deletion"}), 500
+
 
 @main_blueprint.route("/api/users/<int:user_id>", methods=["PUT"])
 @login_required

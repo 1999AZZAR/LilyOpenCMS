@@ -20,7 +20,37 @@ spec.loader.exec_module(main)
 app = main.app
 db = main.db
 
-from models import Album, Category, User
+from models import Album, Category, User, BrandIdentity
+from sqlalchemy import text
+
+def get_seo_injection_settings():
+    """Get SEO injection settings from the database."""
+    try:
+        result = db.session.execute(text('SELECT website_name, website_url, website_description, website_language, organization_name, organization_logo, organization_description FROM seo_injection_settings LIMIT 1'))
+        row = result.fetchone()
+        if row:
+            return {
+                'website_name': row[0] or 'LilyOpenCMS',
+                'website_url': row[1] or 'https://lilycms.com',
+                'website_description': row[2] or '',
+                'website_language': row[3] or 'id',
+                'organization_name': row[4] or 'LilyOpenCMS',
+                'organization_logo': row[5] or '',
+                'organization_description': row[6] or ''
+            }
+    except Exception as e:
+        print(f"Warning: Could not load SEO injection settings: {e}")
+    
+    # Fallback to default values
+    return {
+        'website_name': 'LilyOpenCMS',
+        'website_url': 'https://lilycms.com',
+        'website_description': '',
+        'website_language': 'id',
+        'organization_name': 'LilyOpenCMS',
+        'organization_logo': '',
+        'organization_description': ''
+    }
 
 def clean_markdown_content(content):
     """Clean markdown content and extract plain text for SEO with enhanced filtering."""
@@ -87,10 +117,15 @@ def clean_markdown_content(content):
     
     return content
 
-def normalize_image_url(image_url, base_url="https://lilycms.com"):
+def normalize_image_url(image_url, base_url=None):
     """Normalize image URL to handle internal vs external links."""
     if not image_url:
         return None
+    
+    # Get actual settings from database
+    if base_url is None:
+        seo_settings = get_seo_injection_settings()
+        base_url = seo_settings['website_url']
     
     # If it's already a full URL
     if image_url.startswith(('http://', 'https://')):
@@ -106,6 +141,48 @@ def normalize_image_url(image_url, base_url="https://lilycms.com"):
     
     return image_url
 
+def get_seo_settings():
+    """Get SEO settings from BrandIdentity."""
+    try:
+        brand_info = BrandIdentity.query.first()
+        settings = {}
+        
+        if brand_info and brand_info.seo_settings:
+            # Load settings from the dedicated seo_settings field
+            if isinstance(brand_info.seo_settings, dict):
+                settings = brand_info.seo_settings
+            else:
+                # Handle case where it might be stored as JSON string
+                try:
+                    settings = json.loads(brand_info.seo_settings) if isinstance(brand_info.seo_settings, str) else {}
+                except:
+                    settings = {}
+        
+        return settings
+    except Exception as e:
+        print(f"Warning: Could not load SEO settings: {e}")
+        return {}
+
+def get_website_url(brand_info=None, settings=None):
+    """Get website URL from brand info, settings, or use default."""
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    
+    # First check settings
+    if settings and settings.get("website_url"):
+        return settings["website_url"]
+    
+    # Then check brand info website_url field
+    if brand_info and brand_info.website_url:
+        return brand_info.website_url
+    
+    # Use SEO injection settings
+    if seo_settings['website_url']:
+        return seo_settings['website_url']
+    
+    # Default fallback
+    return "https://lilycms.com"
+
 def get_best_image_for_seo(album):
     """Get the best image for SEO from album."""
     # Check if album has a cover image
@@ -115,8 +192,12 @@ def get_best_image_for_seo(album):
         elif album.cover_image.filepath:
             return normalize_image_url(album.cover_image.filepath)
     
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    base_url = seo_settings['website_url']
+    
     # Default image
-    return "https://lilycms.com/static/pic/placeholder.png"
+    return f"{base_url}/static/pic/placeholder.png"
 
 def generate_seo_slug(title):
     """Generate SEO-friendly slug from title."""
@@ -139,6 +220,11 @@ def generate_seo_slug(title):
 
 def generate_schema_markup(album):
     """Generate JSON-LD structured data for the album."""
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    website_url = seo_settings['website_url']
+    organization_name = seo_settings['organization_name']
+    
     schema = {
         "@context": "https://schema.org",
         "@type": "Book" if album.is_completed else "CreativeWork",
@@ -150,16 +236,16 @@ def generate_schema_markup(album):
         },
         "publisher": {
             "@type": "Organization",
-            "name": "LilyOpenCMS",
-            "url": "https://lilycms.com"
+            "name": organization_name,
+            "url": website_url
         },
         "datePublished": album.created_at.isoformat() if album.created_at else None,
         "dateModified": album.updated_at.isoformat() if album.updated_at else None,
         "numberOfPages": album.total_chapters,
         "isAccessibleForFree": not album.is_premium,
-        "inLanguage": "id",
+        "inLanguage": seo_settings['website_language'],
         "genre": album.category.name if album.category else None,
-        "url": f"/album/{album.id}",
+        "url": f"{website_url}/album/{album.id}",
     }
     
     # Add book-specific properties if completed
@@ -372,13 +458,18 @@ def inject_album_seo():
                 album.schema_markup = generate_schema_markup(album)
                 print(f"   ✅ Generated schema markup")
                 
+                # Get website URL for canonical URL
+                brand_info = BrandIdentity.query.first()
+                seo_settings = get_seo_settings()
+                website_url = get_website_url(brand_info, seo_settings)
+                
                 # Set default values
                 album.meta_author = album.author.get_full_name() if album.author else "Unknown Author"
                 album.meta_language = "id"
                 album.meta_robots = "index, follow"
                 album.twitter_card = "summary_large_image"
                 album.structured_data_type = "Book" if album.is_completed else "CreativeWork"
-                album.canonical_url = f"https://lilycms.com/album/{album.id}"
+                album.canonical_url = f"{website_url}/album/{album.id}"
                 
                 # Calculate SEO score
                 album.seo_score = calculate_seo_score(album)

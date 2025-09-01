@@ -209,10 +209,10 @@ async function fetchAndDisplayContentImagesCreate(page = 1) {
 // Ambil dan isi kategori
 async function fetchCategories() {
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/categories?grouped=true');
         if (!response.ok) throw new Error('Gagal mengambil kategori');
 
-        const categories = await response.json();
+        const groupedData = await response.json();
         const categoryDropdown = document.getElementById('news-category');
         if (!categoryDropdown) {
             console.error("Category dropdown (#news-category) not found.");
@@ -220,11 +220,20 @@ async function fetchCategories() {
         }
 
         categoryDropdown.innerHTML = '<option value="" disabled selected>Pilih kategori...</option>';
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category.id;
-            option.textContent = category.name;
-            categoryDropdown.appendChild(option);
+        
+        // Add optgroups for each category group
+        groupedData.forEach(groupData => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = groupData.group.name;
+            
+            groupData.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                optgroup.appendChild(option);
+            });
+            
+            categoryDropdown.appendChild(optgroup);
         });
     } catch (error) {
         console.error('Error mengambil kategori:', error);
@@ -506,13 +515,15 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('date', document.getElementById('news-date').value);
             formData.append('category', document.getElementById('news-category').value);
             formData.append('age_rating', document.getElementById('news-age-rating').value);
-            formData.append('is_news', document.getElementById('news-premium').checked); // Changed from premium to is_news
-            formData.append('is_main_news', document.getElementById('news-main').checked);
+            formData.append('is_news', document.getElementById('news-is-premium').checked); // Fixed: use correct element ID
+            formData.append('is_main_news', false); // Fixed: news-main element doesn't exist, default to false
             formData.append('is_premium', document.getElementById('news-is-premium').checked);
             formData.append('is_visible', isPublishButton);
             formData.append('writer', document.getElementById('news-writer').value.trim());
             formData.append('external_source', document.getElementById('news-external-source').value.trim());
             formData.append('image_id', document.getElementById('news-image-id').value); // Send the selected image ID
+            formData.append('prize', document.getElementById('news-prize').value || '0'); // Add prize field
+            formData.append('prize_coin_type', document.getElementById('news-prize-coin-type').value || 'any'); // Add coin type field
 
             try {
                 let response;
@@ -527,12 +538,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         date: document.getElementById('news-date').value,
                         category: document.getElementById('news-category').value,
                         age_rating: document.getElementById('news-age-rating').value,
-                        is_news: document.getElementById('news-premium').checked,
-                        is_main_news: document.getElementById('news-main').checked,
+                        is_news: document.getElementById('news-is-premium').checked,
+                        is_main_news: false, // Fixed: news-main element doesn't exist, default to false
                         is_premium: document.getElementById('news-is-premium').checked,
                         writer: document.getElementById('news-writer').value.trim(),
                         external_source: document.getElementById('news-external-source').value.trim(),
-                        image_id: document.getElementById('news-image-id').value
+                        image_id: document.getElementById('news-image-id').value,
+                        prize: document.getElementById('news-prize').value || '0',
+                        prize_coin_type: document.getElementById('news-prize-coin-type').value || 'any'
                     };
                     // Only set visibility when explicitly publishing; otherwise retain existing value on server
                     if (isPublishButton) {

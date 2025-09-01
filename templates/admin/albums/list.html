@@ -35,11 +35,23 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
                 <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Semua Kategori</option>
-                    {% for category in categories %}
-                    <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>
-                        {{ category.name }}
-                    </option>
-                    {% endfor %}
+                    {% if grouped_categories %}
+                      {% for group_data in grouped_categories %}
+                        <optgroup label="{{ group_data.group.name }}">
+                          {% for category in group_data.categories %}
+                          <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>
+                              {{ category.name }}
+                          </option>
+                          {% endfor %}
+                        </optgroup>
+                      {% endfor %}
+                    {% else %}
+                      {% for category in categories %}
+                      <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>
+                          {{ category.name }}
+                      </option>
+                      {% endfor %}
+                    {% endif %}
                 </select>
             </div>
             <div>
@@ -151,6 +163,11 @@
                                     <i class="fas fa-pause mr-1"></i>Hiatus
                                 </span>
                                 {% endif %}
+                                {% if album.deletion_requested %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-user-clock mr-1"></i>Deletion Requested
+                                </span>
+                                {% endif %}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -170,9 +187,10 @@
                                         class="text-purple-600 hover:text-purple-900 p-1 rounded" title="{{ 'Set to Regular' if album.is_premium else 'Set to Premium' }}">
                                     <i class="fas fa-{{ 'crown' if album.is_premium else 'star' }}"></i>
                                 </button>
-                                <button onclick="deleteAlbum({{ album.id }})" 
-                                        class="text-red-600 hover:text-red-900 p-1 rounded" title="Delete Album">
-                                    <i class="fas fa-trash"></i>
+                                <button onclick="requestAlbumDeletion({{ album.id }})" 
+                                        class="p-1 rounded text-orange-600 hover:text-orange-900" 
+                                        title="Request Album Deletion">
+                                    <i class="fas fa-user-clock"></i>
                                 </button>
                             </div>
                         </td>
@@ -262,23 +280,32 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/albums-management.js') }}"></script>
 <script>
+// Pass user role information to JavaScript
+window.currentUserRole = {{ current_user.role.value if current_user.is_authenticated else 'null' | tojson }};
+window.currentUserIsAdminTier = {{ current_user.is_admin_tier() | tojson }};
+window.currentUserId = {{ current_user.id if current_user.is_authenticated else 'null' | tojson }};
+
 // Global modal management
 document.addEventListener('DOMContentLoaded', function() {
     // Add escape key listener to close modals
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closeAllModals();
+            closeConfirmModal();
         }
     });
     
     // Add click outside to close modals
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('fixed') && e.target.classList.contains('bg-black')) {
-            closeAllModals();
+            closeConfirmModal();
         }
     });
 });
+
+
 
 // Bulk selection functionality
 document.getElementById('select-all').addEventListener('change', function() {
@@ -399,21 +426,18 @@ function deleteAlbum(albumId) {
     );
 }
 
+
+
 // Modal functions
 function showConfirmModal(title, message, action) {
     document.getElementById('confirm-title').textContent = title;
     document.getElementById('confirm-message').textContent = message;
     document.getElementById('confirm-action').onclick = action;
-    pushModal('confirm-modal');
+    document.getElementById('confirm-modal').classList.remove('hidden');
 }
 
 function closeConfirmModal() {
-    popModal();
-    // Fallback: also try direct close
-    const modal = document.getElementById('confirm-modal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
+    document.getElementById('confirm-modal').classList.add('hidden');
 }
 
 // Bulk actions
@@ -518,47 +542,6 @@ function getSelectedAlbumIds() {
     return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
 }
 
-// Modal Management
-let modalStack = [];
 
-function pushModal(modalId) {
-    modalStack.push(modalId);
-    document.getElementById(modalId).classList.remove('hidden');
-}
-
-function popModal() {
-    if (modalStack.length > 0) {
-        const currentModal = modalStack.pop();
-        const modalElement = document.getElementById(currentModal);
-        if (modalElement) {
-            modalElement.classList.add('hidden');
-        }
-    }
-}
-
-function closeAllModals() {
-    modalStack.forEach(modalId => {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-    });
-    modalStack = [];
-    
-    // Also close all modals directly as fallback
-    const allModals = document.querySelectorAll('[id$="-modal"]');
-    allModals.forEach(modal => {
-        modal.classList.add('hidden');
-    });
-}
-
-// Debug function to check modal status
-function debugModals() {
-    console.log('Modal Stack:', modalStack);
-    const allModals = document.querySelectorAll('[id$="-modal"]');
-    allModals.forEach(modal => {
-        console.log(`${modal.id}: ${modal.classList.contains('hidden') ? 'Hidden' : 'Visible'}`);
-    });
-}
 </script>
 {% endblock %}

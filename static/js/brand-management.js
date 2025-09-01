@@ -345,6 +345,50 @@ const FIXED_PRESETS = {
     '--ring': '320 100% 45% / 1'
   },
   
+  'Classic Red': {
+    '--background': '0 0% 98% / 1',
+    '--foreground': '0 0% 15% / 1',
+    '--card': '0 0% 100% / 1',
+    '--card-foreground': '0 0% 15% / 1',
+    '--popover': '0 0% 100% / 1',
+    '--popover-foreground': '0 0% 15% / 1',
+    '--primary': '0 100% 50% / 1',
+    '--primary-foreground': '0 0% 98% / 1',
+    '--secondary': '0 0% 85% / 1',
+    '--secondary-foreground': '0 0% 15% / 1',
+    '--muted': '0 0% 92% / 1',
+    '--muted-foreground': '0 0% 45% / 1',
+    '--accent': '0 100% 70% / 1',
+    '--accent-foreground': '0 0% 15% / 1',
+    '--destructive': '0 84% 60% / 1',
+    '--destructive-foreground': '0 0% 98% / 1',
+    '--border': '0 0% 88% / 1',
+    '--input': '0 0% 100% / 1',
+    '--ring': '0 100% 50% / 1'
+  },
+  
+  'Elegance Red': {
+    '--background': '0 20% 98% / 1',
+    '--foreground': '0 30% 15% / 1',
+    '--card': '0 15% 99% / 1',
+    '--card-foreground': '0 30% 15% / 1',
+    '--popover': '0 15% 99% / 1',
+    '--popover-foreground': '0 30% 15% / 1',
+    '--primary': '0 85% 45% / 1',
+    '--primary-foreground': '0 20% 98% / 1',
+    '--secondary': '0 25% 88% / 1',
+    '--secondary-foreground': '0 30% 15% / 1',
+    '--muted': '0 20% 94% / 1',
+    '--muted-foreground': '0 25% 40% / 1',
+    '--accent': '0 75% 65% / 1',
+    '--accent-foreground': '0 30% 15% / 1',
+    '--destructive': '0 80% 55% / 1',
+    '--destructive-foreground': '0 20% 98% / 1',
+    '--border': '0 20% 90% / 1',
+    '--input': '0 15% 99% / 1',
+    '--ring': '0 85% 45% / 1'
+  },
+  
   'Aurora': {
     '--background': '160 50% 98% / 1',
     '--foreground': '160 40% 15% / 1',
@@ -826,7 +870,7 @@ function saveCustomPreset(name, palette) {
 
 // Categorize presets
 const PRESET_CATEGORIES = {
-  classic: ['Current', 'Original', 'Light', 'Dark', 'Neutral', 'Warm', 'Cool', 'Elegant'],
+  classic: ['Current', 'Original', 'Light', 'Dark', 'Neutral', 'Warm', 'Cool', 'Elegant', 'Classic Red', 'Elegance Red'],
   capuchin: ['Capuchin', 'Capuchin Dark', 'Capuchin Blue', 'Capuchin Blue Dark', 'Capuchin Green', 'Capuchin Green Dark', 'Capuchin Purple', 'Capuchin Purple Dark'],
   themed: ['Ocean', 'Forest', 'Sunset', 'Vibrant', 'Midnight', 'Rose', 'Aurora', 'Coral']
 };

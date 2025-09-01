@@ -271,6 +271,7 @@ function displayNews(news) {
                     <div class="flex flex-wrap items-center gap-x-2 text-xs text-gray-500 mb-1">
                         <span>${new Date(article.date).toLocaleDateString()}</span>
                         <span class="px-2 py-0.5 rounded-full ${article.is_visible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${article.is_visible ? 'Terlihat' : 'Tersembunyi'}</span>
+                        ${article.deletion_requested ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><i class="fas fa-user-clock mr-1"></i>Deletion Requested</span>' : ''}
                     </div>
                     <div class="flex items-center text-xs text-gray-500">
                         <span><i class="fas fa-eye mr-1"></i> ${article.read_count || 0}</span>
@@ -285,7 +286,7 @@ function displayNews(news) {
                     <button onclick="toggleVisibility(${article.id}, ${!article.is_visible})" class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="${article.is_visible ? 'Sembunyikan artikel' : 'Tampilkan artikel'}" title="${article.is_visible ? 'Sembunyikan' : 'Tampilkan'}"><i class="fas fa-${article.is_visible ? 'eye-slash' : 'eye'}"></i></button>
                     <button onclick="duplicateNews(${article.id})" class="p-2 bg-green-100 hover:bg-green-200 text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-green-300" aria-label="Duplikat artikel" title="Duplikat"><i class="fas fa-copy"></i></button>
                     <button onclick="toggleArchive(${article.id}, ${article.is_archived})" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="${article.is_archived ? 'Unarchive' : 'Archive'} artikel" title="${article.is_archived ? 'Unarchive' : 'Archive'}"><i class="fas fa-archive"></i></button>
-                    <button onclick="openDeleteModal(${article.id})" class="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Hapus artikel" title="Hapus"><i class="fas fa-trash"></i></button>
+                    <button onclick="requestNewsDeletion(${article.id})" class="p-2 bg-orange-100 hover:bg-orange-200 text-orange-600 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-300" aria-label="Minta penghapusan artikel" title="Minta Penghapusan"><i class="fas fa-user-clock"></i></button>
                 </div>
                 ${article.is_archived ? '<span class="ml-2 text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">Arsip</span>' : ''}
             </div>
@@ -360,13 +361,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fetch and populate categories
 async function fetchCategories() {
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/categories?grouped=true');
         if (!response.ok) {
             throw new Error(`Failed to fetch categories (Status: ${response.status})`);
         }
 
-        const categories = await response.json();
-        console.debug('Categories API response:', categories);
+        const groupedData = await response.json();
+        console.debug('Categories API response:', groupedData);
         const editCategoryDropdown = document.getElementById('edit-news-category');
         const filterCategoryDropdown = document.getElementById('category-filter');
 
@@ -375,26 +376,41 @@ async function fetchCategories() {
             return;
         }
 
-        // Update categoryMap (name to id)
+        // Update categoryMap (name to id) - flatten grouped data
         categoryMap = {};
-        categories.forEach(category => {
-            categoryMap[category.name] = category.id;
+        const allCategories = [];
+        groupedData.forEach(groupData => {
+            groupData.categories.forEach(category => {
+                categoryMap[category.name] = category.id;
+                allCategories.push(category);
+            });
         });
         console.debug('Updated categoryMap:', categoryMap);
 
         editCategoryDropdown.innerHTML = '<option value="" disabled selected>Pilih kategori...</option>';
-        filterCategoryDropdown.innerHTML = '<option value="">Semua Kategori</option>'; // Changed default text
+        filterCategoryDropdown.innerHTML = '<option value="">Semua Kategori</option>';
 
-        categories.forEach(category => {
+        // Populate edit dropdown (flat list for simplicity)
+        allCategories.forEach(category => {
             const editOption = document.createElement('option');
             editOption.value = category.id;
             editOption.textContent = category.name;
             editCategoryDropdown.appendChild(editOption);
+        });
 
-            const filterOption = document.createElement('option');
-            filterOption.value = category.id;
-            filterOption.textContent = category.name;
-            filterCategoryDropdown.appendChild(filterOption);
+        // Populate filter dropdown with grouped structure
+        groupedData.forEach(groupData => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = groupData.group.name;
+            
+            groupData.categories.forEach(category => {
+                const filterOption = document.createElement('option');
+                filterOption.value = category.id;
+                filterOption.textContent = category.name;
+                optgroup.appendChild(filterOption);
+            });
+            
+            filterCategoryDropdown.appendChild(optgroup);
         });
     } catch (error) {
         console.error('Error fetching categories:', error);
@@ -461,15 +477,102 @@ function closeEditModal() {
     }
 }
 
-// Open Delete Modal
-function openDeleteModal(id) {
-    currentNewsId = id;
-    document.getElementById('delete-modal')?.classList.remove('hidden');
+// Request news deletion (for writers)
+async function requestNewsDeletion(newsId) {
+    if (!confirm('Apakah Anda yakin ingin mengirim permintaan penghapusan artikel ini? Permintaan akan ditinjau oleh administrator.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/news/${newsId}/request-deletion`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            // Check if response is JSON or HTML
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to request deletion');
+            } else {
+                // Handle HTML response (likely redirect to login)
+                throw new Error('Session expired. Please refresh the page and try again.');
+            }
+        }
+
+        showToast('success', 'Permintaan penghapusan berhasil dikirim. Administrator akan meninjau permintaan Anda.');
+        
+        // Refresh the news list to show updated status
+        await fetchAndDisplayNews();
+        
+    } catch (error) {
+        console.error('Error requesting news deletion:', error);
+        showToast('error', `Gagal mengirim permintaan penghapusan: ${error.message}`);
+    }
 }
 
-// Close Delete Modal
+// Show Confirm Modal (for all confirmation dialogs)
+function showConfirmModal(title, message, action) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-action').onclick = action;
+    document.getElementById('confirm-modal').classList.remove('hidden');
+}
+
+// Close Confirm Modal
+function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.add('hidden');
+}
+
+// Open Delete Modal (for admins/moderators) - now uses showConfirmModal
+function openDeleteModal(id) {
+    currentNewsId = id;
+    showConfirmModal(
+        'Hapus Cerita',
+        'Apakah Anda yakin ingin menghapus cerita ini? Aksi ini tidak dapat dibatalkan.',
+        () => {
+            // Delete action will be handled by the confirm button
+            deleteNews(id);
+        }
+    );
+}
+
+// Close Delete Modal (for backward compatibility)
 function closeDeleteModal() {
-    document.getElementById('delete-modal')?.classList.add('hidden');
+    closeConfirmModal();
+}
+
+// Delete News Function
+async function deleteNews(newsId) {
+    try {
+        const response = await fetch(`/api/news/${newsId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete news');
+            } else {
+                throw new Error('Session expired. Please refresh the page and try again.');
+            }
+        }
+
+        showToast('success', 'Cerita berhasil dihapus');
+        closeConfirmModal();
+        await fetchAndDisplayNews();
+        
+    } catch (error) {
+        console.error('Error deleting news:', error);
+        showToast('error', `Gagal menghapus cerita: ${error.message}`);
+    }
 }
 
 // Open Link Insert Modal (Placeholder - adapt if needed)
@@ -583,33 +686,7 @@ if (editForm) {
     });
 }
 
-// Delete Article
-const deleteBtn = document.getElementById('confirm-delete-btn');
-if (deleteBtn) {
-    deleteBtn.addEventListener('click', async () => {
-        try {
-            const response = await fetch(`/api/news/${currentNewsId}`, {
-                method: 'DELETE',
-            });
-            if (!response.ok) {
-                // Try to parse error if DELETE returns JSON body on failure
-                let errorMsg = `Failed to delete article (Status: ${response.status})`;
-                try { const errorData = await response.json(); errorMsg = errorData.error || errorMsg; } catch (e) {}
-                throw new Error(errorMsg);
-            }
-            // If response is 204 No Content, response.json() will fail, which is expected on success
 
-            closeDeleteModal();
-            // Decide whether to refresh current page or go to page 1
-            // Let's refresh current page, but might need adjustment if it becomes empty
-            fetchAndDisplayNews(currentPage);
-            showToast('success', 'Artikel berhasil dihapus!');
-        } catch (error) {
-            console.error('Error deleting article:', error);
-            showToast('error', `Gagal menghapus artikel: ${error.message}`);
-        }
-    });
-}
 
 // Toggle News Visibility
 async function toggleVisibility(newsId, isVisible) {

@@ -511,19 +511,34 @@ function loadGlobalSettings() {
 
 // Load categories for filter
 function loadCategories() {
-    fetch('/api/seo/categories')
+    fetch('/api/categories?grouped=true')
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
-        .then(categories => {
+        .then(groupedData => {
             const categoryFilter = document.getElementById('category-filter');
             if (categoryFilter) {
                 const currentValue = categoryFilter.value;
-                categoryFilter.innerHTML = '<option value="">Semua Kategori</option>' +
-                    categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+                categoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
+                
+                // Add grouped categories
+                groupedData.forEach(groupData => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = groupData.group.name;
+                    
+                    groupData.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = category.name;
+                        optgroup.appendChild(option);
+                    });
+                    
+                    categoryFilter.appendChild(optgroup);
+                });
+                
                 categoryFilter.value = currentValue;
             }
         })

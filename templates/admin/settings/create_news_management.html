@@ -1,7 +1,7 @@
 {% extends 'admin_base.html' %}
-{% block title %}{% if news_id %}Edit Artikel{% else %}{% if request.args.get('album_id') %}Buat Chapter{% else %}Buat Artikel{% endif %}{% endif %} - Admin{% endblock %}
-{% block hero_title %}{% if news_id %}Edit Artikel{% else %}{% if request.args.get('album_id') %}Buat Chapter{% else %}Tambah Artikel{% endif %}{% endif %}{% endblock %}
-{% block hero_desc %}{% if news_id %}Perbarui konten artikel yang ada{% else %}{% if request.args.get('album_id') %}Buat chapter baru untuk album{% else %}Buat konten cerita dan artikel baru{% endif %}{% endif %}{% endblock %}
+{% block title %}{% if news_id %}Edit Cerita{% else %}{% if request.args.get('album_id') %}Buat Bab{% else %}Buat Cerita{% endif %}{% endif %} - Admin{% endblock %}
+{% block hero_title %}{% if news_id %}Edit Cerita{% else %}{% if request.args.get('album_id') %}Buat Bab{% else %}Tambah Cerita{% endif %}{% endif %}{% endblock %}
+{% block hero_desc %}{% if news_id %}Perbarui konten cerita yang ada{% else %}{% if request.args.get('album_id') %}Buat bab baru untuk album{% else %}Buat konten cerita dan bab baru{% endif %}{% endif %}{% endblock %}
 {% block extra_head %}
 {% endblock %}
 {% block content %}
@@ -9,7 +9,7 @@
     <main class="container mx-auto px-6 py-12" role="main">
         <!-- Form Tambah Berita -->
         <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-news-title">
-            <h2 id="add-news-title" class="text-xl font-semibold mb-4 text-gray-800">Tambah Cerita</h2>
+            <h2 id="add-news-title" class="text-xl font-semibold mb-4 text-gray-800">Tambah Cerita & Bab</h2>
             
             <!-- Step Indicator -->
             <div class="flex items-center justify-center mb-6">
@@ -26,13 +26,13 @@
                 </div>
             </div>
             
-            <form id="add-news-form" class="flex flex-col lg:flex-row gap-6" method="POST" action="{{ url_for('main.create_news_api') }}" enctype="multipart/form-data" role="form" aria-label="Form tambah berita baru">
+            <form id="add-news-form" class="flex flex-col lg:flex-row gap-6" method="POST" action="{{ url_for('main.create_news_api') }}" enctype="multipart/form-data" role="form" aria-label="Form tambah cerita baru">
                 <!-- Step 1: Details Section (Full Width) -->
                 <div id="step-1-content" class="w-full">
                     <div class="h-full flex flex-col">
                         <!-- Title Input -->
                         <div class="mb-6">
-                            <input type="text" id="news-title" name="title" class="w-full bg-white border-0 border-b-2 border-gray-300 text-gray-800 text-3xl font-light p-4 focus:outline-none focus:border-blue-500 transition-colors" placeholder="Judul artikel..." required aria-required="true">
+                            <input type="text" id="news-title" name="title" class="w-full bg-white border-0 border-b-2 border-gray-300 text-gray-800 text-3xl font-light p-4 focus:outline-none focus:border-blue-500 transition-colors" placeholder="Judul cerita..." required aria-required="true">
                         </div>
                         
                         <!-- Two Column Layout for Details -->
@@ -46,9 +46,9 @@
                                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
                                         <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                                             <i class="fas fa-file-alt text-blue-600 mr-3"></i>
-                                            Detail Artikel
+                                            Detail Cerita
                                         </h3>
-                                        <p class="text-sm text-gray-600 mt-1">Informasi dasar artikel</p>
+                                        <p class="text-sm text-gray-600 mt-1">Informasi dasar cerita</p>
                                     </div>
                                     <div class="p-6">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -66,7 +66,7 @@
                                                     <i class="fas fa-tag text-gray-400 mr-2"></i>Kategori <span class="text-red-500">*</span>
                                                 </label>
                                                 <select id="news-category" name="category" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" required aria-required="true">
-                                                    <option value="" disabled selected>Pilih kategori artikel...</option>
+                                                    <option value="" disabled selected>Pilih kategori cerita...</option>
                                                 </select>
                                             </div>
                                             
@@ -83,7 +83,7 @@
                                                 <label class="block text-sm font-medium text-gray-700 mb-2" for="news-tagar">
                                                     <i class="fas fa-hashtag text-gray-400 mr-2"></i>Tag
                                                 </label>
-                                                <input type="text" id="news-tagar" name="tagar" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="teknologi, berita, inovasi" aria-label="Tag berita">
+                                                <input type="text" id="news-tagar" name="tagar" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" placeholder="fantasi, petualangan, misteri" aria-label="Tag cerita">
                                                 <p class="text-xs text-gray-500 mt-1">Pisahkan tag dengan koma</p>
                                             </div>
                                             
@@ -128,31 +128,46 @@
                                         <p class="text-sm text-gray-600 mt-1">Atur di mana artikel akan ditampilkan</p>
                                     </div>
                                     <div class="p-6">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <!-- Article Page Display -->
-                                            <div class="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                                <input type="checkbox" id="news-premium" name="is_news" class="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" aria-label="Tampilkan di halaman Artikel">
-                                                <div class="flex-1">
-                                                    <label class="text-sm font-medium text-gray-700 cursor-pointer" for="news-premium">Halaman Artikel</label>
-                                                    <p class="text-xs text-gray-600 mt-1">Muncul di daftar artikel utama</p>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Main Carousel Display -->
-                                            <div class="flex items-start space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-100">
-                                                <input type="checkbox" id="news-main" name="is_main_news" class="mt-1 rounded border-gray-300 text-purple-600 focus:ring-purple-500" aria-label="Tampilkan di carousel utama">
-                                                <div class="flex-1">
-                                                    <label class="text-sm font-medium text-gray-700 cursor-pointer" for="news-main">Carousel Utama</label>
-                                                    <p class="text-xs text-gray-600 mt-1">Ditampilkan di carousel halaman utama</p>
-                                                </div>
-                                            </div>
-                                            
+                                        <div class="space-y-4">
                                             <!-- Premium Content -->
                                             <div class="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
                                                 <input type="checkbox" id="news-is-premium" name="is_premium" class="mt-1 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500" aria-label="Konten Premium">
                                                 <div class="flex-1">
                                                     <label class="text-sm font-medium text-gray-700 cursor-pointer" for="news-is-premium">Konten Premium</label>
                                                     <p class="text-xs text-gray-600 mt-1">Akses khusus untuk konten premium</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Prize Input (Hidden by default) -->
+                                            <div id="prize-input-section" class="hidden">
+                                                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <!-- Prize Amount -->
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-2" for="news-prize">
+                                                                <i class="fas fa-coins text-green-600 mr-2"></i>Harga (Koin) <span class="text-red-500">*</span>
+                                                            </label>
+                                                            <input type="number" id="news-prize" name="prize" min="0" value="0" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 p-3 transition-colors" placeholder="0" aria-label="Harga dalam koin" required aria-required="true">
+                                                        </div>
+                                                        
+                                                        <!-- Coin Type -->
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-2" for="news-prize-coin-type">
+                                                                <i class="fas fa-tag text-blue-600 mr-2"></i>Jenis Koin <span class="text-red-500">*</span>
+                                                            </label>
+                                                            <select id="news-prize-coin-type" name="prize_coin_type" class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 transition-colors" required aria-required="true">
+                                                                <option value="any">Kedua Jenis Koin</option>
+                                                                <option value="achievement">Koin Pencapaian Saja</option>
+                                                                <option value="topup">Koin Top-up Saja</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 mt-2">
+                                                        <i class="fas fa-info-circle mr-1"></i>
+                                                        <strong>Koin Pencapaian:</strong> Didapat dari achievement/reward. 
+                                                        <strong>Koin Top-up:</strong> Dibeli dengan uang asli. 
+                                                        <strong>Kedua Jenis:</strong> Bisa menggunakan keduanya.
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -163,14 +178,14 @@
                             <!-- Right Column: Featured Image & Publication -->
                             <div class="space-y-6">
                                 
-                                <!-- Featured Image Card -->
+                                                                            <!-- Featured Image Card -->
                                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                                     <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
                                         <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                                             <i class="fas fa-image text-green-600 mr-3"></i>
                                             Gambar Unggulan (Header) (Opsional)
                                         </h3>
-                                        <p class="text-sm text-gray-600 mt-1">Pilih gambar untuk artikel (opsional)</p>
+                                        <p class="text-sm text-gray-600 mt-1">Pilih gambar untuk cerita (opsional)</p>
                                     </div>
                                     <div class="p-6">
                                         <div id="image-header-section-create" role="group" aria-label="Pilihan gambar unggulan">
@@ -214,10 +229,10 @@
                 </div>
 
                 <!-- Step 2: Content Section (Hidden by default) -->
-                <div id="step-2-content" class="w-full hidden" role="complementary" aria-label="Konten artikel">
+                <div id="step-2-content" class="w-full hidden" role="complementary" aria-label="Konten cerita">
                     <div class="h-full flex flex-col">
                         <!-- Content Editor -->
-                        <div id="simplemde-wrapper" class="flex flex-col flex-1 overflow-hidden" role="textbox" aria-label="Editor konten berita">
+                        <div id="simplemde-wrapper" class="flex flex-col flex-1 overflow-hidden" role="textbox" aria-label="Editor konten cerita">
                             <div id="custom-toolbar" class="flex flex-wrap gap-3 bg-white border border-gray-300 p-2 rounded-t-lg mb-2" role="toolbar" aria-label="Toolbar editor">
                                 <button type="button" data-cmd="bold" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Tebal"><i class="fa fa-bold" aria-hidden="true"></i></button>
                                 <button type="button" data-cmd="italic" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Miring"><i class="fa fa-italic" aria-hidden="true"></i></button>
@@ -230,7 +245,7 @@
                                 <button type="button" data-cmd="preview" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Pratinjau"><i class="fa fa-eye" aria-hidden="true"></i></button>
                                 <button type="button" data-cmd="guide" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300" aria-label="Panduan Markdown"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
                             </div>
-                            <textarea id="news-content" name="content" class="custom-mde flex-1" placeholder="Mulai menulis artikel Anda di sini...\n\nTips:\n- Mulai dengan pengantar yang menarik\n- Gunakan heading untuk struktur\n- Tambahkan gambar untuk visual yang lebih baik\n- Gunakan daftar untuk informasi yang mudah dibaca" aria-label="Editor konten berita"></textarea>
+                            <textarea id="news-content" name="content" class="custom-mde flex-1" placeholder="Mulai menulis cerita Anda di sini...\n\nTips:\n- Mulai dengan pengantar yang menarik\n- Gunakan heading untuk struktur\n- Tambahkan gambar untuk visual yang lebih baik\n- Gunakan daftar untuk informasi yang mudah dibaca" aria-label="Editor konten cerita"></textarea>
                         </div>
                         
                         <!-- Publication Section -->
@@ -241,7 +256,7 @@
                                         <i class="fas fa-rocket text-orange-600 mr-3"></i>
                                         Publikasi
                                     </h3>
-                                    <p class="text-sm text-gray-600 mt-1">Simpan atau terbitkan artikel</p>
+                                    <p class="text-sm text-gray-600 mt-1">Simpan atau terbitkan cerita</p>
                                 </div>
                                 <div class="p-6">
                                     <div class="flex flex-col sm:flex-row gap-3">
@@ -274,11 +289,11 @@
                                         </p>
                                         <p class="text-xs text-gray-500">
                                             <i class="fas fa-eye-slash mr-1"></i>
-                                            <span>"Simpan Sembunyi" menyimpan artikel tetapi tidak menampilkannya ke publik.</span>
+                                            <span>"Simpan Sembunyi" menyimpan cerita tetapi tidak menampilkannya ke publik.</span>
                                         </p>
                                         <p class="text-xs text-gray-500">
                                             <i class="fas fa-eye mr-1"></i>
-                                            <span>"Simpan & Tampilkan" menyimpan dan langsung menampilkan artikel ke publik.</span>
+                                            <span>"Simpan & Tampilkan" menyimpan dan langsung menampilkan cerita ke publik.</span>
                                         </p>
                                     </div>
                                 </div>
@@ -632,8 +647,10 @@
                 const tags = tagsInput ? tagsInput.value.trim() : '';
                 const externalSource = externalSourceInput ? externalSourceInput.value.trim() : '';
                 const ageRating = ageRatingInput ? ageRatingInput.value : '';
+                const prize = prizeInput ? prizeInput.value : '';
+                const coinType = coinTypeSelect ? coinTypeSelect.value : '';
                 
-                if (title || content || category || date || writer || tags || externalSource || ageRating) {
+                if (title || content || category || date || writer || tags || externalSource || ageRating || prize || coinType) {
                     // Save to localStorage as draft
                     const draft = {
                         title: title,
@@ -644,6 +661,8 @@
                         tags: tags,
                         externalSource: externalSource,
                         ageRating: ageRating,
+                        prize: prize,
+                        coinType: coinType,
                         timestamp: new Date().toISOString()
                     };
                     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -693,8 +712,10 @@
             const tagsInput = document.getElementById('news-tagar');
             const externalSourceInput = document.getElementById('news-external-source');
             const ageRatingInput = document.getElementById('news-age-rating');
+            const prizeInput = document.getElementById('news-prize');
+            const coinTypeSelect = document.getElementById('news-prize-coin-type');
             
-            [categoryInput, dateInput, writerInput, tagsInput, externalSourceInput, ageRatingInput].forEach(input => {
+            [categoryInput, dateInput, writerInput, tagsInput, externalSourceInput, ageRatingInput, prizeInput, coinTypeSelect].forEach(input => {
                 if (input) {
                     input.addEventListener('input', function() {
                         stopAutoSave();
@@ -738,6 +759,8 @@
                     if (draft.tags && tagsInput) tagsInput.value = draft.tags;
                     if (draft.externalSource && externalSourceInput) externalSourceInput.value = draft.externalSource;
                     if (draft.ageRating && ageRatingInput) ageRatingInput.value = draft.ageRating;
+                    if (draft.prize && prizeInput) prizeInput.value = draft.prize;
+                    if (draft.coinType && coinTypeSelect) coinTypeSelect.value = draft.coinType;
                     
                     // Load content into SimpleMDE if it exists, otherwise into textarea
                     if (draft.content) {
@@ -766,7 +789,7 @@
             try {
                 const formEl = document.getElementById('add-news-form');
                 if (formEl && typeof formEl.reset === 'function') formEl.reset();
-                const idsToClear = ['news-title','news-writer','news-tagar','news-date','news-external-source'];
+                const idsToClear = ['news-title','news-writer','news-tagar','news-date','news-external-source','news-prize','news-prize-coin-type'];
                 idsToClear.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
                 const selCat = document.getElementById('news-category'); if (selCat) selCat.selectedIndex = 0;
                 const selAge = document.getElementById('news-age-rating'); if (selAge) selAge.selectedIndex = 0;
@@ -1119,6 +1142,45 @@
         // Initialize album context handling
         handleAlbumContext();
 
+        // Prize input visibility handler
+        function setupPrizeInputHandler() {
+            const premiumCheckbox = document.getElementById('news-is-premium');
+            const prizeSection = document.getElementById('prize-input-section');
+            const prizeInput = document.getElementById('news-prize');
+            const coinTypeSelect = document.getElementById('news-prize-coin-type');
+            
+            if (premiumCheckbox && prizeSection && prizeInput && coinTypeSelect) {
+                // Function to toggle prize input visibility
+                function togglePrizeInput() {
+                    if (premiumCheckbox.checked) {
+                        prizeSection.classList.remove('hidden');
+                        prizeInput.setAttribute('required', 'true');
+                        prizeInput.setAttribute('aria-required', 'true');
+                        coinTypeSelect.setAttribute('required', 'true');
+                        coinTypeSelect.setAttribute('aria-required', 'true');
+                    } else {
+                        prizeSection.classList.add('hidden');
+                        prizeInput.removeAttribute('required');
+                        prizeInput.setAttribute('aria-required', 'false');
+                        coinTypeSelect.removeAttribute('required');
+                        coinTypeSelect.setAttribute('aria-required', 'false');
+                        // Reset prize to 0 when premium is unchecked
+                        prizeInput.value = '0';
+                        coinTypeSelect.value = 'any';
+                    }
+                }
+                
+                // Add event listener
+                premiumCheckbox.addEventListener('change', togglePrizeInput);
+                
+                // Initialize state on page load
+                togglePrizeInput();
+            }
+        }
+        
+        // Initialize prize input handler
+        setupPrizeInputHandler();
+
         // Cancel button handler
         const cancelBtn = document.getElementById('cancel-edit-btn');
         if (cancelBtn) {
@@ -1228,6 +1290,8 @@
             setIf(document.getElementById('news-tagar'), a.tagar || '');
             setIf(document.getElementById('news-external-source'), a.external_source || '');
             setIf(document.getElementById('news-age-rating'), a.age_rating || '');
+            setIf(document.getElementById('news-prize'), a.prize || 0);
+            setIf(document.getElementById('news-prize-coin-type'), a.prize_coin_type || 'any');
             if (a.date) setIf(document.getElementById('news-date'), (a.date.split('T')[0]));
 
             // Flags

@@ -349,6 +349,20 @@ def create_news_api():
     is_main_news = data.get("is_main_news", "false").lower() == "true"
     # Default visibility to hidden unless explicitly published
     is_visible = data.get("is_visible", "false").lower() == "true"
+    
+    # --- Handle prize field ---
+    try:
+        prize = int(data.get("prize", "0"))
+        if prize < 0:
+            return jsonify({"error": "Prize cannot be negative"}), 400
+    except ValueError:
+        return jsonify({"error": "Invalid prize value"}), 400
+    
+    # --- Handle prize coin type ---
+    prize_coin_type = data.get("prize_coin_type", "any").strip()
+    allowed_coin_types = ["achievement", "topup", "any"]
+    if prize_coin_type not in allowed_coin_types:
+        return jsonify({"error": f"Invalid prize_coin_type: {prize_coin_type}"}), 400
 
     # --- Create the News object ---
     try:
@@ -374,6 +388,8 @@ def create_news_api():
                 or current_user.username,  # Use provided writer or default to author's username
                 external_source=data.get("external_source", "").strip() or None,
                 age_rating=age_rating,
+                prize=prize,
+                prize_coin_type=prize_coin_type,
             )
 
             # Handle SEO fields if provided
@@ -784,6 +800,20 @@ def upload_docx_create_news_api():
     is_premium = str(data.get("is_premium", "false")).lower() in ("on","true","1")
     is_main_news = str(data.get("is_main_news", "false")).lower() in ("on","true","1")
     is_visible = str(data.get("is_visible", "false")).lower() in ("on","true","1")
+    
+    # Handle prize field for DOCX upload
+    try:
+        prize = int(data.get("prize", "0"))
+        if prize < 0:
+            return jsonify({"error": "Prize cannot be negative"}), 400
+    except ValueError:
+        return jsonify({"error": "Invalid prize value"}), 400
+    
+    # Handle prize coin type for DOCX upload
+    prize_coin_type = data.get("prize_coin_type", "any").strip()
+    allowed_coin_types = ["achievement", "topup", "any"]
+    if prize_coin_type not in allowed_coin_types:
+        return jsonify({"error": f"Invalid prize_coin_type: {prize_coin_type}"}), 400
 
     try:
         news = News(
@@ -802,6 +832,8 @@ def upload_docx_create_news_api():
             writer=data.get("writer", "").strip() or current_user.username,
             external_source=data.get("external_source", "").strip() or None,
             age_rating=age_rating,
+            prize=prize,
+            prize_coin_type=prize_coin_type,
         )
         db.session.add(news)
         db.session.commit()
@@ -826,6 +858,73 @@ def upload_docx_create_news_api():
         db.session.rollback()
         current_app.logger.error(f"Unexpected error creating news from docx: {e}", exc_info=True)
         return jsonify({"error": "Internal error while creating news from docx"}), 500
+
+
+@main_blueprint.route("/api/news/<int:news_id>/purchase", methods=["POST"])
+@login_required
+def purchase_news_access_api(news_id):
+    """API endpoint to purchase access to premium news content."""
+    # Permission: Only verified users can purchase content
+    if not current_user.verified:
+        current_app.logger.warning(
+            f"Unverified user {current_user.username} attempted to purchase news {news_id}"
+        )
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        news = db.session.get(News, news_id)
+        if news is None:
+            return jsonify({"error": "News article not found"}), 404
+        
+        # Check if content is premium
+        if not news.is_premium:
+            return jsonify({"error": "This content is not premium"}), 400
+        
+        # Check if user already has access
+        if news.can_user_access(current_user.id):
+            return jsonify({"error": "You already have access to this content"}), 400
+        
+        # Purchase access
+        result = news.purchase_access(current_user.id)
+        
+        if result["success"]:
+            current_app.logger.info(
+                f"User {current_user.username} purchased access to news {news_id} - {result}"
+            )
+            return jsonify({
+                "success": True,
+                "message": "Access granted",
+                "coins_spent": result.get("coins_spent", 0),
+                "coin_type_used": result.get("coin_type_used", "none"),
+                "remaining_balance": result.get("remaining_balance")
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": result.get("error", "Purchase failed"),
+                "required_coins": news.prize,
+                "coin_type": news.prize_coin_type
+            }), 400
+            
+    except Exception as e:
+        current_app.logger.error(f"Error purchasing news access: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@main_blueprint.route("/api/user/coins", methods=["GET"])
+@login_required
+def get_user_coins_api():
+    """API endpoint to get user's coin balance."""
+    try:
+        balance = CoinManager.get_user_coin_balance(current_user.id)
+        return jsonify({
+            "success": True,
+            "balance": balance,
+            "is_premium": current_user.is_premium
+        }), 200
+    except Exception as e:
+        current_app.logger.error(f"Error getting user coins: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @main_blueprint.route("/api/news/<int:news_id>", methods=["GET"])
@@ -857,8 +956,21 @@ def get_news_detail_api(news_id):
         if news.is_archived and request.args.get("include_archived", "false").lower() != "true":
             abort(404, f"News article with ID {news_id} not found or archived.")
 
+        # Check if user can access premium content
+        can_access = news.can_user_access(current_user.id)
+        
         news_dict = news.to_dict()
         news_dict['category_id'] = news.category_id # Explicitly add category_id
+        news_dict['can_access'] = can_access
+        
+        # Add purchase info if premium content and user can't access
+        if news.is_premium and not can_access:
+            news_dict['purchase_info'] = {
+                "required_coins": news.prize,
+                "coin_type": news.prize_coin_type,
+                "purchase_url": f"/api/news/{news_id}/purchase"
+            }
+        
         return jsonify(news_dict)
 
     except SQLAlchemyError as e:
@@ -979,6 +1091,25 @@ def update_news_api(news_id):
         if news.writer != new_writer:
             news.writer = new_writer
             updated = True
+    if "prize" in data:
+        try:
+            new_prize = int(data["prize"])
+            if new_prize < 0:
+                return jsonify({"error": "Prize cannot be negative"}), 400
+            if news.prize != new_prize:
+                news.prize = new_prize
+                updated = True
+        except ValueError:
+            return jsonify({"error": "Invalid prize value"}), 400
+    
+    if "prize_coin_type" in data:
+        new_coin_type = data["prize_coin_type"].strip()
+        allowed_coin_types = ["achievement", "topup", "any"]
+        if new_coin_type not in allowed_coin_types:
+            return jsonify({"error": f"Invalid prize_coin_type: {new_coin_type}"}), 400
+        if news.prize_coin_type != new_coin_type:
+            news.prize_coin_type = new_coin_type
+            updated = True
 
     # --- Handle SEO fields ---
     seo_fields = [
@@ -1054,15 +1185,12 @@ def delete_news_api(news_id):
     if news is None:
         abort(404, f"News article with ID {news_id} not found.")
 
-    # Permission: Only author or Admin/Superuser can delete
-    if not (
-        news.user_id == current_user.id
-        or current_user.role in [UserRole.ADMIN, UserRole.SUPERUSER]
-    ):
+    # Permission: Only content moderators and above can delete directly
+    if not current_user.is_admin_tier():
         current_app.logger.warning(
-            f"Forbidden DELETE attempt on news ID {news_id} by user {current_user.username}"
+            f"Forbidden DELETE attempt on news ID {news_id} by user {current_user.username} (not admin tier)"
         )
-        abort(403, "You do not have permission to delete this news article.")
+        abort(403, "You do not have permission to delete news articles. Please use the deletion request system.")
 
     try:
         news_title = news.title  # For logging
@@ -1643,3 +1771,158 @@ def get_related_news(news_item, exclude_ids=None, limit=6):
         popular_news = [item[0] for item in popular_news_items]
         related_news.extend(popular_news)
     return related_news
+
+
+# =============================================================================
+# CONTENT DELETION REQUEST SYSTEM
+# =============================================================================
+
+@main_blueprint.route("/api/news/<int:news_id>/request-deletion", methods=["POST"])
+@login_required
+def request_news_deletion(news_id):
+    """Request deletion of a news article."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    news = db.session.get(News, news_id)
+    if news is None:
+        abort(404, f"News article with ID {news_id} not found.")
+
+    # All users must request deletion (no direct deletion allowed)
+    # This ensures consistent workflow and proper audit trail
+
+    # Check if already requested
+    if news.deletion_requested:
+        return jsonify({"error": "Deletion already requested for this article"}), 400
+
+    try:
+        news.deletion_requested = True
+        news.deletion_requested_at = datetime.utcnow()
+        news.deletion_requested_by = current_user.id
+        db.session.commit()
+        
+        current_app.logger.info(
+            f"News deletion requested: '{news.title}' (ID: {news_id}) by user {current_user.username}"
+        )
+        return jsonify({"message": "Deletion request submitted successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(
+            f"Error requesting news deletion ID {news_id} by {current_user.username}: {e}"
+        )
+        return jsonify({"error": "Failed to submit deletion request"}), 500
+
+
+@main_blueprint.route("/api/news/deletion-requests", methods=["GET"])
+@login_required
+def get_news_deletion_requests():
+    """Get all pending news deletion requests (admin/moderator only)."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    # Only content moderators and above can view deletion requests
+    if not current_user.is_admin_tier():
+        abort(403, "You do not have permission to view deletion requests.")
+
+    try:
+        # Get all news with deletion requests
+        news_with_requests = News.query.filter(
+            News.deletion_requested == True
+        ).order_by(News.deletion_requested_at.desc()).all()
+
+        requests_data = []
+        for news in news_with_requests:
+            requester = db.session.get(User, news.deletion_requested_by) if news.deletion_requested_by else None
+            requests_data.append({
+                "id": news.id,
+                "title": news.title,
+                "author": news.author.get_full_name() if news.author else "Unknown",
+                "author_username": news.author.username if news.author else "unknown",
+                "category": news.category.name if news.category else "Uncategorized",
+                "created_at": news.created_at.isoformat(),
+                "deletion_requested_at": news.deletion_requested_at.isoformat() if news.deletion_requested_at else None,
+                "requester": requester.get_full_name() if requester else "Unknown",
+                "requester_username": requester.username if requester else "unknown",
+                "read_count": news.read_count,
+                "is_visible": news.is_visible
+            })
+
+        return jsonify({"requests": requests_data}), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error fetching news deletion requests: {e}")
+        return jsonify({"error": "Failed to fetch deletion requests"}), 500
+
+
+@main_blueprint.route("/api/news/<int:news_id>/approve-deletion", methods=["POST"])
+@login_required
+def approve_news_deletion(news_id):
+    """Approve deletion of a news article (admin/moderator only)."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    # Only content moderators and above can approve deletions
+    if not current_user.is_admin_tier():
+        abort(403, "You do not have permission to approve deletions.")
+
+    news = db.session.get(News, news_id)
+    if news is None:
+        abort(404, f"News article with ID {news_id} not found.")
+
+    if not news.deletion_requested:
+        return jsonify({"error": "No deletion request found for this article"}), 400
+
+    try:
+        news_title = news.title
+        db.session.delete(news)
+        db.session.commit()
+        
+        current_app.logger.info(
+            f"News deletion approved: '{news_title}' (ID: {news_id}) by moderator {current_user.username}"
+        )
+        return jsonify({"message": "News article deleted successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(
+            f"Error approving news deletion ID {news_id} by {current_user.username}: {e}"
+        )
+        return jsonify({"error": "Failed to delete news article"}), 500
+
+
+@main_blueprint.route("/api/news/<int:news_id>/reject-deletion", methods=["POST"])
+@login_required
+def reject_news_deletion(news_id):
+    """Reject deletion request for a news article (admin/moderator only)."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    # Only content moderators and above can reject deletions
+    if not current_user.is_admin_tier():
+        abort(403, "You do not have permission to reject deletions.")
+
+    news = db.session.get(News, news_id)
+    if news is None:
+        abort(404, f"News article with ID {news_id} not found.")
+
+    if not news.deletion_requested:
+        return jsonify({"error": "No deletion request found for this article"}), 400
+
+    try:
+        news.deletion_requested = False
+        news.deletion_requested_at = None
+        news.deletion_requested_by = None
+        db.session.commit()
+        
+        current_app.logger.info(
+            f"News deletion rejected: '{news.title}' (ID: {news_id}) by moderator {current_user.username}"
+        )
+        return jsonify({"message": "Deletion request rejected successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(
+            f"Error rejecting news deletion ID {news_id} by {current_user.username}: {e}"
+        )
+        return jsonify({"error": "Failed to reject deletion request"}), 500

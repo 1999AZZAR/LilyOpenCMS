@@ -37,22 +37,22 @@
       <div id="password-status" class="mt-4" role="status" aria-live="polite"></div>
     </div>
 
-    <!-- Delete Account Card -->
+    <!-- Account Deletion Request Card -->
     <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6" role="region" aria-labelledby="delete-account-title">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center space-x-3">
           <div class="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center" role="img" aria-label="Delete account icon">
-            <i class="fas fa-user-slash text-xl text-white"></i>
+            <i class="fas fa-user-clock text-xl text-white"></i>
           </div>
-          <h2 id="delete-account-title" class="text-xl font-bold text-red-600">Hapus Akun</h2>
+          <h2 id="delete-account-title" class="text-xl font-bold text-red-600">Permintaan Penghapusan Akun</h2>
         </div>
         <button onclick="editAccountSettings()" class="text-blue-600 hover:text-blue-800 transition-colors" title="Edit Account Settings">
           <i class="fas fa-edit"></i>
         </button>
       </div>
-      <p class="text-gray-600 mb-4 text-sm">Peringatan: Tindakan ini tidak dapat dibatalkan. Semua data Anda, termasuk artikel berita, akan dihapus secara permanen.</p>
-      <button onclick="openDeleteAccountModal()" class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 shadow-md" aria-label="Hapus akun" aria-haspopup="dialog">
-        Hapus Akun
+      <p class="text-gray-600 mb-4 text-sm">Kirim permintaan penghapusan akun yang akan ditinjau oleh administrator. Akun Anda akan dinonaktifkan sementara hingga permintaan disetujui.</p>
+      <button onclick="openDeleteRequestModal()" class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 shadow-md" aria-label="Kirim permintaan penghapusan akun" aria-haspopup="dialog">
+        Kirim Permintaan Penghapusan
       </button>
     </div>
 
@@ -296,19 +296,19 @@
     </div>
   </div>
 
-  <!-- Delete Account Modal -->
-  <div id="delete-account-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="delete-account-modal-title" aria-modal="true">
+  <!-- Account Deletion Request Modal -->
+  <div id="delete-request-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="delete-request-modal-title" aria-modal="true">
     <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
       <div class="flex items-center space-x-3 mb-4">
         <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
-          <i class="fas fa-exclamation-triangle text-white"></i>
+          <i class="fas fa-user-clock text-white"></i>
         </div>
-        <h2 id="delete-account-modal-title" class="text-xl font-bold text-red-600">Hapus Akun</h2>
+        <h2 id="delete-request-modal-title" class="text-xl font-bold text-red-600">Permintaan Penghapusan Akun</h2>
       </div>
-      <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus akun Anda? Tindakan ini tidak dapat dibatalkan dan semua data Anda akan hilang selamanya.</p>
+      <p class="text-gray-600 mb-6">Apakah Anda yakin ingin mengirim permintaan penghapusan akun? Akun Anda akan dinonaktifkan sementara dan permintaan akan ditinjau oleh administrator. Anda dapat membatalkan permintaan ini nanti jika diperlukan.</p>
       <div class="flex space-x-3">
-        <button onclick="closeDeleteAccountModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors duration-300" aria-label="Batal hapus akun">Batal</button>
-        <button id="confirm-delete-account-btn" class="flex-1 bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors duration-300" aria-label="Konfirmasi hapus akun">Hapus Akun</button>
+        <button onclick="closeDeleteRequestModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors duration-300" aria-label="Batal permintaan penghapusan">Batal</button>
+        <button id="confirm-delete-request-btn" class="flex-1 bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors duration-300" aria-label="Konfirmasi permintaan penghapusan">Kirim Permintaan</button>
       </div>
     </div>
   </div>
@@ -340,22 +340,7 @@
     </div>
   </div>
 
-  <!-- Delete Article Modal -->
-  <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="delete-modal-title" aria-modal="true">
-    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-      <div class="flex items-center space-x-3 mb-4">
-        <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
-          <i class="fas fa-trash text-white"></i>
-        </div>
-        <h2 id="delete-modal-title" class="text-xl font-bold text-yellow-600">Hapus Artikel</h2>
-      </div>
-      <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.</p>
-      <div class="flex space-x-3">
-        <button onclick="closeDeleteModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors duration-300" aria-label="Batal hapus artikel">Batal</button>
-        <button id="confirm-delete-btn" class="flex-1 bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors duration-300" aria-label="Konfirmasi hapus artikel">Hapus</button>
-      </div>
-    </div>
-  </div>
+
 {% endblock %}
 
 {% block extra_scripts %}

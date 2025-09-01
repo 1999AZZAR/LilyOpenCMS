@@ -22,6 +22,6 @@ Allow: /premium/
 Crawl-delay: 1
 
 # Sitemap locations
-Sitemap: https://LilyOpenCMS.com/sitemap.xml
-Sitemap: https://LilyOpenCMS.com/sitemap-news.xml
-Sitemap: https://LilyOpenCMS.com/sitemap-index.xml
+Sitemap: https://hystory.id/sitemap.xml
+Sitemap: https://hystory.id/sitemap-news.xml
+Sitemap: https://hystory.id/sitemap-index.xml

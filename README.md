@@ -4,7 +4,11 @@ A comprehensive Flask-based content management system with advanced SEO features
 
 ## 🚀 Features
 
-### 🔧 Recent System Improvements (2025-08-30)
+### 🔧 Recent System Improvements (2025-01-08)
+- **✅ Content Deletion Request System**: Role-based content deletion with admin approval workflow for news and albums
+- **✅ SQLAlchemy Relationship Fixes**: Fixed User.news and User.albums relationships with explicit foreign_keys
+- **✅ Content Deletion Management UI**: Admin interface for managing content deletion requests with bulk operations
+- **✅ Enhanced Content Security**: Only admin-tier users can delete content directly, others must request approval
 - **✅ Smart Routing System**: Role-based dashboard routing (admin/superuser/owner → `/settings`, general users → `/dashboard`)
 - **✅ Template Context Integration**: Added `get_user_dashboard_url()` function to Flask template context processors
 - **✅ Consistent Navigation Experience**: All dashboard links now use smart routing for seamless navigation
@@ -18,6 +22,7 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **✅ Template Path Fixes**: All admin template paths corrected and verified
 - **✅ Authentication Enhancement**: Session-based testing with proper CSRF token handling
 - **✅ Error Handling**: Robust error handling and fallback mechanisms implemented
+- **✅ DOCX Upload Tool Enhancement**: Added quick link to news management for seamless workflow integration
 
 ### 📝 Content Management
 - **Advanced News Management**: Create, edit, delete articles with rich text editing (edit via `/settings/create_news?news_id=<id>`, redirects back to `/settings/manage_news` or album chapters if `album_id` present)
@@ -85,6 +90,15 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Content Gating**: Protect premium content with subscription requirements
 - **Payment Integration**: Ready for payment gateway integration
 
+### 🛡️ Content Deletion Request System
+- **Consistent Workflow**: All users (including admins) must request content deletion for approval
+- **Request Workflow**: Any user can request deletion of any content for admin approval
+- **Admin Approval**: Content moderators and admins approve/reject deletion requests
+- **Bulk Operations**: Efficient bulk approve/reject functionality for multiple requests
+- **Request Management**: Dedicated admin interface for managing deletion requests
+- **Audit Trail**: Complete tracking of who requested, when, and approval status
+- **Enhanced Security**: Prevents unauthorized content deletion while maintaining consistent workflow
+
 ### 💬 Comment & Rating System
 - **Nested Comments**: Threaded comment system with replies
 - **Like/Dislike System**: Users can like or dislike comments
@@ -98,6 +112,20 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Content Rating Protection**: Prevent duplicate ratings per user
 - **Rating Distribution**: Visual breakdown of 1-5 star ratings
 - **Top Rated Content**: Discover highest-rated articles and albums
+
+### 🏆 Achievement System
+- **Comprehensive Gamification**: Track user activities and award achievements
+- **Streak Tracking**: Login, activity, and reading streaks with daily consistency
+- **Contribution Achievements**: Content creation milestones (articles, albums, images)
+- **Exploration Achievements**: Content engagement (comments, ratings, reading)
+- **Community Achievements**: Social interactions (likes, comments received)
+- **Milestone Achievements**: Level progression and point accumulation
+- **Points & Leveling**: Point-based progression system with automatic level-ups
+- **Achievement Categories**: Organized into 7 categories with visual indicators
+- **Progress Tracking**: Detailed progress history and completion rates
+- **Real-time Notifications**: Instant achievement unlock notifications
+- **Achievement Dashboard**: Comprehensive user achievement overview
+- **Performance Optimized**: Efficient tracking with database indexes and cleanup
 
 ## 🏗️ Tech Stack
 
@@ -203,7 +231,16 @@ A comprehensive Flask-based content management system with advanced SEO features
    python init_footer_data.py
    ```
 
-8. **Run the application**
+8. **Set up achievement system (optional)**
+   ```bash
+   # Initialize achievement system with default categories and achievements
+   python helper/init_achievement_system.py
+   
+   # Test the achievement system
+   python test/test_achievement_system.py
+   ```
+
+9. **Run the application**
    ```bash
    python main.py
    ```
@@ -238,6 +275,7 @@ python -c "import redis; r = redis.Redis(); print('Redis connection:', r.ping())
 - **[Admin UI Guide](docs/admin_ui.md)** - Comprehensive admin interface documentation
 - **[Sitemap Documentation](docs/SITEMAP_DOCUMENTATION.md)** - Complete sitemap system guide
 - **[Development Roadmap](docs/TODO.md)** - Current development status and progress tracking
+- **[Achievement System Guide](docs/ACHIEVEMENT_SYSTEM_GUIDE.md)** - Comprehensive achievement system documentation
 
 ### Performance & Optimization
 - **[Performance & Optimizations – Comprehensive](docs/PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Complete performance guide with quick start and advanced topics
@@ -389,7 +427,11 @@ chmod +x optimizations/setup_redis.sh
 - `GET /api/news` - List news articles with filtering
 - `POST /api/news` - Create new article
 - `PUT /api/news/<id>` - Update article
-- `DELETE /api/news/<id>` - Delete article
+- `DELETE /api/news/<id>` - Delete article (admin-tier users only)
+- `POST /api/news/<id>/request-deletion` - Request article deletion (non-admin users)
+- `GET /api/news/deletion-requests` - Get news deletion requests (admin only)
+- `POST /api/news/<id>/approve-deletion` - Approve news deletion request (admin only)
+- `POST /api/news/<id>/reject-deletion` - Reject news deletion request (admin only)
 - `PATCH /api/news/<id>/visibility` - Toggle visibility
 - `PATCH /api/news/<id>/archive` - Archive article
 - `PATCH /api/news/<id>/unarchive` - Unarchive article
@@ -397,7 +439,11 @@ chmod +x optimizations/setup_redis.sh
 - `GET /api/albums` - List albums with filtering
 - `POST /api/albums` - Create new album
 - `PUT /api/albums/<id>` - Update album
-- `DELETE /api/albums/<id>` - Delete album
+- `DELETE /api/albums/<id>` - Delete album (admin-tier users only)
+- `POST /admin/albums/<id>/request-deletion` - Request album deletion (non-admin users)
+- `GET /admin/albums/deletion-requests` - Get album deletion requests (admin only)
+- `POST /admin/albums/<id>/approve-deletion` - Approve album deletion request (admin only)
+- `POST /admin/albums/<id>/reject-deletion` - Reject album deletion request (admin only)
 - `PATCH /api/albums/<id>/visibility` - Toggle album visibility
 - `PATCH /api/albums/<id>/archive` - Archive album
 - `PATCH /api/albums/<id>/unarchive` - Unarchive album
@@ -459,6 +505,10 @@ chmod +x optimizations/setup_redis.sh
 - `GET /api/registrations/pending` - Get pending registrations
 - `POST /api/registrations/<id>/approve` - Approve registration
 - `POST /api/registrations/<id>/reject` - Reject registration
+- `POST /api/user/request-account-deletion` - Request account deletion (general users only)
+- `GET /api/users/deletion-requests` - Get account deletion requests (admin only)
+- `POST /api/users/<id>/approve-deletion` - Approve account deletion request (admin only)
+- `POST /api/users/<id>/reject-deletion` - Reject account deletion request (admin only)
 
 ### Roles & Permissions
 - `GET /api/roles` - List roles (backup implementation in routes_users.py)

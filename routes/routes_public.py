@@ -1,6 +1,6 @@
 from routes import main_blueprint
 from .common_imports import *
-from models import Album, AlbumChapter, News, Category, Image, User, UserRole, Rating
+from models import Album, AlbumChapter, News, Category, CategoryGroup, Image, User, UserRole, Rating, default_utcnow
 from optimizations import cache_with_args, cache_query_result, CACHE_TIMEOUTS
 from optimizations import optimize_news_query, optimize_image_query, monitor_ssr_render
 from optimizations.cache_config import safe_cache_get, safe_cache_set
@@ -55,6 +55,11 @@ def inject_navigation_links():
             'footer_links': [],
             'brand_info': None
         }
+
+@main_blueprint.route("/force-scaling-test")
+def force_scaling_test():
+    """Test page for force scaling functionality."""
+    return render_template('public/force-scaling-test.html')
 
 @main_blueprint.route("/")
 @main_blueprint.route("/beranda")
@@ -336,14 +341,12 @@ def news():
         .paginate(page=page, per_page=per_page)
     )
 
-    # Fetch all categories and tags
-    categories = Category.query.all()
+    # Fetch all tags
     tags = get_all_tags()
     
     return render_template(
         "public/news.html",
         news=news_list,
-        categories=categories,
         all_tags=tags,
         query=None,
         category=None,
@@ -688,10 +691,31 @@ def news_detail_legacy(news_id):
 @main_blueprint.route("/api/categories", methods=["GET"])
 def get_categories():
     """Fetch all categories."""
-    categories = Category.query.all()
-    return jsonify(
-        [{"id": category.id, "name": category.name} for category in categories]
-    )
+    # Check if we want grouped categories or flat list
+    grouped = request.args.get('grouped', 'false').lower() == 'true'
+    
+    if grouped:
+        # Fetch categories grouped by their groups
+        groups = CategoryGroup.query.filter_by(is_active=True).order_by(CategoryGroup.display_order).all()
+        result = []
+        
+        for group in groups:
+            group_categories = Category.query.filter_by(
+                group_id=group.id, 
+                is_active=True
+            ).order_by(Category.display_order).all()
+            
+            if group_categories:  # Only include groups with categories
+                result.append({
+                    "group": group.to_dict(),
+                    "categories": [cat.to_dict() for cat in group_categories]
+                })
+        
+        return jsonify(result)
+    else:
+        # Fetch all categories as flat list (for backward compatibility)
+        categories = Category.query.filter_by(is_active=True).order_by(Category.display_order).all()
+        return jsonify([cat.to_dict() for cat in categories])
 
 
 def get_all_tags():
@@ -865,7 +889,7 @@ def navigation_management():
         {"name": "API Tags", "url": "/api/tags"},
     ]
     
-    return render_template('admin/settings/navigation_management.html', internal_links=internal_links)
+    return render_template('admin/brand/navigation_management.html', internal_links=internal_links)
 
 # Navigation Links API Routes
 @main_blueprint.route("/api/navigation-links", methods=["GET"])
@@ -1017,7 +1041,7 @@ def bulk_update_navigation_links():
         return jsonify({"error": "Failed to update navigation links"}), 500
 
 
-@main_blueprint.route("/api/navigation-links/bulk-update", methods=["PUT"])
+@main_blueprint.route("/api/navigation-links/bulk-status", methods=["PUT"])
 @login_required
 def bulk_update_navigation_status():
     """Bulk update navigation links status (activate/deactivate)."""
@@ -1026,27 +1050,40 @@ def bulk_update_navigation_status():
 
     try:
         data = request.get_json()
+        current_app.logger.info(f"Received bulk update data: {data}")
+        
         if not data or 'link_ids' not in data or 'is_active' not in data:
+            current_app.logger.error(f"Invalid data format: {data}")
             return jsonify({"error": "Invalid data format"}), 400
 
         link_ids = data['link_ids']
         is_active = data['is_active']
+        current_app.logger.info(f"Processing {len(link_ids)} links, setting is_active to {is_active}")
         
         updated_count = 0
         for link_id in link_ids:
+            current_app.logger.info(f"Processing link ID: {link_id}")
             link = NavigationLink.query.get(link_id)
             if link:
+                current_app.logger.info(f"Found link: {link.name}, current is_active: {link.is_active}")
                 link.is_active = is_active
                 link.updated_at = default_utcnow()
                 updated_count += 1
+                current_app.logger.info(f"Updated link {link.name} to is_active: {is_active}")
+            else:
+                current_app.logger.warning(f"Link with ID {link_id} not found")
 
+        current_app.logger.info(f"Committing {updated_count} updates to database")
         db.session.commit()
+        current_app.logger.info("Database commit successful")
         
         # Invalidate navigation cache
         try:
             from optimizations import invalidate_cache_pattern
             invalidate_cache_pattern("navigation*")
+            current_app.logger.info("Cache invalidation successful")
         except ImportError:
+            current_app.logger.warning("Cache invalidation module not available")
             pass
         
         return jsonify({
@@ -1057,7 +1094,9 @@ def bulk_update_navigation_status():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error bulk updating navigation links status: {e}")
-        return jsonify({"error": "Failed to update navigation links"}), 500
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({"error": f"Failed to update navigation links: {str(e)}"}), 500
 
 
 @main_blueprint.route("/api/navigation-links/bulk-delete", methods=["DELETE"])
@@ -1182,12 +1221,8 @@ def copy_navigation_links():
 @monitor_ssr_render("albums_list")
 def albums_list():
     """Public albums listing page."""
-    # Get categories for filtering
-    categories = Category.query.all()
-    
     return render_template(
-        'public/albums.html',
-        categories=categories
+        'public/albums.html'
     )
 
 
@@ -1615,14 +1650,15 @@ def albums_management():
     return render_template('admin/settings/albums_management.html')
 
 
-@main_blueprint.route("/settings/albums-seo")
-@login_required
-def albums_seo_management():
-    """Album SEO management page."""
-    if not current_user.verified:
-        return redirect(url_for('main.login'))
-    
-    return render_template('admin/settings/albums_seo_management.html')
+# REMOVED: albums_seo_management route - functionality moved to seo_management
+# @main_blueprint.route("/settings/albums-seo")
+# @login_required
+# def albums_seo_management():
+#     """Album SEO management page."""
+#     if not current_user.verified:
+#         return redirect(url_for('main.login'))
+#     
+#     return render_template('admin/seo/albums_seo_management.html')
 
 
 @main_blueprint.route("/api/search/news", methods=["GET"])

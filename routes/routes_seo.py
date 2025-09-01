@@ -375,6 +375,108 @@ def get_albums_seo():
         "pagination": pagination
     })
 
+# Individual Content Injection Endpoints (must come before more general routes)
+@main_blueprint.route("/api/seo/albums/<int:album_id>/inject", methods=["POST"])
+@login_required
+def inject_album_seo(album_id):
+    """POST: Inject SEO data for a specific album."""
+    # Debug logging
+    current_app.logger.info(f"Album injection request for album_id: {album_id}")
+    current_app.logger.info(f"User authenticated: {current_user.is_authenticated}")
+    current_app.logger.info(f"User verified: {getattr(current_user, 'verified', 'N/A')}")
+    current_app.logger.info(f"Request headers: {dict(request.headers)}")
+    
+    if not current_user.verified:
+        current_app.logger.warning(f"User {current_user.username} not verified for album injection")
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get the album
+        album = Album.query.get_or_404(album_id)
+        
+        # Import the album SEO injector
+        import sys
+        import os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'seo_injector'))
+        
+        from inject_album_seo import (
+            clear_existing_seo, generate_seo_slug, generate_meta_description,
+            generate_meta_keywords, generate_open_graph_data, generate_schema_markup,
+            calculate_seo_score
+        )
+        
+        # Check if SEO is locked
+        if album.is_seo_lock:
+            return jsonify({
+                "error": "SEO is locked for this album",
+                "album_id": album_id
+            }), 400
+        
+        # Clear existing SEO data
+        clear_existing_seo(album)
+        
+        # Generate SEO data
+        album.seo_slug = generate_seo_slug(album.title)
+        album.meta_description = generate_meta_description(album)
+        album.meta_keywords = generate_meta_keywords(album)
+        
+        # Generate Open Graph data
+        og_title, og_description, og_image = generate_open_graph_data(album)
+        album.og_title = og_title
+        album.og_description = og_description
+        album.og_image = og_image
+        
+        # Generate schema markup
+        album.schema_markup = generate_schema_markup(album)
+        
+        # Set default values
+        if album.author:
+            album.meta_author = album.author.get_full_name()
+        else:
+            album.meta_author = "Unknown Author"
+        
+        album.meta_language = "id"
+        album.meta_robots = "index, follow"
+        album.twitter_card = "summary_large_image"
+        album.structured_data_type = "Book" if album.is_completed else "CreativeWork"
+        # Get website URL from SEO injection settings
+        try:
+            from sqlalchemy import text
+            result = db.session.execute(text('SELECT website_url FROM seo_injection_settings LIMIT 1'))
+            row = result.fetchone()
+            website_url = row[0] if row and row[0] else "https://hystory.id"
+        except Exception as e:
+            current_app.logger.warning(f"Could not load SEO injection settings: {e}")
+            website_url = "https://hystory.id"
+        
+        album.canonical_url = f"{website_url}/album/{album.id}"
+        
+        # Calculate SEO score
+        album.seo_score = calculate_seo_score(album)
+        album.last_seo_audit = datetime.now(timezone.utc)
+        
+        # Save to database
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"SEO data injected successfully for album: {album.title}",
+            "album_id": album_id,
+            "seo_score": album.seo_score
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error injecting SEO for album {album_id}: {e}")
+        current_app.logger.error(f"Exception type: {type(e).__name__}")
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "error": "Failed to inject SEO data",
+            "details": str(e)
+        }), 500
+
 @main_blueprint.route("/api/seo/albums/<int:album_id>", methods=["GET"])
 @login_required
 def get_album_seo_detail(album_id):
@@ -968,5 +1070,689 @@ def get_seo_injection_status():
         current_app.logger.error(f"Error getting SEO status: {e}")
         return jsonify({
             "error": "Failed to get SEO status",
+            "details": str(e)
+        }), 500
+
+@main_blueprint.route("/api/root-seo-settings", methods=["GET"])
+@login_required
+def get_root_seo_settings():
+    """GET: Get root SEO settings configuration."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get brand identity for default values
+        brand_info = BrandIdentity.query.first()
+        
+        # Get current root SEO settings from brand identity
+        settings = {}
+        
+        if brand_info and brand_info.seo_settings:
+            # Load settings from the dedicated seo_settings field
+            if isinstance(brand_info.seo_settings, dict):
+                settings = brand_info.seo_settings
+            else:
+                # Handle case where it might be stored as JSON string
+                try:
+                    settings = json.loads(brand_info.seo_settings) if isinstance(brand_info.seo_settings, str) else {}
+                except:
+                    settings = {}
+        
+        # Default settings based on inject_root_seo.py
+        default_settings = {
+            "home_meta_title": "{brand_name} - Modern Content Management System",
+            "home_meta_description": "LilyOpenCMS is a modern content management system for news, stories, and digital content. Discover our platform for managing articles, albums, and multimedia content.",
+            "home_meta_keywords": "content management, CMS, digital publishing, news, articles, stories, multimedia",
+            
+            "about_meta_title": "About Us - {brand_name}",
+            "about_meta_description": "Learn about LilyOpenCMS, our mission, team, and commitment to providing modern content management solutions for digital publishers and content creators.",
+            "about_meta_keywords": "about us, team, mission, company, organization, digital content",
+            
+            "news_meta_title": "Latest News - {brand_name}",
+            "news_meta_description": "Stay updated with the latest news, articles, and current events. Browse our comprehensive collection of news content and stay informed.",
+            "news_meta_keywords": "news, articles, current events, latest updates, breaking news, journalism",
+            
+            "albums_meta_title": "Albums & Stories - {brand_name}",
+            "albums_meta_description": "Explore our collection of albums, stories, and serialized content. Discover novels, comics, and creative works from talented authors.",
+            "albums_meta_keywords": "albums, stories, novels, comics, creative works, serialized content",
+            
+            "default_og_image": "https://lilycms.com/static/pic/logo.png",
+            "default_og_type": "website",
+            "default_twitter_card": "summary_large_image",
+            "default_twitter_image": "https://lilycms.com/static/pic/logo.png",
+            "default_language": "id",
+            "default_meta_robots": "index, follow"
+        }
+        
+        # Merge with saved settings
+        for key, value in default_settings.items():
+            if key not in settings:
+                settings[key] = value
+        
+        # Add website_url to settings if not already present
+        if 'website_url' not in settings:
+            settings['website_url'] = brand_info.website_url if brand_info else "https://lilycms.com"
+        
+        return jsonify({
+            "success": True,
+            "settings": settings,
+            "brand_identity": {
+                "brand_name": brand_info.brand_name if brand_info else "LilyOpenCMS",
+                "website_url": brand_info.website_url if brand_info else "https://lilycms.com"
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting root SEO settings: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to get root SEO settings",
+            "details": str(e)
+        }), 500
+
+@main_blueprint.route("/api/root-seo-settings", methods=["POST"])
+@login_required
+def save_root_seo_settings():
+    """POST: Save root SEO settings configuration."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No data provided"
+            }), 400
+        
+        # Get or create brand identity for storing settings
+        brand_info = BrandIdentity.query.first()
+        if not brand_info:
+            brand_info = BrandIdentity(
+                brand_name="LilyOpenCMS",
+                website_url="https://lilycms.com"
+            )
+            db.session.add(brand_info)
+        
+        # Store settings in brand_info.seo_settings field
+        current_settings = {}
+        
+        # Get existing settings if any
+        if brand_info.seo_settings:
+            if isinstance(brand_info.seo_settings, dict):
+                current_settings = brand_info.seo_settings
+            else:
+                try:
+                    current_settings = json.loads(brand_info.seo_settings) if isinstance(brand_info.seo_settings, str) else {}
+                except:
+                    current_settings = {}
+        
+        # Update with new settings
+        current_settings.update(data)
+        
+        # Update website_url if provided
+        if 'website_url' in data and data['website_url']:
+            brand_info.website_url = data['website_url']
+        
+        # Save to database using the dedicated seo_settings field
+        brand_info.seo_settings = current_settings
+        
+        brand_info.updated_at = datetime.now(timezone.utc)
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Root SEO settings saved successfully"
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error saving root SEO settings: {e}")
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "error": "Failed to save root SEO settings",
+            "details": str(e)
+        }), 500
+
+# Individual Content Injection Endpoints (must come before more general routes)
+@main_blueprint.route("/api/seo/chapters/<int:chapter_id>/inject", methods=["POST"])
+@login_required
+def inject_chapter_seo(chapter_id):
+    """POST: Inject SEO data for a specific chapter."""
+    # Debug logging
+    current_app.logger.info(f"Chapter injection request for chapter_id: {chapter_id}")
+    current_app.logger.info(f"User authenticated: {current_user.is_authenticated}")
+    current_app.logger.info(f"User verified: {getattr(current_user, 'verified', 'N/A')}")
+    current_app.logger.info(f"Request headers: {dict(request.headers)}")
+    
+    if not current_user.verified:
+        current_app.logger.warning(f"User {current_user.username} not verified for chapter injection")
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get the chapter
+        chapter = AlbumChapter.query.get_or_404(chapter_id)
+        
+        # Import the chapter SEO injector
+        import sys
+        import os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'seo_injector'))
+        
+        from inject_chapter_seo import (
+            clear_existing_seo, generate_seo_slug, generate_meta_description,
+            generate_meta_keywords, generate_open_graph_data, generate_schema_markup,
+            calculate_seo_score
+        )
+        
+        # Check if SEO is locked
+        if chapter.is_seo_lock:
+            return jsonify({
+                "error": "SEO is locked for this chapter",
+                "chapter_id": chapter_id
+            }), 400
+        
+        # Clear existing SEO data
+        clear_existing_seo(chapter)
+        
+        # Generate SEO data
+        chapter.seo_slug = generate_seo_slug(f"chapter-{chapter.chapter_number}-{chapter.chapter_title}")
+        chapter.meta_description = generate_meta_description(chapter)
+        chapter.meta_keywords = generate_meta_keywords(chapter)
+        
+        # Generate Open Graph data
+        og_title, og_description, og_image = generate_open_graph_data(chapter)
+        chapter.og_title = og_title
+        chapter.og_description = og_description
+        chapter.og_image = og_image
+        
+        # Generate schema markup
+        chapter.schema_markup = generate_schema_markup(chapter)
+        
+        # Set default values
+        if chapter.album and chapter.album.author:
+            chapter.meta_author = chapter.album.author.get_full_name()
+        else:
+            chapter.meta_author = "Unknown Author"
+        
+        chapter.meta_language = "id"
+        chapter.meta_robots = "index, follow"
+        chapter.twitter_card = "summary_large_image"
+        chapter.structured_data_type = "Chapter"
+        # Get website URL from SEO injection settings
+        try:
+            from sqlalchemy import text
+            result = db.session.execute(text('SELECT website_url FROM seo_injection_settings LIMIT 1'))
+            row = result.fetchone()
+            website_url = row[0] if row and row[0] else "https://hystory.id"
+        except Exception as e:
+            current_app.logger.warning(f"Could not load SEO injection settings: {e}")
+            website_url = "https://hystory.id"
+        
+        chapter.canonical_url = f"{website_url}/album/{chapter.album_id}/chapter/{chapter.chapter_number}"
+        
+        # Calculate SEO score
+        chapter.seo_score = calculate_seo_score(chapter)
+        chapter.last_seo_audit = datetime.now(timezone.utc)
+        
+        # Save to database
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"SEO data injected successfully for Chapter {chapter.chapter_number}",
+            "chapter_id": chapter_id,
+            "seo_score": chapter.seo_score
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error injecting SEO for chapter {chapter_id}: {e}")
+        current_app.logger.error(f"Exception type: {type(e).__name__}")
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "error": "Failed to inject SEO data",
+            "details": str(e)
+        }), 500
+
+@main_blueprint.route("/api/seo/articles/<int:article_id>/inject", methods=["POST"])
+@login_required
+def inject_article_seo(article_id):
+    """POST: Inject SEO data for a specific article/news."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get the article
+        article = News.query.get_or_404(article_id)
+        
+        # Import the news SEO injector
+        import sys
+        import os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'seo_injector'))
+        
+        from inject_news_seo import (
+            clear_existing_seo, generate_seo_slug, generate_meta_description,
+            generate_meta_keywords, generate_open_graph_data, generate_schema_markup,
+            calculate_seo_score
+        )
+        
+        # Check if SEO is locked
+        if article.is_seo_lock:
+            return jsonify({
+                "error": "SEO is locked for this article",
+                "article_id": article_id
+            }), 400
+        
+        # Clear existing SEO data
+        clear_existing_seo(article)
+        
+        # Generate SEO data
+        article.seo_slug = generate_seo_slug(article.title)
+        article.meta_description = generate_meta_description(article)
+        article.meta_keywords = generate_meta_keywords(article)
+        
+        # Generate Open Graph data
+        og_title, og_description, og_image = generate_open_graph_data(article)
+        article.og_title = og_title
+        article.og_description = og_description
+        article.og_image = og_image
+        
+        # Generate schema markup
+        article.schema_markup = generate_schema_markup(article)
+        
+        # Set default values
+        article.meta_author = article.writer or article.author.username
+        article.meta_language = "id"
+        article.meta_robots = "index, follow"
+        article.twitter_card = "summary_large_image"
+        article.structured_data_type = "NewsArticle" if article.is_news else "Article"
+        # Get website URL from SEO injection settings
+        try:
+            from sqlalchemy import text
+            result = db.session.execute(text('SELECT website_url FROM seo_injection_settings LIMIT 1'))
+            row = result.fetchone()
+            website_url = row[0] if row and row[0] else "https://hystory.id"
+        except Exception as e:
+            current_app.logger.warning(f"Could not load SEO injection settings: {e}")
+            website_url = "https://hystory.id"
+        
+        article.canonical_url = f"{website_url}/news/{article.id}"
+        
+        # Calculate SEO score
+        article.seo_score = calculate_seo_score(article)
+        article.last_seo_audit = datetime.now(timezone.utc)
+        
+        # Save to database
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"SEO data injected successfully for article: {article.title}",
+            "article_id": article_id,
+            "seo_score": article.seo_score
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error injecting SEO for article {article_id}: {e}")
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "error": "Failed to inject SEO data",
+            "details": str(e)
+        }), 500 
+
+# Analytics API Endpoints
+@main_blueprint.route("/api/seo/stats/overview", methods=["GET"])
+@login_required
+def get_seo_stats_overview():
+    """GET: Get SEO overview statistics."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get counts from database
+        total_articles = News.query.count()
+        total_albums = Album.query.count()
+        total_chapters = AlbumChapter.query.count()
+        total_root_pages = RootSEO.query.count()
+        
+        # Calculate average SEO scores
+        articles_with_seo = News.query.filter(News.seo_score.isnot(None)).all()
+        albums_with_seo = Album.query.filter(Album.seo_score.isnot(None)).all()
+        chapters_with_seo = AlbumChapter.query.filter(AlbumChapter.seo_score.isnot(None)).all()
+        root_with_seo = RootSEO.query.all()  # RootSEO doesn't have seo_score column, use calculate_seo_score() method
+        
+        avg_article_score = sum(a.seo_score for a in articles_with_seo) / len(articles_with_seo) if articles_with_seo else 0
+        avg_album_score = sum(a.seo_score for a in albums_with_seo) / len(albums_with_seo) if albums_with_seo else 0
+        avg_chapter_score = sum(c.seo_score for c in chapters_with_seo) / len(chapters_with_seo) if chapters_with_seo else 0
+        avg_root_score = sum(r.calculate_seo_score() for r in root_with_seo) / len(root_with_seo) if root_with_seo else 0
+        
+        # Calculate completion rates
+        complete_articles = len([a for a in articles_with_seo if a.seo_score >= 80])
+        complete_albums = len([a for a in albums_with_seo if a.seo_score >= 80])
+        complete_chapters = len([c for c in chapters_with_seo if c.seo_score >= 80])
+        complete_root = len([r for r in root_with_seo if r.calculate_seo_score() >= 80])
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "total_content": {
+                    "articles": total_articles,
+                    "albums": total_albums,
+                    "chapters": total_chapters,
+                    "root_pages": total_root_pages
+                },
+                "average_scores": {
+                    "articles": round(avg_article_score, 1),
+                    "albums": round(avg_album_score, 1),
+                    "chapters": round(avg_chapter_score, 1),
+                    "root_pages": round(avg_root_score, 1)
+                },
+                "completion_rates": {
+                    "articles": round((complete_articles / total_articles * 100) if total_articles > 0 else 0, 1),
+                    "albums": round((complete_albums / total_albums * 100) if total_albums > 0 else 0, 1),
+                    "chapters": round((complete_chapters / total_chapters * 100) if total_chapters > 0 else 0, 1),
+                    "root_pages": round((complete_root / total_root_pages * 100) if total_root_pages > 0 else 0, 1)
+                }
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting SEO stats overview: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to get SEO stats overview",
+            "details": str(e)
+        }), 500
+
+
+@main_blueprint.route("/api/seo/stats/score-distribution", methods=["GET"])
+@login_required
+def get_seo_score_distribution():
+    """GET: Get SEO score distribution data."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get all content with SEO scores
+        articles = News.query.filter(News.seo_score.isnot(None)).all()
+        albums = Album.query.filter(Album.seo_score.isnot(None)).all()
+        chapters = AlbumChapter.query.filter(AlbumChapter.seo_score.isnot(None)).all()
+        root_pages = RootSEO.query.all()  # RootSEO doesn't have seo_score column, use calculate_seo_score() method
+        
+        # Calculate distribution
+        def get_distribution(items, use_calculate_method=False):
+            if use_calculate_method:
+                excellent = len([i for i in items if i.calculate_seo_score() >= 90])
+                good = len([i for i in items if 80 <= i.calculate_seo_score() < 90])
+                fair = len([i for i in items if 60 <= i.calculate_seo_score() < 80])
+                poor = len([i for i in items if i.calculate_seo_score() < 60])
+            else:
+                excellent = len([i for i in items if i.seo_score >= 90])
+                good = len([i for i in items if 80 <= i.seo_score < 90])
+                fair = len([i for i in items if 60 <= i.seo_score < 80])
+                poor = len([i for i in items if i.seo_score < 60])
+            return [excellent, good, fair, poor]
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "articles": get_distribution(articles),
+                "albums": get_distribution(albums),
+                "chapters": get_distribution(chapters),
+                "root_pages": get_distribution(root_pages, use_calculate_method=True)
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting SEO score distribution: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to get SEO score distribution",
+            "details": str(e)
+        }), 500
+
+
+@main_blueprint.route("/api/seo/stats/content-performance", methods=["GET"])
+@login_required
+def get_seo_content_performance():
+    """GET: Get content performance metrics."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get top performing content
+        top_articles = News.query.filter(News.seo_score.isnot(None)).order_by(News.seo_score.desc()).limit(5).all()
+        top_albums = Album.query.filter(Album.seo_score.isnot(None)).order_by(Album.seo_score.desc()).limit(5).all()
+        top_chapters = AlbumChapter.query.filter(AlbumChapter.seo_score.isnot(None)).order_by(AlbumChapter.seo_score.desc()).limit(5).all()
+        
+        # For RootSEO, we need to get all and sort by calculated score
+        all_root_pages = RootSEO.query.all()
+        top_root_pages = sorted(all_root_pages, key=lambda x: x.calculate_seo_score(), reverse=True)[:5]
+        
+        def format_content(content_list, content_type, use_calculate_method=False):
+            return [{
+                "id": item.id,
+                "title": getattr(item, 'title', getattr(item, 'chapter_title', getattr(item, 'page_name', 'Unknown'))),
+                "score": item.calculate_seo_score() if use_calculate_method else item.seo_score,
+                "type": content_type
+            } for item in content_list]
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "top_articles": format_content(top_articles, "article"),
+                "top_albums": format_content(top_albums, "album"),
+                "top_chapters": format_content(top_chapters, "chapter"),
+                "top_root_pages": format_content(top_root_pages, "root_page", use_calculate_method=True)
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting SEO content performance: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to get SEO content performance",
+            "details": str(e)
+        }), 500
+
+
+@main_blueprint.route("/api/seo/stats/status-breakdown", methods=["GET"])
+@login_required
+def get_seo_status_breakdown():
+    """GET: Get SEO status breakdown."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get status breakdown
+        articles = News.query.all()
+        albums = Album.query.all()
+        chapters = AlbumChapter.query.all()
+        root_pages = RootSEO.query.all()
+        
+        def get_status_breakdown(items, use_calculate_method=False):
+            if use_calculate_method:
+                complete = len([i for i in items if i.calculate_seo_score() >= 80])
+                incomplete = len([i for i in items if 40 <= i.calculate_seo_score() < 80])
+                missing = len([i for i in items if i.calculate_seo_score() < 40])
+            else:
+                complete = len([i for i in items if hasattr(i, 'seo_score') and i.seo_score and i.seo_score >= 80])
+                incomplete = len([i for i in items if hasattr(i, 'seo_score') and i.seo_score and 40 <= i.seo_score < 80])
+                missing = len([i for i in items if not hasattr(i, 'seo_score') or not i.seo_score or i.seo_score < 40])
+            return [complete, incomplete, missing]
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "articles": get_status_breakdown(articles),
+                "albums": get_status_breakdown(albums),
+                "chapters": get_status_breakdown(chapters),
+                "root_pages": get_status_breakdown(root_pages, use_calculate_method=True)
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting SEO status breakdown: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to get SEO status breakdown",
+            "details": str(e)
+        }), 500
+
+
+@main_blueprint.route("/api/seo/activity/recent", methods=["GET"])
+@login_required
+def get_seo_recent_activity():
+    """GET: Get recent SEO activity."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        # Get recent SEO audits
+        recent_articles = News.query.filter(News.last_seo_audit.isnot(None)).order_by(News.last_seo_audit.desc()).limit(10).all()
+        recent_albums = Album.query.filter(Album.last_seo_audit.isnot(None)).order_by(Album.last_seo_audit.desc()).limit(10).all()
+        recent_chapters = AlbumChapter.query.filter(AlbumChapter.last_seo_audit.isnot(None)).order_by(AlbumChapter.last_seo_audit.desc()).limit(10).all()
+        # RootSEO doesn't have last_seo_audit column, use updated_at instead
+        recent_root_pages = RootSEO.query.filter(RootSEO.updated_at.isnot(None)).order_by(RootSEO.updated_at.desc()).limit(10).all()
+        
+        # Combine and sort by date
+        all_activity = []
+        
+        for article in recent_articles:
+            all_activity.append({
+                "id": article.id,
+                "title": article.title,
+                "type": "article",
+                "score": article.seo_score,
+                "date": article.last_seo_audit.isoformat() if article.last_seo_audit else None
+            })
+        
+        for album in recent_albums:
+            all_activity.append({
+                "id": album.id,
+                "title": album.title,
+                "type": "album",
+                "score": album.seo_score,
+                "date": album.last_seo_audit.isoformat() if album.last_seo_audit else None
+            })
+        
+        for chapter in recent_chapters:
+            all_activity.append({
+                "id": chapter.id,
+                "title": chapter.chapter_title,
+                "type": "chapter",
+                "score": chapter.seo_score,
+                "date": chapter.last_seo_audit.isoformat() if chapter.last_seo_audit else None
+            })
+        
+        for root_page in recent_root_pages:
+            all_activity.append({
+                "id": root_page.id,
+                "title": root_page.page_name,
+                "type": "root_page",
+                "score": root_page.calculate_seo_score(),
+                "date": root_page.updated_at.isoformat() if root_page.updated_at else None
+            })
+        
+        # Sort by date and take top 15
+        all_activity.sort(key=lambda x: x["date"] or "", reverse=True)
+        all_activity = all_activity[:15]
+        
+        return jsonify({
+            "success": True,
+            "data": all_activity
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting SEO recent activity: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to get SEO recent activity",
+            "details": str(e)
+        }), 500
+
+
+@main_blueprint.route("/api/seo/recommendations", methods=["GET"])
+@login_required
+def get_seo_recommendations():
+    """GET: Get SEO recommendations."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    try:
+        recommendations = []
+        
+        # Check for content without SEO scores
+        articles_without_seo = News.query.filter(News.seo_score.is_(None)).count()
+        albums_without_seo = Album.query.filter(Album.seo_score.is_(None)).count()
+        chapters_without_seo = AlbumChapter.query.filter(AlbumChapter.seo_score.is_(None)).count()
+        
+        if articles_without_seo > 0:
+            recommendations.append({
+                "type": "warning",
+                "title": f"{articles_without_seo} articles need SEO optimization",
+                "description": "Run SEO injection for articles to improve search visibility",
+                "action": "inject_articles"
+            })
+        
+        if albums_without_seo > 0:
+            recommendations.append({
+                "type": "warning",
+                "title": f"{albums_without_seo} albums need SEO optimization",
+                "description": "Run SEO injection for albums to improve search visibility",
+                "action": "inject_albums"
+            })
+        
+        if chapters_without_seo > 0:
+            recommendations.append({
+                "type": "warning",
+                "title": f"{chapters_without_seo} chapters need SEO optimization",
+                "description": "Run SEO injection for chapters to improve search visibility",
+                "action": "inject_chapters"
+            })
+        
+        # Check for low-scoring content
+        low_scoring_articles = News.query.filter(News.seo_score < 60).count()
+        low_scoring_albums = Album.query.filter(Album.seo_score < 60).count()
+        
+        if low_scoring_articles > 0:
+            recommendations.append({
+                "type": "info",
+                "title": f"{low_scoring_articles} articles have low SEO scores",
+                "description": "Review and improve meta descriptions, titles, and keywords",
+                "action": "review_articles"
+            })
+        
+        if low_scoring_albums > 0:
+            recommendations.append({
+                "type": "info",
+                "title": f"{low_scoring_albums} albums have low SEO scores",
+                "description": "Review and improve meta descriptions, titles, and keywords",
+                "action": "review_albums"
+            })
+        
+        # Add general recommendations
+        recommendations.append({
+            "type": "success",
+            "title": "SEO settings configured",
+            "description": "Your root SEO settings are properly configured",
+            "action": "view_settings"
+        })
+        
+        return jsonify({
+            "success": True,
+            "data": recommendations
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting SEO recommendations: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to get SEO recommendations",
             "details": str(e)
         }), 500 

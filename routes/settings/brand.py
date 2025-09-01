@@ -40,7 +40,7 @@ def settings_brand_identity():
         db.session.add(brand_info)
         db.session.commit()
     
-    return render_template('admin/settings/brand_management.html', brand_info=brand_info)
+    return render_template('admin/brand/brand_management.html', brand_info=brand_info)
 
 
 @main_blueprint.route("/settings/brand/info")
@@ -57,7 +57,7 @@ def settings_brand_info():
         db.session.add(brand_info)
         db.session.commit()
     
-    return render_template('admin/settings/brand_info.html', brand_info=brand_info)
+    return render_template('admin/brand/brand_info.html', brand_info=brand_info)
 
 
 @main_blueprint.route("/settings/brand/design")
@@ -74,7 +74,7 @@ def settings_brand_design():
         db.session.add(brand_info)
         db.session.commit()
     
-    return render_template('admin/settings/brand_design.html', brand_info=brand_info)
+    return render_template('admin/brand/brand_design.html', brand_info=brand_info)
 
 
 @main_blueprint.route("/settings/brand/assets")
@@ -91,7 +91,7 @@ def settings_brand_assets():
         db.session.add(brand_info)
         db.session.commit()
     
-    return render_template('admin/settings/brand_assets.html', brand_info=brand_info)
+    return render_template('admin/brand/brand_assets.html', brand_info=brand_info)
 
 
 @main_blueprint.route("/settings/brand/colors")
@@ -108,7 +108,7 @@ def settings_brand_colors():
         db.session.add(brand_info)
         db.session.commit()
     
-    return render_template('admin/settings/brand_colors.html', brand_info=brand_info)
+    return render_template('admin/brand/brand_colors.html', brand_info=brand_info)
 
 
 @main_blueprint.route("/api/brand-identity", methods=["GET"])

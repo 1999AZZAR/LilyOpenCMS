@@ -84,33 +84,7 @@
                 </form>
             </div>
 
-            <!-- Preferences -->
-            <div class="bg-card border border-border rounded-lg p-6 shadow-sm">
-                <h2 class="text-xl font-semibold mb-4">Preferensi</h2>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="font-medium">Tampilkan Iklan</h3>
-                            <p class="text-sm text-muted-foreground">Izinkan menampilkan iklan saat membaca</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="show-ads" class="sr-only peer" 
-                                   {% if current_user.ad_preferences and current_user.ad_preferences.get('show_ads', True) %}checked{% endif %}>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="font-medium">Notifikasi Email</h3>
-                            <p class="text-sm text-muted-foreground">Terima notifikasi via email</p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="email-notifications" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <!-- Right Column: Account Summary & Actions -->
@@ -195,35 +169,35 @@
                 </div>
             </div>
 
-            <!-- Danger Zone -->
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6 shadow-sm">
-                <h2 class="text-lg font-semibold mb-4 text-red-800">Zona Berbahaya</h2>
-                <p class="text-sm text-red-700 mb-4">Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data Anda secara permanen.</p>
-                <button onclick="openDeleteAccountModal()" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                    Hapus Akun
+            <!-- Account Deletion Request -->
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-6 shadow-sm">
+                <h2 class="text-lg font-semibold mb-4 text-orange-800">Permintaan Penghapusan Akun</h2>
+                <p class="text-sm text-orange-700 mb-4">Kirim permintaan penghapusan akun kepada admin. Akun Anda akan dinonaktifkan sementara menunggu persetujuan admin.</p>
+                <button onclick="openDeleteRequestModal()" class="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors">
+                    Kirim Permintaan Penghapusan
                 </button>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Delete Account Modal -->
-<div id="delete-account-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+<!-- Account Deletion Request Modal -->
+<div id="delete-request-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div class="p-6">
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
-                    <i class="fas fa-exclamation-triangle text-white"></i>
+                <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-clock text-white"></i>
                 </div>
-                <h3 class="text-xl font-bold text-red-600">Hapus Akun</h3>
+                <h3 class="text-xl font-bold text-orange-600">Permintaan Penghapusan Akun</h3>
             </div>
-            <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus akun Anda? Tindakan ini tidak dapat dibatalkan dan semua data Anda akan hilang selamanya.</p>
+            <p class="text-gray-600 mb-6">Apakah Anda yakin ingin mengirim permintaan penghapusan akun? Akun Anda akan dinonaktifkan sementara menunggu persetujuan admin. Anda dapat membatalkan permintaan ini kapan saja.</p>
             <div class="flex gap-3">
-                <button onclick="closeDeleteAccountModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors">
+                <button onclick="closeDeleteRequestModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors">
                     Batal
                 </button>
-                <button id="confirm-delete-account" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                    Hapus Akun
+                <button id="confirm-delete-request" class="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors">
+                    Kirim Permintaan
                 </button>
             </div>
         </div>
@@ -335,36 +309,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Preferences handling
-    const showAdsToggle = document.getElementById('show-ads');
-    showAdsToggle.addEventListener('change', async function() {
-        try {
-            const response = await fetch('/api/user/preferences', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ad_preferences: {
-                        show_ads: showAdsToggle.checked
-                    }
-                })
-            });
-            
-            if (response.ok) {
-                showToast('Preferensi berhasil disimpan', 'success');
-            } else {
-                showToast('Gagal menyimpan preferensi', 'error');
-            }
-        } catch (error) {
-            showToast('Terjadi kesalahan', 'error');
-        }
-    });
 
-    // Delete account handling
-    document.getElementById('confirm-delete-account').addEventListener('click', async function() {
+
+    // Account deletion request handling
+    document.getElementById('confirm-delete-request').addEventListener('click', async function() {
         try {
-            const response = await fetch('/api/user/delete-account', {
+            const response = await fetch('/api/user/request-account-deletion', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -372,10 +322,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (response.ok) {
-                window.location.href = '/logout';
+                showToast('Permintaan penghapusan akun berhasil dikirim', 'success');
+                closeDeleteRequestModal();
+                // Optionally redirect to logout or show status
+                setTimeout(() => {
+                    window.location.href = '/logout';
+                }, 2000);
             } else {
                 const error = await response.json();
-                showToast(error.message || 'Gagal menghapus akun', 'error');
+                showToast(error.message || 'Gagal mengirim permintaan penghapusan', 'error');
             }
         } catch (error) {
             showToast('Terjadi kesalahan', 'error');
@@ -387,12 +342,12 @@ function resetProfileForm() {
     document.getElementById('profile-form').reset();
 }
 
-function openDeleteAccountModal() {
-    document.getElementById('delete-account-modal').classList.remove('hidden');
+function openDeleteRequestModal() {
+    document.getElementById('delete-request-modal').classList.remove('hidden');
 }
 
-function closeDeleteAccountModal() {
-    document.getElementById('delete-account-modal').classList.add('hidden');
+function closeDeleteRequestModal() {
+    document.getElementById('delete-request-modal').classList.add('hidden');
 }
 </script>
 {% endblock %}

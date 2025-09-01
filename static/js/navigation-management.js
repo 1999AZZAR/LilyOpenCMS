@@ -38,10 +38,32 @@ class NavigationManager {
         document.getElementById('confirm-copy-btn').addEventListener('click', () => this.copyLinks());
         
         // Bulk action events
-        document.getElementById('bulk-activate-btn').addEventListener('click', () => this.bulkActivate());
-        document.getElementById('bulk-deactivate-btn').addEventListener('click', () => this.bulkDeactivate());
-        document.getElementById('bulk-delete-btn').addEventListener('click', () => this.showBulkDeleteModal());
-        document.getElementById('bulk-clear-btn').addEventListener('click', () => this.clearSelection());
+        const bulkActivateBtn = document.getElementById('bulk-activate-btn');
+        const bulkDeactivateBtn = document.getElementById('bulk-deactivate-btn');
+        const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+        const bulkClearBtn = document.getElementById('bulk-clear-btn');
+        
+        if (bulkActivateBtn) {
+            bulkActivateBtn.addEventListener('click', () => {
+                console.log('Bulk activate button clicked'); // Debug log
+                this.bulkActivate();
+            });
+        }
+        
+        if (bulkDeactivateBtn) {
+            bulkDeactivateBtn.addEventListener('click', () => {
+                console.log('Bulk deactivate button clicked'); // Debug log
+                this.bulkDeactivate();
+            });
+        }
+        
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', () => this.showBulkDeleteModal());
+        }
+        
+        if (bulkClearBtn) {
+            bulkClearBtn.addEventListener('click', () => this.clearSelection());
+        }
         
         // Bulk delete modal events
         document.getElementById('cancel-bulk-delete-btn').addEventListener('click', () => this.hideBulkDeleteModal());
@@ -205,11 +227,15 @@ class NavigationManager {
         document.querySelectorAll('.link-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
                 const linkId = parseInt(e.target.dataset.linkId);
+                console.log('Checkbox changed:', linkId, e.target.checked); // Debug log
+                
                 if (e.target.checked) {
                     this.selectedLinks.add(linkId);
                 } else {
                     this.selectedLinks.delete(linkId);
                 }
+                
+                console.log('Selected links:', Array.from(this.selectedLinks)); // Debug log
                 this.updateBulkActions();
             });
         });
@@ -237,11 +263,15 @@ class NavigationManager {
         const bulkActions = document.getElementById('bulk-actions');
         const selectedCount = document.getElementById('selected-count');
         
+        console.log('Updating bulk actions. Selected count:', this.selectedLinks.size); // Debug log
+        
         if (this.selectedLinks.size > 0) {
-            bulkActions.classList.remove('hidden');
+            bulkActions.style.display = 'flex';
             selectedCount.textContent = `${this.selectedLinks.size} selected`;
+            console.log('Bulk actions should be visible'); // Debug log
         } else {
-            bulkActions.classList.add('hidden');
+            bulkActions.style.display = 'none';
+            console.log('Bulk actions should be hidden'); // Debug log
         }
     }
     
@@ -251,6 +281,12 @@ class NavigationManager {
             checkbox.checked = false;
         });
         this.updateBulkActions();
+        
+        // Also hide bulk actions directly
+        const bulkActions = document.getElementById('bulk-actions');
+        if (bulkActions) {
+            bulkActions.style.display = 'none';
+        }
     }
     
     showAddModal() {
@@ -508,10 +544,20 @@ class NavigationManager {
     }
     
     async bulkActivate() {
+        console.log('Bulk activate called with selected links:', Array.from(this.selectedLinks)); // Debug log
+        if (this.selectedLinks.size === 0) {
+            this.showError('Pilih link yang akan diaktifkan');
+            return;
+        }
         await this.bulkUpdateStatus(true);
     }
     
     async bulkDeactivate() {
+        console.log('Bulk deactivate called with selected links:', Array.from(this.selectedLinks)); // Debug log
+        if (this.selectedLinks.size === 0) {
+            this.showError('Pilih link yang akan dinonaktifkan');
+            return;
+        }
         await this.bulkUpdateStatus(false);
     }
     
@@ -521,8 +567,10 @@ class NavigationManager {
             return;
         }
         
+        console.log(`Bulk updating ${this.selectedLinks.size} links to ${isActive ? 'active' : 'inactive'}`); // Debug log
+        
         try {
-            const response = await fetch('/api/navigation-links/bulk-update', {
+            const response = await fetch('/api/navigation-links/bulk-status', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -533,10 +581,16 @@ class NavigationManager {
                 })
             });
             
+            console.log('Bulk update response status:', response.status); // Debug log
+            
             if (!response.ok) {
                 const error = await response.json();
+                console.error('Bulk update error response:', error); // Debug log
                 throw new Error(error.error || 'Failed to update links');
             }
+            
+            const result = await response.json();
+            console.log('Bulk update success:', result); // Debug log
             
             this.showSuccess(`Berhasil ${isActive ? 'mengaktifkan' : 'menonaktifkan'} ${this.selectedLinks.size} link`);
             this.clearSelection();
@@ -598,6 +652,7 @@ class NavigationManager {
     }
     
     showSuccess(message) {
+        console.log('Showing success message:', message); // Debug log
         if (typeof showToast === 'function') {
             showToast('success', message);
         } else {
@@ -606,6 +661,7 @@ class NavigationManager {
     }
     
     showError(message) {
+        console.log('Showing error message:', message); // Debug log
         if (typeof showToast === 'function') {
             showToast('error', message);
         } else {
@@ -632,5 +688,20 @@ class NavigationManager {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new NavigationManager();
+    const manager = new NavigationManager();
+    
+    // Add a test function to manually test bulk actions
+    window.testBulkActions = () => {
+        console.log('Testing bulk actions...');
+        console.log('Selected links:', Array.from(manager.selectedLinks));
+        console.log('Bulk actions element:', document.getElementById('bulk-actions'));
+        console.log('Bulk actions visible:', document.getElementById('bulk-actions').style.display !== 'none');
+    };
+    
+    // Add a function to manually select a link for testing
+    window.testSelectLink = (linkId) => {
+        manager.selectedLinks.add(parseInt(linkId));
+        manager.updateBulkActions();
+        console.log('Manually selected link:', linkId);
+    };
 }); 

@@ -32,7 +32,7 @@ def root_seo_management():
     # Calculate completion rate
     completion_rate = int((complete_seo / total_pages * 100) if total_pages > 0 else 0)
     
-    return render_template('admin/settings/root_seo_management.html',
+    return render_template('admin/seo/root_seo_management.html',
                          root_seo_entries=root_seo_entries,
                          total_pages=total_pages,
                          active_pages=active_pages,
@@ -118,7 +118,8 @@ def create_root_seo():
             db.session.rollback()
             return jsonify({'success': False, 'message': f'Error creating root SEO: {str(e)}'}), 500
     
-    return render_template('admin/settings/root_seo_create.html')
+    # TODO: Create root_seo_create.html template or redirect to appropriate page
+    return redirect(url_for('root_seo.root_seo_management'))
 
 @root_seo_bp.route('/settings/root-seo/<int:seo_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required

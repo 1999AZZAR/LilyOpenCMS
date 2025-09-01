@@ -18,24 +18,73 @@ app = main.app
 db = main.db
 
 from models import RootSEO, BrandIdentity
+from sqlalchemy import text
 
-def generate_schema_markup(page_identifier, page_name, meta_description=None):
+def get_seo_injection_settings():
+    """Get SEO injection settings from the database."""
+    try:
+        result = db.session.execute(text('SELECT website_name, website_url, website_description, website_language, organization_name, organization_logo, organization_description FROM seo_injection_settings LIMIT 1'))
+        row = result.fetchone()
+        if row:
+            return {
+                'website_name': row[0] or 'LilyOpenCMS',
+                'website_url': row[1] or 'https://lilycms.com',
+                'website_description': row[2] or '',
+                'website_language': row[3] or 'id',
+                'organization_name': row[4] or 'LilyOpenCMS',
+                'organization_logo': row[5] or '',
+                'organization_description': row[6] or ''
+            }
+    except Exception as e:
+        print(f"Warning: Could not load SEO injection settings: {e}")
+    
+    # Fallback to default values
+    return {
+        'website_name': 'LilyOpenCMS',
+        'website_url': 'https://lilycms.com',
+        'website_description': '',
+        'website_language': 'id',
+        'organization_name': 'LilyOpenCMS',
+        'organization_logo': '',
+        'organization_description': ''
+    }
+
+def generate_schema_markup(page_identifier, page_name, meta_description=None, brand_info=None, website_url=None):
     """Generate JSON-LD structured data for the page."""
+    # Get actual settings from database
+    settings = get_seo_injection_settings()
+    actual_website_url = website_url or settings['website_url']
+    actual_website_name = settings['website_name']
+    actual_language = settings['website_language']
+    
     schema = {
         "@context": "https://schema.org",
         "@type": "WebPage",
         "name": page_name,
         "description": meta_description or f"Welcome to {page_name}",
-        "url": f"https://lilycms.com/{page_identifier}",
-        "inLanguage": "id"
+        "url": f"{actual_website_url}/{page_identifier}",
+        "inLanguage": actual_language
     }
     
-    # Add organization info
+    # Add organization info with actual brand data
+    brand_name = brand_info.brand_name if brand_info else actual_website_name
     schema["publisher"] = {
         "@type": "Organization",
-        "name": "LilyOpenCMS",
-        "url": "https://lilycms.com"
+        "name": brand_name,
+        "url": actual_website_url
     }
+    
+    # Add logo if available
+    if brand_info and brand_info.logo_header:
+        schema["publisher"]["logo"] = {
+            "@type": "ImageObject",
+            "url": f"{actual_website_url}{brand_info.logo_header}"
+        }
+    elif settings['organization_logo']:
+        schema["publisher"]["logo"] = {
+            "@type": "ImageObject",
+            "url": settings['organization_logo']
+        }
     
     # Add breadcrumb for nested pages
     if page_identifier != "home":
@@ -46,13 +95,13 @@ def generate_schema_markup(page_identifier, page_name, meta_description=None):
                     "@type": "ListItem",
                     "position": 1,
                     "name": "Home",
-                    "item": "https://lilycms.com"
+                    "item": actual_website_url
                 },
                 {
                     "@type": "ListItem",
                     "position": 2,
                     "name": page_name,
-                    "item": f"https://lilycms.com/{page_identifier}"
+                    "item": f"{actual_website_url}/{page_identifier}"
                 }
             ]
         }
@@ -83,46 +132,91 @@ def calculate_seo_score(root_seo):
     
     return int((score / total_fields) * 100)
 
-def generate_meta_title(page_identifier, page_name):
+def generate_meta_title(page_identifier, page_name, brand_info=None, settings=None):
     """Generate meta title for the page."""
-    base_title = "LilyOpenCMS"
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    brand_name = brand_info.brand_name if brand_info else seo_settings['website_name']
     
+    # Check if we have custom settings for this page
+    if settings:
+        if page_identifier == "home" and settings.get("home_meta_title"):
+            return settings["home_meta_title"].replace("{brand_name}", brand_name)
+        elif page_identifier == "about" and settings.get("about_meta_title"):
+            return settings["about_meta_title"].replace("{brand_name}", brand_name)
+        elif page_identifier == "news" and settings.get("news_meta_title"):
+            return settings["news_meta_title"].replace("{brand_name}", brand_name)
+        elif page_identifier == "albums" and settings.get("albums_meta_title"):
+            return settings["albums_meta_title"].replace("{brand_name}", brand_name)
+    
+    # Default templates
     if page_identifier == "home":
-        return f"{base_title} - Modern Content Management System"
+        return f"{brand_name} - Modern Content Management System"
     elif page_identifier == "about":
-        return f"About Us - {base_title}"
+        return f"About Us - {brand_name}"
     elif page_identifier == "news":
-        return f"Latest News - {base_title}"
+        return f"Latest News - {brand_name}"
     elif page_identifier == "albums":
-        return f"Albums & Stories - {base_title}"
+        return f"Albums & Stories - {brand_name}"
     elif page_identifier == "videos":
-        return f"Videos - {base_title}"
+        return f"Videos - {brand_name}"
     elif page_identifier == "gallery":
-        return f"Image Gallery - {base_title}"
+        return f"Image Gallery - {brand_name}"
     elif page_identifier == "contact":
-        return f"Contact Us - {base_title}"
+        return f"Contact Us - {brand_name}"
     else:
-        return f"{page_name} - {base_title}"
+        return f"{page_name} - {brand_name}"
 
-def generate_meta_description(page_identifier, page_name):
+def generate_meta_description(page_identifier, page_name, brand_info=None, settings=None):
     """Generate meta description for the page."""
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    brand_name = brand_info.brand_name if brand_info else seo_settings['website_name']
+    tagline = brand_info.tagline if brand_info else "Modern content management for the digital age"
+    
+    # Check if we have custom settings for this page
+    if settings:
+        if page_identifier == "home" and settings.get("home_meta_description"):
+            return settings["home_meta_description"].replace("{brand_name}", brand_name).replace("{tagline}", tagline)
+        elif page_identifier == "about" and settings.get("about_meta_description"):
+            return settings["about_meta_description"].replace("{brand_name}", brand_name).replace("{tagline}", tagline)
+        elif page_identifier == "news" and settings.get("news_meta_description"):
+            return settings["news_meta_description"].replace("{brand_name}", brand_name).replace("{tagline}", tagline)
+        elif page_identifier == "albums" and settings.get("albums_meta_description"):
+            return settings["albums_meta_description"].replace("{brand_name}", brand_name).replace("{tagline}", tagline)
+    
+    # Default descriptions
     descriptions = {
-        "home": "LilyOpenCMS is a modern content management system for news, stories, and digital content. Discover our platform for managing articles, albums, and multimedia content.",
-        "about": "Learn about LilyOpenCMS, our mission, team, and commitment to providing modern content management solutions for digital publishers and content creators.",
+        "home": f"{brand_name} is a modern content management system for news, stories, and digital content. {tagline}",
+        "about": f"Learn about {brand_name}, our mission, team, and commitment to providing modern content management solutions for digital publishers and content creators.",
         "news": "Stay updated with the latest news, articles, and current events. Browse our comprehensive collection of news content and stay informed.",
         "albums": "Explore our collection of albums, stories, and serialized content. Discover novels, comics, and creative works from talented authors.",
         "videos": "Watch our curated collection of videos, tutorials, and multimedia content. Discover engaging video content across various topics.",
         "gallery": "Browse our image gallery featuring photos, artwork, and visual content. Discover stunning visuals and creative imagery.",
-        "contact": "Get in touch with the LilyOpenCMS team. Find our contact information, support details, and ways to reach us.",
+        "contact": f"Get in touch with the {brand_name} team. Find our contact information, support details, and ways to reach us.",
         "search": "Search through our comprehensive content library. Find articles, albums, videos, and more with our powerful search functionality.",
-        "login": "Access your LilyOpenCMS account. Login to manage content, view analytics, and access administrative features.",
-        "register": "Join LilyOpenCMS and start creating content. Register for an account to begin publishing and managing your digital content."
+        "login": f"Access your {brand_name} account. Login to manage content, view analytics, and access administrative features.",
+        "register": f"Join {brand_name} and start creating content. Register for an account to begin publishing and managing your digital content."
     }
     
-    return descriptions.get(page_identifier, f"Explore {page_name} on LilyOpenCMS - your modern content management platform.")
+    return descriptions.get(page_identifier, f"Explore {page_name} on {brand_name} - your modern content management platform.")
 
-def generate_meta_keywords(page_identifier, page_name):
+def generate_meta_keywords(page_identifier, page_name, brand_info=None, settings=None):
     """Generate meta keywords for the page."""
+    brand_name = brand_info.brand_name if brand_info else "LilyOpenCMS"
+    
+    # Check if we have custom settings for this page
+    if settings:
+        if page_identifier == "home" and settings.get("home_meta_keywords"):
+            return settings["home_meta_keywords"].replace("{brand_name}", brand_name.lower())
+        elif page_identifier == "about" and settings.get("about_meta_keywords"):
+            return settings["about_meta_keywords"].replace("{brand_name}", brand_name.lower())
+        elif page_identifier == "news" and settings.get("news_meta_keywords"):
+            return settings["news_meta_keywords"].replace("{brand_name}", brand_name.lower())
+        elif page_identifier == "albums" and settings.get("albums_meta_keywords"):
+            return settings["albums_meta_keywords"].replace("{brand_name}", brand_name.lower())
+    
+    # Default keyword sets
     keyword_sets = {
         "home": "content management, CMS, digital publishing, news, articles, stories, multimedia",
         "about": "about us, team, mission, company, organization, digital content",
@@ -136,19 +230,31 @@ def generate_meta_keywords(page_identifier, page_name):
         "register": "register, sign up, create account, join, membership"
     }
     
-    return keyword_sets.get(page_identifier, f"{page_name.lower()}, content, digital, lilycms")
+    return keyword_sets.get(page_identifier, f"{page_name.lower()}, content, digital, {brand_name.lower()}")
 
-def generate_open_graph_data(page_identifier, page_name, meta_description):
+def generate_open_graph_data(page_identifier, page_name, meta_description, brand_info=None, settings=None, website_url=None):
     """Generate Open Graph data for the page."""
-    og_title = f"{page_name} - LilyOpenCMS"
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    actual_website_url = website_url or seo_settings['website_url']
+    brand_name = brand_info.brand_name if brand_info else seo_settings['website_name']
+    
+    og_title = f"{page_name} - {brand_name}"
     
     if page_identifier == "home":
-        og_title = "LilyOpenCMS - Modern Content Management System"
+        og_title = f"{brand_name} - Modern Content Management System"
     
-    og_description = meta_description or generate_meta_description(page_identifier, page_name)
+    og_description = meta_description or generate_meta_description(page_identifier, page_name, brand_info, settings)
     
-    # Default OG image - can be customized per page
-    og_image = "https://lilycms.com/static/pic/logo.png"
+    # Get OG image from settings or brand info
+    og_image = f"{actual_website_url}/static/pic/logo.png"  # Default
+    
+    if settings and settings.get("default_og_image"):
+        og_image = settings["default_og_image"]
+    elif brand_info and brand_info.logo_header:
+        og_image = f"{actual_website_url}{brand_info.logo_header}"
+    elif seo_settings['organization_logo']:
+        og_image = seo_settings['organization_logo']
     
     return og_title, og_description, og_image
 
@@ -172,6 +278,48 @@ def get_default_pages():
         {"identifier": "robots", "name": "Robots", "description": "Robots.txt page"}
     ]
 
+def load_root_seo_settings():
+    """Load root SEO settings from brand identity."""
+    try:
+        brand_info = BrandIdentity.query.first()
+        settings = {}
+        
+        if brand_info and brand_info.seo_settings:
+            # Load settings from the dedicated seo_settings field
+            if isinstance(brand_info.seo_settings, dict):
+                settings = brand_info.seo_settings
+            else:
+                # Handle case where it might be stored as JSON string
+                try:
+                    settings = json.loads(brand_info.seo_settings) if isinstance(brand_info.seo_settings, str) else {}
+                except:
+                    settings = {}
+        
+        return settings
+    except Exception as e:
+        print(f"Warning: Could not load root SEO settings: {e}")
+        return {}
+
+def get_website_url(brand_info=None, settings=None):
+    """Get website URL from brand info, settings, or use default."""
+    # Get actual settings from database
+    seo_settings = get_seo_injection_settings()
+    
+    # First check settings
+    if settings and settings.get("website_url"):
+        return settings["website_url"]
+    
+    # Then check brand info website_url field
+    if brand_info and brand_info.website_url:
+        return brand_info.website_url
+    
+    # Use SEO injection settings
+    if seo_settings['website_url']:
+        return seo_settings['website_url']
+    
+    # Default fallback
+    return "https://lilycms.com"
+
 def inject_root_seo():
     """Inject root SEO data for website pages."""
     print("🎯 LilyOpenCMS Root SEO Injector")
@@ -182,14 +330,23 @@ def inject_root_seo():
         brand_info = BrandIdentity.query.first()
         brand_name = brand_info.brand_name if brand_info else "LilyOpenCMS"
         
+        # Load root SEO settings
+        settings = load_root_seo_settings()
+        website_url = get_website_url(brand_info, settings)
+        
+        print(f"🏷️ Brand: {brand_name}")
+        print(f"🌐 Website: {website_url}")
+        if settings:
+            print(f"⚙️ Using custom SEO settings")
+        else:
+            print(f"⚙️ Using default SEO settings")
+        
         # Get default pages
         default_pages = get_default_pages()
         print(f"📄 Found {len(default_pages)} default pages to process")
         
         # Track statistics
         created_count = 0
-        updated_count = 0
-        skipped_count = 0
         error_count = 0
         
         print(f"\n🔍 Processing root SEO data...")
@@ -205,70 +362,112 @@ def inject_root_seo():
                 existing_seo = RootSEO.query.filter_by(page_identifier=page_identifier).first()
                 
                 if existing_seo:
-                    print(f"   ⏭️ Skipping - already exists")
-                    skipped_count += 1
-                    continue
+                    print(f"   🔄 Updating existing SEO data...")
+                    # Update existing record instead of skipping
+                    update_existing = True
+                else:
+                    update_existing = False
                 
                 # Generate SEO data
                 print(f"   🔧 Generating SEO data...")
                 
                 # Generate meta title
-                meta_title = generate_meta_title(page_identifier, page_name)
+                meta_title = generate_meta_title(page_identifier, page_name, brand_info, settings)
                 
                 # Generate meta description
-                meta_description = generate_meta_description(page_identifier, page_name)
+                meta_description = generate_meta_description(page_identifier, page_name, brand_info, settings)
                 
                 # Generate meta keywords
-                meta_keywords = generate_meta_keywords(page_identifier, page_name)
+                meta_keywords = generate_meta_keywords(page_identifier, page_name, brand_info, settings)
                 
                 # Generate Open Graph data
-                og_title, og_description, og_image = generate_open_graph_data(page_identifier, page_name, meta_description)
+                og_title, og_description, og_image = generate_open_graph_data(page_identifier, page_name, meta_description, brand_info, settings, website_url)
                 
                 # Generate canonical URL
-                canonical_url = f"https://lilycms.com/{page_identifier}"
+                canonical_url = f"{website_url}/{page_identifier}"
                 
                 # Generate schema markup
-                schema_markup = generate_schema_markup(page_identifier, page_name, meta_description)
+                schema_markup = generate_schema_markup(page_identifier, page_name, meta_description, brand_info, website_url)
                 
-                # Create new root SEO entry
-                root_seo = RootSEO(
-                    page_identifier=page_identifier,
-                    page_name=page_name,
-                    is_active=True,
-                    meta_title=meta_title,
-                    meta_description=meta_description,
-                    meta_keywords=meta_keywords,
-                    og_title=og_title,
-                    og_description=og_description,
-                    og_image=og_image,
-                    og_type="website",
-                    twitter_card="summary_large_image",
-                    twitter_title=og_title,
-                    twitter_description=og_description,
-                    twitter_image=og_image,
-                    canonical_url=canonical_url,
-                    meta_author=brand_name,
-                    meta_language="id",
-                    meta_robots="index, follow",
-                    structured_data_type="WebPage",
-                    schema_markup=schema_markup,
-                    google_analytics_id=None,  # Can be set later
-                    facebook_pixel_id=None,    # Can be set later
-                    created_by=1,  # Default to first admin user
-                    updated_by=1   # Default to first admin user
-                )
+                # Get default values from settings
+                og_type = settings.get("default_og_type", "website") if settings else "website"
+                twitter_card = settings.get("default_twitter_card", "summary_large_image") if settings else "summary_large_image"
+                twitter_image = settings.get("default_twitter_image", og_image) if settings else og_image
+                meta_language = settings.get("default_language", "id") if settings else "id"
+                meta_robots = settings.get("default_meta_robots", "index, follow") if settings else "index, follow"
                 
-                # Calculate SEO score
-                root_seo.seo_score = calculate_seo_score(root_seo)
-                root_seo.last_seo_audit = datetime.now(timezone.utc)
-                
-                # Save to database
-                db.session.add(root_seo)
-                db.session.commit()
-                
-                print(f"   ✅ Created SEO data for {page_name}")
-                print(f"   📊 SEO Score: {root_seo.seo_score}/100")
-                created_count += 1
+                if update_existing:
+                    # Update existing record
+                    existing_seo.meta_title = meta_title
+                    existing_seo.meta_description = meta_description
+                    existing_seo.meta_keywords = meta_keywords
+                    existing_seo.og_title = og_title
+                    existing_seo.og_description = og_description
+                    existing_seo.og_image = og_image
+                    existing_seo.og_type = og_type
+                    existing_seo.twitter_card = twitter_card
+                    existing_seo.twitter_title = og_title
+                    existing_seo.twitter_description = og_description
+                    existing_seo.twitter_image = twitter_image
+                    existing_seo.canonical_url = canonical_url
+                    existing_seo.meta_author = brand_name
+                    existing_seo.meta_language = meta_language
+                    existing_seo.meta_robots = meta_robots
+                    existing_seo.structured_data_type = "WebPage"
+                    existing_seo.schema_markup = schema_markup
+                    existing_seo.updated_by = 1
+                    existing_seo.updated_at = datetime.now(timezone.utc)
+                    
+                    # Calculate SEO score
+                    existing_seo.seo_score = calculate_seo_score(existing_seo)
+                    existing_seo.last_seo_audit = datetime.now(timezone.utc)
+                    
+                    # Save to database
+                    db.session.commit()
+                    
+                    print(f"   ✅ Updated SEO data for {page_name}")
+                    print(f"   📊 SEO Score: {existing_seo.seo_score}/100")
+                    created_count += 1
+                else:
+                    # Create new root SEO entry
+                    root_seo = RootSEO(
+                        page_identifier=page_identifier,
+                        page_name=page_name,
+                        is_active=True,
+                        meta_title=meta_title,
+                        meta_description=meta_description,
+                        meta_keywords=meta_keywords,
+                        og_title=og_title,
+                        og_description=og_description,
+                        og_image=og_image,
+                        og_type=og_type,
+                        twitter_card=twitter_card,
+                        twitter_title=og_title,
+                        twitter_description=og_description,
+                        twitter_image=twitter_image,
+                        canonical_url=canonical_url,
+                        meta_author=brand_name,
+                        meta_language=meta_language,
+                        meta_robots=meta_robots,
+                        structured_data_type="WebPage",
+                        schema_markup=schema_markup,
+                        google_analytics_id=None,  # Can be set later
+                        facebook_pixel_id=None,    # Can be set later
+                        created_by=1,  # Default to first admin user
+                        updated_by=1   # Default to first admin user
+                    )
+                    
+                    # Calculate SEO score
+                    root_seo.seo_score = calculate_seo_score(root_seo)
+                    root_seo.last_seo_audit = datetime.now(timezone.utc)
+                    
+                    # Save to database
+                    db.session.add(root_seo)
+                    db.session.commit()
+                    
+                    print(f"   ✅ Created SEO data for {page_name}")
+                    print(f"   📊 SEO Score: {root_seo.seo_score}/100")
+                    created_count += 1
                 
             except Exception as e:
                 print(f"   ❌ Error processing {page_name}: {e}")
@@ -279,17 +478,14 @@ def inject_root_seo():
         print("\n" + "=" * 50)
         print("📊 ROOT SEO INJECTION SUMMARY")
         print("=" * 50)
-        print(f"✅ Successfully created: {created_count} pages")
-        print(f"⏭️ Skipped (already exists): {skipped_count} pages")
+        print(f"✅ Successfully processed: {created_count} pages")
         print(f"❌ Errors: {error_count} pages")
         print(f"📄 Total pages processed: {len(default_pages)}")
         
         if created_count > 0:
-            print(f"\n🎉 Successfully created root SEO data for {created_count} pages!")
-        elif skipped_count > 0:
-            print(f"\nℹ️ All pages already have root SEO data ({skipped_count} pages)")
+            print(f"\n🎉 Successfully processed root SEO data for {created_count} pages!")
         else:
-            print(f"\n⚠️ No pages were created due to errors")
+            print(f"\n⚠️ No pages were processed due to errors")
 
 def show_root_seo_stats():
     """Show statistics about root SEO data."""
@@ -339,6 +535,14 @@ def update_existing_seo():
     print("=" * 50)
     
     with app.app_context():
+        # Get brand identity and settings
+        brand_info = BrandIdentity.query.first()
+        settings = load_root_seo_settings()
+        website_url = get_website_url(brand_info, settings)
+        
+        print(f"🏷️ Brand: {brand_info.brand_name if brand_info else 'LilyOpenCMS'}")
+        print(f"🌐 Website: {website_url}")
+        
         # Get all existing root SEO entries
         existing_seo = RootSEO.query.all()
         print(f"📄 Found {len(existing_seo)} existing root SEO entries")
@@ -362,50 +566,52 @@ def update_existing_seo():
                 
                 # Update missing fields
                 if not root_seo.meta_title:
-                    root_seo.meta_title = generate_meta_title(root_seo.page_identifier, root_seo.page_name)
+                    root_seo.meta_title = generate_meta_title(root_seo.page_identifier, root_seo.page_name, brand_info, settings)
                     print(f"   ✅ Added meta title")
                     updated = True
                 
                 if not root_seo.meta_description:
-                    root_seo.meta_description = generate_meta_description(root_seo.page_identifier, root_seo.page_name)
+                    root_seo.meta_description = generate_meta_description(root_seo.page_identifier, root_seo.page_name, brand_info, settings)
                     print(f"   ✅ Added meta description")
                     updated = True
                 
                 if not root_seo.meta_keywords:
-                    root_seo.meta_keywords = generate_meta_keywords(root_seo.page_identifier, root_seo.page_name)
+                    root_seo.meta_keywords = generate_meta_keywords(root_seo.page_identifier, root_seo.page_name, brand_info, settings)
                     print(f"   ✅ Added meta keywords")
                     updated = True
                 
                 if not root_seo.og_title:
-                    root_seo.og_title = generate_open_graph_data(root_seo.page_identifier, root_seo.page_name, root_seo.meta_description)[0]
+                    og_title, _, _ = generate_open_graph_data(root_seo.page_identifier, root_seo.page_name, root_seo.meta_description, brand_info, settings, website_url)
+                    root_seo.og_title = og_title
                     print(f"   ✅ Added OG title")
                     updated = True
                 
                 if not root_seo.og_description:
-                    root_seo.og_description = generate_open_graph_data(root_seo.page_identifier, root_seo.page_name, root_seo.meta_description)[1]
+                    _, og_description, _ = generate_open_graph_data(root_seo.page_identifier, root_seo.page_name, root_seo.meta_description, brand_info, settings, website_url)
+                    root_seo.og_description = og_description
                     print(f"   ✅ Added OG description")
                     updated = True
                 
                 if not root_seo.schema_markup:
-                    root_seo.schema_markup = generate_schema_markup(root_seo.page_identifier, root_seo.page_name, root_seo.meta_description)
+                    root_seo.schema_markup = generate_schema_markup(root_seo.page_identifier, root_seo.page_name, root_seo.meta_description, brand_info, website_url)
                     print(f"   ✅ Added schema markup")
                     updated = True
                 
                 # Set default values if missing
                 if not root_seo.meta_language:
-                    root_seo.meta_language = "id"
+                    root_seo.meta_language = settings.get("default_language", "id") if settings else "id"
                     updated = True
                 
                 if not root_seo.meta_robots:
-                    root_seo.meta_robots = "index, follow"
+                    root_seo.meta_robots = settings.get("default_meta_robots", "index, follow") if settings else "index, follow"
                     updated = True
                 
                 if not root_seo.twitter_card:
-                    root_seo.twitter_card = "summary_large_image"
+                    root_seo.twitter_card = settings.get("default_twitter_card", "summary_large_image") if settings else "summary_large_image"
                     updated = True
                 
                 if not root_seo.og_type:
-                    root_seo.og_type = "website"
+                    root_seo.og_type = settings.get("default_og_type", "website") if settings else "website"
                     updated = True
                 
                 # Recalculate SEO score

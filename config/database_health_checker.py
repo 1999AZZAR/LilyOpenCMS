@@ -407,12 +407,17 @@ class DatabaseHealthChecker:
             with self.engine.connect() as conn:
                 # Get table sizes
                 if self.database_url.startswith('sqlite'):
-                    query = text("""
-                        SELECT name, sql FROM sqlite_master 
-                        WHERE type='table' AND name IN (
-                            'user', 'news', 'album', 'comment', 'rating', 'image'
-                        )
-                    """)
+                    # For SQLite, get row counts for each table
+                    performance_data = {}
+                    tables = ['user', 'news', 'album', 'comment', 'rating', 'image']
+                    
+                    for table in tables:
+                        try:
+                            count_query = text(f"SELECT COUNT(*) FROM {table}")
+                            count_result = conn.execute(count_query).scalar()
+                            performance_data[table] = count_result
+                        except Exception as e:
+                            performance_data[table] = f"Error: {str(e)}"
                 else:
                     # For PostgreSQL/MySQL, get actual row counts
                     query = text("""
@@ -428,18 +433,18 @@ class DatabaseHealthChecker:
                         UNION ALL
                         SELECT 'image', COUNT(*) FROM image
                     """)
-                
-                result = conn.execute(query).fetchall()
-                
-                performance_data = {}
-                for row in result:
-                    if hasattr(row, '_mapping'):
-                        table_name = row._mapping['table_name']
-                        count = row._mapping['count']
-                    else:
-                        table_name = row[0]
-                        count = row[1]
-                    performance_data[table_name] = count
+                    
+                    result = conn.execute(query).fetchall()
+                    
+                    performance_data = {}
+                    for row in result:
+                        if hasattr(row, '_mapping'):
+                            table_name = row._mapping['table_name']
+                            count = row._mapping['count']
+                        else:
+                            table_name = row[0]
+                            count = row[1]
+                        performance_data[table_name] = count
                 
                 result = CheckResult(
                     name="Database Performance",

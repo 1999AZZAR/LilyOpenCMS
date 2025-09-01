@@ -2,6 +2,66 @@ from routes import main_blueprint
 from .common_imports import *
 from routes.routes_public import safe_title
 
+def calculate_days_old(date):
+    """Calculate days old with proper timezone handling."""
+    if date:
+        # Ensure both dates are timezone-aware
+        if date.tzinfo is None:
+            date = date.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - date).days
+    return 365
+
+def update_robots_txt():
+    """Update robots.txt with correct website URL from SEO settings."""
+    try:
+        from sqlalchemy import text
+        result = db.session.execute(text('SELECT website_url FROM seo_injection_settings LIMIT 1'))
+        row = result.fetchone()
+        website_url = row[0] if row and row[0] else "https://hystory.id"
+        
+        # Remove trailing slash if present
+        website_url = website_url.rstrip('/')
+        
+        robots_content = f"""User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /settings/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /logout
+
+# Allow important public content
+Allow: /news/
+Allow: /videos/
+Allow: /gallery/
+Allow: /about/
+Allow: /utama/
+Allow: /hypes/
+Allow: /premium/
+
+# Crawl delay (optional - be respectful to server)
+Crawl-delay: 1
+
+# Sitemap locations
+Sitemap: {website_url}/sitemap.xml
+Sitemap: {website_url}/sitemap-news.xml
+Sitemap: {website_url}/sitemap-index.xml
+"""
+        
+        # Write to robots.txt
+        with open('robots.txt', 'w', encoding='utf-8') as f:
+            f.write(robots_content)
+        
+        current_app.logger.info(f"Updated robots.txt with website URL: {website_url}")
+        return True
+        
+    except Exception as e:
+        current_app.logger.error(f"Failed to update robots.txt: {e}")
+        return False
+
 def sanitize_filename(filename):
     """Replaces spaces and invalid characters with underscores."""
     # Replace spaces with underscores first
@@ -144,8 +204,8 @@ def tools_docx_upload():
         flash("Akun Anda harus diverifikasi untuk mengakses tools ini.", "error")
         return redirect(url_for("main.admin_dashboard"))
     
-    # Get categories for the form
-    categories = Category.query.order_by(Category.name).all()
+    # Get categories for the form (grouped)
+    category_groups = CategoryGroup.query.filter_by(is_active=True).order_by(CategoryGroup.display_order, CategoryGroup.name).all()
     
     # Get today's date for default value
     from datetime import date
@@ -153,7 +213,7 @@ def tools_docx_upload():
     
     return render_template(
                     "admin/tools/docx_uploader/index.html",
-        categories=categories,
+        category_groups=category_groups,
         today=today,
         title="Upload DOCX ke News"
     )
@@ -333,7 +393,7 @@ def generate_news_sitemap():
                 elif is_premium:
                     changefreq = "weekly"
                 else:
-                    days_old = (datetime.now(timezone.utc) - date).days if date else 365
+                    days_old = calculate_days_old(date)
                     if days_old < 7:
                         changefreq = "daily"
                     elif days_old < 30:
@@ -543,6 +603,8 @@ def sitemap_index():
 def sitemap():
     """Generates a comprehensive sitemap.xml dynamically with SEO optimization."""
     try:
+        # Update robots.txt with correct website URL
+        update_robots_txt()
         # Create the root <urlset> element with namespace
         urlset = ET.Element(
             "urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -620,7 +682,7 @@ def sitemap():
                     changefreq = "weekly"
                 else:
                     # Determine based on how recent the content is
-                    days_old = (datetime.now(timezone.utc) - date).days if date else 365
+                    days_old = calculate_days_old(date)
                     if days_old < 7:
                         changefreq = "daily"
                     elif days_old < 30:
@@ -700,7 +762,7 @@ def sitemap():
             db.session.query(
                 AlbumChapter.id,
                 AlbumChapter.album_id,
-                AlbumChapter.title,
+                AlbumChapter.chapter_title,
                 AlbumChapter.updated_at,
                 Album.title.label('album_title'),
                 Album.is_visible,

@@ -4,30 +4,36 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 
 ---
 
-## News
+## News (Cerita & Bab)
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| GET    | `/api/news`                              | Yes  | List news articles (with filters)           |
-| POST   | `/api/news`                              | Yes  | Create a new article (accepts: title, content, category, date, age_rating, is_news, is_main_news, is_premium, is_visible, writer, external_source, image_id; optional `album_id` for chapter context). Note: default visibility is hidden (is_visible=false) unless explicitly published. |
-| GET    | `/api/news/<news_id>`                    | Yes  | Get article details                         |
-| PUT    | `/api/news/<news_id>`                    | Yes  | Update article (same fields as POST)       |
-| DELETE | `/api/news/<news_id>`                    | Yes  | Delete article                              |
-| PATCH  | `/api/news/<news_id>/visibility`         | Yes  | Toggle article visibility                   |
-| GET    | `/api/news/owned`                        | Yes  | List news owned by current user             |
-| POST   | `/api/news/<news_id>/track-share`        | No   | Track a share action for a news article     |
-| GET    | `/api/news/<news_id>/share-data`         | No   | Get share counts for a news article         |
+| GET    | `/api/news`                              | Yes  | List news articles/stories (with filters)   |
+| POST   | `/api/news`                              | Yes  | Create a new story/chapter (accepts: title, content, category, date, age_rating, is_news, is_main_news, is_premium, is_visible, writer, external_source, image_id, prize, prize_coin_type; optional `album_id` for chapter context). Note: default visibility is hidden (is_visible=false) unless explicitly published. |
+| GET    | `/api/news/<news_id>`                    | Yes  | Get story/chapter details                   |
+| PUT    | `/api/news/<news_id>`                    | Yes  | Update story/chapter (same fields as POST)  |
+| DELETE | `/api/news/<news_id>`                    | Yes  | Delete story/chapter (admin-tier users only) |
+| POST   | `/api/news/<news_id>/request-deletion`   | Yes  | Request story/chapter deletion (non-admin users) |
+| GET    | `/api/news/deletion-requests`            | Yes  | Get story/chapter deletion requests (admin only) |
+| POST   | `/api/news/<news_id>/approve-deletion`   | Yes  | Approve story/chapter deletion request (admin only) |
+| POST   | `/api/news/<news_id>/reject-deletion`    | Yes  | Reject story/chapter deletion request (admin only) |
+| PATCH  | `/api/news/<news_id>/visibility`         | Yes  | Toggle story/chapter visibility             |
+| GET    | `/api/news/owned`                        | Yes  | List stories/chapters owned by current user |
+| POST   | `/api/news/<news_id>/track-share`        | No   | Track a share action for a story/chapter    |
+| GET    | `/api/news/<news_id>/share-data`         | No   | Get share counts for a story/chapter        |
 | GET    | `/api/search/news`                       | No   | Unified news search API (supports: q, category, category_name, tag, sort, type, page, per_page) - type options: general, news, articles, utama - sort options: newest, oldest, popular, least-popular |
-| POST   | `/api/news/upload-docx`                  | Yes  | Upload DOCX file and convert to news article (accepts: file, title, category, date, age_rating, writer, external_source) |
+| POST   | `/api/news/upload-docx`                  | Yes  | Upload DOCX file and convert to story/chapter (accepts: file, title, category, date, age_rating, writer, external_source, prize, prize_coin_type) |
 
 > Admin Create/Edit Flow: Use `/settings/create_news` with optional `news_id` to edit. If `album_id` is present, successful create/edit redirects back to `/admin/albums/<album_id>/chapters`; otherwise redirects to `/settings/manage_news`. In edit mode, saving keeps the current visibility unless explicitly changed (e.g., Publish action).
 
-## Premium Content
+## Premium Content & Coin System
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
 | GET    | `/api/premium/check-access`              | Yes  | Check user's premium access status          |
 | GET    | `/api/premium/content-stats`             | No   | Get premium content statistics              |
 | POST   | `/api/premium/process-content`           | No   | Process content for premium filtering       |
 | GET    | `/api/premium/user-status`               | Yes  | Get current user's premium status           |
+| POST   | `/api/news/<news_id>/purchase`           | Yes  | Purchase access to premium story content with coins |
+| GET    | `/api/user/coins`                        | Yes  | Get user's coin balance and premium status  |
 
 ## Albums
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -36,7 +42,11 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/albums`                            | Yes  | Create a new album                          |
 | GET    | `/api/albums/<album_id>`                 | Yes  | Get album details                           |
 | PUT    | `/api/albums/<album_id>`                 | Yes  | Update album                                |
-| DELETE | `/api/albums/<album_id>`                 | Yes  | Delete album                                |
+| DELETE | `/api/albums/<album_id>`                 | Yes  | Delete album (admin-tier users only)       |
+| POST   | `/admin/albums/<album_id>/request-deletion` | Yes | Request album deletion (non-admin users)   |
+| GET    | `/admin/albums/deletion-requests`        | Yes  | Get album deletion requests (admin only)   |
+| POST   | `/admin/albums/<album_id>/approve-deletion` | Yes | Approve album deletion request (admin only) |
+| POST   | `/admin/albums/<album_id>/reject-deletion` | Yes | Reject album deletion request (admin only) |
 | PATCH  | `/api/albums/<album_id>/visibility`      | Yes  | Toggle album visibility                     |
 | PATCH  | `/api/albums/<album_id>/archive`         | Yes  | Archive album                               |
 | PATCH  | `/api/albums/<album_id>/unarchive`       | Yes  | Unarchive album                             |
@@ -68,11 +78,12 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST    | `/admin/albums/<album_id>/chapters/<chapter_id>/remove`      | Yes  | Remove chapter (JSON) - **FIXED: Updates album total_chapters count** |
 | POST    | `/admin/albums/<album_id>/chapters/<chapter_id>/move`        | Yes  | Move chapter up/down in order (JSON) |
 | POST    | `/admin/albums/<album_id>/chapters/<chapter_id>/toggle-visibility` | Yes  | Toggle chapter visibility (JSON) |
-| GET     | `/admin/albums/api/search-news`                              | Yes  | Search owned news to add as chapters (JSON) - **UPDATED: Shows all owned articles regardless of visibility** |
+| GET     | `/admin/albums/api/search-news`                              | Yes  | Search owned stories to add as chapters (JSON) - **UPDATED: Shows all owned stories regardless of visibility** |
 | GET     | `/admin/albums/api/album-stats/<album_id>`                   | Yes  | Get album statistics (JSON) |
 | GET     | `/admin/albums/<album_id>/data`                              | Yes  | Get album data for edit modal (JSON) |
 | GET     | `/admin/albums/<album_id>/chapters/data`                     | Yes  | Get chapters data for modal (JSON) |
 | GET     | `/admin/albums/analytics`                                    | Yes  | Albums analytics dashboard |
+| GET     | `/settings/content-deletion-requests`                       | Yes  | Content deletion requests management page |
 
 ## Comments
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -125,6 +136,9 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/api/settings/verified-users`           | Yes  | List verified users                         |
 | POST   | `/api/users/<user_id>/suspend`           | Yes  | Suspend user                                |
 | POST   | `/api/users/<user_id>/unsuspend`         | Yes  | Unsuspend user                              |
+| GET    | `/api/users/deletion-requests`           | Yes  | Get pending account deletion requests (admin only) |
+| POST   | `/api/users/<user_id>/approve-deletion`  | Yes  | Approve account deletion request (admin only) |
+| POST   | `/api/users/<user_id>/reject-deletion`   | Yes  | Reject account deletion request (admin only) |
 | GET    | `/api/users/<user_id>/activities`        | Yes  | Get user activities (fixed: proper serialization) |
 
 ## User Library & Reading History
@@ -134,6 +148,35 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/library`                           | Yes  | Add item to user's library                  |
 | DELETE | `/api/library`                           | Yes  | Remove item from user's library             |
 | GET    | `/api/reading-history`                   | Yes  | Get user's reading history                  |
+
+## Achievement System & Coin Management
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/achievements/categories`            | No   | List achievement categories                 |
+| GET    | `/api/achievements`                       | No   | List all achievements                       |
+| GET    | `/api/achievements/<achievement_id>`      | No   | Get achievement details                     |
+| GET    | `/api/user/achievements`                  | Yes  | Get current user's achievements             |
+| GET    | `/api/user/achievements/summary`          | Yes  | Get user's achievement summary (points, level, streaks) |
+| GET    | `/api/user/streaks`                       | Yes  | Get user's streak information               |
+| GET    | `/api/user/points`                        | Yes  | Get user's points and level information     |
+| GET    | `/api/user/points/transactions`           | Yes  | Get user's point transaction history        |
+| POST   | `/api/achievements/track/login`           | Yes  | Track user login for streak achievements    |
+| POST   | `/api/achievements/track/activity`        | Yes  | Track user activity for activity streaks    |
+| POST   | `/api/achievements/track/reading`         | Yes  | Track content reading for reading streaks   |
+| POST   | `/api/achievements/track/news-creation`   | Yes  | Track news article creation                 |
+| POST   | `/api/achievements/track/album-creation`  | Yes  | Track album creation                        |
+| POST   | `/api/achievements/track/image-upload`    | Yes  | Track image upload                          |
+| POST   | `/api/achievements/track/comment`         | Yes  | Track comment creation                      |
+| POST   | `/api/achievements/track/rating`          | Yes  | Track rating creation                       |
+| POST   | `/api/achievements/track/comment-like`    | Yes  | Track comment like/dislike                  |
+| GET    | `/api/achievements/leaderboard`           | No   | Get achievement leaderboard                 |
+| GET    | `/api/achievements/stats`                 | Yes  | Get achievement system statistics (admin)   |
+| GET    | `/api/user/coins`                         | Yes  | Get user's coin balance (achievement & topup coins) |
+| POST   | `/api/user/coins/add-achievement`         | Yes  | Add achievement coins to user balance       |
+| POST   | `/api/user/coins/add-topup`               | Yes  | Add topup coins to user balance             |
+| POST   | `/api/user/coins/spend`                   | Yes  | Spend coins for content purchase            |
+| GET    | `/api/user/coins/transactions`            | Yes  | Get user's coin transaction history         |
+| GET    | `/api/user/coins/can-afford`              | Yes  | Check if user can afford content with coins |
 
 ## Images
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -150,7 +193,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 
 > Image visibility & scoping rules:
 > - Default upload visibility: Uploads by custom roles Writer/Editor default to hidden; uploads by others default to visible (can be overridden via is_visible form value).
-> - Picker scoping: Superuser/Admin/Subadmin see all images; Editor sees own and assigned writers’ images; others see only their own images.
+> - Picker scoping: Superuser/Admin/Subadmin see all images; Editor sees own and assigned writers' images; others see only their own images.
 
 ## Videos (YouTube)
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -164,13 +207,18 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/youtube_videos/bulk-visibility`    | Yes  | Bulk update video visibility                |
 | GET    | `/api/youtube_videos/latest`             | Yes  | Get latest YouTube videos                   |
 
-## Categories
+## Categories & Category Groups
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| GET    | `/api/categories`                        | Yes  | List categories                             |
-| POST   | `/api/categories`                        | Yes  | Create a new category                       |
-| PUT    | `/api/categories/<category_id>`          | Yes  | Update category                             |
+| GET    | `/api/categories`                        | Yes  | List categories (supports `?grouped=true` for hierarchical view) |
+| POST   | `/api/categories`                        | Yes  | Create a new category (accepts: name, description, group_id, display_order) |
+| PUT    | `/api/categories/<category_id>`          | Yes  | Update category (accepts: name, description, group_id, display_order) |
 | DELETE | `/api/categories/<category_id>`          | Yes  | Delete category                             |
+| POST   | `/api/categories/<category_id>/safe-delete` | Yes | Safe delete category with dependency reassignment |
+| GET    | `/api/category-groups`                   | Yes  | List category groups                         |
+| POST   | `/api/category-groups`                   | Yes  | Create a new category group (accepts: name, description, display_order) |
+| PUT    | `/api/category-groups/<group_id>`        | Yes  | Update category group (accepts: name, description, display_order) |
+| DELETE | `/api/category-groups/<group_id>`        | Yes  | Delete category group                        |
 
 ## Tags
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -290,6 +338,21 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/brand-colors`                      | Yes  | Update brand colors                         |
 | GET    | `/api/brand-colors`                      | Yes  | Get brand colors                            |
 
+## SEO Analytics & Management
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/seo/stats/overview`                | Yes  | Get comprehensive SEO overview statistics   |
+| GET    | `/api/seo/stats/score-distribution`      | Yes  | Get SEO score distribution across content types |
+| GET    | `/api/seo/stats/content-performance`     | Yes  | Get content performance metrics by type     |
+| GET    | `/api/seo/stats/status-breakdown`        | Yes  | Get SEO status breakdown (complete/incomplete/missing) |
+| GET    | `/api/seo/activity/recent`               | Yes  | Get recent SEO activity and audit history   |
+| GET    | `/api/seo/recommendations`               | Yes  | Get SEO improvement recommendations         |
+| POST   | `/api/seo/chapters/<chapter_id>/inject`  | Yes  | Inject SEO data for individual chapter      |
+| POST   | `/api/seo/articles/<article_id>/inject`  | Yes  | Inject SEO data for individual article      |
+| POST   | `/api/seo/albums/<album_id>/inject`      | Yes  | Inject SEO data for individual album        |
+| GET    | `/api/root-seo-settings`                 | Yes  | Get root SEO settings from brand identity   |
+| POST   | `/api/root-seo-settings`                 | Yes  | Update root SEO settings in brand identity  |
+
 ## Comprehensive SEO Management
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
@@ -305,10 +368,18 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | PUT    | `/api/seo/chapters/<chapter_id>`         | Yes  | Update SEO data for a chapter               |
 | GET    | `/api/seo/root/<root_id>`                | Yes  | Get detailed SEO data for a root page       |
 | PUT    | `/api/seo/root/<root_id>`                | Yes  | Update SEO data for a root page             |
-| POST   | `/api/seo/root`                          | Yes  | Create new root page SEO entry              |
+| POST   | `/api/seo/root`                          | Yes  | Get detailed SEO data for a root page       |
 | POST   | `/api/seo/inject`                        | Yes  | Run SEO injection for specified content type (news, albums, chapters, root, all) |
 | GET    | `/api/seo/inject/status`                 | Yes  | Get SEO injection operation status and statistics |
 | GET    | `/api/seo/stats`                         | Yes  | Get comprehensive SEO statistics for all content types |
+| GET    | `/api/seo/global-settings`               | Yes  | Get global SEO settings and configuration   |
+| PUT    | `/api/seo/global-settings`               | Yes  | Update global SEO settings and configuration |
+| GET    | `/api/seo/analytics/overview`            | Yes  | Get SEO analytics overview and metrics      |
+| GET    | `/api/seo/analytics/score-distribution`  | Yes  | Get SEO score distribution across content types |
+| GET    | `/api/seo/analytics/content-performance` | Yes  | Get content performance metrics by type     |
+| GET    | `/api/seo/analytics/status-breakdown`    | Yes  | Get SEO status breakdown (complete/incomplete/missing) |
+| GET    | `/api/seo/analytics/recent-activity`     | Yes  | Get recent SEO activity and audit history   |
+| GET    | `/api/seo/analytics/recommendations`     | Yes  | Get SEO improvement recommendations         |
 
 ## Root SEO Management
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -330,6 +401,9 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/seo/inject/albums`                 | Yes  | Run SEO injection for albums only           |
 | POST   | `/api/seo/inject/chapters`               | Yes  | Run SEO injection for chapters only         |
 | POST   | `/api/seo/inject/root`                   | Yes  | Run SEO injection for root pages only       |
+| GET    | `/api/seo-injection-settings`            | Yes  | Get SEO injection settings and default values |
+| PUT    | `/api/seo-injection-settings`            | Yes  | Update SEO injection settings and default values |
+| POST   | `/api/seo-injection-settings`            | Yes  | Create new SEO injection settings            |
 
 ## Team Members
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -470,14 +544,18 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/account/settings`                      | Yes  | User account settings page (general users)  |
 | GET    | `/settings/users`                        | Yes  | User management page                        |
 | GET    | `/settings/analytics`                    | Yes  | Analytics dashboard                         |
-| GET    | `/settings/seo`                          | Yes  | SEO management page                         |
-| GET    | `/settings/comprehensive_seo_management` | Yes  | Comprehensive SEO management page (Articles, Albums, Root Pages) |
+| GET    | `/settings/seo`                          | Yes  | SEO management page (redirects to management) |
+| GET    | `/settings/seo/management`               | Yes  | Main SEO management page (Articles, Albums, Chapters, Root Pages) |
+| GET    | `/settings/seo/settings`                 | Yes  | SEO settings page (Root SEO settings, global settings) |
+| GET    | `/settings/seo/analytics`                | Yes  | SEO analytics dashboard (statistics, charts, recommendations) |
+| GET    | `/settings/comprehensive_seo_management` | Yes  | Legacy SEO management page (redirects to management) |
 | GET    | `/settings/root-seo`                     | Yes  | Root SEO management page                    |
+| GET    | `/admin/seo-management`                  | Yes  | Comprehensive SEO management page (Settings, Articles, Analytics tabs) |
 | GET    | `/settings/create_news`                  | Yes  | Create/Edit news page (optional `news_id`, optional `album_id` for chapter context) |
 | GET    | `/settings/manage_news`                  | Yes  | Manage news page                            |
 | GET    | `/settings/albums`                       | Yes  | Album management page                       |
 | GET    | `/settings/editor-writer`                | Yes  | Editor ↔ Writer management page             |
-| GET    | `/admin/tools/docx-upload`               | Yes  | DOCX upload tool page                       |
+| GET    | `/admin/tools/docx-upload`               | Yes  | DOCX upload tool page with quick link to news management |
 | GET    | `/admin/tools/docx-template`             | Yes  | Download DOCX template file                 |
 | GET    | `/admin/tools/docx-contoh`               | Yes  | Download example DOCX file                  |
 
@@ -522,6 +600,10 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 |--------|------------------------------------------|------|---------------------------------------------|
 | POST   | `/api/account/change-password`           | Yes  | Change user password                        |
 | DELETE | `/api/account/delete`                    | Yes  | Delete user account                         |
+| POST   | `/api/user/request-account-deletion`     | Yes  | Request account deletion (general users only) |
+| GET    | `/api/users/deletion-requests`           | Yes  | Get account deletion requests (admin only) |
+| POST   | `/api/users/<id>/approve-deletion`       | Yes  | Approve account deletion request (admin only) |
+| POST   | `/api/users/<id>/reject-deletion`        | Yes  | Reject account deletion request (admin only) |
 | GET    | `/api/account/stats`                     | Yes  | Get comprehensive account statistics (articles, albums, chapters, comments) |
 | GET    | `/api/account/albums`                    | Yes  | Get user's albums with pagination and filtering |
 | GET    | `/api/account/comments`                  | Yes  | Get user's recent comments                  |
@@ -550,17 +632,39 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 ## Sitemaps & Robots
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| GET    | `/sitemap.xml`                           | No   | Main sitemap (SEO)                          |
+| GET    | `/sitemap.xml`                           | No   | Main sitemap (SEO) - **UPDATED: Fixed datetime timezone issues and AlbumChapter.title field** |
 | GET    | `/sitemap-news.xml`                      | No   | News-specific sitemap (SEO)                 |
 | GET    | `/sitemap-albums.xml`                    | No   | Albums-specific sitemap (SEO)               |
 | GET    | `/sitemap-index.xml`                     | No   | Sitemap index (SEO)                         |
-| GET    | `/robots.txt`                            | No   | Robots.txt (SEO)                            |
+| GET    | `/robots.txt`                            | No   | Robots.txt (SEO) - **UPDATED: Auto-updated with correct website URL from SEO settings** |
 
 ---
 
 > **Note:** All endpoints are listed, including those for admin/settings, public pages, and all CRUD operations. For endpoints with multiple methods (e.g., GET/POST), both are shown. Bulk and utility endpoints are included for completeness. The new Albums section includes all album and chapter management endpoints.
 
 ### **Recent Backend Updates**
+
+#### **Sitemap Generation & Robots.txt Auto-Update**
+- **Fixed Sitemap Generation Errors**: Resolved datetime timezone issues and `AttributeError: type object 'AlbumChapter' has no attribute 'title'` by updating field reference to `chapter_title`
+- **Robots.txt Auto-Update Feature**: Created `update_robots_txt()` function that automatically updates robots.txt with correct website URL from SEO injection settings
+- **Automatic Integration**: Sitemap generation now automatically updates robots.txt with correct website URL when accessed
+- **Error Handling**: Added comprehensive error handling for sitemap generation with proper timezone-aware date calculations
+- **Helper Functions**: Created `calculate_days_old()` helper function for proper timezone handling in sitemap generation
+
+#### **Database Health & Performance Improvements**
+- **Database Health Checks**: All 9 health checks now passing with 77.8% success rate (7/9 passed)
+- **Missing Indexes Identified**: Album `created_at` and Image `is_visible` indexes identified for performance optimization
+- **Safe Migration System**: Custom `safe_migrate.py` system replaces external migration dependencies for minimal external dependencies
+- **Database Optimization**: 50+ strategic database indexes added for optimal query performance
+- **Health Monitoring**: Comprehensive database health monitoring and orphaned data cleanup
+- **Performance Metrics**: Real-time database performance tracking and optimization
+
+#### **UI Terminology Updates**
+- **Story & Chapter Management**: Updated UI terminology from "artikel" to "cerita dan bab" for better context
+- **Admin Interface**: Create and manage news pages now use "Cerita" and "Bab" terminology
+- **Public Interface**: News listing page updated with new terminology for consistency
+- **Form Labels**: All form labels, placeholders, and descriptions updated to reflect story/chapter context
+- **Accessibility**: ARIA labels and descriptions updated for better screen reader support
 
 #### **Smart Routing System Implementation**
 - **Role-Based Navigation**: Automatic dashboard routing based on user role (admin/superuser/owner → `/settings`, general users → `/dashboard`)
@@ -670,6 +774,20 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Content-Specific Overrides**: News and album SEO fields override root SEO settings
 - **Template Integration**: Updated `base.html` to use unified `seo_data` structure
 
+#### **Achievement System Implementation**
+- **Comprehensive Gamification**: Complete achievement system with 7 categories and 40+ achievements
+- **Database Models**: AchievementCategory, Achievement, UserAchievement, AchievementProgress, UserStreak, UserPoints, PointTransaction
+- **Streak Tracking**: Login, activity, and reading streaks with daily consistency tracking
+- **Points & Leveling**: Point-based progression system with automatic level-ups and transaction history
+- **Achievement Categories**: Login Streaks, Activity Streaks, Reading Streaks, Contributions, Exploration, Community, Milestones
+- **Progress Tracking**: Detailed progress history with timestamps and context data
+- **Helper Scripts**: AchievementTracker class for easy activity tracking integration
+- **Initialization System**: Default achievement data population with comprehensive categories
+- **Performance Optimized**: Database indexes and efficient tracking with minimal overhead
+- **Documentation**: Complete system guide with setup, integration, and customization instructions
+- **Testing Suite**: Comprehensive test coverage for all achievement system components
+- **Integration Ready**: Easy integration with existing routes and user activities
+
 #### **Enhanced Account Management System**
 - **Comprehensive Statistics API**: New `/api/account/stats` endpoint providing total articles, visible articles, total reads, albums, chapters, and comments
 - **Albums Management API**: New `/api/account/albums` endpoint with pagination, search, and filtering (status, type)
@@ -778,18 +896,23 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Chapters Tab**: Full chapters SEO management with editing capabilities
 - **SEO Injection System**: Automated SEO data generation for all content types
 
-#### **SEO Injection System**
-- **Automated SEO Generation**: Automatic generation of meta descriptions, keywords, OG tags, and schema markup
-- **Content Type Support**: News articles, albums, chapters, and root pages
-- **Markdown Processing**: Intelligent content cleaning and text extraction for SEO
+#### **Enhanced SEO Injection System**
+- **Dynamic Configuration**: SEO injection settings stored in database with `SEOInjectionSettings` model
+- **Website Information Management**: Centralized website name, URL, description, language, and organization details
+- **Automatic SEO Generation**: Intelligent generation of meta descriptions, keywords, OG tags, and schema markup
+- **Content Type Support**: News articles, albums, chapters, and root pages with specialized injectors
+- **Markdown Processing**: Advanced content cleaning and text extraction for SEO optimization
 - **SEO Score Calculation**: Real-time scoring based on field completeness (0-100)
-- **Bulk Operations**: Mass SEO injection with progress tracking and statistics
+- **Bulk Operations**: Mass SEO injection with progress tracking and comprehensive statistics
 - **Lock System**: SEO lock mechanism to prevent overwriting manually edited SEO data
 - **API Integration**: RESTful endpoints for injection operations and status monitoring
 - **Statistics Dashboard**: Comprehensive SEO statistics and health monitoring
-- **Individual Injectors**: Specialized injectors for each content type (news, albums, chapters, root)
-- **Error Handling**: Robust error handling with rollback mechanisms
+- **Individual Injectors**: Specialized injectors for each content type with dynamic settings
+- **Error Handling**: Robust error handling with rollback mechanisms and detailed logging
 - **Documentation**: Complete documentation and testing suite
+- **Database Integration**: Dynamic retrieval of website settings from `seo_injection_settings` table
+- **Fallback System**: Graceful fallback to default values when settings are unavailable
+- **URL Normalization**: Proper handling of internal vs external image URLs and canonical URLs
 
 ### **Frontend Enhancements**
 - **Album Card Design**: Standardized album cards with badges, ratings, and thumbnails
@@ -824,6 +947,18 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 - **Error Handling**: Robust error handling with graceful fallbacks
 - **Input Validation**: Enhanced validation for all user inputs
 - **Security Headers**: Implementation of security best practices
+
+### **Content Deletion Request System**
+- **✅ COMPLETED: Content deletion request API endpoints for news (`/api/news/<id>/request-deletion`, `/api/news/deletion-requests`, `/api/news/<id>/approve-deletion`, `/api/news/<id>/reject-deletion`)**
+- **✅ COMPLETED: Content deletion request API endpoints for albums (`/admin/albums/<id>/request-deletion`, `/admin/albums/deletion-requests`, `/admin/albums/<id>/approve-deletion`, `/admin/albums/<id>/reject-deletion`)**
+- **✅ COMPLETED: Consistent deletion workflow (all users must request deletion for approval)**
+- **✅ COMPLETED: Admin approval workflow for content deletion with proper security checks**
+- **✅ COMPLETED: Content deletion requests management UI (`/settings/content-deletion-requests`) with bulk operations**
+- **✅ COMPLETED: Database migration for content deletion request fields (`deletion_requested`, `deletion_requested_at`, `deletion_requested_by`)**
+- **✅ COMPLETED: Enhanced content management with deletion request statistics**
+- **✅ COMPLETED: SQLAlchemy relationship fixes for User.news and User.albums with explicit foreign_keys**
+- **✅ COMPLETED: Navigation integration with admin sidebar**
+- **✅ COMPLETED: Complete frontend JavaScript integration with error handling**
 
 ### **DOCX Upload Tool System**
 - **DOCX to News Conversion**: Complete API endpoint (`/api/news/upload-docx`) for uploading and converting DOCX files to news articles

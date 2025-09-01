@@ -1,0 +1,151 @@
+{% extends 'admin_base.html' %}
+{% block title %}Permintaan Penghapusan Konten - Admin{% endblock %}
+{% block hero_title %}Permintaan Penghapusan Konten{% endblock %}
+{% block hero_desc %}Kelola permintaan penghapusan artikel dan album{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-6 py-12" role="main">
+    <!-- Header -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="content-deletion-requests-title">
+        <h1 id="content-deletion-requests-title" class="text-2xl font-bold text-gray-800 mb-4">Permintaan Penghapusan Konten</h1>
+        <p class="text-gray-600">Tinjau dan kelola permintaan penghapusan artikel dan album dari penulis.</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="tabs-title">
+        <h2 id="tabs-title" class="text-lg font-semibold text-gray-800 mb-4">Jenis Konten</h2>
+        <div class="flex space-x-4 border-b border-gray-200" role="tablist">
+            <button class="tab-button bg-blue-500 text-white px-4 py-2 rounded-md font-medium" data-tab="news-requests">
+                <i class="fas fa-newspaper mr-2"></i>Artikel
+            </button>
+            <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="album-requests">
+                <i class="fas fa-book mr-2"></i>Album
+            </button>
+        </div>
+    </div>
+
+    <!-- News Deletion Requests Tab -->
+    <div id="news-requests-tab" class="tab-content">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="news-requests-title">
+            <h2 id="news-requests-title" class="text-xl font-semibold text-gray-800 mb-4">Permintaan Penghapusan Artikel</h2>
+            
+            <!-- Bulk Actions -->
+            <div class="flex space-x-4 mb-4">
+                <button id="bulk-approve-news-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-check mr-2"></i>Setujui Semua
+                </button>
+                <button id="bulk-reject-news-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-times mr-2"></i>Tolak Semua
+                </button>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="flex space-x-4 mb-4">
+                <input type="text" id="news-search" placeholder="Cari artikel..." class="flex-1 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="news-date-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- News Requests List -->
+            <div id="news-requests-list" class="space-y-4">
+                <!-- News requests will be loaded here dynamically -->
+            </div>
+
+            <!-- News Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-blue-800">Total Menunggu</h3>
+                    <p id="news-pending-count" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-green-800">Disetujui Hari Ini</h3>
+                    <p id="news-approved-today" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-red-800">Ditolak Hari Ini</h3>
+                    <p id="news-rejected-today" class="text-2xl font-bold text-red-600">0</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-800">Rata-rata Waktu</h3>
+                    <p id="news-avg-time" class="text-2xl font-bold text-gray-600">0 jam</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Album Deletion Requests Tab -->
+    <div id="album-requests-tab" class="tab-content hidden">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="album-requests-title">
+            <h2 id="album-requests-title" class="text-xl font-semibold text-gray-800 mb-4">Permintaan Penghapusan Album</h2>
+            
+            <!-- Bulk Actions -->
+            <div class="flex space-x-4 mb-4">
+                <button id="bulk-approve-album-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-check mr-2"></i>Setujui Semua
+                </button>
+                <button id="bulk-reject-album-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-times mr-2"></i>Tolak Semua
+                </button>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="flex space-x-4 mb-4">
+                <input type="text" id="album-search" placeholder="Cari album..." class="flex-1 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="album-date-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Album Requests List -->
+            <div id="album-requests-list" class="space-y-4">
+                <!-- Album requests will be loaded here dynamically -->
+            </div>
+
+            <!-- Album Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-blue-800">Total Menunggu</h3>
+                    <p id="album-pending-count" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-green-800">Disetujui Hari Ini</h3>
+                    <p id="album-approved-today" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-red-800">Ditolak Hari Ini</h3>
+                    <p id="album-rejected-today" class="text-2xl font-bold text-red-600">0</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-800">Rata-rata Waktu</h3>
+                    <p id="album-avg-time" class="text-2xl font-bold text-gray-600">0 jam</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+/* Force tab content visibility */
+.tab-content {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    min-height: 100px !important;
+    overflow: visible !important;
+}
+
+.tab-content.hidden {
+    display: none !important;
+}
+
+/* Ensure the container has proper dimensions */
+#news-requests-list, #album-requests-list {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    min-height: 50px !important;
+    overflow: visible !important;
+}
+</style>
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/content-deletion-requests.js') }}"></script>
+{% endblock %}

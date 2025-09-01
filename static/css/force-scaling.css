@@ -1,0 +1,296 @@
+/**
+ * Force Scaling CSS
+ * Styles to support the force scaling functionality
+ */
+
+/* When force scaling is applied */
+body.force-scaled {
+    /* Ensure proper overflow handling */
+    overflow-x: hidden;
+    overflow-y: auto;
+    
+    /* Prevent horizontal scrolling issues */
+    min-width: 100vw;
+    max-width: 100vw;
+    
+    /* Ensure proper positioning for fixed elements */
+    position: relative;
+}
+
+/* Fix for fixed positioned elements when scaling is applied */
+body.force-scaled .fixed,
+body.force-scaled [class*="fixed"] {
+    /* Adjust fixed positioning to account for scaling */
+    transform-origin: top left;
+}
+
+/* Fix for sticky positioned elements */
+body.force-scaled .sticky,
+body.force-scaled [class*="sticky"] {
+    /* Ensure sticky elements work properly with scaling */
+    transform-origin: top left;
+}
+
+/* Fix for absolute positioned elements */
+body.force-scaled .absolute,
+body.force-scaled [class*="absolute"] {
+    /* Ensure absolute positioning works with scaling */
+    transform-origin: top left;
+}
+
+/* Fix for modal overlays and dialogs */
+body.force-scaled .modal,
+body.force-scaled .dialog,
+body.force-scaled [class*="modal"],
+body.force-scaled [class*="dialog"] {
+    /* Ensure modals appear correctly */
+    transform-origin: center;
+}
+
+/* Fix for tooltips and popovers */
+body.force-scaled .tooltip,
+body.force-scaled .popover,
+body.force-scaled [class*="tooltip"],
+body.force-scaled [class*="popover"] {
+    /* Ensure tooltips appear in correct position */
+    transform-origin: center;
+}
+
+/* Fix for dropdown menus */
+body.force-scaled .dropdown,
+body.force-scaled [class*="dropdown"] {
+    /* Ensure dropdowns appear correctly */
+    transform-origin: top left;
+}
+
+/* Fix for navigation elements */
+body.force-scaled nav,
+body.force-scaled .nav,
+body.force-scaled [class*="nav"] {
+    /* Ensure navigation works properly */
+    transform-origin: top left;
+}
+
+/* Fix for sidebar elements */
+body.force-scaled .sidebar,
+body.force-scaled [class*="sidebar"] {
+    /* Ensure sidebars work properly */
+    transform-origin: top left;
+}
+
+/* Fix for toast notifications */
+body.force-scaled .toast,
+body.force-scaled [class*="toast"] {
+    /* Ensure toasts appear correctly */
+    transform-origin: center;
+}
+
+/* Fix for loading spinners */
+body.force-scaled .spinner,
+body.force-scaled [class*="spinner"] {
+    /* Ensure spinners appear correctly */
+    transform-origin: center;
+}
+
+/* Fix for form elements */
+body.force-scaled input,
+body.force-scaled textarea,
+body.force-scaled select,
+body.force-scaled button {
+    /* Ensure form elements work properly */
+    transform-origin: top left;
+}
+
+/* Fix for images and media */
+body.force-scaled img,
+body.force-scaled video,
+body.force-scaled iframe {
+    /* Ensure media elements scale properly */
+    max-width: 100%;
+    height: auto;
+}
+
+/* Fix for tables */
+body.force-scaled table {
+    /* Ensure tables scale properly */
+    transform-origin: top left;
+}
+
+/* Fix for canvas elements */
+body.force-scaled canvas {
+    /* Ensure canvas elements work properly */
+    transform-origin: top left;
+}
+
+/* Fix for SVG elements */
+body.force-scaled svg {
+    /* Ensure SVG elements scale properly */
+    transform-origin: top left;
+}
+
+/* Fix for iframe elements */
+body.force-scaled iframe {
+    /* Ensure iframes work properly */
+    transform-origin: top left;
+}
+
+/* Fix for scrollable containers */
+body.force-scaled .overflow-auto,
+body.force-scaled .overflow-scroll,
+body.force-scaled .overflow-x-auto,
+body.force-scaled .overflow-y-auto {
+    /* Ensure scrollable containers work properly */
+    transform-origin: top left;
+}
+
+/* Fix for grid and flex containers */
+body.force-scaled .grid,
+body.force-scaled .flex,
+body.force-scaled [class*="grid"],
+body.force-scaled [class*="flex"] {
+    /* Ensure layout containers work properly */
+    transform-origin: top left;
+}
+
+/* Fix for responsive breakpoints */
+@media (max-width: 768px) {
+    body.force-scaled {
+        /* Mobile-specific fixes */
+        font-size: 14px; /* Ensure readable text on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    body.force-scaled {
+        /* Small mobile-specific fixes */
+        font-size: 13px;
+    }
+}
+
+/* Fix for high DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    body.force-scaled {
+        /* High DPI display fixes */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Fix for print media */
+@media print {
+    body.force-scaled {
+        /* Print-specific fixes */
+        transform: none !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* Accessibility improvements for force scaling */
+body.force-scaled {
+    /* Ensure proper focus indicators */
+    outline: none;
+}
+
+body.force-scaled *:focus {
+    /* Ensure focus indicators are visible */
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Performance optimizations */
+body.force-scaled {
+    /* Optimize for performance */
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Fix for specific frameworks and libraries */
+body.force-scaled .swiper-container,
+body.force-scaled .swiper-wrapper,
+body.force-scaled .swiper-slide {
+    /* Fix for Swiper.js carousel */
+    transform-origin: top left;
+}
+
+body.force-scaled .slick-slider,
+body.force-scaled .slick-list,
+body.force-scaled .slick-track {
+    /* Fix for Slick carousel */
+    transform-origin: top left;
+}
+
+/* Fix for common UI libraries */
+body.force-scaled .ui-dialog,
+body.force-scaled .ui-tooltip,
+body.force-scaled .ui-autocomplete {
+    /* Fix for jQuery UI elements */
+    transform-origin: center;
+}
+
+/* Fix for Bootstrap components */
+body.force-scaled .modal-dialog,
+body.force-scaled .dropdown-menu,
+body.force-scaled .tooltip {
+    /* Fix for Bootstrap components */
+    transform-origin: center;
+}
+
+/* Fix for Tailwind CSS specific classes */
+body.force-scaled .fixed,
+body.force-scaled .sticky,
+body.force-scaled .absolute,
+body.force-scaled .relative {
+    /* Fix for Tailwind positioning classes */
+    transform-origin: top left;
+}
+
+/* Fix for z-index issues */
+body.force-scaled .z-10,
+body.force-scaled .z-20,
+body.force-scaled .z-30,
+body.force-scaled .z-40,
+body.force-scaled .z-50 {
+    /* Ensure z-index works properly with scaling */
+    transform-origin: top left;
+}
+
+/* Animation fixes */
+body.force-scaled * {
+    /* Ensure animations work properly with scaling */
+    animation-fill-mode: both;
+}
+
+/* Transition fixes */
+body.force-scaled * {
+    /* Ensure transitions work properly with scaling */
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fix for specific elements that might break with scaling */
+body.force-scaled .force-scale-exclude {
+    /* Exclude specific elements from scaling effects */
+    transform: none !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Debug styles (only show in development) */
+body.force-scaled.debug-scaling {
+    /* Add visual indicators for debugging */
+    border: 2px solid red;
+}
+
+body.force-scaled.debug-scaling::before {
+    content: 'FORCE SCALED - ' attr(data-scale);
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: red;
+    color: white;
+    padding: 4px 8px;
+    font-size: 12px;
+    z-index: 9999;
+}

@@ -81,6 +81,7 @@ function initializeEventListeners() {
     document.getElementById('root-status-filter').addEventListener('change', filterRoot);
     document.getElementById('root-seo-status-filter').addEventListener('change', filterRoot);
     document.getElementById('create-root-seo-btn').addEventListener('click', createRootSEO);
+    // root-seo-settings-btn moved to settings.html
     
     // SEO Injection events
     document.getElementById('run-articles-seo-injection').addEventListener('click', () => runSEOInjection('news'));
@@ -110,10 +111,10 @@ function initializeEventListeners() {
 
 function loadCategoryFilters() {
     // Load categories for articles filter
-    fetch('/api/categories')
+    fetch('/api/categories?grouped=true')
         .then(response => response.json())
         .then(data => {
-            if (data.categories) {
+            if (data && data.length > 0) {
                 const articlesCategoryFilter = document.getElementById('articles-category-filter');
                 const albumsCategoryFilter = document.getElementById('albums-category-filter');
                 const chaptersCategoryFilter = document.getElementById('chapters-category-filter');
@@ -123,22 +124,31 @@ function loadCategoryFilters() {
                 albumsCategoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
                 chaptersCategoryFilter.innerHTML = '<option value="">Semua Kategori</option>';
                 
-                // Add category options
-                data.categories.forEach(category => {
-                    const articlesOption = document.createElement('option');
-                    articlesOption.value = category.id;
-                    articlesOption.textContent = category.name;
-                    articlesCategoryFilter.appendChild(articlesOption);
+                // Add category options with grouped structure
+                data.forEach(groupData => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = groupData.group.name;
                     
-                    const albumsOption = document.createElement('option');
-                    albumsOption.value = category.id;
-                    albumsOption.textContent = category.name;
-                    albumsCategoryFilter.appendChild(albumsOption);
+                    groupData.categories.forEach(category => {
+                        const articlesOption = document.createElement('option');
+                        articlesOption.value = category.id;
+                        articlesOption.textContent = category.name;
+                        optgroup.appendChild(articlesOption.cloneNode(true));
+                        
+                        const albumsOption = document.createElement('option');
+                        albumsOption.value = category.id;
+                        albumsOption.textContent = category.name;
+                        optgroup.appendChild(albumsOption.cloneNode(true));
+                        
+                        const chaptersOption = document.createElement('option');
+                        chaptersOption.value = category.id;
+                        chaptersOption.textContent = category.name;
+                        optgroup.appendChild(chaptersOption.cloneNode(true));
+                    });
                     
-                    const chaptersOption = document.createElement('option');
-                    chaptersOption.value = category.id;
-                    chaptersOption.textContent = category.name;
-                    chaptersCategoryFilter.appendChild(chaptersOption);
+                    articlesCategoryFilter.appendChild(optgroup.cloneNode(true));
+                    albumsCategoryFilter.appendChild(optgroup.cloneNode(true));
+                    chaptersCategoryFilter.appendChild(optgroup.cloneNode(true));
                 });
             }
         })
@@ -1243,11 +1253,17 @@ function injectSingle(type, id) {
     showToast(`Memproses injeksi SEO untuk ${labelMap[type]}...`, 'info');
     fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        }
     })
     .then(r => r.json().then(j => ({ ok: r.ok, body: j })))
     .then(({ ok, body }) => {
-        if (!ok) throw new Error(body.error || 'Gagal injeksi');
+        if (!ok) {
+            console.error('Server response:', body);
+            throw new Error(body.error || body.details || 'Gagal injeksi');
+        }
         showToast(body.message || 'SEO injected', 'success');
         // Reload respective table
         switch(type) {
@@ -1267,6 +1283,7 @@ function injectSingle(type, id) {
     })
     .catch(err => {
         console.error('Inject error:', err);
+        console.error('Error details:', err);
         showToast('Gagal injeksi SEO: ' + err.message, 'error');
     });
 }
@@ -1377,4 +1394,209 @@ function generatePaginationHTML(pagination, type) {
     }
     
     return html;
+}
+
+// Root SEO Settings Functions
+function openRootSEOSettings() {
+    // Load brand information first
+    loadBrandInformation();
+    
+    // Show the modal
+    const modal = document.getElementById('root-seo-settings-modal');
+    modal.classList.remove('hidden');
+    
+    // Add event listeners for the modal
+    document.getElementById('close-root-seo-settings').addEventListener('click', closeRootSEOSettings);
+    document.getElementById('cancel-root-seo-settings').addEventListener('click', closeRootSEOSettings);
+    document.getElementById('root-seo-settings-form').addEventListener('submit', handleRootSEOSettingsSubmit);
+}
+
+function closeRootSEOSettings() {
+    const modal = document.getElementById('root-seo-settings-modal');
+    modal.classList.add('hidden');
+}
+
+function loadBrandInformation() {
+    // Fetch root SEO settings from the server
+    fetch('/admin/api/root-seo-settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const brandInfo = data.brand_identity;
+                const settings = data.settings;
+                
+                // Populate brand information fields
+                document.getElementById('brand-name').value = brandInfo.brand_name || 'LilyOpenCMS';
+                document.getElementById('website-url').value = brandInfo.website_url || 'https://lilycms.com';
+                
+                // Populate settings fields
+                populateSettingsFields(settings);
+                
+                // Update template placeholders with actual brand name
+                updateTemplatePlaceholders(brandInfo.brand_name || 'LilyOpenCMS');
+            } else {
+                console.error('Failed to load root SEO settings:', data.error);
+                // Set defaults
+                document.getElementById('brand-name').value = 'LilyOpenCMS';
+                document.getElementById('website-url').value = 'https://lilycms.com';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading root SEO settings:', error);
+            // Set defaults on error
+            document.getElementById('brand-name').value = 'LilyOpenCMS';
+            document.getElementById('website-url').value = 'https://lilycms.com';
+        });
+}
+
+function populateSettingsFields(settings) {
+    // Populate all the settings fields with the loaded data
+    const fields = [
+        'home_meta_title', 'home_meta_description', 'home_meta_keywords',
+        'about_meta_title', 'about_meta_description', 'about_meta_keywords',
+        'news_meta_title', 'news_meta_description', 'news_meta_keywords',
+        'albums_meta_title', 'albums_meta_description', 'albums_meta_keywords',
+        'default_og_image', 'default_og_type', 'default_twitter_card',
+        'default_twitter_image', 'default_language', 'default_meta_robots'
+    ];
+    
+    fields.forEach(fieldName => {
+        const element = document.getElementById(fieldName.replace(/_/g, '-'));
+        if (element && settings[fieldName]) {
+            element.value = settings[fieldName];
+        }
+    });
+}
+
+function updateTemplatePlaceholders(brandName) {
+    // Update meta title templates with actual brand name
+    const homeTitle = document.getElementById('home-meta-title');
+    const aboutTitle = document.getElementById('about-meta-title');
+    const newsTitle = document.getElementById('news-meta-title');
+    const albumsTitle = document.getElementById('albums-meta-title');
+    
+    if (homeTitle && homeTitle.value.includes('{brand_name}')) {
+        homeTitle.value = homeTitle.value.replace('{brand_name}', brandName);
+    }
+    if (aboutTitle && aboutTitle.value.includes('{brand_name}')) {
+        aboutTitle.value = aboutTitle.value.replace('{brand_name}', brandName);
+    }
+    if (newsTitle && newsTitle.value.includes('{brand_name}')) {
+        newsTitle.value = newsTitle.value.replace('{brand_name}', brandName);
+    }
+    if (albumsTitle && albumsTitle.value.includes('{brand_name}')) {
+        albumsTitle.value = albumsTitle.value.replace('{brand_name}', brandName);
+    }
+}
+
+function handleRootSEOSettingsSubmit(event) {
+    event.preventDefault();
+    
+    // Collect form data
+    const formData = new FormData(event.target);
+    const settings = {
+        // Brand information
+        brand_name: document.getElementById('brand-name').value,
+        website_url: document.getElementById('website-url').value,
+        
+        // Page templates
+        home_meta_title: formData.get('home_meta_title'),
+        home_meta_description: formData.get('home_meta_description'),
+        home_meta_keywords: formData.get('home_meta_keywords'),
+        
+        about_meta_title: formData.get('about_meta_title'),
+        about_meta_description: formData.get('about_meta_description'),
+        about_meta_keywords: formData.get('about_meta_keywords'),
+        
+        news_meta_title: formData.get('news_meta_title'),
+        news_meta_description: formData.get('news_meta_description'),
+        news_meta_keywords: formData.get('news_meta_keywords'),
+        
+        albums_meta_title: formData.get('albums_meta_title'),
+        albums_meta_description: formData.get('albums_meta_description'),
+        albums_meta_keywords: formData.get('albums_meta_keywords'),
+        
+        // Open Graph defaults
+        default_og_image: formData.get('default_og_image'),
+        default_og_type: formData.get('default_og_type'),
+        
+        // Twitter Card defaults
+        default_twitter_card: formData.get('default_twitter_card'),
+        default_twitter_image: formData.get('default_twitter_image'),
+        
+        // Schema markup settings
+        default_language: formData.get('default_language'),
+        default_meta_robots: formData.get('default_meta_robots')
+    };
+    
+    // Save settings to server
+    saveRootSEOSettings(settings);
+}
+
+function saveRootSEOSettings(settings) {
+    // Show loading state
+    const submitBtn = document.querySelector('#root-seo-settings-form button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+    submitBtn.disabled = true;
+    
+    fetch('/admin/api/root-seo-settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Pengaturan Root SEO berhasil disimpan!', 'success');
+            closeRootSEOSettings();
+        } else {
+            showToast('Gagal menyimpan pengaturan: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving root SEO settings:', error);
+        showToast('Terjadi kesalahan saat menyimpan pengaturan', 'error');
+    })
+    .finally(() => {
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function getCSRFToken() {
+    // Get CSRF token from meta tag or cookie
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                  document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
+    return token || '';
+}
+
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    
+    toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 max-w-md`;
+    toast.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-auto text-white hover:text-gray-200">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
 }

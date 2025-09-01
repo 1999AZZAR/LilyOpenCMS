@@ -43,6 +43,7 @@ from models import (
     PedomanHak,
     UserRole,
     Category,
+    CategoryGroup,
     ShareLog,
     SocialMedia,
     ContactDetail,
@@ -51,6 +52,7 @@ from models import (
     CustomRole,
     UserActivity,
     NavigationLink,
+    BrandIdentity,
 )
 
 # Import permission management functions

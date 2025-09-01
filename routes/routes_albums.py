@@ -152,8 +152,7 @@ def list_albums():
                      .limit(per_page)\
                      .all()
         
-        # Get categories for filter dropdown
-        categories = Category.query.order_by(Category.name).all()
+        # Categories are provided by context processor
         
         # Calculate pagination info
         total_pages = (total_albums + per_page - 1) // per_page
@@ -170,7 +169,6 @@ def list_albums():
 
         return render_template('admin/albums/list.html',
                              albums=albums,
-                             categories=categories,
                              total_albums=total_albums,
                              page=page,
                              per_page=per_page,
@@ -234,10 +232,8 @@ def album_detail(album_id):
 def create_album():
     """Create a new album"""
     if request.method == 'GET':
-        categories = Category.query.order_by(Category.name).all()
         return render_template('admin/albums/form.html', 
                              album=None, 
-                             categories=categories,
                              action='create')
     
     try:
@@ -293,10 +289,8 @@ def edit_album(album_id):
     album = Album.query.get_or_404(album_id)
     
     if request.method == 'GET':
-        categories = Category.query.order_by(Category.name).all()
         return render_template('admin/albums/form.html', 
                              album=album, 
-                             categories=categories,
                              action='edit')
     
     try:
@@ -339,9 +333,15 @@ def edit_album(album_id):
 
 @albums_bp.route('/<int:album_id>/delete', methods=['POST'])
 @login_required
-@admin_required
 def delete_album(album_id):
-    """Delete an album"""
+    """Delete an album (content moderators and above only)"""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    # Only content moderators and above can delete directly
+    if not current_user.is_admin_tier():
+        return jsonify({"error": "You do not have permission to delete albums. Please use the deletion request system."}), 403
+
     try:
         album = Album.query.get_or_404(album_id)
         
@@ -352,6 +352,9 @@ def delete_album(album_id):
         db.session.delete(album)
         db.session.commit()
         
+        current_app.logger.info(
+            f"Album deleted directly: '{album.title}' (ID: {album_id}) by moderator {current_user.username}"
+        )
         return jsonify({'success': True, 'message': 'Album deleted successfully'})
     
     except Exception as e:
@@ -990,4 +993,157 @@ def edit_chapter_page(album_id, chapter_id):
     return redirect(url_for('albums.manage_chapters', album_id=album_id))
 
 
- 
+# =============================================================================
+# CONTENT DELETION REQUEST SYSTEM
+# =============================================================================
+
+@albums_bp.route('/<int:album_id>/request-deletion', methods=['POST'])
+@login_required
+def request_album_deletion(album_id):
+    """Request deletion of an album."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    album = Album.query.get_or_404(album_id)
+
+    # All users must request deletion (no direct deletion allowed)
+    # This ensures consistent workflow and proper audit trail
+
+    # Check if already requested
+    if album.deletion_requested:
+        return jsonify({"error": "Deletion already requested for this album"}), 400
+
+    try:
+        album.deletion_requested = True
+        album.deletion_requested_at = datetime.utcnow()
+        album.deletion_requested_by = current_user.id
+        db.session.commit()
+        
+        current_app.logger.info(
+            f"Album deletion requested: '{album.title}' (ID: {album_id}) by user {current_user.username}"
+        )
+        return jsonify({"message": "Deletion request submitted successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(
+            f"Error requesting album deletion ID {album_id} by {current_user.username}: {e}"
+        )
+        return jsonify({"error": "Failed to submit deletion request"}), 500
+
+
+@albums_bp.route('/deletion-requests', methods=['GET'])
+@login_required
+def get_album_deletion_requests():
+    """Get all pending album deletion requests (admin/moderator only)."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    # Only content moderators and above can view deletion requests
+    if not current_user.is_admin_tier():
+        abort(403, "You do not have permission to view deletion requests.")
+
+    try:
+        # Get all albums with deletion requests
+        albums_with_requests = Album.query.filter(
+            Album.deletion_requested == True
+        ).order_by(Album.deletion_requested_at.desc()).all()
+
+        requests_data = []
+        for album in albums_with_requests:
+            requester = User.query.get(album.deletion_requested_by) if album.deletion_requested_by else None
+            requests_data.append({
+                "id": album.id,
+                "title": album.title,
+                "author": album.author.get_full_name() if album.author else "Unknown",
+                "author_username": album.author.username if album.author else "unknown",
+                "category": album.category.name if album.category else "Uncategorized",
+                "created_at": album.created_at.isoformat(),
+                "deletion_requested_at": album.deletion_requested_at.isoformat() if album.deletion_requested_at else None,
+                "requester": requester.get_full_name() if requester else "Unknown",
+                "requester_username": requester.username if requester else "unknown",
+                "total_chapters": album.total_chapters,
+                "total_views": album.total_views,
+                "is_visible": album.is_visible,
+                "is_completed": album.is_completed
+            })
+
+        return jsonify({"requests": requests_data}), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error fetching album deletion requests: {e}")
+        return jsonify({"error": "Failed to fetch deletion requests"}), 500
+
+
+@albums_bp.route('/<int:album_id>/approve-deletion', methods=['POST'])
+@login_required
+def approve_album_deletion(album_id):
+    """Approve deletion of an album (admin/moderator only)."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    # Only content moderators and above can approve deletions
+    if not current_user.is_admin_tier():
+        abort(403, "You do not have permission to approve deletions.")
+
+    album = Album.query.get_or_404(album_id)
+
+    if not album.deletion_requested:
+        return jsonify({"error": "No deletion request found for this album"}), 400
+
+    try:
+        album_title = album.title
+        
+        # Delete associated chapters first
+        AlbumChapter.query.filter_by(album_id=album_id).delete()
+        
+        # Delete album
+        db.session.delete(album)
+        db.session.commit()
+        
+        current_app.logger.info(
+            f"Album deletion approved: '{album_title}' (ID: {album_id}) by moderator {current_user.username}"
+        )
+        return jsonify({"message": "Album deleted successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(
+            f"Error approving album deletion ID {album_id} by {current_user.username}: {e}"
+        )
+        return jsonify({"error": "Failed to delete album"}), 500
+
+
+@albums_bp.route('/<int:album_id>/reject-deletion', methods=['POST'])
+@login_required
+def reject_album_deletion(album_id):
+    """Reject deletion request for an album (admin/moderator only)."""
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    # Only content moderators and above can reject deletions
+    if not current_user.is_admin_tier():
+        abort(403, "You do not have permission to reject deletions.")
+
+    album = Album.query.get_or_404(album_id)
+
+    if not album.deletion_requested:
+        return jsonify({"error": "No deletion request found for this album"}), 400
+
+    try:
+        album.deletion_requested = False
+        album.deletion_requested_at = None
+        album.deletion_requested_by = None
+        db.session.commit()
+        
+        current_app.logger.info(
+            f"Album deletion rejected: '{album.title}' (ID: {album_id}) by moderator {current_user.username}"
+        )
+        return jsonify({"message": "Deletion request rejected successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(
+            f"Error rejecting album deletion ID {album_id} by {current_user.username}: {e}"
+        )
+        return jsonify({"error": "Failed to reject deletion request"}), 500

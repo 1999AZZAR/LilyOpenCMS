@@ -43,9 +43,19 @@
       <div class="flex flex-wrap gap-4 items-center">
         <select id="category-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
           <option value="">Semua Kategori</option>
-          {% for category in categories %}
-          <option value="{{ category.id }}">{{ category.name }}</option>
-          {% endfor %}
+          {% if grouped_categories %}
+            {% for group_data in grouped_categories %}
+              <optgroup label="{{ group_data.group.name }}">
+                {% for category in group_data.categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          {% else %}
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          {% endif %}
         </select>
         <select id="status-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
           <option value="">Semua Status</option>

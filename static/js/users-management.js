@@ -96,6 +96,28 @@ class UsersManagement {
 
         // Form handlers
         this.initFormHandlers();
+        
+        // Deletion requests handlers
+        const deletionSearch = document.getElementById('deletion-search');
+        const deletionDateFilter = document.getElementById('deletion-date-filter');
+        const bulkApproveDeletionBtn = document.getElementById('bulk-approve-deletion-btn');
+        const bulkRejectDeletionBtn = document.getElementById('bulk-reject-deletion-btn');
+        
+        if (deletionSearch) {
+            deletionSearch.addEventListener('input', this.debounce(() => this.loadDeletionRequests(), 500));
+        }
+        
+        if (deletionDateFilter) {
+            deletionDateFilter.addEventListener('change', () => this.loadDeletionRequests());
+        }
+        
+        if (bulkApproveDeletionBtn) {
+            bulkApproveDeletionBtn.addEventListener('click', () => this.bulkApproveDeletions());
+        }
+        
+        if (bulkRejectDeletionBtn) {
+            bulkRejectDeletionBtn.addEventListener('click', () => this.bulkRejectDeletions());
+        }
     }
 
     initTabs() {
@@ -137,6 +159,9 @@ class UsersManagement {
             case 'pending':
                 this.loadPendingUsers();
                 this.loadPendingStats();
+                break;
+            case 'deletion-requests':
+                this.loadDeletionRequests();
                 break;
             case 'performance':
                 this.loadPerformanceData();
@@ -928,6 +953,190 @@ async handlePasswordReset(e) {
         }
     }
 
+    async loadDeletionRequests() {
+        try {
+            const response = await fetch('/api/users/deletion-requests');
+            if (!response.ok) {
+                throw new Error('Failed to fetch deletion requests');
+            }
+            
+            const data = await response.json();
+            this.renderDeletionRequests(data.deletion_requests || []);
+            this.updateDeletionStats(data);
+        } catch (error) {
+            console.error('Error loading deletion requests:', error);
+            this.showToast('error', 'Gagal memuat permintaan penghapusan');
+        }
+    }
+
+    renderDeletionRequests(requests) {
+        const container = document.getElementById('deletion-requests-list');
+        if (!container) return;
+        
+        if (requests.length === 0) {
+            container.innerHTML = '<div class="text-gray-600">Tidak ada permintaan penghapusan akun yang menunggu</div>';
+            return;
+        }
+        
+        container.innerHTML = requests.map(request => `
+            <div class="bg-white border border-red-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-red-400 to-pink-400 rounded-full flex items-center justify-center">
+                            <span class="text-white font-semibold text-sm">${request.username.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-red-800">${request.username}</h4>
+                            <p class="text-sm text-red-600">${request.email || 'Tidak ada email'}</p>
+                            <p class="text-xs text-red-500">Daftar: ${new Date(request.created_at).toLocaleDateString('id-ID')}</p>
+                            <p class="text-xs text-red-500">Permintaan: ${new Date(request.deletion_requested_at).toLocaleDateString('id-ID')}</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="usersManagement.approveDeletion(${request.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm">
+                            <i class="fas fa-check mr-1"></i>Setujui
+                        </button>
+                        <button onclick="usersManagement.rejectDeletion(${request.id})" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm">
+                            <i class="fas fa-times mr-1"></i>Tolak
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    updateDeletionStats(data) {
+        const totalRequests = document.getElementById('total-deletion-requests');
+        const approvedToday = document.getElementById('approved-deletions-today');
+        const rejectedToday = document.getElementById('rejected-deletions-today');
+        const avgTime = document.getElementById('avg-deletion-time');
+        
+        if (totalRequests) totalRequests.textContent = data.total || 0;
+        if (approvedToday) approvedToday.textContent = '0'; // TODO: Add API for today's stats
+        if (rejectedToday) rejectedToday.textContent = '0'; // TODO: Add API for today's stats
+        if (avgTime) avgTime.textContent = '-'; // TODO: Add API for average time
+    }
+
+    async approveDeletion(userId) {
+        try {
+            const response = await fetch(`/api/users/${userId}/approve-deletion`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to approve deletion');
+            }
+            
+            const result = await response.json();
+            this.showToast('success', result.message || 'Permintaan penghapusan disetujui');
+            this.loadDeletionRequests();
+        } catch (error) {
+            console.error('Error approving deletion:', error);
+            this.showToast('error', error.message || 'Gagal menyetujui permintaan penghapusan');
+        }
+    }
+
+    async rejectDeletion(userId) {
+        try {
+            const response = await fetch(`/api/users/${userId}/reject-deletion`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to reject deletion');
+            }
+            
+            const result = await response.json();
+            this.showToast('success', result.message || 'Permintaan penghapusan ditolak');
+            this.loadDeletionRequests();
+        } catch (error) {
+            console.error('Error rejecting deletion:', error);
+            this.showToast('error', error.message || 'Gagal menolak permintaan penghapusan');
+        }
+    }
+
+    async bulkApproveDeletions() {
+        if (!confirm('Apakah Anda yakin ingin menyetujui semua permintaan penghapusan? Tindakan ini tidak dapat dibatalkan.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/users/deletion-requests');
+            if (!response.ok) {
+                throw new Error('Failed to fetch deletion requests');
+            }
+            
+            const data = await response.json();
+            const requests = data.deletion_requests || [];
+            
+            if (requests.length === 0) {
+                this.showToast('info', 'Tidak ada permintaan penghapusan untuk disetujui');
+                return;
+            }
+            
+            let approvedCount = 0;
+            for (const request of requests) {
+                try {
+                    await this.approveDeletion(request.id);
+                    approvedCount++;
+                } catch (error) {
+                    console.error(`Error approving deletion for user ${request.id}:`, error);
+                }
+            }
+            
+            this.showToast('success', `${approvedCount} permintaan penghapusan berhasil disetujui`);
+            this.loadDeletionRequests();
+        } catch (error) {
+            console.error('Error bulk approving deletions:', error);
+            this.showToast('error', 'Gagal menyetujui permintaan penghapusan secara massal');
+        }
+    }
+
+    async bulkRejectDeletions() {
+        if (!confirm('Apakah Anda yakin ingin menolak semua permintaan penghapusan?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/users/deletion-requests');
+            if (!response.ok) {
+                throw new Error('Failed to fetch deletion requests');
+            }
+            
+            const data = await response.json();
+            const requests = data.deletion_requests || [];
+            
+            if (requests.length === 0) {
+                this.showToast('info', 'Tidak ada permintaan penghapusan untuk ditolak');
+                return;
+            }
+            
+            let rejectedCount = 0;
+            for (const request of requests) {
+                try {
+                    await this.rejectDeletion(request.id);
+                    rejectedCount++;
+                } catch (error) {
+                    console.error(`Error rejecting deletion for user ${request.id}:`, error);
+                }
+            }
+            
+            this.showToast('success', `${rejectedCount} permintaan penghapusan berhasil ditolak`);
+            this.loadDeletionRequests();
+        } catch (error) {
+            console.error('Error bulk rejecting deletions:', error);
+            this.showToast('error', 'Gagal menolak permintaan penghapusan secara massal');
+        }
+    }
+
     renderPendingUsers(users) {
         const container = document.getElementById('pending-users');
         if (!container) return;
@@ -1560,5 +1769,18 @@ function closePasswordResetModal() {
 function rejectUser(userId) {
     if (window.usersManagement) {
         window.usersManagement.rejectUser(userId);
+    }
+}
+
+// Deletion request functions
+function approveDeletion(userId) {
+    if (window.usersManagement) {
+        window.usersManagement.approveDeletion(userId);
+    }
+}
+
+function rejectDeletion(userId) {
+    if (window.usersManagement) {
+        window.usersManagement.rejectDeletion(userId);
     }
 }

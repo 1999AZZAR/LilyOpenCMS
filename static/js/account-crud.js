@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const ownedPaginationControls = document.getElementById('owned-pagination-controls');
 
     let currentOwnedPage = 1; // Track current page for owned news
-    let newsIdToDelete = null; // Track which news item to delete
 
     // --- Password Change Logic ---
     if (passwordForm) {
@@ -229,9 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button onclick="toggleVisibility(${news.id}, ${!news.is_visible})" class="w-8 h-8 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors" aria-label="${news.is_visible ? 'Sembunyikan artikel' : 'Tampilkan artikel'}" title="${news.is_visible ? 'Sembunyikan' : 'Tampilkan'}">
                             <i class="fas fa-${news.is_visible ? 'eye-slash' : 'eye'} text-sm"></i>
                         </button>
-                        <button data-news-id="${news.id}" class="delete-owned-news-btn w-8 h-8 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300 transition-colors" aria-label="Hapus artikel" title="Hapus">
-                            <i class="fas fa-trash text-sm"></i>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -240,65 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update pagination controls
         updateOwnedPaginationControls(paginationData);
-        attachDeleteListeners();
     }
 
-    // --- Delete News Logic ---
-    const deleteModal = document.getElementById('delete-modal');
-    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
 
-    function openDeleteModal(newsId) {
-        if (!deleteModal) return;
-        newsIdToDelete = newsId;
-        deleteModal.classList.remove('hidden');
-        deleteModal.classList.add('flex');
-    }
-
-    window.closeDeleteModal = function() { // Make globally accessible
-        if (!deleteModal) return;
-        newsIdToDelete = null;
-        deleteModal.classList.add('hidden');
-        deleteModal.classList.remove('flex');
-    }
-
-    function attachDeleteListeners() {
-        document.querySelectorAll('.delete-owned-news-btn').forEach(button => {
-            const newButton = button.cloneNode(true);
-            button.parentNode.replaceChild(newButton, button);
-            newButton.addEventListener('click', () => {
-                const newsId = newButton.getAttribute('data-news-id');
-                openDeleteModal(newsId);
-            });
-        });
-    }
-
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', async () => {
-            if (!newsIdToDelete) return;
-
-            try {
-                // Use the correct general delete endpoint
-                const response = await fetch(`/api/news/${newsIdToDelete}`, {
-                    method: 'DELETE',
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Gagal menghapus artikel.' }));
-                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-                }
-
-                if (typeof showToast === 'function') showToast('success', 'Artikel berhasil dihapus.');
-                // Refresh the current page after delete
-                fetchOwnedNews(currentOwnedPage);
-
-            } catch (error) {
-                console.error('Error deleting news:', error);
-                if (typeof showToast === 'function') showToast('error', `Gagal menghapus artikel: ${error.message}`);
-            } finally {
-                closeDeleteModal();
-            }
-        });
-    }
 
     // --- Toggle Visibility Function (Re-added) ---
     window.toggleVisibility = async function(newsId, isVisible) { // Make globally accessible
@@ -448,32 +388,41 @@ document.getElementById('change-password-form').addEventListener('submit', async
     }
 });
 
-// Open delete account modal
-function openDeleteAccountModal() {
-    document.getElementById('delete-account-modal').classList.remove('hidden');
+// Open delete request modal
+function openDeleteRequestModal() {
+    document.getElementById('delete-request-modal').classList.remove('hidden');
 }
 
-// Close delete account modal
-function closeDeleteAccountModal() {
-    document.getElementById('delete-account-modal').classList.add('hidden');
+// Close delete request modal
+function closeDeleteRequestModal() {
+    document.getElementById('delete-request-modal').classList.add('hidden');
 }
 
-// Delete account
-document.getElementById('confirm-delete-account-btn').addEventListener('click', async () => {
+// Request account deletion
+document.getElementById('confirm-delete-request-btn').addEventListener('click', async () => {
     try {
-        const response = await fetch('/api/account/delete', {
-            method: 'DELETE',
+        const response = await fetch('/api/user/request-account-deletion', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             }
         });
 
-        if (!response.ok) throw new Error('Failed to delete account');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to request account deletion');
+        }
 
-        window.location.href = '/logout'; // Redirect to logout after deletion
+        showToast('success', 'Permintaan penghapusan akun berhasil dikirim. Akun Anda telah dinonaktifkan sementara.');
+        closeDeleteRequestModal();
+        
+        // Redirect to logout after a short delay
+        setTimeout(() => {
+            window.location.href = '/logout';
+        }, 2000);
     } catch (error) {
         console.error(error);
-        showToast('error', error.message);
+        showToast('error', `Gagal mengirim permintaan penghapusan: ${error.message}`);
     }
 });
 

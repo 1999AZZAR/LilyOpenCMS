@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import event, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -156,7 +156,7 @@ class User(db.Model, UserMixin):
     verified = db.Column(db.Boolean, default=False, nullable=False)
     
     # New fields for enhanced user management
-    email = db.Column(db.String(255), unique=True, nullable=True)
+    email = db.Column(db.String(255), unique=True, nullable=True, index=True)
     first_name = db.Column(db.String(100), nullable=True)
     last_name = db.Column(db.String(100), nullable=True)
     bio = db.Column(db.Text, nullable=True)
@@ -184,9 +184,14 @@ class User(db.Model, UserMixin):
     premium_expires_at = db.Column(db.DateTime)
     ad_preferences = db.Column(db.JSON, default=lambda: {"show_ads": True, "ad_frequency": "normal"})
     
+    # Account deletion request fields
+    deletion_requested = db.Column(db.Boolean, default=False, nullable=False)
+    deletion_requested_at = db.Column(db.DateTime, nullable=True)
+    
     # Relationships - Use back_populates for bidirectional links
     news = db.relationship(
         "News",
+        foreign_keys="News.user_id",  # Explicitly specify the foreign key for author relationship
         back_populates="author",  # Links to News.author
         lazy=True,
         cascade="all, delete-orphan",
@@ -234,6 +239,15 @@ class User(db.Model, UserMixin):
     comment_likes = db.relationship("CommentLike", back_populates="user", lazy=True, cascade="all, delete-orphan")
     comment_reports = db.relationship("CommentReport", foreign_keys="CommentReport.user_id", back_populates="user", lazy=True, cascade="all, delete-orphan")
     resolved_reports = db.relationship("CommentReport", foreign_keys="CommentReport.resolved_by", back_populates="resolver", lazy=True)
+    
+    # Achievement system relationships
+    achievements = db.relationship("UserAchievement", back_populates="user", lazy=True, cascade="all, delete-orphan")
+    streaks = db.relationship("UserStreak", back_populates="user", lazy=True, cascade="all, delete-orphan")
+    points = db.relationship("UserPoints", back_populates="user", lazy=True, cascade="all, delete-orphan", uselist=False)
+    
+    # Coin system relationships
+    coins = db.relationship("UserCoins", back_populates="user", lazy=True, cascade="all, delete-orphan", uselist=False)
+    coin_transactions = db.relationship("CoinTransaction", back_populates="user", lazy=True, cascade="all, delete-orphan")
 
     # --- Editor ↔ Writer assignments (many-to-many self-referential) ---
     assigned_writers = db.relationship(
@@ -804,17 +818,64 @@ class Image(db.Model):
             print(f"Error deleting file {self.filepath}: {e}")
 
 
+class CategoryGroup(db.Model):
+    __tablename__ = "category_group"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    display_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationship to categories
+    categories = db.relationship("Category", back_populates="group", lazy=True, cascade="all, delete-orphan")
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "display_order": self.display_order,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "categories": [cat.to_dict() for cat in self.categories if cat.is_active]
+        }
+
+
 class Category(db.Model):
     __tablename__ = "category"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    # Relationship back to News using back_populates
+    description = db.Column(db.String(255), nullable=True)
+    display_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Foreign key to category group
+    group_id = db.Column(
+        db.Integer,
+        db.ForeignKey("category_group.id", name="fk_category_group_id"),
+        nullable=True,
+    )
+    
+    # Relationships
+    group = db.relationship("CategoryGroup", back_populates="categories")
     news = db.relationship("News", back_populates="category", lazy=True)
     
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.name
+            "name": self.name,
+            "description": self.description,
+            "display_order": self.display_order,
+            "is_active": self.is_active,
+            "group_id": self.group_id,
+            "group_name": self.group.name if self.group else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
 
 
@@ -843,6 +904,15 @@ class News(db.Model):
     external_source = db.Column(db.String(255), nullable=True)
     # Indonesian content age rating (e.g., SU, 13+, 17+, 21+)
     age_rating = db.Column(db.String(10), nullable=True, index=True)
+    # Prize in coins for premium content (0 = free, >0 = paid)
+    prize = db.Column(db.Integer, default=0, nullable=False, index=True)
+    # Coin type for premium content ('achievement', 'topup', 'any')
+    prize_coin_type = db.Column(db.String(20), default='any', nullable=False, index=True)
+    
+    # Content deletion request fields
+    deletion_requested = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    deletion_requested_at = db.Column(db.DateTime, nullable=True)
+    deletion_requested_by = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_news_deletion_requested_by"), nullable=True)
 
     # SEO Fields
     meta_description = db.Column(db.String(500), nullable=True)  # Meta description for search engines
@@ -882,7 +952,9 @@ class News(db.Model):
         nullable=False,
     )
     # Use back_populates and rename to 'author' to link back to User.news
-    author = db.relationship("User", back_populates="news")
+    author = db.relationship("User", back_populates="news", foreign_keys=[user_id])
+    # Relationship for the user who requested deletion
+    deletion_requester = db.relationship("User", foreign_keys=[deletion_requested_by])
     album_chapters = db.relationship("AlbumChapter", back_populates="news", cascade="all, delete-orphan")
 
     # Add image_id to connect news to an image (nullable)
@@ -1104,6 +1176,8 @@ class News(db.Model):
             "writer": self.writer,
             "external_source": self.external_source,
             "age_rating": self.age_rating,
+            "prize": self.prize,
+            "prize_coin_type": self.prize_coin_type,
             "category": self.category.to_dict() if self.category else None,
             "author": self.author.to_dict() if self.author else None,
             "image": self.image.to_dict() if self.image else None,
@@ -1111,8 +1185,42 @@ class News(db.Model):
             "seo_score": self.seo_score,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
+            "deletion_requested": self.deletion_requested,
+            "deletion_requested_at": self.deletion_requested_at.isoformat() if self.deletion_requested_at else None,
+            "deletion_requested_by": self.deletion_requested_by,
         }
 
+    def can_user_access(self, user_id):
+        """Check if a user can access this news content."""
+        # If not premium content, anyone can access
+        if not self.is_premium:
+            return True
+        
+        # If premium content but no prize, premium users can access
+        if self.prize == 0:
+            user = User.query.get(user_id)
+            return user and user.is_premium
+        
+        # If premium content with prize, check if user can afford it
+        return CoinManager.can_afford_content(user_id, self.prize, self.prize_coin_type)
+    
+    def purchase_access(self, user_id):
+        """Purchase access to this premium content."""
+        # If not premium content, no purchase needed
+        if not self.is_premium:
+            return {"success": True, "coins_spent": 0, "message": "Free content"}
+        
+        # If premium content but no prize, premium users can access
+        if self.prize == 0:
+            user = User.query.get(user_id)
+            if user and user.is_premium:
+                return {"success": True, "coins_spent": 0, "message": "Premium user - no coins required"}
+            else:
+                return {"success": False, "error": "Premium subscription required"}
+        
+        # If premium content with prize, purchase with coins
+        return CoinManager.purchase_content(user_id, self.id, self.prize, self.prize_coin_type)
+    
     def __repr__(self):
         return f"<News {self.title}>"
 
@@ -1166,6 +1274,11 @@ class Album(db.Model):
     seo_score = db.Column(db.Integer, nullable=True)           # Calculated SEO score (0-100)
     last_seo_audit = db.Column(db.DateTime, nullable=True)     # Last SEO audit timestamp
     is_seo_lock = db.Column(db.Boolean, default=False, nullable=False)  # Lock SEO fields from automatic updates
+    
+    # Content deletion request fields
+    deletion_requested = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    deletion_requested_at = db.Column(db.DateTime, nullable=True)
+    deletion_requested_by = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_album_deletion_requested_by"), nullable=True)
 
     # Foreign Keys
     user_id = db.Column(
@@ -1180,7 +1293,9 @@ class Album(db.Model):
     )
 
     # Relationships
-    author = db.relationship("User", backref="albums")
+    author = db.relationship("User", backref="albums", foreign_keys=[user_id])
+    # Relationship for the user who requested deletion
+    deletion_requester = db.relationship("User", foreign_keys=[deletion_requested_by])
     category = db.relationship("Category", backref="albums")
     cover_image = db.relationship("Image", backref="album_covers")
     chapters = db.relationship("AlbumChapter", back_populates="album", order_by="AlbumChapter.chapter_number", cascade="all, delete-orphan")
@@ -1872,6 +1987,10 @@ class BrandIdentity(db.Model):
     enable_ratings = db.Column(db.Boolean, nullable=False, default=True)
     enable_ads = db.Column(db.Boolean, nullable=False, default=True)
     enable_campaigns = db.Column(db.Boolean, nullable=False, default=True)
+    
+    # SEO Settings
+    seo_settings = db.Column(db.JSON, nullable=True)  # Root SEO settings as JSON
+    website_url = db.Column(db.String(255), nullable=True, default="https://lilycms.com")  # Website URL for SEO
 
     def to_dict(self):
         return {
@@ -1889,6 +2008,8 @@ class BrandIdentity(db.Model):
             "enable_ratings": self.enable_ratings,
             "enable_ads": self.enable_ads,
             "enable_campaigns": self.enable_campaigns,
+            "seo_settings": self.seo_settings,
+            "website_url": self.website_url,
         }
 
 
@@ -3259,6 +3380,52 @@ def add_missing_indexes():
             ON team_member ("group", member_order, is_active)
         """))
         
+        # Achievement system optimizations
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_achievement_category_active_order 
+            ON achievement_category (is_active, display_order)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_achievement_criteria_active 
+            ON achievement (criteria_type, is_active)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_achievement_category_active 
+            ON achievement (category_id, is_active)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_achievement_user_completed 
+            ON user_achievement (user_id, is_completed)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_achievement_achievement_completed 
+            ON user_achievement (achievement_id, is_completed)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_achievement_progress_user_achievement 
+            ON achievement_progress (user_achievement_id, created_at DESC)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_streak_user_type 
+            ON user_streak (user_id, streak_type)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_user_points_user 
+            ON user_points (user_id)
+        """))
+        
+        db.session.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_point_transaction_user_points 
+            ON point_transaction (user_points_id, created_at DESC)
+        """))
+        
         # Policy/guideline optimizations
         db.session.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_policy_order_active 
@@ -3541,7 +3708,10 @@ def get_all_models():
         Image, Category, News, Album, AlbumChapter, YouTubeVideo, ShareLog,
         SocialMedia, ContactDetail, TeamMember, BrandIdentity, UserSubscription,
         Comment, Rating, CommentLike, CommentReport, NavigationLink, RootSEO,
-        AdCampaign, Ad, AdPlacement, AdStats
+        AdCampaign, Ad, AdPlacement, AdStats,
+        # Achievement system models
+        AchievementCategory, Achievement, UserAchievement, AchievementProgress,
+        UserStreak, UserPoints, PointTransaction
     ]
 
 
@@ -3625,3 +3795,1069 @@ if __name__ == "__main__":
     print("- cleanup_orphaned_data()")
     print("- get_database_stats()")
     print("=" * 50)
+
+# =============================================================================
+# ACHIEVEMENT SYSTEM MODELS
+# =============================================================================
+
+class AchievementCategory(db.Model):
+    """Model for categorizing achievements."""
+    __tablename__ = "achievement_category"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text, nullable=True)
+    icon_class = db.Column(db.String(100), nullable=True)  # CSS icon class
+    color = db.Column(db.String(7), nullable=True)  # Hex color code
+    display_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationships
+    achievements = db.relationship("Achievement", back_populates="category", lazy=True)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "icon_class": self.icon_class,
+            "color": self.color,
+            "display_order": self.display_order,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    def __repr__(self):
+        return f"<AchievementCategory {self.name}>"
+
+
+class Achievement(db.Model):
+    """Model for defining achievements that users can earn."""
+    __tablename__ = "achievement"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    achievement_type = db.Column(db.String(50), nullable=False, index=True)  # 'streak', 'count', 'milestone', 'special'
+    
+    # Achievement criteria
+    criteria_type = db.Column(db.String(50), nullable=False)  # 'login_streak', 'activity_streak', 'reading_streak', 'contribution', 'exploration', etc.
+    criteria_value = db.Column(db.Integer, nullable=False)  # Target value to achieve
+    criteria_operator = db.Column(db.String(10), default='>=', nullable=False)  # '>=', '=', '>', etc.
+    
+    # Achievement rewards and display
+    points_reward = db.Column(db.Integer, default=0, nullable=False)  # Points awarded
+    badge_icon = db.Column(db.String(255), nullable=True)  # Badge image URL
+    rarity = db.Column(db.String(20), default='common', nullable=False)  # 'common', 'rare', 'epic', 'legendary'
+    is_hidden = db.Column(db.Boolean, default=False, nullable=False)  # Hidden until achieved
+    
+    # Status
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Foreign Keys
+    category_id = db.Column(db.Integer, db.ForeignKey("achievement_category.id", ondelete="SET NULL"), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    
+    # Relationships
+    category = db.relationship("AchievementCategory", back_populates="achievements")
+    creator = db.relationship("User", foreign_keys=[created_by], backref="created_achievements")
+    user_achievements = db.relationship("UserAchievement", back_populates="achievement", cascade="all, delete-orphan")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.validate()
+    
+    def validate(self):
+        """Validate achievement data."""
+        if self.criteria_value < 0:
+            raise ValueError("Criteria value cannot be negative")
+        
+        valid_operators = ['>=', '=', '>', '<', '<=', '!=']
+        if self.criteria_operator not in valid_operators:
+            raise ValueError(f"Criteria operator must be one of: {', '.join(valid_operators)}")
+        
+        valid_rarities = ['common', 'rare', 'epic', 'legendary']
+        if self.rarity not in valid_rarities:
+            raise ValueError(f"Rarity must be one of: {', '.join(valid_rarities)}")
+    
+    def check_criteria(self, current_value):
+        """Check if the current value meets the achievement criteria."""
+        if self.criteria_operator == '>=':
+            return current_value >= self.criteria_value
+        elif self.criteria_operator == '=':
+            return current_value == self.criteria_value
+        elif self.criteria_operator == '>':
+            return current_value > self.criteria_value
+        elif self.criteria_operator == '<':
+            return current_value < self.criteria_value
+        elif self.criteria_operator == '<=':
+            return current_value <= self.criteria_value
+        elif self.criteria_operator == '!=':
+            return current_value != self.criteria_value
+        return False
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "achievement_type": self.achievement_type,
+            "criteria_type": self.criteria_type,
+            "criteria_value": self.criteria_value,
+            "criteria_operator": self.criteria_operator,
+            "points_reward": self.points_reward,
+            "badge_icon": self.badge_icon,
+            "rarity": self.rarity,
+            "is_hidden": self.is_hidden,
+            "is_active": self.is_active,
+            "category": self.category.to_dict() if self.category else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    def __repr__(self):
+        return f"<Achievement {self.name} ({self.rarity})>"
+
+
+class UserAchievement(db.Model):
+    """Model for tracking user achievements."""
+    __tablename__ = "user_achievement"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    achievement_id = db.Column(db.Integer, db.ForeignKey("achievement.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Achievement progress and completion
+    current_progress = db.Column(db.Integer, default=0, nullable=False)  # Current progress value
+    is_completed = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    completed_at = db.Column(db.DateTime, nullable=True)  # When achievement was completed
+    points_earned = db.Column(db.Integer, default=0, nullable=False)  # Points actually earned
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship("User", back_populates="achievements")
+    achievement = db.relationship("Achievement", back_populates="user_achievements")
+    progress_logs = db.relationship("AchievementProgress", back_populates="user_achievement", cascade="all, delete-orphan")
+    
+    # Unique constraint to prevent duplicate user achievements
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'achievement_id', name='uq_user_achievement'),
+    )
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def update_progress(self, new_progress, earned_points=0):
+        """Update achievement progress and check for completion."""
+        self.current_progress = new_progress
+        
+        # Check if achievement is completed
+        if not self.is_completed and self.achievement.check_criteria(new_progress):
+            self.is_completed = True
+            self.completed_at = datetime.now(timezone.utc)
+            self.points_earned = earned_points or self.achievement.points_reward
+        
+        self.updated_at = datetime.now(timezone.utc)
+    
+    def get_progress_percentage(self):
+        """Get progress as a percentage."""
+        if self.achievement.criteria_value == 0:
+            return 100 if self.is_completed else 0
+        return min(100, (self.current_progress / self.achievement.criteria_value) * 100)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "achievement_id": self.achievement_id,
+            "current_progress": self.current_progress,
+            "is_completed": self.is_completed,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "points_earned": self.points_earned,
+            "progress_percentage": self.get_progress_percentage(),
+            "achievement": self.achievement.to_dict() if self.achievement else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    def __repr__(self):
+        status = "completed" if self.is_completed else "in_progress"
+        return f"<UserAchievement {self.user_id} - {self.achievement_id} ({status})>"
+
+
+class AchievementProgress(db.Model):
+    """Model for tracking detailed achievement progress history."""
+    __tablename__ = "achievement_progress"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_achievement_id = db.Column(db.Integer, db.ForeignKey("user_achievement.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Progress details
+    progress_type = db.Column(db.String(50), nullable=False)  # 'increment', 'set', 'reset'
+    old_value = db.Column(db.Integer, nullable=True)  # Previous progress value
+    new_value = db.Column(db.Integer, nullable=False)  # New progress value
+    change_amount = db.Column(db.Integer, nullable=True)  # Amount of change
+    
+    # Context information
+    context_data = db.Column(db.JSON, nullable=True)  # Additional context (e.g., content_id, activity_type)
+    source = db.Column(db.String(100), nullable=True)  # Source of the progress (e.g., 'login', 'news_creation', 'comment')
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    
+    # Relationships
+    user_achievement = db.relationship("UserAchievement", back_populates="progress_logs")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.old_value is not None and self.new_value is not None:
+            self.change_amount = self.new_value - self.old_value
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_achievement_id": self.user_achievement_id,
+            "progress_type": self.progress_type,
+            "old_value": self.old_value,
+            "new_value": self.new_value,
+            "change_amount": self.change_amount,
+            "context_data": self.context_data,
+            "source": self.source,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+    
+    def __repr__(self):
+        return f"<AchievementProgress {self.progress_type}: {self.old_value} -> {self.new_value}>"
+
+
+class UserStreak(db.Model):
+    """Model for tracking user streaks (login, activity, reading, etc.)."""
+    __tablename__ = "user_streak"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    streak_type = db.Column(db.String(50), nullable=False, index=True)  # 'login', 'activity', 'reading', 'contribution'
+    
+    # Streak tracking
+    current_streak = db.Column(db.Integer, default=0, nullable=False)  # Current streak count
+    longest_streak = db.Column(db.Integer, default=0, nullable=False)  # Longest streak ever
+    last_activity_date = db.Column(db.Date, nullable=True)  # Last activity date
+    streak_start_date = db.Column(db.Date, nullable=True)  # When current streak started
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship("User", back_populates="streaks")
+    
+    # Unique constraint to prevent duplicate streaks per user and type
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'streak_type', name='uq_user_streak'),
+    )
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def update_streak(self, activity_date=None):
+        """Update the streak based on new activity."""
+        if activity_date is None:
+            activity_date = datetime.now(timezone.utc).date()
+        
+        # If this is the first activity or consecutive day
+        if (self.last_activity_date is None or 
+            activity_date == self.last_activity_date + timedelta(days=1)):
+            self.current_streak += 1
+            if self.streak_start_date is None:
+                self.streak_start_date = activity_date
+        # If same day, no change
+        elif activity_date == self.last_activity_date:
+            pass
+        # If gap in streak, reset
+        else:
+            self.current_streak = 1
+            self.streak_start_date = activity_date
+        
+        # Update longest streak if current is longer
+        if self.current_streak > self.longest_streak:
+            self.longest_streak = self.current_streak
+        
+        self.last_activity_date = activity_date
+        self.updated_at = datetime.now(timezone.utc)
+    
+    def is_streak_active(self):
+        """Check if the streak is still active (not broken)."""
+        if self.last_activity_date is None:
+            return False
+        
+        yesterday = datetime.now(timezone.utc).date() - timedelta(days=1)
+        return self.last_activity_date >= yesterday
+    
+    def get_days_since_last_activity(self):
+        """Get the number of days since last activity."""
+        if self.last_activity_date is None:
+            return None
+        
+        today = datetime.now(timezone.utc).date()
+        return (today - self.last_activity_date).days
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "streak_type": self.streak_type,
+            "current_streak": self.current_streak,
+            "longest_streak": self.longest_streak,
+            "last_activity_date": self.last_activity_date.isoformat() if self.last_activity_date else None,
+            "streak_start_date": self.streak_start_date.isoformat() if self.streak_start_date else None,
+            "is_active": self.is_streak_active(),
+            "days_since_last_activity": self.get_days_since_last_activity(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    def __repr__(self):
+        return f"<UserStreak {self.user_id} - {self.streak_type}: {self.current_streak}>"
+
+
+class UserPoints(db.Model):
+    """Model for tracking user points/XP from achievements and activities."""
+    __tablename__ = "user_points"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Points tracking
+    total_points = db.Column(db.Integer, default=0, nullable=False)  # Total points earned
+    current_level = db.Column(db.Integer, default=1, nullable=False)  # Current user level
+    points_to_next_level = db.Column(db.Integer, default=100, nullable=False)  # Points needed for next level
+    
+    # Level progression
+    total_levels_earned = db.Column(db.Integer, default=0, nullable=False)  # Total levels earned
+    highest_level_reached = db.Column(db.Integer, default=1, nullable=False)  # Highest level ever reached
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship("User", back_populates="points")
+    point_transactions = db.relationship("PointTransaction", back_populates="user_points", cascade="all, delete-orphan")
+    
+    # Unique constraint to ensure one points record per user
+    __table_args__ = (
+        db.UniqueConstraint('user_id', name='uq_user_points'),
+    )
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def add_points(self, points, source="achievement", description=None, context_data=None):
+        """Add points and check for level up."""
+        if points <= 0:
+            return False
+        
+        old_level = self.current_level
+        self.total_points += points
+        
+        # Check for level up
+        while self.total_points >= self.points_to_next_level:
+            self.current_level += 1
+            self.total_levels_earned += 1
+            if self.current_level > self.highest_level_reached:
+                self.highest_level_reached = self.current_level
+            
+            # Calculate points needed for next level (simple progression)
+            self.points_to_next_level = self.current_level * 100
+        
+        self.updated_at = datetime.now(timezone.utc)
+        
+        # Record transaction
+        transaction = PointTransaction(
+            user_points_id=self.id,
+            points_change=points,
+            source=source,
+            description=description,
+            context_data=context_data
+        )
+        db.session.add(transaction)
+        
+        return self.current_level > old_level  # Return True if leveled up
+    
+    def get_level_progress(self):
+        """Get progress towards next level as percentage."""
+        if self.points_to_next_level == 0:
+            return 100
+        
+        current_level_points = (self.current_level - 1) * 100
+        points_in_current_level = self.total_points - current_level_points
+        points_needed_for_level = self.points_to_next_level - current_level_points
+        
+        return min(100, (points_in_current_level / points_needed_for_level) * 100)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "total_points": self.total_points,
+            "current_level": self.current_level,
+            "points_to_next_level": self.points_to_next_level,
+            "total_levels_earned": self.total_levels_earned,
+            "highest_level_reached": self.highest_level_reached,
+            "level_progress": self.get_level_progress(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    def __repr__(self):
+        return f"<UserPoints {self.user_id}: Level {self.current_level} ({self.total_points} pts)>"
+
+
+class PointTransaction(db.Model):
+    """Model for tracking point transactions (earned/spent)."""
+    __tablename__ = "point_transaction"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_points_id = db.Column(db.Integer, db.ForeignKey("user_points.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Transaction details
+    points_change = db.Column(db.Integer, nullable=False)  # Positive for earned, negative for spent
+    source = db.Column(db.String(100), nullable=False)  # 'achievement', 'activity', 'bonus', etc.
+    description = db.Column(db.Text, nullable=True)  # Human-readable description
+    context_data = db.Column(db.JSON, nullable=True)  # Additional context data
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    
+    # Relationships
+    user_points = db.relationship("UserPoints", back_populates="point_transactions")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    @property
+    def is_positive(self):
+        """Check if this is a positive transaction (points earned)."""
+        return self.points_change > 0
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_points_id": self.user_points_id,
+            "points_change": self.points_change,
+            "source": self.source,
+            "description": self.description,
+            "context_data": self.context_data,
+            "is_positive": self.is_positive,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+    
+    def __repr__(self):
+        change_type = "earned" if self.is_positive else "spent"
+        return f"<PointTransaction {change_type} {abs(self.points_change)} pts>"
+
+
+class CoinTransaction(db.Model):
+    """Model for tracking coin transactions (achievement coins and top-up coins)."""
+    __tablename__ = "coin_transaction"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Transaction details
+    coin_type = db.Column(db.String(20), nullable=False, index=True)  # 'achievement', 'topup'
+    coins_change = db.Column(db.Integer, nullable=False)  # Positive for earned/purchased, negative for spent
+    source = db.Column(db.String(100), nullable=False)  # 'achievement_reward', 'purchase', 'content_purchase', etc.
+    description = db.Column(db.Text, nullable=True)  # Human-readable description
+    context_data = db.Column(db.JSON, nullable=True)  # Additional context data
+    
+    # For top-up transactions
+    payment_provider = db.Column(db.String(50), nullable=True)  # 'stripe', 'paypal', etc.
+    payment_id = db.Column(db.String(255), nullable=True)  # External payment ID
+    amount_paid = db.Column(db.Numeric(10, 2), nullable=True)  # Amount paid in real currency
+    currency = db.Column(db.String(3), default='IDR', nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship("User", back_populates="coin_transactions")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    @property
+    def is_positive(self):
+        """Check if this is a positive transaction (coins earned/purchased)."""
+        return self.coins_change > 0
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "coin_type": self.coin_type,
+            "coins_change": self.coins_change,
+            "source": self.source,
+            "description": self.description,
+            "context_data": self.context_data,
+            "payment_provider": self.payment_provider,
+            "payment_id": self.payment_id,
+            "amount_paid": float(self.amount_paid) if self.amount_paid else None,
+            "currency": self.currency,
+            "is_positive": self.is_positive,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+    
+    def __repr__(self):
+        change_type = "earned" if self.is_positive else "spent"
+        return f"<CoinTransaction {self.user_id}: {change_type} {self.coins_change} {self.coin_type} coins>"
+
+
+class UserCoins(db.Model):
+    """Model for tracking user's coin balances (achievement and top-up coins)."""
+    __tablename__ = "user_coins"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    
+    # Coin balances
+    achievement_coins = db.Column(db.Integer, default=0, nullable=False)  # Coins earned from achievements
+    topup_coins = db.Column(db.Integer, default=0, nullable=False)  # Coins purchased with real money
+    
+    # Statistics
+    total_achievement_coins_earned = db.Column(db.Integer, default=0, nullable=False)  # Total ever earned
+    total_topup_coins_purchased = db.Column(db.Integer, default=0, nullable=False)  # Total ever purchased
+    total_coins_spent = db.Column(db.Integer, default=0, nullable=False)  # Total ever spent
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship("User", back_populates="coins")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    def add_coins(self, coins, coin_type, source="achievement", description=None, context_data=None, 
+                  payment_provider=None, payment_id=None, amount_paid=None, currency=None):
+        """Add coins and record transaction."""
+        if coins <= 0:
+            return False
+        
+        # Update balance
+        if coin_type == 'achievement':
+            self.achievement_coins += coins
+            self.total_achievement_coins_earned += coins
+        elif coin_type == 'topup':
+            self.topup_coins += coins
+            self.total_topup_coins_purchased += coins
+        
+        self.updated_at = datetime.now(timezone.utc)
+        
+        # Record transaction
+        transaction = CoinTransaction(
+            user_id=self.user_id,
+            coin_type=coin_type,
+            coins_change=coins,
+            source=source,
+            description=description,
+            context_data=context_data,
+            payment_provider=payment_provider,
+            payment_id=payment_id,
+            amount_paid=amount_paid,
+            currency=currency
+        )
+        db.session.add(transaction)
+        
+        return True
+    
+    def spend_coins(self, coins, coin_type, source="content_purchase", description=None, context_data=None):
+        """Spend coins and record transaction."""
+        if coins <= 0:
+            return False
+        
+        # Check if user has enough coins
+        if coin_type == 'achievement' and self.achievement_coins < coins:
+            return False
+        elif coin_type == 'topup' and self.topup_coins < coins:
+            return False
+        elif coin_type == 'any':
+            # Try topup coins first, then achievement coins
+            if self.topup_coins >= coins:
+                coin_type = 'topup'
+            elif self.achievement_coins >= coins:
+                coin_type = 'achievement'
+            else:
+                return False
+        
+        # Update balance
+        if coin_type == 'achievement':
+            self.achievement_coins -= coins
+        elif coin_type == 'topup':
+            self.topup_coins -= coins
+        
+        self.total_coins_spent += coins
+        self.updated_at = datetime.now(timezone.utc)
+        
+        # Record transaction
+        transaction = CoinTransaction(
+            user_id=self.user_id,
+            coin_type=coin_type,
+            coins_change=-coins,  # Negative for spending
+            source=source,
+            description=description,
+            context_data=context_data
+        )
+        db.session.add(transaction)
+        
+        return True
+    
+    def get_total_coins(self):
+        """Get total available coins (achievement + topup)."""
+        return self.achievement_coins + self.topup_coins
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "achievement_coins": self.achievement_coins,
+            "topup_coins": self.topup_coins,
+            "total_coins": self.get_total_coins(),
+            "total_achievement_coins_earned": self.total_achievement_coins_earned,
+            "total_topup_coins_purchased": self.total_topup_coins_purchased,
+            "total_coins_spent": self.total_coins_spent,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+    
+    def __repr__(self):
+        return f"<UserCoins {self.user_id}: {self.achievement_coins} achievement + {self.topup_coins} topup = {self.get_total_coins()} total>"
+
+
+class CoinManager:
+    """Manager class for handling coin system operations."""
+    
+    @staticmethod
+    def get_or_create_user_coins(user_id):
+        """Get or create a user coins record."""
+        user_coins = UserCoins.query.filter_by(user_id=user_id).first()
+        
+        if not user_coins:
+            user_coins = UserCoins(user_id=user_id)
+            db.session.add(user_coins)
+        
+        return user_coins
+    
+    @staticmethod
+    def add_achievement_coins(user_id, coins, source="achievement", description=None, context_data=None):
+        """Add achievement coins to user."""
+        user_coins = CoinManager.get_or_create_user_coins(user_id)
+        success = user_coins.add_coins(coins, 'achievement', source, description, context_data)
+        
+        if success:
+            db.session.commit()
+            return True
+        return False
+    
+    @staticmethod
+    def add_topup_coins(user_id, coins, payment_provider, payment_id, amount_paid, currency='IDR', description=None, context_data=None):
+        """Add top-up coins to user."""
+        user_coins = CoinManager.get_or_create_user_coins(user_id)
+        success = user_coins.add_coins(
+            coins, 'topup', 'purchase', description, context_data,
+            payment_provider, payment_id, amount_paid, currency
+        )
+        
+        if success:
+            db.session.commit()
+            return True
+        return False
+    
+    @staticmethod
+    def spend_coins(user_id, coins, coin_type='any', source="content_purchase", description=None, context_data=None):
+        """Spend coins from user balance."""
+        user_coins = CoinManager.get_or_create_user_coins(user_id)
+        success = user_coins.spend_coins(coins, coin_type, source, description, context_data)
+        
+        if success:
+            db.session.commit()
+            return True
+        return False
+    
+    @staticmethod
+    def get_user_coin_balance(user_id):
+        """Get user's coin balance."""
+        user_coins = UserCoins.query.filter_by(user_id=user_id).first()
+        if not user_coins:
+            return {
+                "achievement_coins": 0,
+                "topup_coins": 0,
+                "total_coins": 0
+            }
+        return user_coins.to_dict()
+    
+    @staticmethod
+    def can_afford_content(user_id, required_coins, coin_type='any'):
+        """Check if user can afford content with specified coin type."""
+        # First check if user is premium - premium users bypass coin system
+        user = User.query.get(user_id)
+        if user and user.is_premium:
+            return True
+        
+        # For non-premium users, check coin balance
+        user_coins = UserCoins.query.filter_by(user_id=user_id).first()
+        if not user_coins:
+            return False
+        
+        if coin_type == 'achievement':
+            return user_coins.achievement_coins >= required_coins
+        elif coin_type == 'topup':
+            return user_coins.topup_coins >= required_coins
+        elif coin_type == 'any':
+            return user_coins.get_total_coins() >= required_coins
+        
+        return False
+    
+    @staticmethod
+    def purchase_content(user_id, news_id, required_coins, coin_type='any', source="content_purchase"):
+        """Purchase content with coins. Premium users bypass coin requirement."""
+        # First check if user is premium - premium users bypass coin system
+        user = User.query.get(user_id)
+        if user and user.is_premium:
+            # Premium users can access content without spending coins
+            return {
+                "success": True,
+                "coins_spent": 0,
+                "coin_type_used": "premium_bypass",
+                "message": "Premium user - no coins required"
+            }
+        
+        # For non-premium users, spend coins
+        user_coins = CoinManager.get_or_create_user_coins(user_id)
+        
+        # Determine which coin type to use
+        actual_coin_type = coin_type
+        if coin_type == 'any':
+            # Try topup coins first, then achievement coins
+            if user_coins.topup_coins >= required_coins:
+                actual_coin_type = 'topup'
+            elif user_coins.achievement_coins >= required_coins:
+                actual_coin_type = 'achievement'
+            else:
+                return {
+                    "success": False,
+                    "error": "Insufficient coins",
+                    "required": required_coins,
+                    "available": user_coins.get_total_coins()
+                }
+        
+        # Spend the coins
+        success = user_coins.spend_coins(
+            required_coins, 
+            actual_coin_type, 
+            source, 
+            f"Purchased content (News ID: {news_id})",
+            {"news_id": news_id, "original_coin_type": coin_type}
+        )
+        
+        if success:
+            db.session.commit()
+            return {
+                "success": True,
+                "coins_spent": required_coins,
+                "coin_type_used": actual_coin_type,
+                "remaining_balance": user_coins.to_dict()
+            }
+        else:
+            return {
+                "success": False,
+                "error": "Failed to spend coins",
+                "required": required_coins,
+                "available": user_coins.to_dict()
+            }
+
+
+def add_achievement_relationships_to_user():
+    """Add achievement-related relationships to the User model."""
+    # Add these relationships to the User class
+    # Coin system relationships are now defined directly in User model
+    pass
+
+
+# Achievement system helper functions
+class AchievementManager:
+    """Manager class for handling achievement logic."""
+    
+    @staticmethod
+    def get_or_create_user_achievement(user_id, achievement_id):
+        """Get or create a user achievement record."""
+        user_achievement = UserAchievement.query.filter_by(
+            user_id=user_id, 
+            achievement_id=achievement_id
+        ).first()
+        
+        if not user_achievement:
+            user_achievement = UserAchievement(
+                user_id=user_id,
+                achievement_id=achievement_id
+            )
+            db.session.add(user_achievement)
+        
+        return user_achievement
+    
+    @staticmethod
+    def get_or_create_user_streak(user_id, streak_type):
+        """Get or create a user streak record."""
+        user_streak = UserStreak.query.filter_by(
+            user_id=user_id,
+            streak_type=streak_type
+        ).first()
+        
+        if not user_streak:
+            user_streak = UserStreak(
+                user_id=user_id,
+                streak_type=streak_type
+            )
+            db.session.add(user_streak)
+        
+        return user_streak
+    
+    @staticmethod
+    def get_or_create_user_points(user_id):
+        """Get or create a user points record."""
+        user_points = UserPoints.query.filter_by(user_id=user_id).first()
+        
+        if not user_points:
+            user_points = UserPoints(user_id=user_id)
+            db.session.add(user_points)
+        
+        return user_points
+    
+    @staticmethod
+    def check_achievements(user_id, criteria_type, current_value, source="activity", context_data=None):
+        """Check and update achievements for a specific criteria type."""
+        achievements = Achievement.query.filter_by(
+            criteria_type=criteria_type,
+            is_active=True
+        ).all()
+        
+        user_points = AchievementManager.get_or_create_user_points(user_id)
+        completed_achievements = []
+        
+        for achievement in achievements:
+            user_achievement = AchievementManager.get_or_create_user_achievement(
+                user_id, achievement.id
+            )
+            
+            # Update progress
+            old_progress = user_achievement.current_progress
+            user_achievement.update_progress(current_value)
+            
+            # Log progress change
+            if old_progress != current_value:
+                progress_log = AchievementProgress(
+                    user_achievement_id=user_achievement.id,
+                    progress_type='set',
+                    old_value=old_progress,
+                    new_value=current_value,
+                    source=source,
+                    context_data=context_data
+                )
+                db.session.add(progress_log)
+            
+            # Check if achievement was just completed
+            if user_achievement.is_completed and user_achievement.completed_at:
+                # Check if this is a new completion (completed_at was just set)
+                if user_achievement.points_earned > 0:
+                    leveled_up = user_points.add_points(
+                        user_achievement.points_earned,
+                        source="achievement",
+                        description=f"Achievement: {achievement.name}",
+                        context_data={"achievement_id": achievement.id}
+                    )
+                    completed_achievements.append({
+                        "achievement": achievement,
+                        "user_achievement": user_achievement,
+                        "leveled_up": leveled_up
+                    })
+        
+        return completed_achievements
+    
+    @staticmethod
+    def update_streak(user_id, streak_type, activity_date=None):
+        """Update a user's streak."""
+        user_streak = AchievementManager.get_or_create_user_streak(user_id, streak_type)
+        user_streak.update_streak(activity_date)
+        return user_streak
+    
+    @staticmethod
+    def get_user_achievements_summary(user_id):
+        """Get a summary of user's achievements."""
+        user_achievements = UserAchievement.query.filter_by(user_id=user_id).all()
+        user_points = UserPoints.query.filter_by(user_id=user_id).first()
+        user_streaks = UserStreak.query.filter_by(user_id=user_id).all()
+        
+        total_achievements = len(user_achievements)
+        completed_achievements = len([ua for ua in user_achievements if ua.is_completed])
+        total_points = user_points.total_points if user_points else 0
+        current_level = user_points.current_level if user_points else 1
+        
+        return {
+            "total_achievements": total_achievements,
+            "completed_achievements": completed_achievements,
+            "completion_rate": (completed_achievements / total_achievements * 100) if total_achievements > 0 else 0,
+            "total_points": total_points,
+            "current_level": current_level,
+            "streaks": {streak.streak_type: streak.to_dict() for streak in user_streaks}
+        }
+
+
+# Event listeners
+
+class SEOInjectionSettings(db.Model):
+    """Model for managing SEO injection settings and default values."""
+    __tablename__ = "seo_injection_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Website Information
+    website_name = db.Column(db.String(200), nullable=True)
+    website_url = db.Column(db.String(255), nullable=True)
+    website_description = db.Column(db.Text, nullable=True)
+    website_language = db.Column(db.String(10), nullable=True, default='id')
+    website_logo = db.Column(db.String(255), nullable=True)
+    
+    # Organization Information
+    organization_name = db.Column(db.String(200), nullable=True)
+    organization_logo = db.Column(db.String(255), nullable=True)
+    organization_description = db.Column(db.Text, nullable=True)
+    organization_type = db.Column(db.String(100), nullable=True)
+    
+    # Social Media Information
+    facebook_url = db.Column(db.String(255), nullable=True)
+    twitter_url = db.Column(db.String(255), nullable=True)
+    instagram_url = db.Column(db.String(255), nullable=True)
+    youtube_url = db.Column(db.String(255), nullable=True)
+    linkedin_url = db.Column(db.String(255), nullable=True)
+    
+    # Contact Information
+    contact_email = db.Column(db.String(255), nullable=True)
+    contact_phone = db.Column(db.String(50), nullable=True)
+    contact_address = db.Column(db.Text, nullable=True)
+    
+    # Default SEO Templates
+    default_meta_description = db.Column(db.Text, nullable=True)
+    default_meta_keywords = db.Column(db.Text, nullable=True)
+    default_meta_author = db.Column(db.String(100), nullable=True)
+    default_meta_robots = db.Column(db.String(50), nullable=True, default='index, follow')
+    
+    # Default Open Graph Templates
+    default_og_title = db.Column(db.String(200), nullable=True)
+    default_og_description = db.Column(db.Text, nullable=True)
+    default_og_image = db.Column(db.String(255), nullable=True)
+    
+    # Default Twitter Templates
+    default_twitter_card = db.Column(db.String(50), nullable=True, default='summary')
+    default_twitter_title = db.Column(db.String(200), nullable=True)
+    default_twitter_description = db.Column(db.Text, nullable=True)
+    
+    # Default Structured Data Templates
+    default_structured_data_type = db.Column(db.String(50), nullable=True, default='Article')
+    default_canonical_url = db.Column(db.String(255), nullable=True)
+    default_meta_language = db.Column(db.String(10), nullable=True, default='id')
+    
+    # Injection Settings
+    auto_inject_news = db.Column(db.Boolean, default=True, nullable=False)
+    auto_inject_albums = db.Column(db.Boolean, default=True, nullable=False)
+    auto_inject_chapters = db.Column(db.Boolean, default=True, nullable=False)
+    auto_inject_root = db.Column(db.Boolean, default=True, nullable=False)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    def __init__(self, **kwargs):
+        super(SEOInjectionSettings, self).__init__(**kwargs)
+        self._load_defaults()
+    
+    def _load_defaults(self):
+        """Load default schema markup templates."""
+        if not hasattr(self, '_defaults_loaded'):
+            self._defaults_loaded = True
+    
+    def get_website_info(self):
+        """Get website information, with fallback to BrandIdentity."""
+        from models import BrandIdentity
+        
+        brand_info = BrandIdentity.query.first()
+        
+        return {
+            'name': self.website_name or (brand_info.website_name if brand_info else 'LilyOpenCMS'),
+            'url': self.website_url or (brand_info.website_url if brand_info else 'https://lilycms.com'),
+            'description': self.website_description or (brand_info.website_description if brand_info else ''),
+            'language': self.website_language or 'id',
+            'logo': self.website_logo or (brand_info.logo_url if brand_info else '')
+        }
+    
+    def get_organization_info(self):
+        """Get organization information, with fallback to BrandIdentity."""
+        from models import BrandIdentity
+        
+        brand_info = BrandIdentity.query.first()
+        
+        return {
+            'name': self.organization_name or (brand_info.organization_name if brand_info else ''),
+            'logo': self.organization_logo or (brand_info.logo_url if brand_info else ''),
+            'description': self.organization_description or (brand_info.organization_description if brand_info else ''),
+            'type': self.organization_type or 'Organization'
+        }
+    
+    def get_social_media_info(self):
+        """Get social media information."""
+        return {
+            'facebook': self.facebook_url,
+            'twitter': self.twitter_url,
+            'instagram': self.instagram_url,
+            'youtube': self.youtube_url,
+            'linkedin': self.linkedin_url
+        }
+    
+    def get_contact_info(self):
+        """Get contact information."""
+        return {
+            'email': self.contact_email,
+            'phone': self.contact_phone,
+            'address': self.contact_address
+        }
+    
+    def format_template(self, template, **kwargs):
+        """Format a template string with provided values and defaults."""
+        from models import BrandIdentity
+        
+        brand_info = BrandIdentity.query.first()
+        
+        # Default values
+        defaults = {
+            'website_name': self.website_name or (brand_info.website_name if brand_info else 'LilyOpenCMS'),
+            'website_url': self.website_url or (brand_info.website_url if brand_info else 'https://lilycms.com'),
+            'website_description': self.website_description or (brand_info.website_description if brand_info else ''),
+            'organization_name': self.organization_name or (brand_info.organization_name if brand_info else ''),
+            'organization_logo': self.organization_logo or (brand_info.logo_url if brand_info else ''),
+        }
+        
+        # Merge with provided kwargs
+        defaults.update(kwargs)
+        
+        try:
+            return template.format(**defaults)
+        except (KeyError, ValueError):
+            return template

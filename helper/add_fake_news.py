@@ -16,7 +16,7 @@ spec.loader.exec_module(main)
 app = main.app
 db = main.db
 
-from models import News, Category, User, Image  # Import Image model
+from models import News, Category, User, Image, UserCoins, CoinTransaction  # Import coin models
 from faker import Faker
 import random
 import json
@@ -79,6 +79,97 @@ def generate_markdown_content(min_paras=10, max_paras=30):
         styled_content.append("")
 
     return "\n".join(styled_content) # Use single newline as we added blanks
+
+def generate_fake_user_coins(users):
+    """Generate fake user coins data for testing the coin system."""
+    print("   Generating fake user coins data...")
+    
+    coins_added = 0
+    for user in users:
+        try:
+            # Check if user already has coins data
+            existing_coins = UserCoins.query.filter_by(user_id=user.id).first()
+            if existing_coins:
+                continue  # Skip if user already has coins
+            
+            # Generate random coin balances
+            achievement_coins = random.randint(0, 200)  # 0-200 achievement coins
+            topup_coins = random.randint(0, 500)  # 0-500 topup coins
+            
+            # Create user coins record
+            user_coins = UserCoins(
+                user_id=user.id,
+                achievement_coins=achievement_coins,
+                topup_coins=topup_coins,
+                total_achievement_coins_earned=achievement_coins,
+                total_topup_coins_purchased=topup_coins,
+                total_coins_spent=0
+            )
+            db.session.add(user_coins)
+            
+            # Generate some fake transactions
+            if achievement_coins > 0:
+                # Add achievement coin transactions
+                coins_earned = 0
+                while coins_earned < achievement_coins:
+                    transaction_amount = min(random.randint(1, 20), achievement_coins - coins_earned)
+                    transaction = CoinTransaction(
+                        user_id=user.id,
+                        coin_type='achievement',
+                        coins_change=transaction_amount,
+                        source='achievement_reward',
+                        description=f"Earned from achievement: {fake.sentence(nb_words=3)}",
+                        context_data={'achievement_name': fake.word()}
+                    )
+                    db.session.add(transaction)
+                    coins_earned += transaction_amount
+            
+            if topup_coins > 0:
+                # Add topup coin transactions
+                coins_purchased = 0
+                while coins_purchased < topup_coins:
+                    transaction_amount = min(random.randint(10, 100), topup_coins - coins_purchased)
+                    transaction = CoinTransaction(
+                        user_id=user.id,
+                        coin_type='topup',
+                        coins_change=transaction_amount,
+                        source='topup_purchase',
+                        description=f"Purchased {transaction_amount} coins",
+                        payment_provider=random.choice(['paypal', 'stripe', 'bank_transfer']),
+                        payment_id=f"PAY-{fake.uuid4()[:8].upper()}",
+                        amount_paid=transaction_amount * 0.1,  # Assume 10 cents per coin
+                        currency='USD'
+                    )
+                    db.session.add(transaction)
+                    coins_purchased += transaction_amount
+            
+            coins_added += 1
+            
+        except Exception as e:
+            print(f"   ❌ Error creating coins for user {user.username}: {e}")
+            db.session.rollback()
+            continue
+    
+    if coins_added > 0:
+        try:
+            db.session.commit()
+            print(f"   ✅ Successfully added coin data for {coins_added} users")
+            
+            # Show coin statistics
+            total_achievement = sum(uc.achievement_coins for uc in UserCoins.query.all())
+            total_topup = sum(uc.topup_coins for uc in UserCoins.query.all())
+            total_transactions = CoinTransaction.query.count()
+            
+            print(f"   📊 Coin Statistics:")
+            print(f"      Total achievement coins: {total_achievement}")
+            print(f"      Total topup coins: {total_topup}")
+            print(f"      Total transactions: {total_transactions}")
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"   ❌ Error committing coin data: {e}")
+    else:
+        print("   ℹ️ No new coin data added (users may already have coins)")
 
 def generate_seo_fields(title, content, author_name):
     """Generate SEO fields for the news article."""
@@ -246,7 +337,7 @@ def add_fake_news_with_images(num_news, image_prob, link_prob):
                     is_visible = random.choices([True, False], weights=[95, 5], k=1)[0]
                     is_main_news = random.choices([True, False], weights=[10, 90], k=1)[0]
                     is_news = random.choices([True, False], weights=[70, 30], k=1)[0]
-                    is_premium = random.choices([True, False], weights=[20, 80], k=1)[0]
+                    is_premium = random.choices([True, False], weights=[int(args.premium_prob * 100), int((1 - args.premium_prob) * 100)], k=1)[0]
                     has_image = (image_pool or images) and (random.random() < image_prob)
                     has_external_link = random.random() < link_prob
 
@@ -279,7 +370,22 @@ def add_fake_news_with_images(num_news, image_prob, link_prob):
                 tags_str = ", ".join(tags)
                 news_title = fake.sentence(nb_words=random.randint(5, 10))
                 # Use the new function to generate richer content
-                news_content_str = generate_markdown_content() 
+                news_content_str = generate_markdown_content()
+                
+                # --- Generate coin system data for premium content ---
+                prize = 0
+                prize_coin_type = 'any'
+                if is_premium:
+                    # Configurable chance of having a prize for premium content
+                    if random.random() < args.premium_prize_prob:
+                        # Prize between 5-50 coins
+                        prize = random.randint(5, 50)
+                        # Random coin type preference
+                        prize_coin_type = random.choice(['any', 'achievement', 'topup'])
+                    else:
+                        # Premium content without prize (premium users can access for free)
+                        prize = 0
+                        prize_coin_type = 'any' 
 
                 # Generate SEO fields
                 seo_fields = generate_seo_fields(news_title, news_content_str, author.username)
@@ -308,6 +414,8 @@ def add_fake_news_with_images(num_news, image_prob, link_prob):
                     is_main_news=is_main_news,
                     is_news=is_news,
                     is_premium=is_premium,
+                    prize=prize,  # Coin prize for premium content
+                    prize_coin_type=prize_coin_type,  # Type of coins required
                     read_count=random.randint(0, 1500),  # Add some fake read counts
                     external_source=external_source,  # Random external link or None
                     is_archived=False,  # Explicitly set as not archived
@@ -368,6 +476,34 @@ def add_fake_news_with_images(num_news, image_prob, link_prob):
                         print(f"   Pool reused {cycles} times for complete distribution")
                 
                 print("-" * 30)
+                
+                # Show premium content and coin statistics
+                total_news = News.query.count()
+                premium_news = News.query.filter_by(is_premium=True).count()
+                premium_with_prize = News.query.filter(News.is_premium == True, News.prize > 0).count()
+                premium_free = News.query.filter(News.is_premium == True, News.prize == 0).count()
+                
+                print(f"📊 Premium Content Statistics:")
+                print(f"   Total news articles: {total_news}")
+                print(f"   Premium content: {premium_news} ({premium_news/total_news*100:.1f}%)")
+                print(f"   Premium with coin cost: {premium_with_prize}")
+                print(f"   Premium (free for premium users): {premium_free}")
+                
+                # Coin type distribution
+                if premium_with_prize > 0:
+                    any_coins = News.query.filter(News.is_premium == True, News.prize > 0, News.prize_coin_type == 'any').count()
+                    achievement_coins = News.query.filter(News.is_premium == True, News.prize > 0, News.prize_coin_type == 'achievement').count()
+                    topup_coins = News.query.filter(News.is_premium == True, News.prize > 0, News.prize_coin_type == 'topup').count()
+                    
+                    print(f"   Coin type distribution:")
+                    print(f"      Any coin type: {any_coins}")
+                    print(f"      Achievement coins only: {achievement_coins}")
+                    print(f"      Topup coins only: {topup_coins}")
+                
+                # Generate fake user coins data for testing
+                print("Generating fake user coins data...")
+                generate_fake_user_coins(users)
+                
             except Exception as e:
                 db.session.rollback()
                 print("-" * 30)
@@ -401,6 +537,18 @@ if __name__ == "__main__":
         default=0.65,
         help="Probability (0-1) of a news article having an external link (default: 0.65)"
     )
+    parser.add_argument(
+        "--premium-prob",
+        type=float,
+        default=0.2,
+        help="Probability (0-1) of a news article being premium (default: 0.2)"
+    )
+    parser.add_argument(
+        "--premium-prize-prob",
+        type=float,
+        default=0.7,
+        help="Probability (0-1) of premium content having a coin cost (default: 0.7)"
+    )
 
     args = parser.parse_args()
 
@@ -410,6 +558,14 @@ if __name__ == "__main__":
         sys.exit(1)
     if not 0 <= args.link_prob <= 1:
         print("❌ Error: --link-prob must be between 0 and 1.", file=sys.stderr)
+        sys.exit(1)
+
+    # Validate probabilities
+    if not 0 <= args.premium_prob <= 1:
+        print("❌ Error: --premium-prob must be between 0 and 1.", file=sys.stderr)
+        sys.exit(1)
+    if not 0 <= args.premium_prize_prob <= 1:
+        print("❌ Error: --premium-prize-prob must be between 0 and 1.", file=sys.stderr)
         sys.exit(1)
 
     # Call the main function with parsed arguments

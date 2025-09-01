@@ -113,7 +113,7 @@ def settings_performance():
                 'routes': {}
             }
     
-    return render_template('admin/settings/performance_dashboard.html', performance_summary=performance_summary)
+    return render_template('admin/optimization/performance_dashboard.html', performance_summary=performance_summary)
 
 
 @main_blueprint.route("/settings/asset-optimization")
@@ -136,7 +136,7 @@ def settings_asset_optimization():
             'recent_optimizations': []
         }
     
-    return render_template('admin/settings/asset_optimization_dashboard.html', asset_stats=asset_stats)
+    return render_template('admin/optimization/asset_optimization_dashboard.html', asset_stats=asset_stats)
 
 
 @main_blueprint.route("/settings/ssr-optimization")
@@ -159,4 +159,4 @@ def settings_ssr_optimization():
             'active_caches': 0
         }
     
-    return render_template('admin/settings/ssr_optimization_dashboard.html', ssr_stats=ssr_stats)
+    return render_template('admin/optimization/ssr_optimization_dashboard.html', ssr_stats=ssr_stats)

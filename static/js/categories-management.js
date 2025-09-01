@@ -7,10 +7,22 @@ let allCategories = [];
 // Fetch and populate categories
 async function fetchCategories() {
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/categories?grouped=true');
         if (!response.ok) throw new Error('Failed to fetch categories');
-        allCategories = await response.json();
-        renderManageCategories(allCategories);
+        const groupedData = await response.json();
+        
+        // Flatten categories for bulk operations
+        allCategories = [];
+        groupedData.forEach(groupData => {
+            groupData.categories.forEach(cat => {
+                allCategories.push({
+                    ...cat,
+                    group_name: groupData.group.name
+                });
+            });
+        });
+        
+        renderManageCategories(groupedData);
     } catch (error) {
         console.error(error);
         showToast('error', 'Gagal memuat kategori');
@@ -18,55 +30,81 @@ async function fetchCategories() {
 }
 
 // Render list and actions
-function renderManageCategories(categories) {
+function renderManageCategories(groupedData) {
     const list = document.getElementById('category-list'); 
     list.innerHTML = '';
     
-    categories.forEach(cat => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between p-3 border-b border-gray-200 last:border-b-0 hover:bg-gray-50';
-        row.setAttribute('role', 'listitem');
-        row.setAttribute('aria-label', `Kategori: ${cat.name}`);
+    groupedData.forEach(groupData => {
+        // Create group header
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'bg-gray-100 border-b border-gray-200 p-3 mb-2';
+        groupHeader.setAttribute('role', 'group');
+        groupHeader.setAttribute('aria-label', `Category group: ${groupData.group.name}`);
+        
+        const groupTitle = document.createElement('h3');
+        groupTitle.className = 'text-lg font-semibold text-gray-800 flex items-center';
+        groupTitle.innerHTML = `
+            <i class="fas fa-folder text-blue-600 mr-2"></i>
+            ${groupData.group.name}
+        `;
+        groupHeader.appendChild(groupTitle);
+        
+        if (groupData.group.description) {
+            const groupDesc = document.createElement('p');
+            groupDesc.className = 'text-sm text-gray-600 mt-1';
+            groupDesc.textContent = groupData.group.description;
+            groupHeader.appendChild(groupDesc);
+        }
+        
+        list.appendChild(groupHeader);
+        
+        // Create categories in this group
+        groupData.categories.forEach(cat => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center justify-between p-3 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 ml-4';
+            row.setAttribute('role', 'listitem');
+            row.setAttribute('aria-label', `Kategori: ${cat.name}`);
 
-        // Checkbox for bulk selection
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded';
-        checkbox.setAttribute('aria-label', `Pilih kategori ${cat.name}`);
-        checkbox.checked = selectedCategories.has(cat.id);
-        checkbox.onchange = () => toggleCategorySelection(cat.id, checkbox.checked);
-        row.appendChild(checkbox);
+            // Checkbox for bulk selection
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded';
+            checkbox.setAttribute('aria-label', `Pilih kategori ${cat.name}`);
+            checkbox.checked = selectedCategories.has(cat.id);
+            checkbox.onchange = () => toggleCategorySelection(cat.id, checkbox.checked);
+            row.appendChild(checkbox);
 
-        const name = document.createElement('span');
-        name.textContent = cat.name;
-        name.className = 'text-gray-800 font-medium flex-1';
-        row.appendChild(name);
+            const name = document.createElement('span');
+            name.textContent = cat.name;
+            name.className = 'text-gray-800 font-medium flex-1';
+            row.appendChild(name);
 
-        const btns = document.createElement('div'); 
-        btns.className = 'flex space-x-3';
-        btns.setAttribute('role', 'group');
-        btns.setAttribute('aria-label', `Actions for category ${cat.name}`);
+            const btns = document.createElement('div'); 
+            btns.className = 'flex space-x-3';
+            btns.setAttribute('role', 'group');
+            btns.setAttribute('aria-label', `Actions for category ${cat.name}`);
 
-        // Edit Button (Icon Style)
-        const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<i class="fas fa-edit" aria-hidden="true"></i>';
-        editBtn.className = 'p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-300';
-        editBtn.setAttribute('aria-label', `Edit category ${cat.name}`);
-        editBtn.title = 'Edit';
-        editBtn.onclick = () => showEditModal(cat.id, cat.name);
-        btns.appendChild(editBtn);
+            // Edit Button (Icon Style)
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit" aria-hidden="true"></i>';
+            editBtn.className = 'p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-300';
+            editBtn.setAttribute('aria-label', `Edit category ${cat.name}`);
+            editBtn.title = 'Edit';
+            editBtn.onclick = () => showEditModal(cat.id, cat.name, cat.group_id);
+            btns.appendChild(editBtn);
 
-        // Delete Button (Icon Style)
-        const delBtn = document.createElement('button');
-        delBtn.innerHTML = '<i class="fas fa-trash" aria-hidden="true"></i>';
-        delBtn.className = 'p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300';
-        delBtn.setAttribute('aria-label', `Delete category ${cat.name}`);
-        delBtn.title = 'Delete';
-        delBtn.onclick = () => showDeleteModal(cat.id);
-        btns.appendChild(delBtn);
+            // Delete Button (Icon Style)
+            const delBtn = document.createElement('button');
+            delBtn.innerHTML = '<i class="fas fa-trash" aria-hidden="true"></i>';
+            delBtn.className = 'p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300';
+            delBtn.setAttribute('aria-label', `Delete category ${cat.name}`);
+            delBtn.title = 'Delete';
+            delBtn.onclick = () => showDeleteModal(cat.id);
+            btns.appendChild(delBtn);
 
-        row.appendChild(btns); 
-        list.appendChild(row);
+            row.appendChild(btns); 
+            list.appendChild(row);
+        });
     });
     
     updateBulkActionsToolbar();
@@ -114,12 +152,15 @@ function deselectAllCategories() {
 }
 
 // Update category
-async function updateCategory(id, name) {
+async function updateCategory(id, name, groupId = null) {
     try {
         const response = await fetch(`/api/categories/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name }),
+            body: JSON.stringify({ 
+                name,
+                group_id: groupId
+            }),
         });
         if (!response.ok) throw new Error('Gagal memperbarui kategori');
         fetchCategories();
@@ -253,10 +294,62 @@ async function safeDeleteCategory(id, newCategoryId) {
 }
 
 // Show edit modal
-function showEditModal(id, name) {
+async function showEditModal(id, name, groupId = null) {
     document.getElementById('edit-category-id').value = id;
     document.getElementById('edit-category-name').value = name;
+    
+    // Populate group select
+    await populateGroupSelect();
+    
+    // Set selected group
+    const groupSelect = document.getElementById('edit-category-group');
+    groupSelect.value = groupId || '';
+    
     document.getElementById('edit-category-modal').classList.remove('hidden');
+}
+
+// Populate group select
+async function populateGroupSelect() {
+    try {
+        const response = await fetch('/api/category-groups');
+        if (!response.ok) throw new Error('Failed to fetch category groups');
+        const groups = await response.json();
+        
+        const select = document.getElementById('edit-category-group');
+        select.innerHTML = '<option value="">Tanpa Grup</option>';
+        
+        groups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.id;
+            option.textContent = group.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to populate group select:', error);
+        showToast('error', 'Gagal memuat daftar grup kategori');
+    }
+}
+
+// Populate add category group select
+async function populateAddCategoryGroupSelect() {
+    try {
+        const response = await fetch('/api/category-groups');
+        if (!response.ok) throw new Error('Failed to fetch category groups');
+        const groups = await response.json();
+        
+        const select = document.getElementById('category-group');
+        select.innerHTML = '<option value="">Tanpa Grup</option>';
+        
+        groups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.id;
+            option.textContent = group.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to populate add category group select:', error);
+        showToast('error', 'Gagal memuat daftar grup kategori');
+    }
 }
 
 // Show delete modal
@@ -347,14 +440,20 @@ function closeBulkDeleteModal() {
 }
 
 // Initialize categories management
-document.addEventListener('DOMContentLoaded', () => {
-    // Load categories on page load
-    fetchCategories();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load categories and populate group selects on page load
+    await Promise.all([
+        fetchCategories(),
+        populateGroupSelect(),
+        populateAddCategoryGroupSelect()
+    ]);
     
     // Add new category form handler
     document.getElementById('add-category').addEventListener('submit', async (e) => {
         e.preventDefault();
         const categoryName = document.getElementById('category-name').value.trim();
+        const groupId = document.getElementById('category-group').value || null;
+        
         if (!categoryName) { 
             showToast('warning', 'Nama kategori diperlukan'); 
             return; 
@@ -364,7 +463,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: categoryName }),
+                body: JSON.stringify({ 
+                    name: categoryName,
+                    group_id: groupId
+                }),
             });
             if (!response.ok) { 
                 const err = await response.json(); 
@@ -373,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('success', 'Kategori berhasil ditambahkan!');
             fetchCategories(); 
             document.getElementById('category-name').value = '';
+            document.getElementById('category-group').value = '';
         } catch (error) {
             showToast('error', `Gagal menambahkan kategori: ${error.message}`);
         }
@@ -383,11 +486,13 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const id = document.getElementById('edit-category-id').value;
         const name = document.getElementById('edit-category-name').value.trim();
+        const groupId = document.getElementById('edit-category-group').value || null;
+        
         if (!name) {
             showToast('warning', 'Nama kategori diperlukan');
             return;
         }
-        await updateCategory(id, name);
+        await updateCategory(id, name, groupId);
         closeEditModal();
     });
 

@@ -6,7 +6,7 @@ This module handles all SEO-related routes and API endpoints.
 
 from routes import main_blueprint
 from .common_imports import *
-from flask import jsonify
+from flask import jsonify, redirect, url_for
 
 
 @main_blueprint.route("/settings/seo")
@@ -15,17 +15,48 @@ def settings_seo():
     # Allow access only to admin-tier users
     if not (current_user.is_admin_tier() or current_user.is_owner()):
         abort(403)
-    return render_template('admin/settings/seo_management.html')
+    return render_template('admin/seo/management.html')
 
 
-@main_blueprint.route("/settings/comprehensive-seo")
+@main_blueprint.route("/settings/seo/management")
 @login_required
-def settings_comprehensive_seo():
-    """Comprehensive SEO management page for all content types"""
+def seo_management():
+    """Main SEO management page for all content types"""
     # Allow access only to admin-tier users
     if not (current_user.is_admin_tier() or current_user.is_owner()):
         abort(403)
-    return render_template('admin/settings/comprehensive_seo_management.html')
+    return render_template('admin/seo/management.html')
+
+
+@main_blueprint.route("/settings/seo/settings")
+@login_required
+def seo_settings():
+    """SEO settings page for root SEO and global settings"""
+    # Allow access only to admin-tier users
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    return render_template('admin/seo/settings.html')
+
+
+@main_blueprint.route("/settings/seo/analytics")
+@login_required
+def seo_analytics():
+    """SEO analytics page for performance metrics and insights"""
+    # Allow access only to admin-tier users
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    return render_template('admin/seo/analytics.html')
+
+
+# Legacy route for backward compatibility
+@main_blueprint.route("/settings/comprehensive-seo")
+@login_required
+def settings_comprehensive_seo():
+    """Comprehensive SEO management page for all content types - redirects to new management page"""
+    # Allow access only to admin-tier users
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    return redirect(url_for('main.seo_management'))
 
 
 # SEO Management API Endpoints
@@ -44,8 +75,8 @@ def get_seo_articles():
         seo_status = request.args.get('seo_status', '')
         category = request.args.get('category', '')
         
-        # Build query
-        query = News.query.join(Category).join(User)
+        # Build query with explicit foreign key relationships
+        query = News.query.join(Category, News.category_id == Category.id).join(User, News.user_id == User.id)
         
         # Apply filters
         if search:
@@ -871,155 +902,34 @@ def get_albums_seo_management_settings():
         return jsonify({'error': str(e)}), 500
 
 
-@main_blueprint.route("/api/seo/inject", methods=["POST"])
-@login_required
-def run_seo_injection_settings():
-    """Alias endpoint to run SEO injection (articles, albums, chapters, root, all)."""
-    if not (current_user.is_admin_tier() or current_user.is_owner()):
-        abort(403)
-
-    data = request.get_json() or {}
-    injection_type = data.get('type', 'all')
-    valid_types = ['news', 'albums', 'chapters', 'root', 'all']
-    if injection_type not in valid_types:
-        return jsonify({"error": f"Invalid injection type. Must be one of: {valid_types}"}), 400
-
-    try:
-        import sys, os
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'seo_injector'))
-        from seo_injector import run_seo_injection as run_injection
-        result = run_injection(injection_type)
-        return jsonify({"message": "SEO injection completed", "type": injection_type, "result": result}), 200
-    except Exception as e:
-        current_app.logger.error(f"Error running SEO injection (settings alias): {e}")
-        return jsonify({"error": "Failed to run SEO injection", "details": str(e)}), 500
+# REMOVED: Duplicate route - using routes_seo.py instead
+# @main_blueprint.route("/api/seo/inject", methods=["POST"])
+# @login_required
+# def run_seo_injection_settings():
+#     """Alias endpoint to run SEO injection (articles, albums, chapters, root, all)."""
+#     # This route has been moved to routes_seo.py for better organization
 
 
+# REMOVED: Duplicate route - using routes_seo.py instead
 # Per-item SEO Injection Endpoints
-@main_blueprint.route("/api/seo/articles/<int:article_id>/inject", methods=["POST"])
-@login_required
-def inject_seo_article(article_id):
-    if not (current_user.is_admin_tier() or current_user.is_owner()):
-        abort(403)
-    try:
-        article = News.query.get_or_404(article_id)
-        # Respect SEO lock
-        if getattr(article, 'is_seo_lock', False):
-            return jsonify({"error": "SEO is locked for this item"}), 400
-        # Generate/update SEO fields from content
-        try:
-            from slugify import slugify
-        except Exception:
-            def slugify(s):
-                import re as _re
-                s = (s or '').lower()
-                s = _re.sub(r'[^a-z0-9\s\-_]', '', s)
-                s = _re.sub(r'[\s_]+', '-', s)
-                s = _re.sub(r'-+', '-', s).strip('-')
-                return s or f"article-{article.id}"
-        base_slug = slugify(article.title or f"article-{article.id}")
-        # Ensure unique slug if empty
-        if not article.seo_slug:
-            new_slug = base_slug
-            counter = 1
-            while News.query.filter(News.seo_slug == new_slug, News.id != article.id).first():
-                new_slug = f"{base_slug}-{counter}"
-                counter += 1
-            article.seo_slug = new_slug
-        # Meta generation
-        content_text = (article.content or "").strip()
-        if content_text:
-            # Basic markdown cleanup
-            import re
-            cleaned = re.sub(r"[#*_`>\-]+", " ", content_text)
-            cleaned = re.sub(r"\s+", " ", cleaned).strip()
-        else:
-            cleaned = (article.title or "").strip()
-        # Enforce field limits and avoid overwriting existing non-empty fields
-        if not article.meta_description:
-            article.meta_description = (cleaned or '')[:500]
-        if not article.meta_keywords:
-            kws = ", ".join((article.title or "").lower().split()[:12])
-            article.meta_keywords = kws[:500]
-        if not article.og_title:
-            article.og_title = (article.title or '')[:200]
-        if not article.og_description:
-            article.og_description = (article.meta_description or '')[:500]
-        # Score and audit
-        article.seo_score = article.calculate_seo_score()
-        article.last_seo_audit = datetime.utcnow()
-        db.session.commit()
-        return jsonify({"message": "SEO injected for article", "id": article.id}), 200
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"inject_seo_article error: {e}")
-        return jsonify({"error": str(e)}), 500
+# @main_blueprint.route("/api/seo/articles/<int:article_id>/inject", methods=["POST"])
+# @login_required
+# def inject_seo_article(article_id):
+#     # This route has been moved to routes_seo.py for better organization
 
 
-@main_blueprint.route("/api/seo/albums/<int:album_id>/inject", methods=["POST"])
-@login_required
-def inject_seo_album_item(album_id):
-    if not (current_user.is_admin_tier() or current_user.is_owner()):
-        abort(403)
-    try:
-        album = Album.query.get_or_404(album_id)
-        from slugify import slugify
-        # Generate meta from title/description
-        base_desc_source = (album.description or album.title or "").strip()
-        album.meta_description = album.meta_description or (base_desc_source[:500] if base_desc_source else None)
-        album.meta_keywords = album.meta_keywords or ", ".join((album.title or "").lower().split()[:6])
-        album.og_title = album.og_title or (album.title or "")
-        album.og_description = album.og_description or album.meta_description
-        # Slug
-        if not album.seo_slug:
-            base_slug = slugify(album.title or f"album-{album.id}")
-            new_slug = base_slug
-            counter = 1
-            while Album.query.filter(Album.seo_slug == new_slug, Album.id != album.id).first():
-                new_slug = f"{base_slug}-{counter}"
-                counter += 1
-            album.seo_slug = new_slug
-        # Score
-        seo_fields_to_check = ['meta_description','meta_keywords','og_title','og_description','og_image','seo_slug']
-        filled = sum(1 for f in seo_fields_to_check if getattr(album, f) and str(getattr(album, f)).strip())
-        album.seo_score = min(100, int((filled / len(seo_fields_to_check)) * 100))
-        db.session.commit()
-        return jsonify({"message": "SEO injected for album", "id": album.id}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+# REMOVED: Duplicate route - using routes_seo.py instead
+# @main_blueprint.route("/api/seo/albums/<int:album_id>/inject", methods=["POST"])
+# @login_required
+# def inject_seo_album_item(album_id):
+#     # This route has been moved to routes_seo.py for better organization
 
 
-@main_blueprint.route("/api/seo/chapters/<int:chapter_id>/inject", methods=["POST"])
-@login_required
-def inject_seo_chapter_item(chapter_id):
-    if not (current_user.is_admin_tier() or current_user.is_owner()):
-        abort(403)
-    try:
-        chapter = AlbumChapter.query.get_or_404(chapter_id)
-        from slugify import slugify
-        base_text = (chapter.og_description or chapter.meta_description or chapter.chapter_title or "").strip()
-        chapter.meta_description = chapter.meta_description or base_text[:500]
-        chapter.meta_keywords = chapter.meta_keywords or ", ".join((chapter.chapter_title or "").lower().split()[:6])
-        chapter.og_title = chapter.og_title or (chapter.chapter_title or "")
-        chapter.og_description = chapter.og_description or chapter.meta_description
-        if not chapter.seo_slug:
-            base_slug = slugify(chapter.chapter_title or f"chapter-{chapter.id}")
-            new_slug = base_slug
-            counter = 1
-            while AlbumChapter.query.filter(AlbumChapter.seo_slug == new_slug, AlbumChapter.id != chapter.id).first():
-                new_slug = f"{base_slug}-{counter}"
-                counter += 1
-            chapter.seo_slug = new_slug
-        # Score
-        fields = ['meta_description','meta_keywords','og_title','og_description','og_image','seo_slug']
-        filled = sum(1 for f in fields if getattr(chapter, f) and str(getattr(chapter, f)).strip())
-        chapter.seo_score = min(100, int((filled / len(fields)) * 100))
-        db.session.commit()
-        return jsonify({"message": "SEO injected for chapter", "id": chapter.id}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+# REMOVED: Duplicate route - using routes_seo.py instead
+# @main_blueprint.route("/api/seo/chapters/<int:chapter_id>/inject", methods=["POST"])
+# @login_required
+# def inject_seo_chapter_item(chapter_id):
+#     # This route has been moved to routes_seo.py for better organization
 
 
 @main_blueprint.route("/api/seo/root/<int:root_id>/inject", methods=["POST"])

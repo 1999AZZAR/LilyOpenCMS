@@ -47,7 +47,7 @@ def settings_privacy_policy():
         db.session.commit()
         return redirect(url_for("main.settings_privacy_policy"))
 
-    return render_template('admin/settings/policy_management.html', policies=policies)
+    return render_template('admin/legal/policy_management.html', policies=policies)
 
 
 @main_blueprint.route("/settings/media-guidelines", methods=["GET", "POST"])
@@ -89,7 +89,7 @@ def settings_media_guidelines():
         db.session.commit()
         return redirect(url_for("main.settings_media_guidelines"))
 
-    return render_template('admin/settings/mediaguidelines_management.html', guidelines=guidelines)
+    return render_template('admin/legal/mediaguidelines_management.html', guidelines=guidelines)
 
 
 @main_blueprint.route("/settings/visi-misi", methods=["GET", "POST"])
@@ -130,7 +130,7 @@ def settings_visi_misi():
         return redirect(url_for("main.settings_visi_misi"))
 
     return render_template(
-        "admin/settings/visimisi_management.html", visi_misi_sections=visi_misi_sections
+        "admin/legal/visimisi_management.html", visi_misi_sections=visi_misi_sections
     )
 
 
@@ -174,7 +174,7 @@ def settings_pedomanhak():
         return redirect(url_for("main.settings_pedomanhak"))
 
     return render_template(
-        "admin/settings/pedomanhak_management.html", pedomanhak_sections=pedomanhak_sections
+        "admin/legal/pedomanhak_management.html", pedomanhak_sections=pedomanhak_sections
     )
 
 
@@ -220,5 +220,5 @@ def settings_penyangkalan():
         return redirect(url_for("main.settings_penyangkalan"))
 
     return render_template(
-        "admin/settings/penyangkalan_management.html", penyangkalan_sections=penyangkalan_sections
+        "admin/legal/penyangkalan_management.html", penyangkalan_sections=penyangkalan_sections
     )

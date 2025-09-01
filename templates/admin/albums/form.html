@@ -83,12 +83,18 @@
                             <select id="album-category" name="category_id"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">Pilih Kategori</option>
-                                {% for category in categories %}
-                                <option value="{{ category.id }}" 
-                                        {% if album and album.category_id == category.id %}selected{% endif %}>
-                                    {{ category.name }}
-                                </option>
-                                {% endfor %}
+                                {% if grouped_categories %}
+                                    {% for group_data in grouped_categories %}
+                                        <optgroup label="{{ group_data.group.name }}">
+                                            {% for category in group_data.categories %}
+                                                <option value="{{ category.id }}" 
+                                                        {% if album and album.category_id == category.id %}selected{% endif %}>
+                                                    {{ category.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                         </div>
                     </div>

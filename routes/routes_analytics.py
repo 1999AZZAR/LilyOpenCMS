@@ -540,7 +540,7 @@ def performance_dashboard():
             slow_queries = {}
         
         return render_template(
-            "admin/settings/performance_dashboard.html",
+            "admin/optimization/performance_dashboard.html",
             performance_summary=performance_summary,
             slow_queries=slow_queries
         )
@@ -597,7 +597,7 @@ def asset_optimization_dashboard():
         asset_stats = asset_optimizer.get_optimization_stats()
         
         return render_template(
-            "admin/settings/asset_optimization_dashboard.html",
+            "admin/optimization/asset_optimization_dashboard.html",
             asset_stats=asset_stats
         )
     except Exception as e:
@@ -618,7 +618,7 @@ def ssr_optimization_dashboard():
         ssr_stats = ssr_optimizer.get_render_stats()
         
         return render_template(
-            "admin/settings/ssr_optimization_dashboard.html",
+            "admin/optimization/ssr_optimization_dashboard.html",
             ssr_stats=ssr_stats
         )
     except Exception as e:

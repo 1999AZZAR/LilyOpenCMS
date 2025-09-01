@@ -3,7 +3,7 @@
 {% block title %}
 {{ brand_info.brand_name|default('LilyOpenCMS') }} - 
 {% if type == 'news' %}Berita
-{% elif type == 'articles' %}Artikel
+{% elif type == 'articles' %}Cerita
 {% elif type == 'utama' %}Utama
 {% elif query %}Hasil Pencarian "{{ query }}"
 {% elif category %}Kategori {{ category }}
@@ -22,21 +22,21 @@
   <div class="mb-8">
     <h1 class="text-3xl md:text-4xl font-bold text-foreground mb-4">
       {% if type == 'news' %}Berita Terkini
-      {% elif type == 'articles' %}Artikel Terkini
+      {% elif type == 'articles' %}Cerita Terkini
       {% elif type == 'utama' %}Utama
       {% elif query %}Hasil Pencarian "{{ query }}"
       {% elif category %}Kategori {{ category }}
       {% elif tag %}Tag #{{ tag }}
-      {% else %}Semua Berita{% endif %}
+      {% else %}Semua Cerita{% endif %}
     </h1>
     <p class="text-muted-foreground text-lg">
       {% if type == 'news' %}Berita terbaru dan terkini dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
-      {% elif type == 'articles' %}Temukan artikel-artikel mendalam tentang Artikel terbaru dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
+      {% elif type == 'articles' %}Temukan cerita-cerita mendalam dan bab-bab terbaru dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
       {% elif type == 'utama' %}Berita Utama dari {{ brand_info.brand_name|default('LilyOpenCMS') }}
       {% elif query %}Menampilkan hasil pencarian untuk "{{ query }}"
       {% elif category %}Menampilkan semua Hasil dalam kategori "{{ category }}"
       {% elif tag %}Menampilkan semua Hasil dengan tag "#{{ tag }}"
-      {% else %}Kumpulan Berita terbaru dari {{ brand_info.brand_name|default('LilyOpenCMS') }}{% endif %}
+      {% else %}Kumpulan Cerita terbaru dari {{ brand_info.brand_name|default('LilyOpenCMS') }}{% endif %}
     </p>
   </div>
 
@@ -52,7 +52,7 @@
     </div>
     <div class="content-type-tab {% if type == 'articles' %}active{% endif %}" 
          data-type="articles" onclick="switchContentType('articles')">
-      Artikel
+      Cerita
     </div>
     <div class="content-type-tab {% if type == 'utama' %}active{% endif %}" 
          data-type="utama" onclick="switchContentType('utama')">
@@ -66,7 +66,7 @@
       <div class="flex-1 min-w-0">
         <input type="text" 
                id="search-input"
-               placeholder="Cari berita, artikel, atau deskripsi..." 
+               placeholder="Cari berita, cerita, atau deskripsi..." 
                class="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                autocomplete="off">
       </div>
@@ -90,9 +90,19 @@
       <div class="flex flex-wrap gap-4 items-center">
         <select id="category-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
           <option value="">Semua Kategori</option>
-          {% for category in categories %}
-          <option value="{{ category.id }}">{{ category.name }}</option>
-          {% endfor %}
+          {% if grouped_categories %}
+            {% for group_data in grouped_categories %}
+              <optgroup label="{{ group_data.group.name }}">
+                {% for category in group_data.categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endfor %}
+          {% else %}
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          {% endif %}
         </select>
         <select id="tag-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
           <option value="">Semua Tag</option>

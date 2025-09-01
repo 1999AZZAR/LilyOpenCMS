@@ -13,10 +13,49 @@
     <!-- CSRF protection disabled for this application -->
     <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_base_css.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/force-scaling.css') }}">
     <title>{% block title %}Dasbor Admin - LilyOpenCms Admin{% endblock %}</title>
+    
+    <!-- Admin Layout Fixes -->
+    <style>
+        /* Ensure proper admin layout */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #main-content {
+            flex: 1;
+            min-height: 0;
+        }
+        
+        /* Reduce excessive spacing */
+        .py-8 {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        .p-8 {
+            padding: 2rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .py-8 {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+            
+            .p-8 {
+                padding: 1rem;
+            }
+        }
+    </style>
+    
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans">
+<body class="bg-gray-50 text-gray-900 font-sans flex flex-col min-h-screen">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:bg-white focus:px-4 focus:py-2 focus:z-50">Skip to main content</a>
     <div id="toast-container" class="fixed top-5 right-5 space-y-2 z-50" role="alert" aria-live="assertive" aria-atomic="true"></div>
     <!-- Loading Spinner -->
@@ -33,7 +72,7 @@
             <!-- Logo -->
             <div class="p-8 border-b border-gray-200 bg-gradient-to-r from-gray-700 to-gray-800">
                 <div class="text-4xl font-bold text-white comic-font text-center">
-                    LILY CMS by <a href="https://azzar.netlify.app/porto" class="text-white hover:text-gray-300 underline" target="_blank" rel="noopener">azzar</a>
+                    LILY CMS by <a href="https://azzar.netlify.app/porto" class="text-white hover:text-gray-300 underline" target="_blank" rel="noopener">AZZAR</a>
                     <div class="text-sm font-normal text-gray-300 mt-2">Admin Dashboard</div>
                 </div>
             </div>
@@ -203,7 +242,8 @@
                                 'icon': 'fas fa-user',
                                 'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.content_deletion_requests'), 'icon': 'fas fa-trash-alt', 'label': 'Permintaan Penghapusan Konten', 'visible': current_user.is_admin_tier()}
                                 ]
                             },
 
@@ -243,7 +283,8 @@
                                     {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
                                     {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
                                     {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
@@ -268,32 +309,14 @@
                         ]
                     },
                     {
-                        'id': 'navigation',
-                        'title': 'Navigasi & SEO',
-                        'icon': 'fas fa-sitemap',
+                        'id': 'seo',
+                        'title': 'SEO Management',
+                        'icon': 'fas fa-search',
                         'visible': can_manage_settings() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
-                        'subgroups': [
-                            {
-                                'id': 'navigation-management',
-                                'title': 'Navigasi',
-                                'icon': 'fas fa-link',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
-                                'links': [
-                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
-                                ]
-                            },
-                            {
-                                'id': 'navigation-seo',
-                                'title': 'SEO',
-                                'icon': 'fas fa-search',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
-                                'links': [
-                                    {'url': url_for('main.settings_seo'), 'icon': 'fas fa-search', 'label': 'SEO Konten', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_comprehensive_seo'), 'icon': 'fas fa-globe', 'label': 'SEO Komprehensif', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('root_seo.root_seo_management'), 'icon': 'fas fa-sitemap', 'label': 'SEO Root', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.albums_seo_management'), 'icon': 'fas fa-search-plus', 'label': 'SEO Album', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
-                                ]
-                            }
+                        'links': [
+                            {'url': url_for('main.seo_management'), 'icon': 'fas fa-globe', 'label': 'Manajemen SEO', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
+                            {'url': url_for('main.seo_settings'), 'icon': 'fas fa-cog', 'label': 'Pengaturan SEO', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
+                            {'url': url_for('main.seo_analytics'), 'icon': 'fas fa-chart-line', 'label': 'Analitik SEO', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
                         ]
                     },
                     {
@@ -455,13 +478,13 @@
     <!-- Overlay for Mobile -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-25 z-30 hidden" aria-hidden="true"></div>
     <!-- Hero Section -->
-    <section id="hero-toggle" class="bg-gradient-to-r from-gray-700 to-gray-800 shadow-lg px-6 py-16 text-center cursor-pointer hover:from-gray-800 hover:to-gray-900 transition-all duration-300" role="banner" aria-label="Admin dashboard header">
-        <h1 class="text-5xl font-extrabold text-white">{% block hero_title %}Dasbor Admin{% endblock %}</h1>
-        <p class="text-lg text-gray-300 max-w-2xl mx-auto mt-4">{% block hero_desc %}Kelola pengguna, cerita, dan pengaturan sistem{% endblock %}</p>
+    <section id="hero-toggle" class="bg-gradient-to-r from-gray-700 to-gray-800 shadow-lg px-6 py-8 text-center cursor-pointer hover:from-gray-800 hover:to-gray-900 transition-all duration-300" role="banner" aria-label="Admin dashboard header">
+        <h1 class="text-4xl font-extrabold text-white">{% block hero_title %}Dasbor Admin{% endblock %}</h1>
+        <p class="text-base text-gray-300 max-w-2xl mx-auto mt-2">{% block hero_desc %}Kelola pengguna, cerita, dan pengaturan sistem{% endblock %}</p>
     </section>
     <!-- Admin Content -->
-    <main id="main-content" class="w-full px-8 py-12" role="main" tabindex="-1">
-      <div class="bg-white rounded-2xl shadow-lg p-10 border border-gray-200" role="region" aria-label="Content">
+    <main id="main-content" class="w-full px-8 py-8" role="main" tabindex="-1">
+      <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200" role="region" aria-label="Content">
         {% block content %}{% endblock %}
       </div>
     </main>
@@ -657,6 +680,9 @@
             const navGroupToggles = document.querySelectorAll('.nav-group-toggle');
             const navSubgroupToggles = document.querySelectorAll('.nav-subgroup-toggle');
             
+            // Check if we're on mobile
+            const isMobile = window.innerWidth <= 768;
+            
             // Main group toggles
             navGroupToggles.forEach(toggle => {
                 toggle.addEventListener('click', function() {
@@ -677,6 +703,27 @@
                     }
                 });
             });
+            
+            // On mobile, collapse all groups by default except the one containing current page
+            if (isMobile) {
+                navGroupToggles.forEach(toggle => {
+                    const groupId = toggle.getAttribute('aria-controls');
+                    const content = document.getElementById(groupId);
+                    const chevron = toggle.querySelector('.fas.fa-chevron-down');
+                    
+                    // Check if this group contains the current page
+                    const currentPath = window.location.pathname;
+                    const groupLinks = content.querySelectorAll('a');
+                    const hasCurrentPage = Array.from(groupLinks).some(link => link.getAttribute('href') === currentPath);
+                    
+                    if (!hasCurrentPage) {
+                        // Collapse groups that don't contain current page
+                        content.style.display = 'none';
+                        toggle.setAttribute('aria-expanded', 'false');
+                        chevron.style.transform = 'rotate(-90deg)';
+                    }
+                });
+            }
             
             // Sub-group toggles
             navSubgroupToggles.forEach(toggle => {
@@ -759,6 +806,16 @@
                         this.click();
                     }
                 });
+            });
+            
+            // Handle window resize for responsive behavior
+            window.addEventListener('resize', function() {
+                const newIsMobile = window.innerWidth <= 768;
+                
+                // Only update if mobile state changed
+                if (newIsMobile !== isMobile) {
+                    location.reload(); // Simple approach: reload to reinitialize with new mobile state
+                }
             });
         });
         
@@ -999,6 +1056,29 @@
                     setCampaignsUi(this.checked);
                 });
             }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/force-scaling.js') }}"></script>
+    <script>
+        // Force Scaling Event Handler for Admin
+        document.addEventListener('forceScalingChanged', function(event) {
+            const { action, fromScale, toScale, isForced } = event.detail;
+            
+            // Add data attribute to body for debugging
+            document.body.setAttribute('data-scale', fromScale.toFixed(2));
+            
+            // Show user feedback for force scaling in admin
+            if (action === 'forced' && typeof showToast === 'function') {
+                showToast('info', `Admin zoom level adjusted to 100% (was ${(fromScale * 100).toFixed(0)}%)`);
+            }
+            
+            // Log scaling changes for debugging
+            console.log('Admin Force Scaling Event:', {
+                action: action,
+                fromScale: fromScale,
+                toScale: toScale,
+                isForced: isForced
+            });
         });
     </script>
     {% block extra_scripts %}{% endblock %}
