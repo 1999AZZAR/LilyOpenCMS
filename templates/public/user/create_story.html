@@ -1,0 +1,1912 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if news_id %}Edit Cerita{% else %}Tulis Cerita Baru{% endif %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-foreground">
+                        {% if news_id %}Edit Cerita{% else %}Tulis Cerita Baru{% endif %}
+                    </h1>
+                    <p class="mt-2 text-muted-foreground">
+                        {% if news_id %}Perbarui konten cerita Anda{% else %}Bagikan kreativitas Anda dengan komunitas{% endif %}
+                    </p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('user_profile.user_stories', username=user.username) }}" 
+                       class="text-primary hover:text-foreground">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Cerita
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Form Container -->
+        <div class="bg-card border border-border p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="create-story-title">
+            <h2 id="create-story-title" class="text-xl font-semibold mb-4 text-foreground">Buat Cerita</h2>
+            
+            <!-- Step Indicator -->
+            <div class="flex items-center justify-center mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <div id="step-1-indicator" class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-semibold">1</div>
+                        <span class="ml-2 text-sm font-medium text-foreground">Detail</span>
+                    </div>
+                    <div class="w-12 h-0.5 bg-border"></div>
+                    <div class="flex items-center">
+                        <div id="step-2-indicator" class="w-8 h-8 bg-muted text-muted-foreground rounded-full flex items-center justify-center font-semibold">2</div>
+                        <span class="ml-2 text-sm font-medium text-muted-foreground">Konten</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="create-story-form" class="flex flex-col lg:flex-row gap-6" method="POST" action="{{ url_for('main.create_news_api') }}" enctype="multipart/form-data" role="form" aria-label="Form create story">
+                <!-- Step 1: Details Section (Full Width) -->
+                <div id="step-1-content" class="w-full">
+                    <div class="h-full flex flex-col">
+                        <!-- Title Input -->
+                        <div class="mb-6">
+                            <input type="text" id="story-title" name="title" 
+                                   class="w-full bg-card border-0 border-b-2 border-border text-foreground text-3xl font-light p-4 focus:outline-none focus:border-primary transition-colors" 
+                                   placeholder="Judul cerita..." required aria-required="true">
+                        </div>
+                        
+                        <!-- Two Column Layout for Details -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            
+                            <!-- Left Column: Story Details -->
+                            <div class="lg:col-span-2 space-y-6">
+                                
+                                <!-- Story Details Card -->
+                                <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-border">
+                                        <h3 class="text-lg font-semibold text-foreground flex items-center">
+                                            <i class="fas fa-file-alt text-primary mr-3"></i>
+                                            Detail Cerita
+                                        </h3>
+                                        <p class="text-sm text-muted-foreground mt-1">Informasi dasar cerita</p>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <!-- Category (Required) -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-foreground mb-2" for="story-category">
+                                                    <i class="fas fa-tag text-muted-foreground mr-2"></i>Kategori <span class="text-red-500">*</span>
+                                                </label>
+                                                <select id="story-category" name="category" 
+                                                        class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
+                                                        required aria-required="true">
+                                                    <option value="" disabled selected>Pilih kategori cerita...</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <!-- Date (Required) -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-foreground mb-2" for="story-date">
+                                                    <i class="fas fa-calendar text-muted-foreground mr-2"></i>Tanggal Publikasi <span class="text-red-500">*</span>
+                                                </label>
+                                                <input type="date" id="story-date" name="date" 
+                                                       class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
+                                                       required aria-required="true">
+                                            </div>
+                                            
+                                            <!-- Tags -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-foreground mb-2" for="story-tags">
+                                                    <i class="fas fa-hashtag text-muted-foreground mr-2"></i>Tag
+                                                </label>
+                                                <input type="text" id="story-tags" name="tagar" 
+                                                       class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
+                                                       placeholder="fantasi, petualangan, misteri" aria-label="Story tags">
+                                                <p class="text-xs text-muted-foreground mt-1">Pisahkan tag dengan koma</p>
+                                            </div>
+                                            
+                                            <!-- Age Rating (Required) -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-foreground mb-2" for="story-age-rating">
+                                                    <i class="fas fa-user-shield text-muted-foreground mr-2"></i>Rating Usia <span class="text-red-500">*</span>
+                                                </label>
+                                                <select id="story-age-rating" name="age_rating" 
+                                                        class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
+                                                        required aria-required="true">
+                                                    <option value="" disabled selected>Pilih rating usia...</option>
+                                                    <option value="SU">SU — Semua Umur</option>
+                                                    <option value="P">P — Prasekolah (2–6)</option>
+                                                    <option value="A">A — Anak-anak (7–12)</option>
+                                                    <option value="T">T — Remaja (13+)</option>
+                                                    <option value="M">M — Dewasa (18+)</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <!-- Writer Name -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-foreground mb-2" for="story-writer">
+                                                    <i class="fas fa-user text-muted-foreground mr-2"></i>Nama Penulis
+                                                </label>
+                                                <input type="text" id="story-writer" name="writer" 
+                                                       class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
+                                                       placeholder="Nama penulis" aria-label="Writer name" value="{{ user.username }}">
+                                                <p class="text-xs text-muted-foreground mt-1">Nama penulis cerita</p>
+                                            </div>
+
+                                            <!-- External Source -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-foreground mb-2" for="story-external-source">
+                                                    <i class="fas fa-link text-muted-foreground mr-2"></i>Sumber Eksternal
+                                                </label>
+                                                <input type="url" id="story-external-source" name="external_source" 
+                                                       class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
+                                                       placeholder="https://contoh.com/sumber" aria-label="External source URL">
+                                                <p class="text-xs text-muted-foreground mt-1">Opsional - untuk atribusi sumber</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Display Settings Card -->
+                                <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-border">
+                                        <h3 class="text-lg font-semibold text-foreground flex items-center">
+                                            <i class="fas fa-eye text-purple-600 mr-3"></i>
+                                            Pengaturan Tampilan
+                                        </h3>
+                                        <p class="text-sm text-muted-foreground mt-1">Konfigurasi di mana cerita Anda akan ditampilkan</p>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="space-y-4">
+                                            <!-- Premium Content -->
+                                            <div class="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                                                <input type="checkbox" id="story-is-premium" name="is_premium" 
+                                                       class="mt-1 rounded border-border text-yellow-600 focus:ring-yellow-500" 
+                                                       aria-label="Premium content">
+                                                <div class="flex-1">
+                                                    <label class="text-sm font-medium text-foreground cursor-pointer" for="story-is-premium">Konten Premium</label>
+                                                    <p class="text-xs text-muted-foreground mt-1">Akses khusus untuk konten premium</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Prize Input (Hidden by default) -->
+                                            <div id="prize-input-section" class="hidden">
+                                                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <!-- Prize Amount -->
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-foreground mb-2" for="story-prize">
+                                                                <i class="fas fa-coins text-green-600 mr-2"></i>Harga (Koin) <span class="text-red-500">*</span>
+                                                            </label>
+                                                            <input type="number" id="story-prize" name="prize" min="0" value="0" 
+                                                                   class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 p-3 transition-colors" 
+                                                                   placeholder="0" aria-label="Price in coins" required aria-required="true">
+                                                        </div>
+                                                        
+                                                        <!-- Coin Type -->
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-foreground mb-2" for="story-prize-coin-type">
+                                                                <i class="fas fa-tag text-primary mr-2"></i>Jenis Koin <span class="text-red-500">*</span>
+                                                            </label>
+                                                            <select id="story-prize-coin-type" name="prize_coin_type" 
+                                                                    class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
+                                                                    required aria-required="true">
+                                                                <option value="any">Kedua Jenis Koin</option>
+                                                                <option value="achievement">Koin Prestasi Saja</option>
+                                                                <option value="topup">Koin Top-up Saja</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground mt-2">
+                                                        <i class="fas fa-info-circle mr-1"></i>
+                                                        <strong>Koin Prestasi:</strong> Diperoleh dari prestasi/hadiah. 
+                                                        <strong>Koin Top-up:</strong> Dibeli dengan uang asli. 
+                                                        <strong>Kedua Jenis:</strong> Dapat menggunakan keduanya.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column: Featured Image -->
+                            <div class="space-y-6">
+                                <!-- Featured Image Card -->
+                                <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-border">
+                                        <h3 class="text-lg font-semibold text-foreground flex items-center">
+                                            <i class="fas fa-image text-green-600 mr-3"></i>
+                                            Gambar Utama (Opsional)
+                                        </h3>
+                                        <p class="text-sm text-muted-foreground mt-1">Pilih gambar untuk cerita Anda (opsional)</p>
+                                    </div>
+                                    <div class="p-6">
+                                        <div id="image-header-section-create" role="group" aria-label="Featured image options">
+                                            <input type="hidden" id="story-image-id" name="image_id">
+                                            
+                                            <!-- Image Preview -->
+                                            <div class="mb-4">
+                                                <img id="featured-preview-create" src="" 
+                                                     class="w-full h-40 object-cover rounded-lg border-2 border-dashed border-border hidden" 
+                                                     alt="Featured image preview">
+                                                <div id="no-image-placeholder" class="w-full h-40 bg-muted border-2 border-dashed border-border rounded-lg flex items-center justify-center">
+                                                    <div class="text-center">
+                                                        <i class="fas fa-image text-muted-foreground text-2xl mb-2"></i>
+                                                        <p class="text-sm text-muted-foreground">Belum ada gambar utama (opsional)</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="flex space-x-2">
+                                                <button type="button" id="open-header-modal-btn" onclick="console.log('Button clicked via onclick'); window.openImageHeaderModalCreate && window.openImageHeaderModalCreate();"
+                                                        class="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-3 rounded-lg font-medium text-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200 flex items-center justify-center" 
+                                                        aria-label="Choose featured image">
+                                                    <i class="fas fa-plus mr-2"></i>Pilih Gambar (Opsional)
+                                                </button>
+                                                <button type="button" id="clear-featured-image-btn" 
+                                                        class="px-3 py-2 bg-muted hover:bg-muted/80 text-muted-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-muted transition-all duration-200" 
+                                                        aria-label="Remove featured image" title="Remove Featured Image">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 1 Navigation -->
+                        <div class="flex justify-end mt-6 pt-4 border-t border-border">
+                            <button type="button" id="next-step-btn" 
+                                    class="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" 
+                                    aria-label="Continue to content">
+                                Lanjut ke Konten <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Content Section (Hidden by default) -->
+                <div id="step-2-content" class="w-full hidden" role="complementary" aria-label="Story content">
+                    <div class="h-full flex flex-col">
+                        <!-- Content Editor Card -->
+                        <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden mb-6">
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-border">
+                                                                        <h3 class="text-lg font-semibold text-foreground flex items-center">
+                                            <i class="fas fa-edit text-primary mr-3"></i>
+                                            Editor Konten Cerita
+                                        </h3>
+                                        <p class="text-sm text-muted-foreground mt-1">Tulis konten cerita Anda dengan format yang kaya</p>
+                            </div>
+                            <div class="p-6">
+                                <!-- Content Editor -->
+                                <div id="simplemde-wrapper" class="flex flex-col min-h-[600px]" role="textbox" aria-label="Story content editor">
+                                    <div id="custom-toolbar" class="flex flex-wrap gap-3 bg-card border border-border p-3 rounded-t-lg mb-3" role="toolbar" aria-label="Editor toolbar">
+                                        <button type="button" data-cmd="bold" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Bold"><i class="fa fa-bold" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="italic" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Italic"><i class="fa fa-italic" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="heading" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Heading"><i class="fa fa-header" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="quote" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Quote"><i class="fa fa-quote-left" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="unordered-list" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Unordered list"><i class="fa fa-list-ul" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="ordered-list" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Ordered list"><i class="fa fa-list-ol" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="link" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Link"><i class="fa fa-link" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="image" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Image"><i class="fa fa-image" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="preview" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Preview"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                                        <button type="button" data-cmd="guide" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Markdown guide"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
+                                    </div>
+                                    <textarea id="story-content" name="content" class="custom-mde flex-1 min-h-[500px] resize-none" 
+                                              placeholder="Mulai menulis cerita Anda di sini...
+
+Tips:
+- Mulai dengan pengantar yang menarik
+- Gunakan heading untuk struktur
+- Tambahkan gambar untuk visual yang lebih baik
+- Gunakan daftar untuk informasi yang mudah dibaca" 
+                                              aria-label="Story content editor"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Publication Section -->
+                        <div class="mt-6 pt-4 border-t border-border">
+                            <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                                <div class="bg-gradient-to-r from-orange-50 to-red-50 px-6 py-4 border-b border-border">
+                                                                            <h3 class="text-lg font-semibold text-foreground flex items-center">
+                                            <i class="fas fa-rocket text-orange-600 mr-3"></i>
+                                            Publikasi
+                                        </h3>
+                                        <p class="text-sm text-muted-foreground mt-1">Simpan atau terbitkan cerita Anda</p>
+                                </div>
+                                <div class="p-6">
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <!-- Back Button -->
+                                        <button type="button" id="prev-step-btn" 
+                                                class="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" 
+                                                aria-label="Back to details">
+                                            <i class="fas fa-arrow-left mr-2"></i>Kembali ke Detail
+                                        </button>
+                                        
+                                        <!-- Cancel Button -->
+                                        <button type="button" id="cancel-edit-btn" 
+                                                class="bg-card hover:bg-muted text-foreground border border-border py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-muted transition-all duration-200" 
+                                                aria-label="Cancel and go back">
+                                            <i class="fas fa-times mr-2"></i>Batal
+                                        </button>
+                                        
+                                        <!-- Save Hidden Button -->
+                                        <button type="submit" name="save-draft" 
+                                                class="bg-muted hover:bg-muted/80 text-foreground border border-border py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-muted transition-all duration-200 flex items-center justify-center" 
+                                                aria-label="Save and keep hidden">
+                                            <i class="fas fa-eye-slash mr-2"></i>Simpan Tersembunyi
+                                        </button>
+                                        
+                                        <!-- Save and Show (Publish) Button -->
+                                        <button type="submit" name="publish" 
+                                                class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 flex items-center justify-center" 
+                                                aria-label="Save and show to public">
+                                            <i class="fas fa-eye mr-2"></i>Simpan & Tampilkan
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Help Text -->
+                                    <div class="text-center pt-4 space-y-1">
+                                        <p class="text-xs text-muted-foreground">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Pastikan semua field yang diperlukan telah diisi.
+                                        </p>
+                                        <p class="text-xs text-muted-foreground">
+                                            <i class="fas fa-eye-slash mr-1"></i>
+                                            <span>"Simpan Tersembunyi" menyimpan cerita tetapi tidak menampilkannya ke publik.</span>
+                                        </p>
+                                        <p class="text-xs text-muted-foreground">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            <span>"Simpan & Tampilkan" menyimpan dan segera menampilkan cerita ke publik.</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden input for news_id -->
+<input type="hidden" id="news-id" value="{{ news_id or '' }}">
+
+<!-- Modal Sisip Gambar untuk Tambah Cerita -->
+<div id="image-insert-modal-create" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40" role="dialog" aria-labelledby="image-insert-title" aria-modal="true">
+  <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <h2 id="image-insert-title" class="text-xl font-semibold mb-4 text-gray-800">Sisipkan Gambar</h2>
+    <div class="mb-4" role="radiogroup" aria-label="Pilih sumber gambar">
+      <label class="inline-flex items-center"><input type="radio" name="image-source-create" value="library" checked class="form-radio text-blue-500" aria-label="Pilih dari perpustakaan"><span class="ml-2 text-gray-700">Perpustakaan</span></label>
+      <label class="inline-flex items-center ml-4"><input type="radio" name="image-source-create" value="url" class="form-radio text-blue-500" aria-label="Gunakan URL eksternal"><span class="ml-2 text-gray-700">URL Eksternal</span></label>
+    </div>
+    <div id="image-library-section-create" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" role="list" aria-label="Daftar gambar perpustakaan"></div>
+    <!-- Pagination for Content Image Library (Create) -->
+    <div id="content-image-pagination-controls-create" class="mt-4 mb-4" role="navigation" aria-label="Navigasi halaman gambar">
+        <!-- Create content image pagination will be generated here -->
+    </div>
+    <div id="image-url-section-create" class="hidden space-y-4 mb-4">
+      <input id="image-url-input-create" type="text" inputmode="url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://contoh.com/gambar.jpg" aria-label="URL gambar">
+      <input id="image-alt-input-create" type="text" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Alt teks (opsional)" aria-label="Teks alternatif gambar">
+    </div>
+    <div class="flex space-x-4" role="group" aria-label="Tombol aksi gambar">
+      <button type="button" id="insert-image-btn-create" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Sisipkan gambar">Sisipkan</button>
+      <button type="button" id="close-image-insert-create" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300" aria-label="Tutup dialog">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Pilih Gambar Unggulan untuk Tambah Cerita -->
+<div id="image-header-modal-create" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40" role="dialog" aria-labelledby="header-image-title" aria-modal="true">
+  <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <h2 id="header-image-title" class="text-xl font-semibold mb-4 text-gray-800">Pilih Gambar Unggulan</h2>
+    <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg" role="group" aria-label="Unggah gambar baru">
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">Unggah Gambar Baru</h3>
+      <input id="header-upload-name-create" type="text" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nama gambar (opsional)" aria-label="Nama gambar">
+      <input id="header-upload-file-create" type="file" accept="image/*" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" aria-label="Pilih file gambar">
+      <input id="header-upload-url-create" type="url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://contoh.com/gambar.jpg" aria-label="URL gambar">
+      <button type="button" id="header-upload-btn-create" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Unggah gambar">Unggah</button>
+    </div>
+    <div id="header-image-library-create" class="grid grid-cols-1 md:grid-cols-3 gap-4" role="list" aria-label="Daftar gambar unggulan"></div>
+    <!-- Pagination for Header Image Library (Create) -->
+    <div id="header-image-pagination-controls-create" class="mt-4 mb-4" role="navigation" aria-label="Navigasi halaman gambar unggulan">
+        <!-- Create header image pagination will be generated here -->
+    </div>
+    <button type="button" id="header-image-close-create" onclick="console.log('Close button clicked via onclick'); window.closeImageHeaderModalCreate && window.closeImageHeaderModalCreate();" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg mt-4 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300" aria-label="Tutup dialog">Tutup</button>
+  </div>
+</div>
+
+<!-- Modal Sisipkan Tautan -->
+<div id="link-insert-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-30" role="dialog" aria-labelledby="link-insert-title" aria-modal="true">
+    <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-md">
+        <h3 id="link-insert-title" class="text-xl font-semibold text-gray-800 mb-4">Sisipkan Tautan</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-gray-700 font-medium mb-2" for="link-text">Teks Tautan</label>
+                <input type="text" id="link-text" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="misalnya, Kunjungi situs kami" aria-label="Teks yang akan ditampilkan">
+            </div>
+            <div>
+                <label class="block text-gray-700 font-medium mb-2" for="link-url">URL</label>
+                <input type="text" inputmode="url" id="link-url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., https://contoh.com" required aria-required="true" aria-label="URL tujuan">
+            </div>
+        </div>
+        <div class="flex justify-end space-x-4 mt-6" role="group" aria-label="Tombol aksi tautan">
+            <button type="button" id="cancel-link-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300" aria-label="Batal sisipkan tautan">Batal</button>
+            <button type="button" id="insert-link-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Sisipkan tautan">Sisipkan</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+/* Enhanced Content Editor Styles */
+#simplemde-wrapper {
+    min-height: 600px;
+}
+
+#story-content {
+    min-height: 500px !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background-color: var(--card);
+    color: var(--foreground);
+}
+
+/* SimpleMDE Custom Styles */
+.EasyMDEContainer {
+    min-height: 500px !important;
+}
+
+.EasyMDEContainer .CodeMirror {
+    min-height: 500px !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    background-color: var(--card);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+}
+
+.EasyMDEContainer .CodeMirror-focused {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary/20);
+}
+
+/* Toolbar Enhancement */
+#custom-toolbar {
+    background: linear-gradient(135deg, var(--card) 0%, var(--muted) 100%);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+#custom-toolbar button {
+    transition: all 0.2s ease;
+}
+
+#custom-toolbar button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+<script>
+// 2-Step Process Functionality
+(function() {
+    'use strict';
+    
+    // Wait for DOM to be ready
+    function ready(fn) {
+        if (document.readyState !== 'loading') {
+            fn();
+        } else {
+            document.addEventListener('DOMContentLoaded', fn);
+        }
+    }
+    
+    ready(function() {
+        console.log('2-Step Process JavaScript loaded');
+        
+        // Get news ID and draft storage key
+        const NEWS_ID = document.getElementById('news-id').value;
+        const DRAFT_KEY = NEWS_ID ? `story-draft-${NEWS_ID}` : 'story-draft-create';
+        
+        // Get elements
+        const step1Content = document.getElementById('step-1-content');
+        const step2Content = document.getElementById('step-2-content');
+        const step1Indicator = document.getElementById('step-1-indicator');
+        const step2Indicator = document.getElementById('step-2-indicator');
+        const nextStepBtn = document.getElementById('next-step-btn');
+        const prevStepBtn = document.getElementById('prev-step-btn');
+        
+        // Simple toast function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 transform transition-all duration-300 translate-x-full`;
+            
+            switch (type) {
+                case 'error':
+                    toast.classList.add('bg-red-500');
+                    break;
+                case 'success':
+                    toast.classList.add('bg-green-500');
+                    break;
+                case 'warning':
+                    toast.classList.add('bg-yellow-500');
+                    break;
+                default:
+                    toast.classList.add('bg-blue-500');
+            }
+            
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Step 1: Details (Default view)
+        function showStep1() {
+            console.log('Showing Step 1 (Details)');
+            if (step1Content) step1Content.classList.remove('hidden');
+            if (step2Content) step2Content.classList.add('hidden');
+            
+            if (step1Indicator) {
+                step1Indicator.classList.remove('bg-muted', 'text-muted-foreground');
+                step1Indicator.classList.add('bg-primary', 'text-primary-foreground');
+            }
+            
+            if (step2Indicator) {
+                step2Indicator.classList.remove('bg-primary', 'text-primary-foreground');
+                step2Indicator.classList.add('bg-muted', 'text-muted-foreground');
+            }
+            
+            // Update step labels
+            const step1Label = document.querySelector('#step-1-indicator + span');
+            const step2Label = document.querySelector('#step-2-indicator + span');
+            
+            if (step1Label) {
+                step1Label.classList.remove('text-muted-foreground');
+                step1Label.classList.add('text-foreground');
+            }
+            
+            if (step2Label) {
+                step2Label.classList.remove('text-foreground');
+                step2Label.classList.add('text-muted-foreground');
+            }
+        }
+        
+        // Step 2: Content Editor
+        function showStep2() {
+            console.log('Showing Step 2 (Content)');
+            
+            // Validate required fields in step 1
+            const titleInput = document.getElementById('story-title');
+            const categoryInput = document.getElementById('story-category');
+            const dateInput = document.getElementById('story-date');
+            const ageRatingInput = document.getElementById('story-age-rating');
+            
+            const title = titleInput ? titleInput.value.trim() : '';
+            const category = categoryInput ? categoryInput.value : '';
+            const date = dateInput ? dateInput.value : '';
+            const ageRating = ageRatingInput ? ageRatingInput.value : '';
+            
+            if (!title) {
+                showToast('Judul cerita diperlukan', 'error');
+                if (titleInput) titleInput.focus();
+                return;
+            }
+            
+            if (!category) {
+                showToast('Kategori diperlukan', 'error');
+                if (categoryInput) categoryInput.focus();
+                return;
+            }
+            
+            if (!date) {
+                showToast('Tanggal publikasi diperlukan', 'error');
+                if (dateInput) dateInput.focus();
+                return;
+            }
+            
+            if (!ageRating) {
+                showToast('Rating usia diperlukan', 'error');
+                if (ageRatingInput) ageRatingInput.focus();
+                return;
+            }
+            
+            if (step1Content) step1Content.classList.add('hidden');
+            if (step2Content) step2Content.classList.remove('hidden');
+            
+            if (step1Indicator) {
+                step1Indicator.classList.remove('bg-primary', 'text-primary-foreground');
+                step1Indicator.classList.add('bg-muted', 'text-muted-foreground');
+            }
+            
+            if (step2Indicator) {
+                step2Indicator.classList.remove('bg-muted', 'text-muted-foreground');
+                step2Indicator.classList.add('bg-primary', 'text-primary-foreground');
+            }
+            
+            // Update step labels
+            const step1Label = document.querySelector('#step-1-indicator + span');
+            const step2Label = document.querySelector('#step-2-indicator + span');
+            
+            if (step1Label) {
+                step1Label.classList.remove('text-foreground');
+                step1Label.classList.add('text-muted-foreground');
+            }
+            
+            if (step2Label) {
+                step2Label.classList.remove('text-muted-foreground');
+                step2Label.classList.add('text-foreground');
+            }
+        }
+        
+        // Event listeners
+        if (nextStepBtn) {
+            nextStepBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showStep2();
+            });
+        }
+        
+        if (prevStepBtn) {
+            prevStepBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showStep1();
+            });
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Enter to go to next step
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (step1Content && !step1Content.classList.contains('hidden')) {
+                    e.preventDefault();
+                    showStep2();
+                }
+            }
+            
+            // Escape to go back to previous step
+            if (e.key === 'Escape') {
+                if (step2Content && !step2Content.classList.contains('hidden')) {
+                    e.preventDefault();
+                    showStep1();
+                }
+            }
+        });
+        
+        // Auto-save functionality
+        let autoSaveTimer;
+        function setupAutoSave() {
+            const titleInput = document.getElementById('story-title');
+            const contentTextarea = document.getElementById('story-content');
+            
+            if (!titleInput) {
+                console.log('Title input not found, skipping auto-save setup');
+                return;
+            }
+            
+            // Get all form elements for auto-save
+            const categoryInput = document.getElementById('story-category');
+            const dateInput = document.getElementById('story-date');
+            const tagsInput = document.getElementById('story-tags');
+            const writerInput = document.getElementById('story-writer');
+            const externalSourceInput = document.getElementById('story-external-source');
+            const ageRatingInput = document.getElementById('story-age-rating');
+            const prizeInput = document.getElementById('story-prize');
+            const coinTypeSelect = document.getElementById('story-prize-coin-type');
+            
+            function autoSave() {
+                const title = titleInput.value.trim();
+                
+                // Get content from textarea first, then try SimpleMDE
+                let content = contentTextarea ? contentTextarea.value.trim() : '';
+                
+                if (!content) {
+                    let simplemde = window.simplemde || window.addSimplemde;
+                    if (simplemde) {
+                        try {
+                            if (typeof simplemde.value === 'function') {
+                                content = simplemde.value().trim();
+                            } else if (simplemde.codemirror && simplemde.codemirror.getValue) {
+                                content = simplemde.codemirror.getValue().trim();
+                            }
+                        } catch (e) {
+                            console.error('Error getting SimpleMDE content for auto-save:', e);
+                        }
+                    }
+                }
+                
+                // Get details fields
+                const category = categoryInput ? categoryInput.value : '';
+                const date = dateInput ? dateInput.value : '';
+                const tags = tagsInput ? tagsInput.value.trim() : '';
+                const writer = writerInput ? writerInput.value.trim() : '';
+                const externalSource = externalSourceInput ? externalSourceInput.value.trim() : '';
+                const ageRating = ageRatingInput ? ageRatingInput.value : '';
+                const prize = prizeInput ? prizeInput.value : '';
+                const coinType = coinTypeSelect ? coinTypeSelect.value : '';
+                
+                if (title || content || category || date || tags || writer || externalSource || ageRating || prize || coinType) {
+                    // Save to localStorage as draft
+                    const draft = {
+                        title: title,
+                        content: content,
+                        category: category,
+                        date: date,
+                        tags: tags,
+                        writer: writer,
+                        externalSource: externalSource,
+                        ageRating: ageRating,
+                        prize: prize,
+                        coinType: coinType,
+                        timestamp: new Date().toISOString()
+                    };
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+                    
+                    // Show subtle indicator
+                    const indicator = document.createElement('div');
+                    indicator.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-3 py-1 rounded-lg text-sm opacity-0 transition-opacity duration-300';
+                    indicator.textContent = 'Draft tersimpan';
+                    document.body.appendChild(indicator);
+                    
+                    setTimeout(() => {
+                        indicator.classList.remove('opacity-0');
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        indicator.classList.add('opacity-0');
+                        setTimeout(() => {
+                            if (document.body.contains(indicator)) {
+                                document.body.removeChild(indicator);
+                            }
+                        }, 300);
+                    }, 2000);
+                }
+            }
+            
+            // Auto-save every 30 seconds
+            function startAutoSave() {
+                autoSaveTimer = setInterval(autoSave, 30000);
+            }
+            
+            function stopAutoSave() {
+                if (autoSaveTimer) {
+                    clearInterval(autoSaveTimer);
+                }
+            }
+            
+            // Start auto-save when user starts typing
+            titleInput.addEventListener('input', function() {
+                stopAutoSave();
+                startAutoSave();
+            });
+            
+            // Start auto-save when user changes details fields
+            const formInputs = [categoryInput, dateInput, tagsInput, writerInput, externalSourceInput, ageRatingInput, prizeInput, coinTypeSelect];
+            formInputs.forEach(input => {
+                if (input) {
+                    input.addEventListener('input', function() {
+                        stopAutoSave();
+                        startAutoSave();
+                    });
+                    input.addEventListener('change', function() {
+                        stopAutoSave();
+                        startAutoSave();
+                    });
+                }
+            });
+            
+            // Listen for SimpleMDE changes
+            let simplemde = window.simplemde || window.addSimplemde;
+            if (simplemde && simplemde.codemirror) {
+                simplemde.codemirror.on('change', function() {
+                    stopAutoSave();
+                    startAutoSave();
+                });
+            } else if (contentTextarea) {
+                contentTextarea.addEventListener('input', function() {
+                    stopAutoSave();
+                    startAutoSave();
+                });
+            }
+            
+            // Load draft on page load
+            try { localStorage.removeItem('story-draft'); } catch(e) {}
+            const savedDraft = localStorage.getItem(DRAFT_KEY);
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    
+                    // Load title
+                    if (draft.title) titleInput.value = draft.title;
+                    
+                    // Load details fields
+                    if (draft.category && categoryInput) categoryInput.value = draft.category;
+                    if (draft.date && dateInput) dateInput.value = draft.date;
+                    if (draft.tags && tagsInput) tagsInput.value = draft.tags;
+                    if (draft.writer && writerInput) writerInput.value = draft.writer;
+                    if (draft.externalSource && externalSourceInput) externalSourceInput.value = draft.externalSource;
+                    if (draft.ageRating && ageRatingInput) ageRatingInput.value = draft.ageRating;
+                    if (draft.prize && prizeInput) prizeInput.value = draft.prize;
+                    if (draft.coinType && coinTypeSelect) coinTypeSelect.value = draft.coinType;
+                    
+                    // Load content into SimpleMDE if it exists, otherwise into textarea
+                    if (draft.content) {
+                        let simplemde = window.simplemde || window.addSimplemde;
+                        if (simplemde && typeof simplemde.value === 'function') {
+                            simplemde.value(draft.content);
+                        } else if (contentTextarea) {
+                            contentTextarea.value = draft.content;
+                        }
+                    }
+                    
+                    // Show draft loaded notification
+                    showToast('Draft sebelumnya dimuat', 'info');
+                } catch (e) {
+                    console.error('Error loading draft:', e);
+                }
+            }
+        }
+        
+        // Initialize auto-save
+        setupAutoSave();
+
+        // Initialize modal event listeners
+        function setupModalEventListeners() {
+            // Attach listener for opening header modal
+            const openHeaderBtn = document.getElementById('open-header-modal-btn');
+            console.log('Looking for open-header-modal-btn:', openHeaderBtn);
+            if (openHeaderBtn) {
+                openHeaderBtn.addEventListener('click', window.openImageHeaderModalCreate);
+                console.log('Header modal open button listener attached');
+                
+                // Test if button is clickable
+                console.log('Button properties:', {
+                    disabled: openHeaderBtn.disabled,
+                    type: openHeaderBtn.type,
+                    className: openHeaderBtn.className,
+                    style: openHeaderBtn.style.display
+                });
+            } else {
+                console.error('open-header-modal-btn not found in DOM');
+            }
+            
+            // Attach listener for closing header modal
+            const closeHeaderBtn = document.getElementById('header-image-close-create');
+            console.log('Looking for header-image-close-create button:', closeHeaderBtn);
+            if (closeHeaderBtn) {
+                closeHeaderBtn.addEventListener('click', () => {
+                    console.log('Close button clicked!');
+                    window.closeImageHeaderModalCreate();
+                });
+                console.log('Header modal close button listener attached');
+            } else {
+                console.error('header-image-close-create button not found in DOM');
+            }
+            
+            // Attach listener for closing content image modal
+            const closeContentInsertBtn = document.getElementById('close-image-insert-create');
+            if (closeContentInsertBtn) {
+                closeContentInsertBtn.addEventListener('click', window.closeImageInsertModalCreate);
+                console.log('Content image modal close button listener attached');
+            }
+            
+            // Attach listener for closing link modal
+            const cancelLinkBtn = document.getElementById('cancel-link-btn');
+            if (cancelLinkBtn) {
+                cancelLinkBtn.addEventListener('click', () => {
+                    const modal = document.getElementById('link-insert-modal');
+                    if (modal) modal.classList.add('hidden');
+                });
+                console.log('Link modal close button listener attached');
+            }
+            
+            // Close modals when clicking outside
+            const modals = ['image-insert-modal-create', 'image-header-modal-create', 'link-insert-modal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.classList.add('hidden');
+                            console.log(`Modal ${modalId} closed by clicking outside`);
+                        }
+                    });
+                }
+            });
+            
+            // Close modals with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    modals.forEach(modalId => {
+                        const modal = document.getElementById(modalId);
+                        if (modal && !modal.classList.contains('hidden')) {
+                            modal.classList.add('hidden');
+                            console.log(`Modal ${modalId} closed by Escape key`);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Prize input visibility handler
+        function setupPrizeInputHandler() {
+            const premiumCheckbox = document.getElementById('story-is-premium');
+            const prizeSection = document.getElementById('prize-input-section');
+            const prizeInput = document.getElementById('story-prize');
+            const coinTypeSelect = document.getElementById('story-prize-coin-type');
+            
+            if (premiumCheckbox && prizeSection && prizeInput && coinTypeSelect) {
+                // Function to toggle prize input visibility
+                function togglePrizeInput() {
+                    if (premiumCheckbox.checked) {
+                        prizeSection.classList.remove('hidden');
+                        prizeInput.setAttribute('required', 'true');
+                        prizeInput.setAttribute('aria-required', 'true');
+                        coinTypeSelect.setAttribute('required', 'true');
+                        coinTypeSelect.setAttribute('aria-required', 'true');
+                    } else {
+                        prizeSection.classList.add('hidden');
+                        prizeInput.removeAttribute('required');
+                        prizeInput.setAttribute('aria-required', 'false');
+                        coinTypeSelect.removeAttribute('required');
+                        coinTypeSelect.setAttribute('aria-required', 'false');
+                        // Reset prize to 0 when premium is unchecked
+                        prizeInput.value = '0';
+                        coinTypeSelect.value = 'any';
+                    }
+                }
+                
+                // Add event listener
+                premiumCheckbox.addEventListener('change', togglePrizeInput);
+                
+                // Initialize state on page load
+                togglePrizeInput();
+            }
+        }
+        
+        // Initialize prize input handler
+        setupPrizeInputHandler();
+
+        // Initialize modal event listeners
+        setupModalEventListeners();
+
+        // Cancel button handler
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                if (NEWS_ID) {
+                    // If we're editing, go back to stories page
+                    window.location.href = "{{ url_for('user_profile.user_stories', username=user.username) }}";
+                } else {
+                    // If we're creating new, go back to stories page
+                    window.location.href = "{{ url_for('user_profile.user_stories', username=user.username) }}";
+                }
+            });
+        }
+        
+        // Load categories
+        async function loadCategories() {
+            try {
+                console.log('Loading categories...');
+                const response = await fetch('/api/categories?grouped=false');
+                const data = await response.json();
+                
+                console.log('Categories API response:', data);
+                
+                // Handle the actual API response structure
+                let categories = [];
+                if (Array.isArray(data)) {
+                    // Flat array response
+                    categories = data;
+                } else if (data.success && data.categories) {
+                    // Legacy response with success property
+                    categories = data.categories;
+                } else {
+                    console.error('Unexpected categories API response format:', data);
+                    throw new Error('Unexpected categories API response format');
+                }
+                
+                const select = document.getElementById('story-category');
+                if (select) {
+                    // Clear existing options first
+                    select.innerHTML = '<option value="" disabled selected>Select story category...</option>';
+                    
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        select.appendChild(option);
+                    });
+                    console.log(`Loaded ${categories.length} categories into select`);
+                    
+                    // Verify the options are actually in the DOM
+                    if (select.options.length > 1) {
+                        console.log('Categories successfully loaded into DOM');
+                    } else {
+                        console.warn('Categories may not be fully loaded into DOM');
+                    }
+                } else {
+                    console.error('Category select element not found');
+                    throw new Error('Category select element not found');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                throw error; // Re-throw so we can catch it in the initialization
+            }
+        }
+        
+        // Load existing story data if editing
+        async function loadStoryData(newsId) {
+            try {
+                console.log('Loading story data for ID:', newsId);
+                const response = await fetch(`/api/news/${newsId}`);
+                console.log('API Response status:', response.status);
+                
+                if (!response.ok) {
+                    console.error('API Error:', response.status, response.statusText);
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Error details:', errorData);
+                    showToast('error', `Failed to load story: ${errorData.error || response.statusText}`);
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Story data received:', data);
+                
+                const story = data;
+                
+                // Helper functions for robust field setting
+                function setIf(el, val) { 
+                    if (el && val !== undefined && val !== null) {
+                        el.value = val;
+                        console.log(`Set ${el.id} to:`, val);
+                    }
+                }
+                
+                function setCheckedIf(el, val) { 
+                    if (el && typeof val === 'boolean') {
+                        el.checked = val;
+                        console.log(`Set ${el.id} checked to:`, val);
+                    }
+                }
+                
+                // Wait for element to be ready
+                function when(elGetter, predicate, cb, tries = 100, delay = 50) {
+                    let count = 0;
+                    (function wait() {
+                        const el = elGetter();
+                        if (predicate(el)) return cb(el);
+                        if (count++ > tries) return cb(null);
+                        setTimeout(wait, delay);
+                    })();
+                }
+                
+                // Apply category with waiting for options to load
+                function applyCategory(cat) {
+                    if (!cat) {
+                        console.log('No category to apply');
+                        return;
+                    }
+                    
+                    const select = document.getElementById('story-category');
+                    if (!select) {
+                        console.log('Category select element not found');
+                        return;
+                    }
+                    
+                    console.log('Applying category:', cat, 'to select with', select.options.length, 'options');
+                    
+                    // First try to set immediately if options are available
+                    if (select.options && select.options.length > 1) {
+                        try {
+                            const categoryValue = cat.id || cat;
+                            select.value = categoryValue;
+                            console.log(`Set category to:`, categoryValue);
+                            return;
+                        } catch(e) {
+                            console.warn('Immediate category setting error:', e);
+                        }
+                    }
+                    
+                    // If not available, wait for options to load
+                    let attempts = 0;
+                    const maxAttempts = 50; // Reduced from 100 to prevent infinite loops
+                    
+                    function trySetCategory() {
+                        attempts++;
+                        console.log(`Category attempt ${attempts}/${maxAttempts}`);
+                        
+                        if (select.options && select.options.length > 1) {
+                            try {
+                                const categoryValue = cat.id || cat;
+                                select.value = categoryValue;
+                                console.log(`Set category to:`, categoryValue);
+                                return;
+                            } catch(e) {
+                                console.warn('Category setting error:', e);
+                            }
+                        }
+                        
+                        if (attempts >= maxAttempts) {
+                            console.warn('Failed to set category after', maxAttempts, 'attempts');
+                            return;
+                        }
+                        
+                        setTimeout(trySetCategory, 100);
+                    }
+                    
+                    trySetCategory();
+                }
+                
+                // Apply content with SimpleMDE support
+                function applyContent(content) {
+                    if (!content) return;
+                    const textarea = document.getElementById('story-content');
+                    
+                    // Try SimpleMDE if present
+                    let attempts = 0;
+                    (function trySet() {
+                        attempts++;
+                        const simplemde = window.simplemde || window.addSimplemde;
+                        if (simplemde && typeof simplemde.value === 'function') {
+                            try { 
+                                simplemde.value(content); 
+                                console.log('Content set via SimpleMDE');
+                                return; 
+                            } catch (e) {
+                                console.warn('SimpleMDE setting error:', e);
+                            }
+                        }
+                        if (textarea) { 
+                            textarea.value = content; 
+                            console.log('Content set via textarea');
+                        }
+                        if (attempts < 20 && simplemde == null) setTimeout(trySet, 100);
+                    })();
+                }
+                
+                // Populate form fields
+                setIf(document.getElementById('story-title'), story.title || '');
+                setIf(document.getElementById('story-tags'), story.tagar || '');
+                setIf(document.getElementById('story-age-rating'), story.age_rating || '');
+                setIf(document.getElementById('story-external-source'), story.external_source || '');
+                setIf(document.getElementById('story-prize'), story.prize || 0);
+                setIf(document.getElementById('story-prize-coin-type'), story.prize_coin_type || 'any');
+                
+                if (story.date) {
+                    setIf(document.getElementById('story-date'), story.date.split('T')[0]);
+                }
+                
+                // Handle premium content
+                setCheckedIf(document.getElementById('story-is-premium'), !!story.is_premium);
+                
+                // Category and content (with special handling)
+                applyCategory(story.category_id);
+                applyContent(story.content || '');
+                
+                console.log('Story data loaded successfully');
+                showToast('success', 'Story data loaded successfully');
+                
+            } catch (error) {
+                console.error('Error loading story data:', error);
+                showToast('error', 'Failed to load story data');
+            }
+        }
+        
+        // Initialize
+        console.log('Initializing with NEWS_ID:', NEWS_ID);
+        
+        // Load categories first, then load story data if editing
+        async function initializePage() {
+            try {
+                await loadCategories();
+                console.log('Categories loaded');
+                
+                // Wait a bit more for categories to be fully populated in the DOM
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (NEWS_ID) {
+                    console.log('Loading story data for editing...');
+                    loadStoryData(NEWS_ID);
+                } else {
+                    console.log('Creating new story...');
+                }
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        }
+        
+        initializePage();
+        
+        // Form submission
+        document.getElementById('create-story-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitStory(e);
+        });
+        
+        async function submitStory(event) {
+            try {
+                console.log('Submitting story...');
+                
+                const formData = new FormData();
+                
+                // Get form values with error checking
+                const title = document.getElementById('story-title')?.value || '';
+                const category = document.getElementById('story-category')?.value || '';
+                const tags = document.getElementById('story-tags')?.value || '';
+                const writer = document.getElementById('story-writer')?.value || '';
+                const ageRating = document.getElementById('story-age-rating')?.value || '';
+                const content = document.getElementById('story-content')?.value || '';
+                const externalSource = document.getElementById('story-external-source')?.value || '';
+                const date = document.getElementById('story-date')?.value || '';
+                const isPremium = document.getElementById('story-is-premium')?.checked || false;
+                const prize = document.getElementById('story-prize')?.value || '0';
+                const coinType = document.getElementById('story-prize-coin-type')?.value || 'any';
+                
+                // Validate required fields
+                if (!title.trim()) {
+                    showToast('error', 'Judul cerita diperlukan');
+                    return;
+                }
+                if (!category) {
+                    showToast('error', 'Kategori diperlukan');
+                    return;
+                }
+                if (!ageRating) {
+                    showToast('error', 'Rating usia diperlukan');
+                    return;
+                }
+                if (!date) {
+                    showToast('error', 'Tanggal publikasi diperlukan');
+                    return;
+                }
+                if (!content.trim()) {
+                    showToast('error', 'Konten cerita diperlukan');
+                    return;
+                }
+                
+                formData.append('title', title);
+                formData.append('category', category);
+                formData.append('tagar', tags);
+                formData.append('writer', writer);
+                formData.append('age_rating', ageRating);
+                formData.append('content', content);
+                formData.append('external_source', externalSource);
+                formData.append('date', date);
+                formData.append('is_premium', isPremium);
+                formData.append('prize', prize);
+                formData.append('prize_coin_type', coinType);
+            
+            // Check if it's a draft or publish
+            const isDraft = event.submitter && event.submitter.name === 'save-draft';
+            formData.append('is_visible', !isDraft);
+            
+            console.log('Submitting as:', isDraft ? 'draft' : 'published');
+            
+            const url = NEWS_ID ? `/api/news/${NEWS_ID}` : '/api/news/create';
+            const method = NEWS_ID ? 'PUT' : 'POST';
+            
+            console.log('Making request to:', url, 'with method:', method);
+            
+            const response = await fetch(url, {
+                method: method,
+                body: formData
+            });
+            
+            console.log('Response status:', response.status);
+            
+            const data = await response.json();
+            console.log('Response data:', data);
+            
+            if (response.ok) {
+                showToast('success', NEWS_ID ? 'Cerita berhasil diperbarui!' : 'Cerita berhasil diterbitkan!');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('user_profile.user_stories', username=user.username) }}";
+                }, 1500);
+            } else {
+                showToast('error', data.error || data.message || 'Gagal menyimpan cerita');
+            }
+        } catch (error) {
+            console.error('Error submitting story:', error);
+            showToast('error', 'Gagal menyimpan cerita');
+        }
+        }
+        
+        console.log('2-Step Process JavaScript initialization complete');
+        
+        // Initialize SimpleMDE editor
+        let simplemde;
+        function initializeSimpleMDE() {
+            const textarea = document.getElementById('story-content');
+            if (textarea && !simplemde) {
+                simplemde = new SimpleMDE({
+                    element: textarea,
+                    spellChecker: true,
+                    autofocus: true,
+                    placeholder: "Mulai menulis cerita Anda di sini...\n\nTips:\n- Mulai dengan pengantar yang menarik\n- Gunakan heading untuk struktur\n- Tambahkan gambar untuk visual yang lebih baik\n- Gunakan daftar untuk informasi yang mudah dibaca",
+                    autosave: {
+                        enabled: true,
+                        uniqueId: "story-content-autosave",
+                        delay: 1000,
+                    },
+                    toolbar: false, // Use custom toolbar
+                    renderingConfig: {
+                        singleLineBreaks: false,
+                        codeSyntaxHighlighting: true,
+                    },
+                });
+                
+                // Make SimpleMDE globally accessible
+                window.simplemde = simplemde;
+                window.addSimplemde = simplemde;
+                
+                console.log('SimpleMDE initialized successfully');
+            }
+        }
+        
+        // Initialize SimpleMDE when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSimpleMDE);
+        } else {
+            initializeSimpleMDE();
+        }
+        
+        // Make functions globally available immediately
+        window.openImageInsertModalCreate = function() {
+            const modal = document.getElementById('image-insert-modal-create');
+            if (!modal) {
+                console.error("Content image insert modal (#image-insert-modal-create) not found.");
+                return;
+            }
+            modal.classList.remove('hidden');
+
+            const librarySection = document.getElementById('image-library-section-create');
+            const urlSection = document.getElementById('image-url-section-create');
+            const libraryRadio = document.querySelector('input[name="image-source-create"][value="library"]');
+
+            if (librarySection && urlSection && libraryRadio) {
+                librarySection.classList.remove('hidden');
+                urlSection.classList.add('hidden');
+                libraryRadio.checked = true;
+            }
+
+            document.getElementsByName('image-source-create').forEach(radio => {
+                if (!radio.dataset.listenerAttached) {
+                    radio.addEventListener('change', e => {
+                        const val = e.target.value;
+                        if (librarySection) librarySection.classList.toggle('hidden', val === 'url');
+                        if (urlSection) urlSection.classList.toggle('hidden', val !== 'url');
+                    });
+                    radio.dataset.listenerAttached = 'true';
+                }
+            });
+
+            fetchAndDisplayContentImagesCreate(1);
+        };
+        
+        window.openImageHeaderModalCreate = function() {
+            console.log('openImageHeaderModalCreate function called');
+            const modal = document.getElementById('image-header-modal-create');
+            if (modal) {
+                modal.classList.remove('hidden');
+                console.log('Modal opened successfully');
+                loadHeaderLibraryCreate(1);
+            } else {
+                console.error("Featured image modal (#image-header-modal-create) not found.");
+            }
+        };
+        
+        window.closeImageInsertModalCreate = function() {
+            const modal = document.getElementById('image-insert-modal-create');
+            if (modal) {
+                modal.classList.add('hidden');
+                console.log('Content image modal closed');
+            } else {
+                console.error('Content image modal not found');
+            }
+        };
+        
+        window.closeImageHeaderModalCreate = function() {
+            console.log('closeImageHeaderModalCreate function called');
+            const modal = document.getElementById('image-header-modal-create');
+            console.log('Modal element found:', modal);
+            if (modal) {
+                console.log('Modal classes before:', modal.className);
+                modal.classList.add('hidden');
+                console.log('Modal classes after:', modal.className);
+                console.log('Header image modal closed');
+            } else {
+                console.error('Header image modal not found');
+            }
+        };
+        
+        // Clear featured image function
+        window.clearFeaturedImageCreate = function() {
+            const preview = document.getElementById('featured-preview-create');
+            const imageIdInput = document.getElementById('story-image-id');
+            const noImagePlaceholder = document.getElementById('no-image-placeholder');
+            
+            if (preview && imageIdInput && noImagePlaceholder) {
+                preview.src = '/static/pic/placeholder.png';
+                imageIdInput.value = '';
+                preview.classList.add('hidden');
+                noImagePlaceholder.classList.remove('hidden');
+                console.log('Featured image cleared');
+            } else {
+                console.error('Featured image elements not found');
+            }
+        };
+        
+        // Image Modal Functionality
+        // Pagination Helpers
+        function generatePageNumbers(currentPage, totalPages, edgeCount = 1, currentCount = 2) {
+            if (totalPages <= 1) return [];
+            const pages = new Set();
+            for (let i = 1; i <= Math.min(edgeCount, totalPages); i++) pages.add(i);
+            for (let i = Math.max(1, totalPages - edgeCount + 1); i <= totalPages; i++) pages.add(i);
+            for (let i = Math.max(1, currentPage - currentCount); i <= Math.min(totalPages, currentPage + currentCount); i++) pages.add(i);
+            const sortedPages = Array.from(pages).sort((a, b) => a - b);
+            const result = [];
+            let lastPage = 0;
+            for (const page of sortedPages) {
+                if (page > lastPage + 1) result.push(null); // Ellipsis
+                result.push(page);
+                lastPage = page;
+            }
+            return result;
+        }
+
+        function createPaginationElement(tag, classes, content, ariaLabel = null, title = null, disabled = false, onClick = null) {
+            const el = document.createElement(tag);
+            el.className = classes;
+            el.innerHTML = content;
+            if (ariaLabel) el.setAttribute('aria-label', ariaLabel);
+            if (title) el.title = title;
+            if (disabled) el.setAttribute('aria-disabled', 'true');
+            if (onClick && !disabled) el.onclick = () => onClick();
+            return el;
+        }
+
+        // Content Image Insert Modal Pagination
+        function updateContentImagePaginationControlsCreate(paginationData) {
+            const controlsContainer = document.getElementById('content-image-pagination-controls-create');
+            if (!controlsContainer) return;
+            controlsContainer.innerHTML = '';
+            if (!paginationData || paginationData.total_pages <= 1) return;
+
+            const { page: currentPage, total_pages: totalPages } = paginationData;
+            const nav = document.createElement('nav');
+            nav.setAttribute('aria-label', 'Content Image Pagination');
+            nav.className = 'flex flex-wrap items-center justify-center mt-4 gap-2 overflow-x-auto';
+
+            const buttonClasses = 'px-3 py-1 rounded-md hover:bg-blue-100 text-sm border border-gray-300';
+            const disabledClasses = 'px-3 py-1 rounded-md opacity-50 cursor-not-allowed text-sm border border-gray-300';
+            const currentClasses = 'px-3 py-1 rounded-md text-sm bg-blue-600 text-white';
+            const ellipsisClasses = 'h-8 px-1 inline-flex items-center text-gray-500 text-sm font-medium';
+            const firstIcon = `&laquo;`, prevIcon = `&lsaquo;`, nextIcon = `&rsaquo;`, lastIcon = `&raquo;`;
+
+            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, firstIcon, 'First Page', 'First Page', currentPage <= 1, () => fetchAndDisplayContentImagesCreate(1)));
+            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, prevIcon, 'Previous Page', 'Previous Page', currentPage <= 1, () => fetchAndDisplayContentImagesCreate(currentPage - 1)));
+            generatePageNumbers(currentPage, totalPages, 1, 1).forEach(page_num => {
+                if (page_num === null) nav.appendChild(createPaginationElement('span', ellipsisClasses, '...', null, null, true));
+                else if (page_num === currentPage) {
+                    const el = createPaginationElement('span', currentClasses, page_num, null, `Page ${page_num}`, true);
+                    el.setAttribute('aria-current', 'page');
+                    nav.appendChild(el);
+                } else nav.appendChild(createPaginationElement('button', buttonClasses, page_num, `Go to page ${page_num}`, `Go to page ${page_num}`, false, () => fetchAndDisplayContentImagesCreate(page_num)));
+            });
+            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, nextIcon, 'Next Page', 'Next Page', currentPage >= totalPages, () => fetchAndDisplayContentImagesCreate(currentPage + 1)));
+            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, lastIcon, 'Last Page', 'Last Page', currentPage >= totalPages, () => fetchAndDisplayContentImagesCreate(totalPages)));
+            controlsContainer.appendChild(nav);
+        }
+
+        // Header Image Library Pagination
+        function updateHeaderImagePaginationControlsCreate(paginationData) {
+            const controlsContainer = document.getElementById('header-image-pagination-controls-create');
+            if (!controlsContainer) return;
+            controlsContainer.innerHTML = '';
+            if (!paginationData || paginationData.total_pages <= 1) return;
+
+            const { page: currentPage, total_pages: totalPages } = paginationData;
+            const nav = document.createElement('nav');
+            nav.setAttribute('aria-label', 'Header Image Pagination');
+            nav.className = 'flex flex-wrap items-center justify-center mt-4 gap-2 overflow-x-auto';
+
+            const buttonClasses = 'px-3 py-1 rounded-md hover:bg-blue-100 text-sm border border-gray-300';
+            const disabledClasses = 'px-3 py-1 rounded-md opacity-50 cursor-not-allowed text-sm border border-gray-300';
+            const currentClasses = 'px-3 py-1 rounded-md text-sm bg-blue-600 text-white';
+            const ellipsisClasses = 'h-8 px-1 inline-flex items-center text-gray-500 text-sm font-medium';
+            const firstIcon = `&laquo;`, prevIcon = `&lsaquo;`, nextIcon = `&rsaquo;`, lastIcon = `&raquo;`;
+
+            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, firstIcon, 'First Page', 'First Page', currentPage <= 1, () => loadHeaderLibraryCreate(1)));
+            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, prevIcon, 'Previous Page', 'Previous Page', currentPage <= 1, () => loadHeaderLibraryCreate(currentPage - 1)));
+            generatePageNumbers(currentPage, totalPages, 1, 1).forEach(page_num => {
+                if (page_num === null) nav.appendChild(createPaginationElement('span', ellipsisClasses, '...', null, null, true));
+                else if (page_num === currentPage) {
+                    const el = createPaginationElement('span', currentClasses, page_num, null, `Page ${page_num}`, true);
+                    el.setAttribute('aria-current', 'page');
+                    nav.appendChild(el);
+                } else nav.appendChild(createPaginationElement('button', buttonClasses, page_num, `Go to page ${page_num}`, `Go to page ${page_num}`, false, () => loadHeaderLibraryCreate(page_num)));
+            });
+            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, nextIcon, 'Next Page', 'Next Page', currentPage >= totalPages, () => loadHeaderLibraryCreate(currentPage + 1)));
+            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, lastIcon, 'Last Page', 'Last Page', currentPage >= totalPages, () => loadHeaderLibraryCreate(totalPages)));
+            controlsContainer.appendChild(nav);
+        }
+
+        // Content Image Functions
+        async function fetchAndDisplayContentImagesCreate(page = 1) {
+            const librarySection = document.getElementById('image-library-section-create');
+            const paginationContainer = document.getElementById('content-image-pagination-controls-create');
+            if (!librarySection || !paginationContainer) return;
+            librarySection.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">Loading your images...</p>';
+            paginationContainer.innerHTML = '';
+            try {
+                const response = await fetch(`/api/images?page=${page}&per_page=12&visibility=visible`);
+                if (!response.ok) throw new Error('Failed to load content images');
+                const data = await response.json();
+                console.log('Content images loaded:', data.items.length, 'visible images');
+                
+                // Show message if no images found
+                if (data.items.length === 0) {
+                    librarySection.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <i class="fas fa-images text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-gray-500 mb-2">Belum ada gambar</p>
+                            <p class="text-sm text-gray-400">Upload gambar baru menggunakan form di atas</p>
+                        </div>
+                    `;
+                } else {
+                    renderImageLibraryCreate(data.items);
+                    updateContentImagePaginationControlsCreate(data);
+                }
+            } catch (err) {
+                librarySection.innerHTML = '<p class="col-span-full text-red-500 py-4">Error loading images.</p>';
+                console.error("Content image load error (create):", err);
+            }
+        }
+
+        function renderImageLibraryCreate(imgs) {
+            const container = document.getElementById('image-library-section-create');
+            if (!container) return;
+
+            container.innerHTML = (imgs || []).map(image => {
+                const placeholderImg = '/static/pic/placeholder.png';
+                const fullImageUrl = image.file_url || image.url || '/static/pic/placeholder.png';
+                let squareThumbUrl = placeholderImg;
+
+                if (image.filepath) {
+                    const pathWithoutStatic = image.filepath.replace('static/', '', 1);
+                    const lastDotIndex = pathWithoutStatic.lastIndexOf('.');
+                    if (lastDotIndex !== -1) {
+                        const base_path = pathWithoutStatic.substring(0, lastDotIndex);
+                        const extension = pathWithoutStatic.substring(lastDotIndex);
+                        squareThumbUrl = `/static/${base_path}_thumb_square${extension}`;
+                    } else {
+                        squareThumbUrl = fullImageUrl;
+                    }
+                } else {
+                    squareThumbUrl = fullImageUrl;
+                }
+                return `
+                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition p-3 flex flex-col gap-2 group cursor-pointer hover:border-blue-400">
+                    <img src="${squareThumbUrl}" onerror="this.onerror=null;this.src='${placeholderImg}'" alt="${image.filename||'Image'}" class="w-full aspect-square object-cover rounded-lg mb-2 shadow-sm group-hover:shadow-md">
+                    <button class="select-image-create bg-blue-600 text-white py-1 rounded-lg font-semibold" data-url="${fullImageUrl}" data-alt="${image.filename||''}">Select</button>
+                    </div>
+                `;
+            }).join('');
+
+            // Re-attach listeners after rendering
+            document.querySelectorAll('.select-image-create').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', () => {
+                    const url = newBtn.dataset.url;
+                    const alt = newBtn.dataset.alt;
+                    let simplemde = window.simplemde || window.addSimplemde;
+                    if (simplemde && simplemde.codemirror) {
+                        simplemde.codemirror.replaceSelection(`![${alt||null}](${url})`);
+                    }
+                    closeImageInsertModalCreate();
+                });
+            });
+        }
+
+        // Header Image Functions
+        async function loadHeaderLibraryCreate(page = 1) {
+            const container = document.getElementById('header-image-library-create');
+            const paginationContainer = document.getElementById('header-image-pagination-controls-create');
+            if (!container || !paginationContainer) return;
+
+            container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">Loading your images...</p>';
+            paginationContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(`/api/images?page=${page}&per_page=12&visibility=visible`);
+                if (!response.ok) throw new Error('Failed to load header images');
+                const data = await response.json();
+                const imgs = data.items || [];
+                console.log('Header images loaded:', imgs.length, 'visible images');
+
+                container.innerHTML = imgs.map(image => {
+                    const placeholderImg = '/static/pic/placeholder.png';
+                    const fullImageUrl = image.file_url || image.url || '/static/pic/placeholder.png';
+                    let squareThumbUrl = placeholderImg;
+                    let landscapeThumbUrl = placeholderImg;
+
+                    if (image.filepath) {
+                        const pathWithoutStatic = image.filepath.replace('static/', '', 1);
+                        const lastDotIndex = pathWithoutStatic.lastIndexOf('.');
+                        if (lastDotIndex !== -1) {
+                            const base_path = pathWithoutStatic.substring(0, lastDotIndex);
+                            const extension = pathWithoutStatic.substring(lastDotIndex);
+                            squareThumbUrl = `/static/${base_path}_thumb_square${extension}`;
+                            landscapeThumbUrl = `/static/${base_path}_thumb_landscape${extension}`;
+                        } else {
+                            squareThumbUrl = fullImageUrl;
+                            landscapeThumbUrl = fullImageUrl;
+                        }
+                    } else {
+                        squareThumbUrl = fullImageUrl;
+                        landscapeThumbUrl = fullImageUrl;
+                    }
+                    return `
+                    <div class="p-2 group cursor-pointer border border-transparent hover:border-yellow-400 rounded-lg transition duration-150">
+                        <img src="${squareThumbUrl}" onerror="this.onerror=null;this.src='${placeholderImg}'" alt="${image.filename || 'Image'}" class="w-full aspect-square object-cover rounded-lg mb-2 shadow-sm group-hover:shadow-md" loading="lazy">
+                        <button class="select-header-create mt-2 w-full bg-yellow-500 text-gray-900 py-1 rounded-lg font-semibold" data-thumb-url="${landscapeThumbUrl}" data-id="${image.id}">Select</button>
+                    </div>
+                    `;
+                }).join('');
+
+                // Re-attach listeners
+                container.querySelectorAll('.select-header-create').forEach(btn => {
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    newBtn.addEventListener('click', () => {
+                        const preview = document.getElementById('featured-preview-create');
+                        const imageIdInput = document.getElementById('story-image-id');
+                        if (preview && imageIdInput) {
+                            preview.src = newBtn.dataset.thumbUrl;
+                            imageIdInput.value = newBtn.dataset.id;
+                            preview.classList.remove('hidden');
+                            document.getElementById('no-image-placeholder').classList.add('hidden');
+                        }
+                        window.closeImageHeaderModalCreate();
+                    });
+                });
+
+                updateHeaderImagePaginationControlsCreate(data);
+                
+                // Show message if no images found
+                if (imgs.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <i class="fas fa-images text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-gray-500 mb-2">Belum ada gambar</p>
+                            <p class="text-sm text-gray-400">Upload gambar baru menggunakan form di atas</p>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('Error loading header images:', err);
+                container.innerHTML = '<p class="col-span-full text-center text-red-500 py-4">Error loading images.</p>';
+            }
+        }
+
+
+
+        // Link Insert Modal
+        function openLinkInsertModal(editor) {
+            const modal = document.getElementById('link-insert-modal');
+            const linkTextInput = document.getElementById('link-text');
+            const linkUrlInput = document.getElementById('link-url');
+            const insertBtn = document.getElementById('insert-link-btn');
+            const cancelBtn = document.getElementById('cancel-link-btn');
+
+            if (!modal || !linkTextInput || !linkUrlInput || !insertBtn || !cancelBtn) {
+                console.error("Link insert modal elements not found!");
+                return;
+            }
+
+            const cm = editor.codemirror;
+            const selectedText = cm.getSelection();
+            linkTextInput.value = selectedText || '';
+            linkUrlInput.value = 'https://';
+
+            modal.classList.remove('hidden');
+
+            const insertLink = () => {
+                const text = linkTextInput.value.trim();
+                const url = linkUrlInput.value.trim();
+                if (url && url !== 'https://') {
+                    const markdownLink = `[${text || url}](${url})`;
+                    cm.replaceSelection(markdownLink);
+                    closeModal();
+                } else {
+                    console.warn("URL is required to insert a link.");
+                    linkUrlInput.focus();
+                }
+            };
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                linkTextInput.value = '';
+                linkUrlInput.value = '';
+                insertBtn.removeEventListener('click', insertLink);
+                cancelBtn.removeEventListener('click', closeModal);
+                linkUrlInput.removeEventListener('keypress', handleEnter);
+            };
+
+            const handleEnter = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    insertLink();
+                }
+            };
+
+            insertBtn.addEventListener('click', insertLink);
+            cancelBtn.addEventListener('click', closeModal);
+            linkUrlInput.addEventListener('keypress', handleEnter);
+            linkUrlInput.focus();
+        }
+
+        // Make link function globally available
+        window.openLinkInsertModal = openLinkInsertModal;
+
+        // Attach additional event listeners
+        function setupAdditionalEventListeners() {
+            // Attach listener for clear featured image button
+            const clearFeaturedBtn = document.getElementById('clear-featured-image-btn');
+            if (clearFeaturedBtn) {
+                clearFeaturedBtn.addEventListener('click', window.clearFeaturedImageCreate);
+                console.log('Clear featured image button listener attached');
+            } else {
+                console.error('clear-featured-image-btn not found in DOM');
+            }
+            
+            // Attach listener for uploading header image
+            const uploadHeaderBtn = document.getElementById('header-upload-btn-create');
+            if (uploadHeaderBtn) {
+                uploadHeaderBtn.addEventListener('click', async () => {
+                    const fileInput = document.getElementById('header-upload-file-create');
+                    const urlInput = document.getElementById('header-upload-url-create');
+                    const nameInput = document.getElementById('header-upload-name-create');
+                    const urlValue = urlInput.value.trim();
+                    const nameValue = nameInput.value.trim();
+                    const fd = new FormData();
+
+                    if (fileInput.files.length) {
+                        fd.append('file', fileInput.files[0]);
+                    } else if (urlValue) {
+                        fd.append('url', urlValue);
+                    } else {
+                        showToast('Pilih berkas atau masukkan URL.', 'warning');
+                        return;
+                    }
+                    if (nameValue) fd.append('name', nameValue);
+                    fd.append('is_visible', 'true');
+
+                    try {
+                        const resp = await fetch('/api/images', { method: 'POST', body: fd });
+                        const data = await resp.json();
+                        if (!resp.ok) throw new Error(data.error || 'Upload failed');
+
+                        nameInput.value = '';
+                        fileInput.value = '';
+                        urlInput.value = '';
+
+                        await loadHeaderLibraryCreate();
+                        showToast('Gambar berhasil diunggah!', 'success');
+                    } catch (err) {
+                        console.error('Header image upload error:', err);
+                        showToast('Gagal mengunggah gambar: ' + err.message, 'error');
+                    }
+                });
+            }
+
+            // Attach listener for inserting image from URL (content modal)
+            const insertContentUrlBtn = document.getElementById('insert-image-btn-create');
+            if (insertContentUrlBtn) {
+                insertContentUrlBtn.addEventListener('click', () => {
+                    const source = document.querySelector('input[name="image-source-create"]:checked').value;
+                    let simplemde = window.simplemde || window.addSimplemde;
+                    if (simplemde && simplemde.codemirror) {
+                        const cm = simplemde.codemirror;
+                        if (source === 'url') {
+                            const urlInput = document.getElementById('image-url-input-create');
+                            const altInput = document.getElementById('image-alt-input-create');
+                            const url = urlInput.value.trim();
+                            const alt = altInput.value.trim();
+                            if (url) {
+                                cm.replaceSelection(`![${alt||null}](${url})`);
+                                window.closeImageInsertModalCreate();
+                            } else {
+                                showToast('Masukkan URL gambar.', 'warning');
+                                urlInput.focus();
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Attach event listeners for custom toolbar
+            document.querySelectorAll('#custom-toolbar button[data-cmd]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const cmd = btn.getAttribute('data-cmd');
+                    let simplemde = window.simplemde || window.addSimplemde;
+                    if (simplemde && simplemde.codemirror) {
+                        const cm = simplemde.codemirror;
+                        switch (cmd) {
+                            case 'bold': 
+                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleBold(simplemde); 
+                                break;
+                            case 'italic': 
+                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleItalic(simplemde); 
+                                break;
+                            case 'heading': 
+                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleHeadingSmaller(simplemde); 
+                                break;
+                            case 'quote': 
+                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleBlockquote(simplemde); 
+                                break;
+                            case 'unordered-list': 
+                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleUnorderedList(simplemde); 
+                                break;
+                            case 'ordered-list': 
+                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleOrderedList(simplemde); 
+                                break;
+                            case 'link': 
+                                window.openLinkInsertModal(simplemde); 
+                                break;
+                            case 'image': 
+                                window.openImageInsertModalCreate(); 
+                                break;
+                            case 'preview': 
+                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.togglePreview(simplemde); 
+                                break;
+                            case 'guide': 
+                                window.open('https://www.markdownguide.org/cheat-sheet/', '_blank'); 
+                                break;
+                        }
+                    }
+                });
+            });
+        }
+
+        // Initialize additional event listeners
+        setupAdditionalEventListeners();
+        
+        console.log('2-Step Process JavaScript initialization complete');
+    });
+})();
+</script>
+{% endblock %}

@@ -300,6 +300,96 @@ def can_manage_seo(user=None) -> bool:
     return PermissionManager.has_any_permission(user, 'seo', ['read', 'update'])
 
 
+def can_manage_news(user=None) -> bool:
+    """Check if user can manage news content (create, read, update, delete)."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_any_permission(user, 'news', ['read', 'create', 'update', 'delete', 'publish'])
+
+
+def can_create_news(user=None) -> bool:
+    """Check if user can create news articles."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'news', 'create')
+
+
+def can_edit_news(user=None) -> bool:
+    """Check if user can edit news articles."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'news', 'update')
+
+
+def can_delete_news(user=None) -> bool:
+    """Check if user can delete news articles."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'news', 'delete')
+
+
+def can_publish_news(user=None) -> bool:
+    """Check if user can publish/unpublish news articles."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'news', 'publish')
+
+
+def can_manage_albums(user=None) -> bool:
+    """Check if user can manage albums (create, read, update, delete)."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_any_permission(user, 'albums', ['read', 'create', 'update', 'delete', 'publish'])
+
+
+def can_create_albums(user=None) -> bool:
+    """Check if user can create albums."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'albums', 'create')
+
+
+def can_edit_albums(user=None) -> bool:
+    """Check if user can edit albums."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'albums', 'update')
+
+
+def can_delete_albums(user=None) -> bool:
+    """Check if user can delete albums."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'albums', 'delete')
+
+
+def can_publish_albums(user=None) -> bool:
+    """Check if user can publish/unpublish albums."""
+    if user is None:
+        user = current_user
+    
+    return PermissionManager.has_permission(user, 'albums', 'publish')
+
+
+def can_access_content_creation(user=None) -> bool:
+    """Check if user can access content creation features (news, albums, etc.)."""
+    if user is None:
+        user = current_user
+    
+    return (can_create_news(user) or can_create_albums(user) or 
+            PermissionManager.has_any_permission(user, 'images', ['create']) or
+            PermissionManager.has_any_permission(user, 'videos', ['create']))
+
+
 def has_permission(user=None, resource: str = None, action: str = None) -> bool:
     """Check if user has specific permission."""
     if user is None:
@@ -427,6 +517,17 @@ __all__ = [
     'can_manage_legal',
     'can_manage_brand',
     'can_manage_seo',
+    'can_manage_news',
+    'can_create_news',
+    'can_edit_news',
+    'can_delete_news',
+    'can_publish_news',
+    'can_manage_albums',
+    'can_create_albums',
+    'can_edit_albums',
+    'can_delete_albums',
+    'can_publish_albums',
+    'can_access_content_creation',
     'has_permission',
     'has_any_permission',
     'has_all_permissions',

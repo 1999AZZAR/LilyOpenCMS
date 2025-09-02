@@ -8,6 +8,7 @@ It replaces all individual migration scripts and Alembic migrations.
 import sys
 import os
 from pathlib import Path
+import sqlite3 # Added for sqlite3.OperationalError
 
 # Add the project root to the Python path
 project_root = Path(__file__).parent.parent
@@ -480,7 +481,7 @@ def safe_migrate():
                 required_bi_columns = [
                     'enable_comments', 'enable_ratings', 'enable_ads', 
                     'enable_campaigns', 'categories_display_location', 'card_design',
-                    'seo_settings', 'website_url'  # New SEO fields
+                    'seo_settings', 'website_url', 'brand_description'  # New SEO fields and brand description
                 ]
                 
                 for col in required_bi_columns:
@@ -524,6 +525,12 @@ def safe_migrate():
                                 # Update existing records to have the default value
                                 db.session.execute(text("UPDATE brand_identity SET website_url = 'https://lilycms.com' WHERE website_url IS NULL"))
                                 print("✅ Updated existing records with default website URL")
+                            elif col == 'brand_description':
+                                db.session.execute(text("ALTER TABLE brand_identity ADD COLUMN brand_description TEXT DEFAULT 'LilyOpenCMS is a modern, open-source content management system designed for the digital age. We provide comprehensive tools for managing digital content, from news articles and media files to user interactions and analytics. Our platform empowers content creators and organizations to build engaging digital experiences with ease and efficiency.'"))
+                                print("✅ Added brand_description column")
+                                # Update existing records to have the default value
+                                db.session.execute(text("UPDATE brand_identity SET brand_description = 'LilyOpenCMS is a modern, open-source content management system designed for the digital age. We provide comprehensive tools for managing digital content, from news articles and media files to user interactions and analytics. Our platform empowers content creators and organizations to build engaging digital experiences with ease and efficiency.' WHERE brand_description IS NULL"))
+                                print("✅ Updated existing records with default brand description")
                         except Exception as e:
                             print(f"⚠️ Column {col} might already exist: {e}")
                     db.session.commit()
@@ -628,6 +635,31 @@ def safe_migrate():
             print("📖 READING HISTORY & USER LIBRARY TABLES")
             print("="*50)
             
+            # Drop old tables if they exist with wrong structure
+            print("\n🔄 Checking for old table structures...")
+            try:
+                # Check if reading_history has old structure (album_id column)
+                result = db.session.execute(text("PRAGMA table_info(reading_history)"))
+                columns = [row[1] for row in result.fetchall()]
+                
+                if 'album_id' in columns:
+                    print("🔄 Dropping old reading_history table...")
+                    db.session.execute(text("DROP TABLE IF EXISTS reading_history"))
+                    print("✅ Dropped old reading_history table")
+                
+                # Check if user_library has old structure (album_id column)
+                result = db.session.execute(text("PRAGMA table_info(user_library)"))
+                columns = [row[1] for row in result.fetchall()]
+                
+                if 'album_id' in columns:
+                    print("🔄 Dropping old user_library table...")
+                    db.session.execute(text("DROP TABLE IF EXISTS user_library"))
+                    print("✅ Dropped old user_library table")
+                
+                db.session.commit()
+            except Exception as e:
+                print(f"⚠️ Could not check/drop old tables: {e}")
+            
             # Check if reading_history table exists
             if 'reading_history' not in existing_tables:
                 print("\n🔧 Creating reading_history table...")
@@ -636,12 +668,13 @@ def safe_migrate():
                         CREATE TABLE reading_history (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             user_id INTEGER NOT NULL,
-                            album_id INTEGER NOT NULL,
-                            chapter_id INTEGER,
-                            last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            progress FLOAT DEFAULT 0.0,
-                            FOREIGN KEY (user_id) REFERENCES user (id),
-                            FOREIGN KEY (album_id) REFERENCES album (id)
+                            content_type VARCHAR(20) NOT NULL,
+                            content_id INTEGER NOT NULL,
+                            read_count INTEGER DEFAULT 1 NOT NULL,
+                            first_read_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            last_read_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+                            UNIQUE(user_id, content_type, content_id)
                         )
                     """))
                     print("✅ Created reading_history table")
@@ -656,11 +689,11 @@ def safe_migrate():
                         CREATE TABLE user_library (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             user_id INTEGER NOT NULL,
-                            album_id INTEGER NOT NULL,
-                            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            is_favorite BOOLEAN DEFAULT 0,
-                            FOREIGN KEY (user_id) REFERENCES user (id),
-                            FOREIGN KEY (album_id) REFERENCES album (id)
+                            content_type VARCHAR(20) NOT NULL,
+                            content_id INTEGER NOT NULL,
+                            added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+                            UNIQUE(user_id, content_type, content_id)
                         )
                     """))
                     print("✅ Created user_library table")
@@ -882,6 +915,537 @@ def safe_migrate():
                     print("✅ Created coin_transaction table")
                 except Exception as e:
                     print(f"⚠️ Could not create coin_transaction table: {e}")
+
+            # ===== ROLE PERMISSION SYSTEM TABLES =====
+            print("\n" + "="*50)
+            print("🔐 ROLE PERMISSION SYSTEM TABLES")
+            print("="*50)
+            
+            # Check if role_permission table exists
+            if 'role_permission' not in existing_tables:
+                print("\n🔧 Creating role_permission table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE role_permission (
+                            role_id INTEGER NOT NULL,
+                            permission_id INTEGER NOT NULL,
+                            PRIMARY KEY (role_id, permission_id),
+                            FOREIGN KEY (role_id) REFERENCES custom_role (id) ON DELETE CASCADE,
+                            FOREIGN KEY (permission_id) REFERENCES permission (id) ON DELETE CASCADE
+                        )
+                    """))
+                    print("✅ Created role_permission table")
+                except Exception as e:
+                    print(f"⚠️ Could not create role_permission table: {e}")
+            
+            # Check if permission table exists
+            if 'permission' not in existing_tables:
+                print("\n🔧 Creating permission table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE permission (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR(100) NOT NULL UNIQUE,
+                            description VARCHAR(255),
+                            resource VARCHAR(100) NOT NULL,
+                            action VARCHAR(50) NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created permission table")
+                except Exception as e:
+                    print(f"⚠️ Could not create permission table: {e}")
+            
+            # Check if custom_role table exists
+            if 'custom_role' not in existing_tables:
+                print("\n🔧 Creating custom_role table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE custom_role (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR(100) NOT NULL UNIQUE,
+                            description VARCHAR(255),
+                            is_active BOOLEAN NOT NULL DEFAULT 1,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created custom_role table")
+                except Exception as e:
+                    print(f"⚠️ Could not create custom_role table: {e}")
+
+            # ===== CONTENT MANAGEMENT TABLES =====
+            print("\n" + "="*50)
+            print("📝 CONTENT MANAGEMENT TABLES")
+            print("="*50)
+            
+            # Check if comment table exists
+            if 'comment' not in existing_tables:
+                print("\n🔧 Creating comment table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE comment (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            content_type VARCHAR(20) NOT NULL,
+                            content_id INTEGER NOT NULL,
+                            parent_id INTEGER,
+                            content TEXT NOT NULL,
+                            is_approved BOOLEAN DEFAULT 1 NOT NULL,
+                            is_deleted BOOLEAN DEFAULT 0 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+                            FOREIGN KEY (parent_id) REFERENCES comment (id) ON DELETE CASCADE
+                        )
+                    """))
+                    print("✅ Created comment table")
+                except Exception as e:
+                    print(f"⚠️ Could not create comment table: {e}")
+            
+            # Check if rating table exists
+            if 'rating' not in existing_tables:
+                print("\n🔧 Creating rating table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE rating (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            content_type VARCHAR(20) NOT NULL,
+                            content_id INTEGER NOT NULL,
+                            rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+                            review TEXT,
+                            is_approved BOOLEAN DEFAULT 1 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+                            UNIQUE(user_id, content_type, content_id)
+                        )
+                    """))
+                    print("✅ Created rating table")
+                except Exception as e:
+                    print(f"⚠️ Could not create rating table: {e}")
+            
+            # Check if comment_like table exists
+            if 'comment_like' not in existing_tables:
+                print("\n🔧 Creating comment_like table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE comment_like (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            comment_id INTEGER NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+                            FOREIGN KEY (comment_id) REFERENCES comment (id) ON DELETE CASCADE,
+                            UNIQUE(user_id, comment_id)
+                        )
+                    """))
+                    print("✅ Created comment_like table")
+                except Exception as e:
+                    print(f"⚠️ Could not create comment_like table: {e}")
+            
+            # Check if comment_report table exists
+            if 'comment_report' not in existing_tables:
+                print("\n🔧 Creating comment_report table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE comment_report (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            comment_id INTEGER NOT NULL,
+                            reason VARCHAR(100) NOT NULL,
+                            description TEXT,
+                            status VARCHAR(20) DEFAULT 'pending' NOT NULL,
+                            reviewed_by_id INTEGER,
+                            reviewed_at DATETIME,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+                            FOREIGN KEY (comment_id) REFERENCES comment (id) ON DELETE CASCADE,
+                            FOREIGN KEY (reviewed_by_id) REFERENCES user (id)
+                        )
+                    """))
+                    print("✅ Created comment_report table")
+                except Exception as e:
+                    print(f"⚠️ Could not create comment_report table: {e}")
+
+            # ===== WEBSITE MANAGEMENT TABLES =====
+            print("\n" + "="*50)
+            print("🌐 WEBSITE MANAGEMENT TABLES")
+            print("="*50)
+            
+            # Check if navigation_link table exists
+            if 'navigation_link' not in existing_tables:
+                print("\n🔧 Creating navigation_link table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE navigation_link (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR(100) NOT NULL,
+                            url VARCHAR(255) NOT NULL,
+                            position INTEGER DEFAULT 0,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            is_external BOOLEAN DEFAULT 0 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created navigation_link table")
+                except Exception as e:
+                    print(f"⚠️ Could not create navigation_link table: {e}")
+            
+            # Check if youtube_video table exists
+            if 'youtube_video' not in existing_tables:
+                print("\n🔧 Creating youtube_video table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE youtube_video (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title VARCHAR(255) NOT NULL,
+                            description TEXT,
+                            video_id VARCHAR(20) NOT NULL UNIQUE,
+                            thumbnail_url VARCHAR(255),
+                            duration INTEGER,
+                            view_count INTEGER DEFAULT 0,
+                            like_count INTEGER DEFAULT 0,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created youtube_video table")
+                except Exception as e:
+                    print(f"⚠️ Could not create youtube_video table: {e}")
+            
+            # Check if share_log table exists
+            if 'share_log' not in existing_tables:
+                print("\n🔧 Creating share_log table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE share_log (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER,
+                            content_type VARCHAR(20) NOT NULL,
+                            content_id INTEGER NOT NULL,
+                            platform VARCHAR(50) NOT NULL,
+                            shared_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL
+                        )
+                    """))
+                    print("✅ Created share_log table")
+                except Exception as e:
+                    print(f"⚠️ Could not create share_log table: {e}")
+            
+            # Check if social_media table exists
+            if 'social_media' not in existing_tables:
+                print("\n🔧 Creating social_media table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE social_media (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            platform VARCHAR(50) NOT NULL,
+                            url VARCHAR(255) NOT NULL,
+                            icon_class VARCHAR(100),
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            display_order INTEGER DEFAULT 0,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created social_media table")
+                except Exception as e:
+                    print(f"⚠️ Could not create social_media table: {e}")
+            
+            # Check if contact_detail table exists
+            if 'contact_detail' not in existing_tables:
+                print("\n🔧 Creating contact_detail table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE contact_detail (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            type VARCHAR(50) NOT NULL,
+                            value VARCHAR(255) NOT NULL,
+                            icon_class VARCHAR(100),
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            display_order INTEGER DEFAULT 0,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created contact_detail table")
+                except Exception as e:
+                    print(f"⚠️ Could not create contact_detail table: {e}")
+            
+            # Check if team_member table exists
+            if 'team_member' not in existing_tables:
+                print("\n🔧 Creating team_member table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE team_member (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR(100) NOT NULL,
+                            position VARCHAR(100) NOT NULL,
+                            bio TEXT,
+                            image_url VARCHAR(255),
+                            social_links TEXT,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            display_order INTEGER DEFAULT 0,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created team_member table")
+                except Exception as e:
+                    print(f"⚠️ Could not create team_member table: {e}")
+            
+            # Check if user_subscriptions table exists
+            if 'user_subscriptions' not in existing_tables:
+                print("\n🔧 Creating user_subscriptions table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE user_subscriptions (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            subscription_type VARCHAR(50) NOT NULL,
+                            status VARCHAR(20) DEFAULT 'active' NOT NULL,
+                            start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            end_date DATETIME,
+                            payment_provider VARCHAR(50),
+                            payment_id VARCHAR(255),
+                            amount DECIMAL(10,2),
+                            currency VARCHAR(3) DEFAULT 'IDR',
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+                        )
+                    """))
+                    print("✅ Created user_subscriptions table")
+                except Exception as e:
+                    print(f"⚠️ Could not create user_subscriptions table: {e}")
+
+            # ===== ADVERTISING SYSTEM TABLES =====
+            print("\n" + "="*50)
+            print("📢 ADVERTISING SYSTEM TABLES")
+            print("="*50)
+            
+            # Check if ad_campaign table exists
+            if 'ad_campaign' not in existing_tables:
+                print("\n🔧 Creating ad_campaign table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE ad_campaign (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR(255) NOT NULL,
+                            description TEXT,
+                            start_date DATETIME NOT NULL,
+                            end_date DATETIME NOT NULL,
+                            budget DECIMAL(10,2),
+                            status VARCHAR(20) DEFAULT 'active' NOT NULL,
+                            created_by INTEGER,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (created_by) REFERENCES user (id)
+                        )
+                    """))
+                    print("✅ Created ad_campaign table")
+                except Exception as e:
+                    print(f"⚠️ Could not create ad_campaign table: {e}")
+            
+            # Check if ad table exists
+            if 'ad' not in existing_tables:
+                print("\n🔧 Creating ad table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE ad (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            campaign_id INTEGER,
+                            title VARCHAR(255) NOT NULL,
+                            content TEXT,
+                            image_url VARCHAR(255),
+                            target_url VARCHAR(255),
+                            ad_type VARCHAR(50) NOT NULL,
+                            position VARCHAR(50) NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            start_date DATETIME,
+                            end_date DATETIME,
+                            max_impressions INTEGER,
+                            max_clicks INTEGER,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (campaign_id) REFERENCES ad_campaign (id) ON DELETE SET NULL
+                        )
+                    """))
+                    print("✅ Created ad table")
+                except Exception as e:
+                    print(f"⚠️ Could not create ad table: {e}")
+            
+            # Check if ad_placement table exists
+            if 'ad_placement' not in existing_tables:
+                print("\n🔧 Creating ad_placement table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE ad_placement (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR(100) NOT NULL UNIQUE,
+                            description TEXT,
+                            location VARCHAR(100) NOT NULL,
+                            ad_type VARCHAR(50) NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created ad_placement table")
+                except Exception as e:
+                    print(f"⚠️ Could not create ad_placement table: {e}")
+            
+            # Check if ad_stats table exists
+            if 'ad_stats' not in existing_tables:
+                print("\n🔧 Creating ad_stats table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE ad_stats (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            ad_id INTEGER NOT NULL,
+                            date DATE NOT NULL,
+                            impressions INTEGER DEFAULT 0 NOT NULL,
+                            clicks INTEGER DEFAULT 0 NOT NULL,
+                            ctr DECIMAL(5,4) DEFAULT 0.0000,
+                            revenue DECIMAL(10,2) DEFAULT 0.00,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (ad_id) REFERENCES ad (id) ON DELETE CASCADE,
+                            UNIQUE(ad_id, date)
+                        )
+                    """))
+                    print("✅ Created ad_stats table")
+                except Exception as e:
+                    print(f"⚠️ Could not create ad_stats table: {e}")
+
+            # ===== LEGAL & POLICY TABLES =====
+            print("\n" + "="*50)
+            print("⚖️ LEGAL & POLICY TABLES")
+            print("="*50)
+            
+            # Check if privacy_policy table exists
+            if 'privacy_policy' not in existing_tables:
+                print("\n🔧 Creating privacy_policy table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE privacy_policy (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title VARCHAR(255) NOT NULL,
+                            content TEXT NOT NULL,
+                            version VARCHAR(20) NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            effective_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created privacy_policy table")
+                except Exception as e:
+                    print(f"⚠️ Could not create privacy_policy table: {e}")
+            
+            # Check if media_guideline table exists
+            if 'media_guideline' not in existing_tables:
+                print("\n🔧 Creating media_guideline table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE media_guideline (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title VARCHAR(255) NOT NULL,
+                            content TEXT NOT NULL,
+                            version VARCHAR(20) NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            effective_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created media_guideline table")
+                except Exception as e:
+                    print(f"⚠️ Could not create media_guideline table: {e}")
+            
+            # Check if visi_misi table exists
+            if 'visi_misi' not in existing_tables:
+                print("\n🔧 Creating visi_misi table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE visi_misi (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title VARCHAR(255) NOT NULL,
+                            content TEXT NOT NULL,
+                            type VARCHAR(20) NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created visi_misi table")
+                except Exception as e:
+                    print(f"⚠️ Could not create visi_misi table: {e}")
+            
+            # Check if penyangkalan table exists
+            if 'penyangkalan' not in existing_tables:
+                print("\n🔧 Creating penyangkalan table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE penyangkalan (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title VARCHAR(255) NOT NULL,
+                            content TEXT NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created penyangkalan table")
+                except Exception as e:
+                    print(f"⚠️ Could not create penyangkalan table: {e}")
+            
+            # Check if pedoman_hak table exists
+            if 'pedoman_hak' not in existing_tables:
+                print("\n🔧 Creating pedoman_hak table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE pedoman_hak (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title VARCHAR(255) NOT NULL,
+                            content TEXT NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    print("✅ Created pedoman_hak table")
+                except Exception as e:
+                    print(f"⚠️ Could not create pedoman_hak table: {e}")
+
+            # ===== USER ACTIVITY TRACKING =====
+            print("\n" + "="*50)
+            print("📊 USER ACTIVITY TRACKING")
+            print("="*50)
+            
+            # Check if user_activity table exists
+            if 'user_activity' not in existing_tables:
+                print("\n🔧 Creating user_activity table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE user_activity (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER,
+                            activity_type VARCHAR(50) NOT NULL,
+                            description TEXT,
+                            ip_address VARCHAR(45),
+                            user_agent TEXT,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL
+                        )
+                    """))
+                    print("✅ Created user_activity table")
+                except Exception as e:
+                    print(f"⚠️ Could not create user_activity table: {e}")
 
             # ===== RECORD COUNTS =====
             print("\n" + "="*50)
@@ -1141,11 +1705,31 @@ def safe_migrate():
             except Exception as e:
                 print(f"⚠️ Could not cleanup orphaned data: {e}")
             
+            # ===== USER PROFILE SYSTEM MIGRATION =====
+            print("\n" + "="*50)
+            print("👤 USER PROFILE SYSTEM MIGRATION")
+            print("="*50)
+            
+            try:
+                migrate_user_profile_system(db.session)
+                print("✅ User profile system migration completed")
+                
+                migrate_write_access_requests(db.session)
+                print("✅ Write access requests migration completed")
+            except Exception as e:
+                print(f"⚠️ Could not migrate user profile system: {e}")
+            
             print(f"\n🎉 Comprehensive migration completed successfully!")
             print("✅ All existing data preserved")
             print("✅ All tables have required columns")
             print("✅ Reading history and user library tables created")
             print("✅ Achievement system tables created")
+            print("✅ Role permission system tables created")
+            print("✅ Content management tables (comments, ratings) created")
+            print("✅ Website management tables created")
+            print("✅ Advertising system tables created")
+            print("✅ Legal & policy tables created")
+            print("✅ User activity tracking table created")
             print("✅ Brand identity SEO fields added")
             print("✅ Root SEO table and columns created")
             print("✅ SEO columns added to News, Album, and AlbumChapter tables")
@@ -1161,6 +1745,144 @@ def safe_migrate():
         import traceback
         traceback.print_exc()
         return False
+
+def migrate_write_access_requests(db_session):
+    """Create write access requests table."""
+    from sqlalchemy import text
+    print("🔄 Creating write access requests table...")
+    
+    try:
+        # Create write_access_requests table
+        db_session.execute(text("""
+            CREATE TABLE IF NOT EXISTS write_access_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                request_reason TEXT,
+                portfolio_links TEXT,
+                experience_description TEXT,
+                status VARCHAR(20) DEFAULT 'pending',
+                admin_notes TEXT,
+                reviewed_by_id INTEGER,
+                requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                reviewed_at DATETIME,
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                FOREIGN KEY (reviewed_by_id) REFERENCES users (id)
+            )
+        """))
+        
+        # Create indexes
+        db_session.execute(text("CREATE INDEX IF NOT EXISTS idx_write_access_requests_user_id ON write_access_requests (user_id)"))
+        db_session.execute(text("CREATE INDEX IF NOT EXISTS idx_write_access_requests_status ON write_access_requests (status)"))
+        db_session.execute(text("CREATE INDEX IF NOT EXISTS idx_write_access_requests_requested_at ON write_access_requests (requested_at)"))
+        
+        db_session.commit()
+        print("✅ Write access requests table created successfully")
+        
+    except Exception as e:
+        print(f"⚠️ Write access requests table might already exist or error occurred: {e}")
+        db_session.rollback()
+
+
+def migrate_user_profile_system(db_session):
+    """Add user profile system tables and fields."""
+    from sqlalchemy import text
+    print("🔄 Migrating user profile system...")
+    
+    # Add write_access field to user table
+    try:
+        db_session.execute(text("""
+            ALTER TABLE user 
+            ADD COLUMN write_access BOOLEAN DEFAULT NULL
+        """))
+        print("✅ Added write_access field to user table")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("ℹ️  write_access field already exists")
+        else:
+            print(f"⚠️  Error adding write_access field: {e}")
+    
+    # Create user_follow table
+    try:
+        db_session.execute(text("""
+            CREATE TABLE user_follow (
+                follower_id INTEGER NOT NULL,
+                following_id INTEGER NOT NULL,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (follower_id, following_id),
+                FOREIGN KEY (follower_id) REFERENCES user (id) ON DELETE CASCADE,
+                FOREIGN KEY (following_id) REFERENCES user (id) ON DELETE CASCADE,
+                UNIQUE (follower_id, following_id)
+            )
+        """))
+        print("✅ Created user_follow table")
+    except sqlite3.OperationalError as e:
+        if "table user_follow already exists" in str(e):
+            print("ℹ️  user_follow table already exists")
+        else:
+            print(f"⚠️  Error creating user_follow table: {e}")
+    
+    # Create user_profile table
+    try:
+        db_session.execute(text("""
+            CREATE TABLE user_profile (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL UNIQUE,
+                pronouns VARCHAR(50),
+                short_bio TEXT,
+                location VARCHAR(100),
+                website VARCHAR(255),
+                social_links TEXT,  -- JSON stored as TEXT
+                is_public BOOLEAN NOT NULL DEFAULT 1,
+                show_email BOOLEAN NOT NULL DEFAULT 0,
+                show_birthdate BOOLEAN NOT NULL DEFAULT 0,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+            )
+        """))
+        print("✅ Created user_profile table")
+    except sqlite3.OperationalError as e:
+        if "table user_profile already exists" in str(e):
+            print("ℹ️  user_profile table already exists")
+        else:
+            print(f"⚠️  Error creating user_profile table: {e}")
+    
+    # Create user_stats table
+    try:
+        db_session.execute(text("""
+            CREATE TABLE user_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL UNIQUE,
+                total_stories INTEGER NOT NULL DEFAULT 0,
+                total_albums INTEGER NOT NULL DEFAULT 0,
+                total_views INTEGER NOT NULL DEFAULT 0,
+                total_likes INTEGER NOT NULL DEFAULT 0,
+                total_comments INTEGER NOT NULL DEFAULT 0,
+                total_followers INTEGER NOT NULL DEFAULT 0,
+                total_following INTEGER NOT NULL DEFAULT 0,
+                total_reads INTEGER NOT NULL DEFAULT 0,
+                total_saved INTEGER NOT NULL DEFAULT 0,
+                activity_calendar TEXT,  -- JSON stored as TEXT
+                monthly_stats TEXT,      -- JSON stored as TEXT
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+            )
+        """))
+        print("✅ Created user_stats table")
+    except sqlite3.OperationalError as e:
+        if "table user_stats already exists" in str(e):
+            print("ℹ️  user_stats table already exists")
+        else:
+            print(f"⚠️  Error creating user_stats table: {e}")
+    
+    # Create indexes for better performance
+    try:
+        db_session.execute(text("CREATE INDEX IF NOT EXISTS idx_user_follow_follower ON user_follow (follower_id)"))
+        db_session.execute(text("CREATE INDEX IF NOT EXISTS idx_user_follow_following ON user_follow (following_id)"))
+        print("✅ Created indexes for user profile system")
+    except sqlite3.OperationalError as e:
+        print(f"⚠️  Error creating indexes: {e}")
 
 def main():
     """Main function to run comprehensive safe migration."""
@@ -1179,6 +1901,12 @@ def main():
         print("✅ Database schema is now complete and up-to-date")
         print("✅ All tables have required columns")
         print("✅ Achievement system tables created")
+        print("✅ Role permission system tables created")
+        print("✅ Content management tables (comments, ratings) created")
+        print("✅ Website management tables created")
+        print("✅ Advertising system tables created")
+        print("✅ Legal & policy tables created")
+        print("✅ User activity tracking table created")
         print("✅ Brand identity SEO fields added")
         print("✅ Root SEO table and columns created")
         print("✅ SEO columns added to News, Album, and AlbumChapter tables")

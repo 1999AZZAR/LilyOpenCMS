@@ -20,6 +20,20 @@
       </p>
     </section>
 
+    <!-- Brand Description Section -->
+    {% if brand_info.brand_description %}
+    <section class="mb-16 lg:mb-20">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-card p-8 rounded-lg border border-border shadow-sm">
+          <h2 class="text-2xl font-bold text-foreground mb-6 text-center">Tentang Kami</h2>
+          <div class="text-muted-foreground leading-relaxed text-lg">
+            {{ brand_info.brand_description|nl2br }}
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
     <!-- Dynamic Vision & Mission Section -->
     <section class="mb-16 lg:mb-20">
         <h2 class="text-3xl font-bold text-foreground mb-10 md:mb-12 text-center">Visi & Misi Kami</h2>

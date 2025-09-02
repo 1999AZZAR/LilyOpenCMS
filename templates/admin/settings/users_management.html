@@ -23,6 +23,9 @@
     <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="performance">
       <i class="fas fa-chart-line mr-2"></i>Performa Pengguna
     </button>
+    <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="write-access">
+      <i class="fas fa-pen-alt mr-2"></i>Permintaan Akses Tulis
+    </button>
   </nav>
 </div>
 
@@ -607,6 +610,103 @@
     </div>
 </div>
 
+<!-- Write Access Requests Tab -->
+<div id="write-access-tab" class="tab-content hidden">
+  <main class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="main">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-semibold text-gray-800">Permintaan Akses Tulis</h2>
+      <div class="flex space-x-2">
+        <button id="bulk-approve-write-access-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
+          <i class="fas fa-check mr-2"></i>Setujui Semua
+        </button>
+        <button id="bulk-reject-write-access-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
+          <i class="fas fa-times mr-2"></i>Tolak Semua
+        </button>
+      </div>
+    </div>
+
+    <div class="mb-6 flex flex-wrap gap-4" role="search" aria-label="Filter permintaan akses tulis">
+      <div class="flex-1">
+        <label for="write-access-search" class="sr-only">Cari permintaan akses tulis</label>
+        <input type="text" id="write-access-search" placeholder="Cari berdasarkan nama pengguna, email..." class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Cari permintaan akses tulis">
+      </div>
+      <div>
+        <label for="write-access-status-filter" class="sr-only">Filter berdasarkan status</label>
+        <select id="write-access-status-filter" class="w-48 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan status permintaan">
+          <option value="">Semua Status</option>
+          <option value="pending">Menunggu</option>
+          <option value="approved">Disetujui</option>
+          <option value="rejected">Ditolak</option>
+        </select>
+      </div>
+      <div>
+        <label for="write-access-date-filter" class="sr-only">Filter berdasarkan tanggal</label>
+        <select id="write-access-date-filter" class="w-48 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan tanggal permintaan">
+          <option value="">Semua Tanggal</option>
+          <option value="today">Hari Ini</option>
+          <option value="week">Minggu Ini</option>
+          <option value="month">Bulan Ini</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="write-access-requests" class="space-y-4">
+      <div class="text-gray-600">Memuat permintaan akses tulis...</div>
+    </div>
+    
+    <!-- Write Access Statistics -->
+    <div class="mt-8">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4">Statistik Permintaan Akses Tulis</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-yellow-100 rounded-lg">
+              <i class="fas fa-clock text-yellow-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-600">Total Menunggu</p>
+              <p id="total-write-access-pending" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-green-100 rounded-lg">
+              <i class="fas fa-check text-green-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-600">Disetujui Hari Ini</p>
+              <p id="approved-write-access-today" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-red-100 rounded-lg">
+              <i class="fas fa-times text-red-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-600">Ditolak Hari Ini</p>
+              <p id="rejected-write-access-today" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div class="flex items-center">
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <i class="fas fa-hourglass-half text-blue-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-600">Rata-rata Waktu</p>
+              <p id="avg-write-access-time" class="text-2xl font-bold text-gray-900">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
 <!-- Create Role Modal -->
 <div id="create-role-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="create-role-title" aria-modal="true">
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -860,6 +960,77 @@
         </form>
     </div>
 </div>
+
+<!-- Write Access Review Modal -->
+<div id="write-access-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="write-access-title" aria-modal="true">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 id="write-access-title" class="text-xl font-semibold mb-6 text-gray-800">Review Permintaan Akses Tulis</h2>
+        <form id="write-access-form" class="space-y-6" role="form" aria-label="Form review permintaan akses tulis">
+            <input type="hidden" id="review-request-id">
+            
+            <!-- User Information -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Informasi Pengguna</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Username</label>
+                        <p id="review-username" class="text-gray-900"></p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Email</label>
+                        <p id="review-email" class="text-gray-900"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request Details -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Detail Permintaan</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Tanggal Permintaan</label>
+                        <p id="review-requested-at" class="text-gray-900"></p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Alasan Permintaan</label>
+                        <p id="review-request-reason" class="text-gray-900 bg-gray-50 p-2 rounded"></p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Link Portfolio</label>
+                        <p id="review-portfolio-links" class="text-gray-900 bg-gray-50 p-2 rounded"></p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Pengalaman Menulis</label>
+                        <p id="review-experience" class="text-gray-900 bg-gray-50 p-2 rounded"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Decision -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Keputusan Admin</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="admin-notes" class="block text-gray-700 font-medium mb-2">Catatan Admin</label>
+                        <textarea id="admin-notes" rows="3" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Berikan catatan atau feedback untuk pengguna..."></textarea>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="button" onclick="reviewWriteAccessRequest('approved')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-300 transition-all duration-300 shadow-md">
+                            <i class="fas fa-check mr-2"></i>Setujui
+                        </button>
+                        <button type="button" onclick="reviewWriteAccessRequest('rejected')" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-300 transition-all duration-300 shadow-md">
+                            <i class="fas fa-times mr-2"></i>Tolak
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-4" role="group" aria-label="Tombol aksi">
+                <button type="button" onclick="closeWriteAccessModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Tutup modal">Tutup</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -954,6 +1125,14 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmResetPassword.addEventListener('keyup', validateResetPassword);
     }
     
+    // Load write access requests when tab is shown
+    const writeAccessTab = document.querySelector('[data-tab="write-access"]');
+    if (writeAccessTab) {
+        writeAccessTab.addEventListener('click', function() {
+            loadWriteAccessRequests();
+        });
+    }
+    
     // Tab functionality
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -1020,6 +1199,72 @@ function closePasswordResetModal() {
     document.getElementById('password-reset-modal').classList.add('hidden');
     document.getElementById('password-reset-modal').classList.remove('flex');
     document.getElementById('password-reset-form').reset();
+}
+
+function openWriteAccessModal(requestId) {
+    // Load write access request details via API
+    fetch(`/api/write-access-requests/${requestId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateWriteAccessModal(data.request);
+                document.getElementById('write-access-modal').classList.remove('hidden');
+                document.getElementById('write-access-modal').classList.add('flex');
+            } else {
+                showToast('error', 'Gagal memuat detail permintaan');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading write access request:', error);
+            showToast('error', 'Gagal memuat detail permintaan');
+        });
+}
+
+function closeWriteAccessModal() {
+    document.getElementById('write-access-modal').classList.add('hidden');
+    document.getElementById('write-access-modal').classList.remove('flex');
+    document.getElementById('write-access-form').reset();
+}
+
+function populateWriteAccessModal(request) {
+    document.getElementById('review-request-id').value = request.id;
+    document.getElementById('review-username').textContent = request.user.username;
+    document.getElementById('review-email').textContent = request.user.email || 'Tidak ada';
+    document.getElementById('review-request-reason').textContent = request.request_reason || 'Tidak ada alasan';
+    document.getElementById('review-portfolio-links').textContent = request.portfolio_links || 'Tidak ada';
+    document.getElementById('review-experience').textContent = request.experience_description || 'Tidak ada';
+    document.getElementById('review-requested-at').textContent = new Date(request.requested_at).toLocaleDateString('id-ID');
+}
+
+function reviewWriteAccessRequest(decision) {
+    const requestId = document.getElementById('review-request-id').value;
+    const adminNotes = document.getElementById('admin-notes').value;
+    
+    fetch(`/api/write-access-requests/${requestId}/review`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            decision: decision,
+            admin_notes: adminNotes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', `Permintaan berhasil ${decision === 'approved' ? 'disetujui' : 'ditolak'}`);
+            closeWriteAccessModal();
+            // Refresh the write access requests list
+            loadWriteAccessRequests();
+        } else {
+            showToast('error', data.message || 'Gagal memproses permintaan');
+        }
+    })
+    .catch(error => {
+        console.error('Error reviewing write access request:', error);
+        showToast('error', 'Gagal memproses permintaan');
+    });
 }
 
 function generateUserDetailsHTML(user) {
@@ -1147,6 +1392,97 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Load write access requests function
+async function loadWriteAccessRequests(page = 1) {
+    try {
+        const statusFilter = document.getElementById('write-access-status-filter')?.value || '';
+        const searchTerm = document.getElementById('write-access-search')?.value || '';
+        const dateFilter = document.getElementById('write-access-date-filter')?.value || '';
+        
+        const params = new URLSearchParams({
+            page: page,
+            status: statusFilter,
+            search: searchTerm,
+            date_filter: dateFilter
+        });
+        
+        const response = await fetch(`/api/write-access-requests?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayWriteAccessRequests(data.requests);
+            updateWriteAccessStats(data.stats);
+        } else {
+            console.error('Failed to load write access requests:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading write access requests:', error);
+    }
+}
+
+function displayWriteAccessRequests(requests) {
+    const container = document.getElementById('write-access-requests');
+    
+    if (requests.length === 0) {
+        container.innerHTML = '<div class="text-gray-600">Tidak ada permintaan akses tulis ditemukan</div>';
+        return;
+    }
+    
+    container.innerHTML = requests.map(request => `
+        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h4 class="font-semibold text-gray-800">${request.user.username}</h4>
+                        <span class="px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(request.status)}">
+                            ${getStatusText(request.status)}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-1">
+                        <strong>Email:</strong> ${request.user.email || 'Tidak ada'}
+                    </p>
+                    <p class="text-sm text-gray-600 mb-2">
+                        <strong>Tanggal:</strong> ${new Date(request.requested_at).toLocaleDateString('id-ID')}
+                    </p>
+                    <p class="text-sm text-gray-700">
+                        <strong>Alasan:</strong> ${request.request_reason || 'Tidak ada alasan'}
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openWriteAccessModal(${request.id})" 
+                            class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded">
+                        Review
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateWriteAccessStats(stats) {
+    document.getElementById('total-write-access-pending').textContent = stats.total_pending || 0;
+    document.getElementById('approved-write-access-today').textContent = stats.approved_today || 0;
+    document.getElementById('rejected-write-access-today').textContent = stats.rejected_today || 0;
+}
+
+function getStatusBadgeClass(status) {
+    switch(status) {
+        case 'pending': return 'bg-yellow-100 text-yellow-800';
+        case 'approved': return 'bg-green-100 text-green-800';
+        case 'rejected': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getStatusText(status) {
+    switch(status) {
+        case 'pending': return 'Menunggu';
+        case 'approved': return 'Disetujui';
+        case 'rejected': return 'Ditolak';
+        default: return status;
+    }
+}
 </script>
 <script src="{{ url_for('static', filename='js/users-management.js') }}"></script>
 {% endblock %}

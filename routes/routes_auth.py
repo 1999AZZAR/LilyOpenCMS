@@ -256,12 +256,12 @@ def login():
             
             login_user(user)
             next_page = request.args.get("next")
-            # Role-based redirect: admins to settings, general users to reader dashboard
+            # Role-based redirect: admins to settings, general users to user profile
             if next_page:
                 return redirect(next_page)
             if user.role in [UserRole.ADMIN, UserRole.SUPERUSER] or user.is_owner():
                 return redirect(url_for("main.settings_dashboard"))
-            return redirect("/dashboard")
+            return redirect(url_for("user_profile.user_profile", username=user.username))
 
         flash("Invalid credentials", "error")
         return render_template("public/login.html")
@@ -494,7 +494,7 @@ def get_user_dashboard_url(user):
     """Get the appropriate dashboard URL based on user role."""
     if user.role in [UserRole.ADMIN, UserRole.SUPERUSER] or user.is_owner():
         return url_for("main.settings_dashboard")
-    return "/dashboard"
+    return url_for("user_profile.user_profile", username=user.username)
 
 @main_blueprint.route("/api/account/profile", methods=["GET"])
 @login_required

@@ -185,6 +185,17 @@ def inject_permission_functions():
         can_manage_legal,
         can_manage_brand,
         can_manage_seo,
+        can_manage_news,
+        can_create_news,
+        can_edit_news,
+        can_delete_news,
+        can_publish_news,
+        can_manage_albums,
+        can_create_albums,
+        can_edit_albums,
+        can_delete_albums,
+        can_publish_albums,
+        can_access_content_creation,
         has_permission,
         has_any_permission,
         has_all_permissions,
@@ -202,7 +213,11 @@ def inject_permission_functions():
         from models import UserRole
         if user.role in [UserRole.ADMIN, UserRole.SUPERUSER] or user.is_owner():
             return url_for("main.settings_dashboard")
-        return "/dashboard"
+        return url_for("user_profile.user_profile", username=user.username)
+    
+    def has_write_access(user):
+        """Check if user has write access (admin tier or write_access granted)."""
+        return user.is_admin_tier() or user.write_access == True
     
     return {
         'can_access_admin': can_access_admin,
@@ -218,6 +233,17 @@ def inject_permission_functions():
         'can_manage_legal': can_manage_legal,
         'can_manage_brand': can_manage_brand,
         'can_manage_seo': can_manage_seo,
+        'can_manage_news': can_manage_news,
+        'can_create_news': can_create_news,
+        'can_edit_news': can_edit_news,
+        'can_delete_news': can_delete_news,
+        'can_publish_news': can_publish_news,
+        'can_manage_albums': can_manage_albums,
+        'can_create_albums': can_create_albums,
+        'can_edit_albums': can_edit_albums,
+        'can_delete_albums': can_delete_albums,
+        'can_publish_albums': can_publish_albums,
+        'can_access_content_creation': can_access_content_creation,
         'has_permission': has_permission,
         'has_any_permission': has_any_permission,
         'has_all_permissions': has_all_permissions,
@@ -227,7 +253,8 @@ def inject_permission_functions():
         'is_admin': is_admin,
         'is_admin_tier': is_admin_tier,
         'has_custom_role': has_custom_role,
-        'get_user_dashboard_url': get_user_dashboard_url
+        'get_user_dashboard_url': get_user_dashboard_url,
+        'has_write_access': has_write_access
     }
 
 @app.context_processor
@@ -311,6 +338,14 @@ def utility_processor():
         return filtered_title
     
     return dict(safe_title=safe_title)
+
+# Register custom Jinja2 filters
+@app.template_filter('nl2br')
+def nl2br_filter(text):
+    """Convert newlines to HTML line breaks."""
+    if text is None:
+        return ""
+    return text.replace('\n', '<br>')
 
 @app.context_processor
 def inject_brand_info():
@@ -553,6 +588,15 @@ except ImportError as e:
     app.logger.error(f"❌ Failed to import or register blueprint 'albums_bp': {e}")
 except Exception as e:
     app.logger.error(f"❌ Unexpected error during albums blueprint registration: {e}", exc_info=True)
+
+try:
+    from routes.routes_user_profile import user_profile_bp
+    app.register_blueprint(user_profile_bp)
+    app.logger.info("✅ Blueprint 'user_profile_bp' registered successfully.")
+except ImportError as e:
+    app.logger.error(f"❌ Failed to import or register blueprint 'user_profile_bp': {e}")
+except Exception as e:
+    app.logger.error(f"❌ Unexpected error during user profile blueprint registration: {e}", exc_info=True)
 
 # ----------------------
 # 🔧 Database Initialization

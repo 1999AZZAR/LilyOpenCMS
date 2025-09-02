@@ -327,6 +327,7 @@ def videos():
 
 
 @main_blueprint.route("/news")
+@main_blueprint.route("/stories")
 @cache_with_args(timeout=CACHE_TIMEOUTS['news_list'], key_prefix='news_list')
 @monitor_ssr_render("news_list")
 def news():
@@ -482,6 +483,7 @@ def search():
 
 
 @main_blueprint.route("/news/<int:news_id>/<path:news_title>")
+@main_blueprint.route("/stories/<int:news_id>/<path:news_title>")
 @monitor_ssr_render("news_detail")
 def news_detail(news_id, news_title):
     from .utils.premium_content import process_premium_content, get_premium_content_stats
@@ -641,6 +643,7 @@ def news_detail(news_id, news_title):
     )
 
 @main_blueprint.route("/news/<int:news_id>")
+@main_blueprint.route("/stories/<int:news_id>")
 def news_detail_legacy(news_id):
     """
     Legacy route that redirects old URLs to new SEO-friendly URLs
@@ -863,7 +866,8 @@ def navigation_management():
         # Main pages
         {"name": "Beranda", "url": "/"},
         {"name": "Beranda (Alternatif)", "url": "/beranda"},
-        {"name": "Berita", "url": "/news"},
+        {"name": "Cerita", "url": "/news"},
+        {"name": "Cerita alt", "url": "/stories"},
         {"name": "Artikel", "url": "/articles"},
         {"name": "Hypes", "url": "/hypes"},
         {"name": "Utama", "url": "/utama"},
@@ -875,6 +879,7 @@ def navigation_management():
         
         # Album pages
         {"name": "Album Cerita", "url": "/albums"},
+        {"name": "Album Novel", "url": "/novel"},
         {"name": "Album Detail (Template)", "url": "/album/1/contoh-album"},
         {"name": "Chapter Reader (Template)", "url": "/album/1/chapter/1/contoh-bab"},
         
@@ -1218,6 +1223,7 @@ def copy_navigation_links():
 
 # Album Public Routes
 @main_blueprint.route("/albums")
+@main_blueprint.route("/novel")
 @monitor_ssr_render("albums_list")
 def albums_list():
     """Public albums listing page."""
@@ -1485,6 +1491,7 @@ def search_albums():
 
 
 @main_blueprint.route("/album/<int:album_id>/<path:album_title>")
+@main_blueprint.route("/novel/<int:album_id>/<path:album_title>")
 @monitor_ssr_render("album_detail")
 def album_detail(album_id, album_title):
     """Album detail page showing album info and chapter list."""
@@ -1554,6 +1561,7 @@ def album_detail(album_id, album_title):
 
 
 @main_blueprint.route("/album/<int:album_id>/chapter/<int:chapter_id>/<path:chapter_title>")
+@main_blueprint.route("/novel/<int:album_id>/chapter/<int:chapter_id>/<path:chapter_title>")
 @monitor_ssr_render("chapter_reader")
 def chapter_reader(album_id, chapter_id, chapter_title):
     """Chapter reader page within an album."""
@@ -1648,18 +1656,6 @@ def albums_management():
         return redirect(url_for('main.login'))
     
     return render_template('admin/settings/albums_management.html')
-
-
-# REMOVED: albums_seo_management route - functionality moved to seo_management
-# @main_blueprint.route("/settings/albums-seo")
-# @login_required
-# def albums_seo_management():
-#     """Album SEO management page."""
-#     if not current_user.verified:
-#         return redirect(url_for('main.login'))
-#     
-#     return render_template('admin/seo/albums_seo_management.html')
-
 
 @main_blueprint.route("/api/search/news", methods=["GET"])
 def search_news_api():
@@ -1836,6 +1832,11 @@ def search_news_api():
         }
     })
 
+@main_blueprint.route("/robots.txt")
+def robots_txt():
+    """Serve robots.txt file."""
+    from flask import send_from_directory
+    return send_from_directory('.', 'robots.txt')
 
 @main_blueprint.route("/api/settings/ads-injection", methods=["POST"])
 def update_ads_preferences():

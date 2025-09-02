@@ -43,7 +43,8 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/api/albums/<album_id>`                 | Yes  | Get album details                           |
 | PUT    | `/api/albums/<album_id>`                 | Yes  | Update album                                |
 | DELETE | `/api/albums/<album_id>`                 | Yes  | Delete album (admin-tier users only)       |
-| POST   | `/admin/albums/<album_id>/request-deletion` | Yes | Request album deletion (non-admin users)   |
+| POST   | `/admin/albums/<album_id>/request-deletion` | Yes | Request album deletion (admin interface)   |
+| POST   | `/api/albums/<album_id>/request-deletion` | Yes | Request album deletion (user interface)   |
 | GET    | `/admin/albums/deletion-requests`        | Yes  | Get album deletion requests (admin only)   |
 | POST   | `/admin/albums/<album_id>/approve-deletion` | Yes | Approve album deletion request (admin only) |
 | POST   | `/admin/albums/<album_id>/reject-deletion` | Yes | Reject album deletion request (admin only) |
@@ -140,6 +141,29 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/users/<user_id>/approve-deletion`  | Yes  | Approve account deletion request (admin only) |
 | POST   | `/api/users/<user_id>/reject-deletion`   | Yes  | Reject account deletion request (admin only) |
 | GET    | `/api/users/<user_id>/activities`        | Yes  | Get user activities (fixed: proper serialization) |
+
+## User Profile System
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/user/<username>`                       | No   | User profile page (Home tab)               |
+| GET    | `/user/<username>?tab=list`              | No   | User profile page (List tab) - **UPDATED: Unified card design matching other profile pages** |
+| GET    | `/user/<username>/library`               | No   | User's library page (saved content)         |
+| GET    | `/user/<username>/stories`               | No   | User's stories page (drafts & published)    |
+| GET    | `/user/<username>/stats`                 | No   | User's statistics page (analytics)           |
+| GET    | `/user/<username>/following?tab=following` | No | User's following list page                 |
+| GET    | `/user/<username>/following?tab=followers` | No | User's followers list page                  |
+| GET    | `/user/<username>/settings`              | Yes  | User's settings page (account management)  |
+| GET    | `/user/<username>/stories/create`        | Yes  | User-friendly story creation page           |
+| POST   | `/api/follow/<int:user_id>`              | Yes  | Follow/unfollow a user                     |
+| POST   | `/api/profile/update`                    | Yes  | Update user profile information             |
+| POST   | `/api/write-access/request`              | Yes  | Request write access (for general users)   |
+| GET    | `/api/write-access-requests`            | Yes  | Get write access requests (admin only)      |
+| POST   | `/api/write-access-requests/<request_id>/approve` | Yes | Approve write access request (admin only) |
+| POST   | `/api/write-access-requests/<request_id>/reject` | Yes | Reject write access request (admin only)  |
+| POST   | `/api/library/add`                       | Yes  | Add content to user's library              |
+| POST   | `/api/library/remove`                    | Yes  | Remove content from user's library         |
+| GET    | `/api/library/check`                     | Yes  | Check if content is in user's library      |
+| POST   | `/api/reading-history/record`            | Yes  | Record content in reading history          |
 
 ## User Library & Reading History
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -334,7 +358,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | GET    | `/api/brand-identity`                    | Yes  | Get brand identity assets                   |
 | GET    | `/api/brand-info`                        | No   | Get public brand info (no auth required)   |
 | POST   | `/api/brand-identity`                    | Yes  | Update brand identity assets                |
-| POST   | `/api/brand-identity/text`               | Yes  | Update brand text fields and feature toggles (brand_name, tagline, homepage_design, categories_display_location, card_design, enable_comments, enable_ratings, enable_ads, enable_campaigns) - **UPDATED: card_design field supports 4 designs (classic, modern, minimal, featured)** |
+| POST   | `/api/brand-identity/text`               | Yes  | Update brand text fields and feature toggles (brand_name, tagline, brand_description, homepage_design, categories_display_location, card_design, enable_comments, enable_ratings, enable_ads, enable_campaigns) - **UPDATED: Added brand_description field for detailed brand description** |
 | POST   | `/api/brand-colors`                      | Yes  | Update brand colors                         |
 | GET    | `/api/brand-colors`                      | Yes  | Get brand colors                            |
 
@@ -643,6 +667,16 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 > **Note:** All endpoints are listed, including those for admin/settings, public pages, and all CRUD operations. For endpoints with multiple methods (e.g., GET/POST), both are shown. Bulk and utility endpoints are included for completeness. The new Albums section includes all album and chapter management endpoints.
 
 ### **Recent Backend Updates**
+
+#### **Profile List Card Design Unification**
+- **Unified Card Design**: Updated `profile_list.html` to use consistent card design matching other user profile pages (stories.html, library.html)
+- **Layout Consistency**: Replaced custom album card grid with uniform list layout using `space-y-6` spacing
+- **Flex Layout Structure**: Implemented consistent flex layout with image container (`sm:w-1/3 lg:w-2/5 xl:w-1/3`) and text container
+- **Visual Improvements**: Same hover effects, transitions, badge styling, and icon usage as other profile pages
+- **Responsive Design**: Mobile stacked layout, tablet side-by-side, desktop optimized proportions
+- **CSS Cleanup**: Removed dependency on custom `albums.css` file for cleaner codebase
+- **Better Information Hierarchy**: Title and badges in header, category link, description with line clamping, metadata footer with icons
+- **Performance**: Lazy loading for images and proper ARIA labels for accessibility
 
 #### **Sitemap Generation & Robots.txt Auto-Update**
 - **Fixed Sitemap Generation Errors**: Resolved datetime timezone issues and `AttributeError: type object 'AlbumChapter' has no attribute 'title'` by updating field reference to `chapter_title`

@@ -20,7 +20,7 @@ function initializeSharing(contentData, logger) {
     
     // Detect content type based on the data structure or URL
     const isAlbum = contentData.type === 'album' || window.location.pathname.includes('/album/');
-    const contentType = isAlbum ? 'album' : 'news';
+    const contentType = isAlbum ? 'novel' : 'stories';
     
     if (logger) logger.log(`Initializing sharing for ${contentType} with ID: ${contentData.id}`);
     
@@ -57,8 +57,8 @@ function fetchShareData(contentData, logger) {
         return;
     }
     
-    const contentType = contentData.type || 'news';
-    const apiUrl = contentType === 'album' 
+    const contentType = contentData.type || 'stories';
+    const apiUrl = contentType === 'novel' 
         ? `/api/albums/${contentData.id}/share-data`
         : `/api/news/${contentData.id}/share-data`;
     
@@ -112,8 +112,8 @@ function trackShare(platform, contentData, logger) {
         return Promise.reject(error);
     }
     
-    const contentType = contentData.type || 'news';
-    const trackUrl = contentType === 'album'
+    const contentType = contentData.type || 'stories';
+    const trackUrl = contentType === 'novel'
         ? `/api/albums/${contentData.id}/track-share`
         : `/api/news/${contentData.id}/track-share`;
     

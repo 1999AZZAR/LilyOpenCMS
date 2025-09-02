@@ -113,6 +113,15 @@ editor_writer = db.Table(
     db.UniqueConstraint("editor_id", "writer_id", name="uq_editor_writer_pair")
 )
 
+# Association table for user following relationships
+user_follow = db.Table(
+    "user_follow",
+    db.Column("follower_id", db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("following_id", db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("created_at", db.DateTime, default=default_utcnow, nullable=False),
+    db.UniqueConstraint("follower_id", "following_id", name="uq_user_follow_pair")
+)
+
 
 class UserActivity(db.Model):
     __tablename__ = "user_activity"
@@ -188,6 +197,9 @@ class User(db.Model, UserMixin):
     deletion_requested = db.Column(db.Boolean, default=False, nullable=False)
     deletion_requested_at = db.Column(db.DateTime, nullable=True)
     
+    # Write access for content creation (nullable, admin always has write access)
+    write_access = db.Column(db.Boolean, nullable=True)  # None = not requested, True = granted, False = denied
+    
     # Relationships - Use back_populates for bidirectional links
     news = db.relationship(
         "News",
@@ -248,6 +260,20 @@ class User(db.Model, UserMixin):
     # Coin system relationships
     coins = db.relationship("UserCoins", back_populates="user", lazy=True, cascade="all, delete-orphan", uselist=False)
     coin_transactions = db.relationship("CoinTransaction", back_populates="user", lazy=True, cascade="all, delete-orphan")
+    
+    # Following system relationships
+    following = db.relationship(
+        "User",
+        secondary="user_follow",
+        primaryjoin=(id == user_follow.c.follower_id),
+        secondaryjoin=(id == user_follow.c.following_id),
+        backref=db.backref("followers", lazy="dynamic"),
+        lazy="dynamic"
+    )
+    
+    # Profile and stats relationships
+    profile = db.relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    stats = db.relationship("UserStats", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     # --- Editor ↔ Writer assignments (many-to-many self-referential) ---
     assigned_writers = db.relationship(
@@ -506,6 +532,10 @@ class UserLibrary(db.Model):
             self.suspension_until = None
             return False
         return True
+    
+    def is_admin_tier(self):
+        """Check if user has admin tier access (admin, superuser, or owner)."""
+        return self.role in [UserRole.ADMIN, UserRole.SUPERUSER] or self.tier >= 100
     
     def get_full_name(self):
         """Get user's full name or username if no name is set."""
@@ -1178,6 +1208,7 @@ class News(db.Model):
             "age_rating": self.age_rating,
             "prize": self.prize,
             "prize_coin_type": self.prize_coin_type,
+            "category_id": self.category_id,
             "category": self.category.to_dict() if self.category else None,
             "author": self.author.to_dict() if self.author else None,
             "image": self.image.to_dict() if self.image else None,
@@ -1965,6 +1996,7 @@ class BrandIdentity(db.Model):
     # Brand Information
     brand_name = db.Column(db.String(100), nullable=True, default="LilyOpenCMS")  # Brand name
     tagline = db.Column(db.String(255), nullable=True, default="Modern content management for the digital age")  # Brand tagline
+    brand_description = db.Column(db.Text, nullable=True, default="LilyOpenCMS is a modern, open-source content management system designed for the digital age. We provide comprehensive tools for managing digital content, from news articles and media files to user interactions and analytics. Our platform empowers content creators and organizations to build engaging digital experiences with ease and efficiency.")  # Brand description
     
     # Homepage Design Preference
     homepage_design = db.Column(db.String(50), nullable=True, default="news")  # 'news' or 'albums'
@@ -1996,6 +2028,7 @@ class BrandIdentity(db.Model):
         return {
             "brand_name": self.brand_name,
             "tagline": self.tagline,
+            "brand_description": self.brand_description,
             "homepage_design": self.homepage_design,
             "categories_display_location": getattr(self, 'categories_display_location', None) or "body",
             "card_design": getattr(self, 'card_design', None) or "classic",
@@ -4861,3 +4894,184 @@ class SEOInjectionSettings(db.Model):
             return template.format(**defaults)
         except (KeyError, ValueError):
             return template
+
+
+# ============================================================================
+# USER PROFILE SYSTEM MODELS
+# ============================================================================
+
+
+class UserProfile(db.Model):
+    """Extended user profile information."""
+    __tablename__ = "user_profile"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    # Profile information
+    pronouns = db.Column(db.String(50), nullable=True)  # e.g., "he/him", "she/her", "they/them"
+    short_bio = db.Column(db.Text, nullable=True)
+    location = db.Column(db.String(100), nullable=True)
+    website = db.Column(db.String(255), nullable=True)
+    
+    # Social media links (stored as JSON)
+    social_links = db.Column(db.JSON, nullable=True)  # {"twitter": "...", "instagram": "...", etc.}
+    
+    # Profile preferences
+    is_public = db.Column(db.Boolean, default=True, nullable=False)
+    show_email = db.Column(db.Boolean, default=False, nullable=False)
+    show_birthdate = db.Column(db.Boolean, default=False, nullable=False)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship("User", back_populates="profile")
+    
+    def __repr__(self):
+        return f"<UserProfile {self.user_id}>"
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "pronouns": self.pronouns,
+            "short_bio": self.short_bio,
+            "location": self.location,
+            "website": self.website,
+            "social_links": self.social_links or {},
+            "is_public": self.is_public,
+            "show_email": self.show_email,
+            "show_birthdate": self.show_birthdate,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class UserStats(db.Model):
+    """User statistics and analytics."""
+    __tablename__ = "user_stats"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    # Content statistics
+    total_stories = db.Column(db.Integer, default=0, nullable=False)
+    total_albums = db.Column(db.Integer, default=0, nullable=False)
+    total_views = db.Column(db.Integer, default=0, nullable=False)
+    total_likes = db.Column(db.Integer, default=0, nullable=False)
+    total_comments = db.Column(db.Integer, default=0, nullable=False)
+    
+    # Follower statistics
+    total_followers = db.Column(db.Integer, default=0, nullable=False)
+    total_following = db.Column(db.Integer, default=0, nullable=False)
+    
+    # Reading statistics
+    total_reads = db.Column(db.Integer, default=0, nullable=False)
+    total_saved = db.Column(db.Integer, default=0, nullable=False)
+    
+    # Activity tracking (stored as JSON for flexibility)
+    activity_calendar = db.Column(db.JSON, nullable=True)  # {"2024-01-01": 5, "2024-01-02": 3, ...}
+    monthly_stats = db.Column(db.JSON, nullable=True)  # {"2024-01": {"stories": 10, "views": 100}, ...}
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=default_utcnow, onupdate=default_utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship("User", back_populates="stats")
+    
+    def __repr__(self):
+        return f"<UserStats {self.user_id}>"
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "total_stories": self.total_stories,
+            "total_albums": self.total_albums,
+            "total_views": self.total_views,
+            "total_likes": self.total_likes,
+            "total_comments": self.total_comments,
+            "total_followers": self.total_followers,
+            "total_following": self.total_following,
+            "total_reads": self.total_reads,
+            "total_saved": self.total_saved,
+            "activity_calendar": self.activity_calendar or {},
+            "monthly_stats": self.monthly_stats or {},
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    def update_stats(self):
+        """Update statistics from actual data."""
+        from models import News, Album, UserLibrary, ReadingHistory
+        
+        # Count user's content
+        self.total_stories = News.query.filter_by(user_id=self.user_id, is_visible=True).count()
+        self.total_albums = Album.query.filter_by(user_id=self.user_id, is_visible=True).count()
+        
+        # Count followers/following
+        self.total_followers = self.user.followers.count()
+        self.total_following = self.user.following.count()
+        
+        # Count user's library and reading history
+        self.total_saved = UserLibrary.query.filter_by(user_id=self.user_id).count()
+        self.total_reads = ReadingHistory.query.filter_by(user_id=self.user_id).count()
+        
+        # Update activity calendar (simplified - can be enhanced later)
+        today = datetime.now().date().isoformat()
+        if not self.activity_calendar:
+            self.activity_calendar = {}
+        if today not in self.activity_calendar:
+            self.activity_calendar[today] = 0
+        self.activity_calendar[today] += 1
+
+
+# =============================================================================
+# WRITE ACCESS REQUEST MODEL
+# =============================================================================
+
+class WriteAccessRequest(db.Model):
+    """Model for tracking write access requests from users."""
+    __tablename__ = 'write_access_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    request_reason = db.Column(db.Text, nullable=True)  # Why they want write access
+    portfolio_links = db.Column(db.Text, nullable=True)  # Links to their work
+    experience_description = db.Column(db.Text, nullable=True)  # Their writing experience
+    status = db.Column(db.Enum('pending', 'approved', 'rejected', name='request_status'), default='pending')
+    admin_notes = db.Column(db.Text, nullable=True)  # Notes from admin
+    reviewed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id])
+    reviewed_by = db.relationship('User', foreign_keys=[reviewed_by_id])
+    
+    def __repr__(self):
+        return f'<WriteAccessRequest {self.id}: {self.user.username} - {self.status}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user': {
+                'username': self.user.username,
+                'full_name': self.user.get_full_name(),
+                'email': self.user.email
+            },
+            'request_reason': self.request_reason,
+            'portfolio_links': self.portfolio_links,
+            'experience_description': self.experience_description,
+            'status': self.status,
+            'admin_notes': self.admin_notes,
+            'reviewed_by': self.reviewed_by.username if self.reviewed_by else None,
+            'requested_at': self.requested_at.isoformat() if self.requested_at else None,
+            'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None
+        }
+
+

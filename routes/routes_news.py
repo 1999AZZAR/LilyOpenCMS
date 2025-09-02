@@ -1,5 +1,6 @@
 from routes import main_blueprint
 from .common_imports import *
+from routes.utils.permission_decorators import require_api_news_create
 import io
 import re
 try:
@@ -261,18 +262,13 @@ def get_news_api():
 
 @main_blueprint.route("/api/news", methods=["POST"])
 @login_required
+@require_api_news_create
 def create_news_api():
     """
     API endpoint to create a new news article.
-    Requires user to be logged in and verified.
+    Requires user to be logged in and have create news permission.
     Expects form data including title, content, category, date, etc.
     """
-    # Permission: Only verified users can create news
-    if not current_user.verified:
-        current_app.logger.warning(
-            f"Unverified user {current_user.username} attempted POST /api/news"
-        )
-        return jsonify({"error": "Account not verified"}), 403
 
     # Assume data is coming as form data based on original code
     data = request.form
@@ -944,6 +940,7 @@ def get_news_detail_api(news_id):
             abort(404, f"News article with ID {news_id} not found.")
 
         # Optional: Check visibility based on role (e.g., author/admin can see hidden ones)
+        # Authors can always access their own stories, regardless of visibility
         if (
             not news.is_visible
             and current_user.role == UserRole.GENERAL
@@ -1005,7 +1002,26 @@ def update_news_api(news_id):
         )
         abort(403, "You do not have permission to modify this news article.")
 
-    data = request.get_json()
+    # Handle both JSON and FormData
+    if request.content_type and 'application/json' in request.content_type:
+        data = request.get_json()
+    else:
+        # Handle FormData
+        data = {}
+        for key in request.form:
+            value = request.form[key]
+            if key in ['is_premium', 'is_visible']:
+                data[key] = value.lower() in ['true', '1', 'on']
+            elif key in ['prize']:
+                try:
+                    data[key] = int(value) if value else 0
+                except ValueError:
+                    data[key] = 0
+            elif key in ['age_rating']:
+                data[key] = value.strip() if value else ''
+            else:
+                data[key] = value
+    
     if not data:
         return jsonify({"error": "No update data provided"}), 400
 
@@ -1109,6 +1125,25 @@ def update_news_api(news_id):
             return jsonify({"error": f"Invalid prize_coin_type: {new_coin_type}"}), 400
         if news.prize_coin_type != new_coin_type:
             news.prize_coin_type = new_coin_type
+            updated = True
+
+    if "age_rating" in data:
+        age_rating = data["age_rating"].strip()
+        if age_rating:
+            normalized = age_rating.upper().replace(" ", "")
+            if normalized in {'R/13+','R13+'}:
+                normalized = '13+'
+            if normalized in {'D/17+','D17+'}:
+                normalized = '17+'
+            allowed = {"SU","P","A","3+","7+","13+","17+","18+","21+"}
+            if normalized not in allowed:
+                return jsonify({"error": f"Invalid age_rating: {age_rating}"}), 400
+            age_rating = normalized
+        else:
+            age_rating = "17+" if data.get("is_premium", False) else "SU"
+        
+        if news.age_rating != age_rating:
+            news.age_rating = age_rating
             updated = True
 
     # --- Handle SEO fields ---

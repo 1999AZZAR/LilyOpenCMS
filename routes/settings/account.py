@@ -26,11 +26,8 @@ def user_account():
 @main_blueprint.route("/account/settings")
 @login_required
 def user_account_settings():
-    # Only general users can access this page
-    if current_user.role != UserRole.GENERAL:
-        abort(403)
-    
-    return render_template('public/settings/user_account_settings.html')
+    # Redirect to the new user profile settings
+    return redirect(url_for("user_profile.user_profile", username=current_user.username, tab='settings'))
 
 
 # API endpoints for user account management

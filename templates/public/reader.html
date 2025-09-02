@@ -82,7 +82,7 @@
               {% if news.date %}
                 <time datetime="{{ news.date.isoformat() }}">
                   <i class="fas fa-calendar-alt fa-fw mr-1 opacity-70"></i>
-                  {{ news.date.strftime('%d %b %Y, %H:%M') }} WIB
+                  {{ news.date.strftime('%d %b %Y') }}
                 </time>
               {% endif %}
               <span>
@@ -310,9 +310,34 @@
           </div>
           {% endif %}
           
+          <!-- Library Section -->
+          <div class="bg-card rounded-lg border border-border p-6" role="region" aria-label="Library options">
+            <h2 class="text-lg font-semibold text-foreground mb-4">Perpustakaan</h2>
+            {% if current_user.is_authenticated %}
+              <div class="flex items-center justify-between">
+                <p class="text-sm text-muted-foreground">Simpan artikel ini ke perpustakaan Anda</p>
+                <button id="save-to-library-btn" 
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                        data-content-type="news" 
+                        data-content-id="{{ news.id }}">
+                  <i class="fas fa-bookmark mr-2"></i>
+                  <span id="save-btn-text">Simpan ke Perpustakaan</span>
+                </button>
+              </div>
+            {% else %}
+              <div class="text-center">
+                <p class="text-sm text-muted-foreground mb-3">Login untuk menyimpan artikel ke perpustakaan</p>
+                <a href="{{ url_for('main.login') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                  <i class="fas fa-sign-in-alt mr-2"></i>
+                  Login
+                </a>
+              </div>
+            {% endif %}
+          </div>
+          
           <!-- Share Section -->
           <div class="bg-card rounded-lg border border-border p-6" role="region" aria-label="Share options">
-            <h2 class="text-lg font-semibold text-foreground mb-4">Bagikan Artikel</h2>
+            <h2 class="text-lg font-semibold text-foreground mb-4">Bagikan ke Teman</h2>
             <p id="total-share-count" class="text-sm text-muted-foreground mb-4">
               Total dibagikan: <span class="font-semibold text-primary">0</span> kali
             </p>
@@ -606,7 +631,133 @@
           }
         });
       }
+      
+      // Library functionality
+      const saveToLibraryBtn = document.getElementById('save-to-library-btn');
+      if (saveToLibraryBtn) {
+        saveToLibraryBtn.addEventListener('click', function() {
+          const contentType = this.dataset.contentType;
+          const contentId = this.dataset.contentId;
+          
+          // Check if already saved
+          const isSaved = this.classList.contains('saved');
+          
+          if (isSaved) {
+            // Remove from library
+            removeFromLibrary(contentType, contentId, this);
+          } else {
+            // Add to library
+            addToLibrary(contentType, contentId, this);
+          }
+        });
+        
+        // Check if already in library on page load
+        checkLibraryStatus('news', {{ news.id }}, saveToLibraryBtn);
+      }
     });
+    
+    // Library management functions
+    function addToLibrary(contentType, contentId, buttonElement) {
+      fetch('/api/library/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content_type: contentType,
+          content_id: contentId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update button state
+          buttonElement.classList.add('saved');
+          buttonElement.classList.remove('text-primary', 'bg-primary/10', 'hover:bg-primary/20');
+          buttonElement.classList.add('text-green-600', 'bg-green-100', 'hover:bg-green-200');
+          const btnText = buttonElement.querySelector('#save-btn-text');
+          if (btnText) btnText.textContent = 'Tersimpan di Perpustakaan';
+          const icon = buttonElement.querySelector('i');
+          if (icon) icon.className = 'fas fa-check mr-2';
+          
+          showToast('success', 'Ditambahkan ke perpustakaan');
+        } else {
+          showToast('error', data.error || 'Gagal menambahkan ke perpustakaan');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Gagal menambahkan ke perpustakaan');
+      });
+    }
+    
+    function removeFromLibrary(contentType, contentId, buttonElement) {
+      fetch('/api/library/remove', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content_type: contentType,
+          content_id: contentId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update button state
+          buttonElement.classList.remove('saved');
+          buttonElement.classList.remove('text-green-600', 'bg-green-100', 'hover:bg-green-200');
+          buttonElement.classList.add('text-primary', 'bg-primary/10', 'hover:bg-primary/20');
+          const btnText = buttonElement.querySelector('#save-btn-text');
+          if (btnText) btnText.textContent = 'Simpan ke Perpustakaan';
+          const icon = buttonElement.querySelector('i');
+          if (icon) icon.className = 'fas fa-bookmark mr-2';
+          
+          showToast('success', 'Dihapus dari perpustakaan');
+        } else {
+          showToast('error', data.error || 'Gagal menghapus dari perpustakaan');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Gagal menghapus dari perpustakaan');
+      });
+    }
+    
+    function checkLibraryStatus(contentType, contentId, buttonElement) {
+      fetch(`/api/library/check?content_type=${contentType}&content_id=${contentId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.in_library) {
+          // Update button to saved state
+          buttonElement.classList.add('saved');
+          buttonElement.classList.remove('text-primary', 'bg-primary/10', 'hover:bg-primary/20');
+          buttonElement.classList.add('text-green-600', 'bg-green-100', 'hover:bg-green-200');
+          const btnText = buttonElement.querySelector('#save-btn-text');
+          if (btnText) btnText.textContent = 'Tersimpan di Perpustakaan';
+          const icon = buttonElement.querySelector('i');
+          if (icon) icon.className = 'fas fa-check mr-2';
+        }
+      })
+      .catch(error => {
+        console.error('Error checking library status:', error);
+      });
+    }
+    
+    // Simple toast function if not already available
+    function showToast(type, message) {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-5 right-5 p-4 rounded-lg text-white z-50 ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+      }`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
   </script>
 
 {% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Permintaan Akses Menulis{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="bg-card rounded-lg shadow-sm border border-border p-8">
+            <div class="text-center">
+                <i class="fas fa-pen-fancy text-4xl text-primary mb-4"></i>
+                <h2 class="text-2xl font-bold text-foreground mb-2">Permintaan Akses Menulis</h2>
+                <p class="text-muted-foreground mb-6">
+                    Untuk membuat album dan cerita, Anda perlu meminta akses menulis dari administrator.
+                </p>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Current Status -->
+                <div class="bg-muted rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-foreground mb-2">Status Saat Ini</h3>
+                    {% if current_user.write_access is none %}
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-yellow-500 mr-2"></i>
+                            <span class="text-sm text-muted-foreground">Belum ada permintaan diajukan</span>
+                        </div>
+                    {% elif current_user.write_access == true %}
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                            <span class="text-sm text-gray-600">Akses diberikan</span>
+                        </div>
+                    {% elif current_user.write_access == false %}
+                        <div class="flex items-center">
+                            <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                            <span class="text-sm text-gray-600">Akses ditolak</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Request Form -->
+                {% if current_user.write_access is none %}
+                    <form id="write-access-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Mengapa Anda ingin akses menulis?
+                                </label>
+                                <textarea id="reason" name="reason" rows="4" 
+                                          class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                          placeholder="Ceritakan tentang tujuan menulis Anda dan apa yang Anda rencanakan untuk dibuat..."></textarea>
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full button button-primary">
+                                Ajukan Permintaan
+                            </button>
+                        </div>
+                    </form>
+                {% elif current_user.write_access == true %}
+                    <div class="text-center">
+                        <p class="text-sm text-muted-foreground mb-4">
+                            Selamat! Anda telah diberikan akses menulis. Anda sekarang dapat membuat album dan cerita.
+                        </p>
+                        <div class="space-y-3">
+                            <a href="{{ url_for('albums.create_album') }}" 
+                               class="block w-full button button-primary">
+                                Buat Album
+                            </a>
+                            <a href="{{ url_for('main.create_news_management') }}" 
+                               class="block w-full button button-primary">
+                                Tulis Cerita
+                            </a>
+                        </div>
+                    </div>
+                {% elif current_user.write_access == false %}
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-4">
+                            Permintaan Anda untuk akses menulis telah ditolak. Anda dapat menghubungi administrator untuk informasi lebih lanjut.
+                        </p>
+                        <a href="{{ url_for('main.index') }}" 
+                           class="block w-full button button-outline">
+                            Kembali ke Beranda
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Information -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-sm font-medium text-gray-900 mb-3">Yang dapat Anda lakukan dengan akses menulis:</h3>
+                <ul class="text-sm text-gray-600 space-y-2">
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                        Membuat dan menerbitkan album
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                        Menulis dan menerbitkan cerita
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                        Mengelola konten Anda
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                        Melihat analitik detail
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('write-access-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const reason = document.getElementById('reason').value;
+            
+            fetch('/api/write-access/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ reason: reason })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Permintaan akses menulis berhasil diajukan! Anda akan diberitahu ketika permintaan Anda ditinjau.');
+                    window.location.reload();
+                } else {
+                    alert('Error mengajukan permintaan: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error mengajukan permintaan');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

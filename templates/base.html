@@ -211,6 +211,7 @@
     <div id="loading-spinner" class="hidden"> <div class="spinner"></div> </div>
 
     <!-- Navigation -->
+    {% if not request.path.startswith('/user/') %}
     <nav role="banner" aria-label="Main navigation" class="bg-card md:bg-card/85 backdrop-blur-lg shadow-sm sticky top-0 z-40 border-b border-border">
         <div class="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-3 flex items-center justify-between">
             <!-- Logo -->
@@ -335,6 +336,7 @@
 
 
     </nav> <!-- End of Nav -->
+    {% endif %}
 
     <!-- Ad Placement Area - Header/Top (REMOVED: Avoids navigation areas) -->
     <!-- <div id="ad-header-top" class="ad-placement-area" data-ad-section="header" data-ad-position="top"></div> -->
@@ -381,13 +383,16 @@
     </main>
 
     <!-- Footer -->
-    {% include 'footer.html' %}
+    {% if not request.path.startswith('/user/') %}
+        {% include 'footer.html' %}
+    {% endif %}
     <!-- End Footer -->
 
     <!-- Mobile Menu Overlay (Removed, integrated into menu) -->
     <!-- <div id="mobile-menu-overlay" class="fixed inset-0 bg-black opacity-0 pointer-events-none transition-opacity duration-300 ease-in-out z-40 md:hidden"></div> -->
 
     <!-- Full Screen Mobile Navigation Menu -->
+    {% if not request.path.startswith('/user/') %}
     {# MODIFIED: Changed classes for full screen, opacity transition, added close button #}
     {# ADDED: -translate-y-4 for initial slide-up, transition-all to include transform #}
     <div id="mobile-menu" class="fixed inset-0 w-full h-screen bg-card backdrop-blur-sm p-6 opacity-0 pointer-events-none -translate-y-4 transition-all duration-300 ease-in-out z-50 md:hidden flex flex-col">
@@ -519,7 +524,7 @@
                         <li> {# Account/Logout links keep the same spacing as main menu #}
                             <a href="{{ get_user_dashboard_url(current_user) }}" class="mobile-nav-link flex items-center gap-3 text-lg py-3 px-3 rounded-md hover:bg-accent">
                                 <i class="fa-solid fa-circle-user"></i>
-                                <span>Akun Saya</span>
+                                <span>My Account</span>
                             </a>
                         </li>
                         <li>
@@ -533,6 +538,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Core Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>

@@ -15,6 +15,10 @@ import logging
 
 from models import db, Album, AlbumChapter, News, Category, User, UserRole
 from routes.common_imports import *
+from routes.utils.permission_decorators import (
+    require_album_manage, require_album_create, require_album_edit, 
+    require_album_delete, require_content_creation
+)
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -22,14 +26,16 @@ logger = logging.getLogger(__name__)
 # Create blueprint
 albums_bp = Blueprint('albums', __name__, url_prefix='/admin/albums')
 
-# Admin check function
+# Updated admin check function that uses permission system
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for('auth.login'))
-        if not current_user.is_admin_tier():
-            flash('Access denied. Admin privileges required.', 'error')
+        # Check if user has album management permissions or is admin tier
+        from routes.utils.permission_manager import can_manage_albums, is_admin_tier
+        if not (can_manage_albums(current_user) or is_admin_tier(current_user)):
+            flash('Access denied. Album management privileges required.', 'error')
             return redirect(url_for('main.settings_dashboard'))
         return f(*args, **kwargs)
     return decorated_function
@@ -226,9 +232,23 @@ def album_detail(album_id):
 # ALBUM CRUD
 # =============================================================================
 
+def creator_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        # Check if user has album creation permissions or is admin tier
+        from routes.utils.permission_manager import can_create_albums, is_admin_tier
+        if not (can_create_albums(current_user) or is_admin_tier(current_user)):
+            flash('Write access required. Request access to create albums.', 'error')
+            return redirect(url_for('user_profile.write_access_request'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @albums_bp.route('/create', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_album_create
 def create_album():
     """Create a new album"""
     if request.method == 'GET':
@@ -283,7 +303,7 @@ def create_album():
 
 @albums_bp.route('/<int:album_id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_album_edit
 def edit_album(album_id):
     """Edit an existing album"""
     album = Album.query.get_or_404(album_id)

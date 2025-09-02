@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistik - {{ user.get_full_name() or user.username }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-foreground">Statistik</h1>
+                    <p class="mt-2 text-muted-foreground">Statistik {{ user.get_full_name() or user.username }}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('user_profile.user_profile', username=user.username) }}" 
+                       class="text-primary hover:text-foreground">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Profil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Status Tabs -->
+        <div class="flex items-center justify-between border-b border-border mb-6">
+            <nav class="flex space-x-8" aria-label="Analytics tabs">
+                <button id="stories-tab" 
+                        class="py-2 px-1 border-b-2 font-medium text-sm border-primary text-primary">
+                    Cerita
+                </button>
+                <button id="list-tab" 
+                        class="py-2 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                    Daftar
+                </button>
+                <button id="audience-tab" 
+                        class="py-2 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                    Audiens
+                </button>
+            </nav>
+        </div>
+
+        <!-- Stories Analytics Tab -->
+        <div id="stories-content" class="space-y-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-newspaper text-2xl text-primary"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Total Cerita</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_stories }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-eye text-2xl text-green-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Total Dilihat</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_views }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-heart text-2xl text-red-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Total Suka</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_likes }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-comments text-2xl text-purple-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Total Komentar</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_comments }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Calendar -->
+            <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                <h3 class="text-lg font-medium text-foreground mb-4">Kalender Aktivitas</h3>
+                <div class="text-center py-12">
+                    <i class="fas fa-calendar text-4xl text-muted-foreground mb-4"></i>
+                    <p class="text-muted-foreground">Kalender aktivitas akan segera hadir</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- List Analytics Tab -->
+        <div id="list-content" class="space-y-8 hidden">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-book text-2xl text-primary"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Total Album</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_albums }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-eye text-2xl text-green-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Total Dilihat</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_views }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-star text-2xl text-yellow-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Rata-rata Rating</p>
+                            <p class="text-2xl font-semibold text-foreground">4.5</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Calendar -->
+            <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                <h3 class="text-lg font-medium text-foreground mb-4">Kalender Aktivitas</h3>
+                <div class="text-center py-12">
+                    <i class="fas fa-calendar text-4xl text-muted-foreground mb-4"></i>
+                    <p class="text-muted-foreground">Kalender aktivitas akan segera hadir</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audience Analytics Tab -->
+        <div id="audience-content" class="space-y-8 hidden">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users text-2xl text-primary"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Pengikut</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_followers }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-plus text-2xl text-green-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Mengikuti</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_following }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-bookmark text-2xl text-purple-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Tersimpan</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_saved }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-history text-2xl text-orange-600"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-muted-foreground">Dibaca</p>
+                            <p class="text-2xl font-semibold text-foreground">{{ stats.total_reads }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Audience Insights -->
+            <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                <h3 class="text-lg font-medium text-foreground mb-4">Wawasan Audiens</h3>
+                <div class="text-center py-12">
+                    <i class="fas fa-chart-line text-4xl text-muted-foreground mb-4"></i>
+                    <p class="text-muted-foreground">Wawasan audiens detail akan segera hadir</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = ['stories', 'list', 'audience'];
+    const tabElements = {};
+    const contentElements = {};
+
+    // Initialize tab and content elements
+    tabs.forEach(tabName => {
+        tabElements[tabName] = document.getElementById(tabName + '-tab');
+        contentElements[tabName] = document.getElementById(tabName + '-content');
+    });
+
+    // Add click event listeners to all tabs
+    tabs.forEach(tabName => {
+        tabElements[tabName].addEventListener('click', function() {
+            // Hide all content
+            Object.values(contentElements).forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Remove active state from all tabs
+            Object.values(tabElements).forEach(tab => {
+                tab.classList.remove('border-primary', 'text-primary');
+                tab.classList.add('border-transparent', 'text-muted-foreground');
+            });
+
+            // Show selected content
+            contentElements[tabName].classList.remove('hidden');
+
+            // Add active state to clicked tab
+            tabElements[tabName].classList.add('border-primary', 'text-primary');
+            tabElements[tabName].classList.remove('border-transparent', 'text-muted-foreground');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1066,7 +1066,7 @@ function handleBrandTextForm(formId, fieldName) {
   
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const input = form.querySelector('input[type="text"]');
+    const input = form.querySelector('input[type="text"], textarea');
     const value = input.value.trim();
     
     if (!value) {
@@ -1094,14 +1094,20 @@ function handleBrandTextForm(formId, fieldName) {
       
       if (!resp.ok) throw new Error('Update failed');
       
-      showToast('success', `${fieldName === 'brand_name' ? 'Brand name' : 'Tagline'} berhasil diperbarui!`);
+      const fieldDisplayName = fieldName === 'brand_name' ? 'Brand name' : 
+                              fieldName === 'tagline' ? 'Tagline' : 
+                              fieldName === 'brand_description' ? 'Brand description' : fieldName;
+      showToast('success', `${fieldDisplayName} berhasil diperbarui!`);
       
       // Update the input value to reflect the saved state
       input.value = value;
       
     } catch (err) {
       console.error('Update error:', err);
-      showToast('error', `Gagal memperbarui ${fieldName === 'brand_name' ? 'brand name' : 'tagline'}: ` + err.message);
+      const fieldDisplayName = fieldName === 'brand_name' ? 'brand name' : 
+                              fieldName === 'tagline' ? 'tagline' : 
+                              fieldName === 'brand_description' ? 'brand description' : fieldName;
+      showToast('error', `Gagal memperbarui ${fieldDisplayName}: ` + err.message);
     }
   });
 }
@@ -1388,6 +1394,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Brand text form handlers
   handleBrandTextForm('form-brand-name', 'brand_name');
   handleBrandTextForm('form-tagline', 'tagline');
+  handleBrandTextForm('form-brand-description', 'brand_description');
   
   // Homepage design form handlers
   handleHomepageDesignForm('form-homepage-news');

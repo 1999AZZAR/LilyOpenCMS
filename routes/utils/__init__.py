@@ -18,6 +18,17 @@ from .permission_manager import (
     can_manage_legal,
     can_manage_brand,
     can_manage_seo,
+    can_manage_news,
+    can_create_news,
+    can_edit_news,
+    can_delete_news,
+    can_publish_news,
+    can_manage_albums,
+    can_create_albums,
+    can_edit_albums,
+    can_delete_albums,
+    can_publish_albums,
+    can_access_content_creation,
     has_permission,
     has_any_permission,
     has_all_permissions,
@@ -40,6 +51,28 @@ from .role_manager import (
     get_role_statistics
 )
 
+from .permission_decorators import (
+    require_permission,
+    require_news_create,
+    require_news_edit,
+    require_news_delete,
+    require_news_publish,
+    require_news_manage,
+    require_album_create,
+    require_album_edit,
+    require_album_delete,
+    require_album_publish,
+    require_album_manage,
+    require_content_creation,
+    require_api_permission,
+    require_api_news_create,
+    require_api_news_edit,
+    require_api_news_delete,
+    require_api_album_create,
+    require_api_album_edit,
+    require_api_album_delete
+)
+
 __all__ = [
     # Permission management
     'can_access_admin',
@@ -55,6 +88,17 @@ __all__ = [
     'can_manage_legal',
     'can_manage_brand',
     'can_manage_seo',
+    'can_manage_news',
+    'can_create_news',
+    'can_edit_news',
+    'can_delete_news',
+    'can_publish_news',
+    'can_manage_albums',
+    'can_create_albums',
+    'can_edit_albums',
+    'can_delete_albums',
+    'can_publish_albums',
+    'can_access_content_creation',
     'has_permission',
     'has_any_permission',
     'has_all_permissions',
@@ -73,5 +117,26 @@ __all__ = [
     'can_assign_custom_roles',
     'get_available_roles',
     'get_available_custom_roles',
-    'get_role_statistics'
+    'get_role_statistics',
+    
+    # Permission decorators
+    'require_permission',
+    'require_news_create',
+    'require_news_edit',
+    'require_news_delete',
+    'require_news_publish',
+    'require_news_manage',
+    'require_album_create',
+    'require_album_edit',
+    'require_album_delete',
+    'require_album_publish',
+    'require_album_manage',
+    'require_content_creation',
+    'require_api_permission',
+    'require_api_news_create',
+    'require_api_news_edit',
+    'require_api_news_delete',
+    'require_api_album_create',
+    'require_api_album_edit',
+    'require_api_album_delete'
 ]

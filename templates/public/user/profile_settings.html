@@ -1,0 +1,717 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.get_full_name() or user.username }} - Pengaturan{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-foreground">Pengaturan</h1>
+                    <p class="mt-2 text-muted-foreground">Kelola akun dan preferensi Anda</p>
+                </div>
+                <a href="{{ url_for('user_profile.user_profile', username=user.username) }}" 
+                   class="text-primary hover:text-foreground">
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali ke Profil
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Settings Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Account Settings -->
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">
+                        <i class="fas fa-user mr-2"></i>Akun
+                    </h3>
+                    <form id="profile-form" class="space-y-4">
+
+                        
+
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="first_name" class="block text-sm font-medium text-foreground">Nama Depan</label>
+                                <input type="text" id="first_name" name="first_name" value="{{ user.first_name or '' }}"
+                                       class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                            </div>
+                            
+                            <div>
+                                <label for="last_name" class="block text-sm font-medium text-foreground">Nama Belakang</label>
+                                <input type="text" id="last_name" name="last_name" value="{{ user.last_name or '' }}"
+                                       class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="pronouns" class="block text-sm font-medium text-foreground">Kata Ganti</label>
+                            <input type="text" id="pronouns" name="pronouns" value="{{ profile.pronouns or '' }}"
+                                   placeholder="misalnya, dia/laki-laki, dia/perempuan, mereka"
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        
+                        <div>
+                            <label for="short_bio" class="block text-sm font-medium text-foreground">Bio Singkat</label>
+                            <textarea id="short_bio" name="short_bio" rows="3"
+                                      class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">{{ profile.short_bio or '' }}</textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="location" class="block text-sm font-medium text-foreground">Lokasi</label>
+                            <input type="text" id="location" name="location" value="{{ profile.location or '' }}"
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        
+                        <div>
+                            <label for="website" class="block text-sm font-medium text-foreground">Situs Web</label>
+                            <input type="url" id="website" name="website" value="{{ profile.website or '' }}"
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-foreground">Email</label>
+                            <input type="email" id="email" name="email" value="{{ user.email or '' }}"
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        
+                        <div>
+                            <label for="birthdate" class="block text-sm font-medium text-foreground">Tanggal Lahir</label>
+                            <input type="date" id="birthdate" name="birthdate" 
+                                   value="{{ user.birthdate.strftime('%Y-%m-%d') if user.birthdate else '' }}"
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        
+                        <div>
+                            <label for="bio" class="block text-sm font-medium text-foreground">Bio Lengkap</label>
+                            <textarea id="bio" name="bio" rows="5"
+                                      class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">{{ user.bio or '' }}</textarea>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" 
+                                    class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Social Media Links -->
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">
+                        <i class="fas fa-share-alt mr-2"></i>Media Sosial
+                    </h3>
+                    <form id="social-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="twitter" class="block text-sm font-medium text-foreground">Twitter</label>
+                                <input type="url" id="twitter" name="twitter" 
+                                       value="{{ profile.social_links.twitter if profile.social_links else '' }}"
+                                       class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                            </div>
+                            
+                            <div>
+                                <label for="instagram" class="block text-sm font-medium text-foreground">Instagram</label>
+                                <input type="url" id="instagram" name="instagram" 
+                                       value="{{ profile.social_links.instagram if profile.social_links else '' }}"
+                                       class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                            </div>
+                            
+                            <div>
+                                <label for="facebook" class="block text-sm font-medium text-foreground">Facebook</label>
+                                <input type="url" id="facebook" name="facebook" 
+                                       value="{{ profile.social_links.facebook if profile.social_links else '' }}"
+                                       class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                            </div>
+                            
+                            <div>
+                                <label for="youtube" class="block text-sm font-medium text-foreground">YouTube</label>
+                                <input type="url" id="youtube" name="youtube" 
+                                       value="{{ profile.social_links.youtube if profile.social_links else '' }}"
+                                       class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end">
+                            <button type="submit" 
+                                    class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                Simpan Tautan Sosial
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Password Management -->
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">
+                        <i class="fas fa-key mr-2"></i>Ubah Kata Sandi
+                    </h3>
+                    <form id="password-form" class="space-y-4">
+                        <div>
+                            <label for="current-password" class="block text-sm font-medium text-foreground">Kata Sandi Saat Ini</label>
+                            <input type="password" id="current-password" name="current_password" required
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        <div>
+                            <label for="new-password" class="block text-sm font-medium text-foreground">Kata Sandi Baru</label>
+                            <input type="password" id="new-password" name="new_password" required
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        <div>
+                            <label for="confirm-password" class="block text-sm font-medium text-foreground">Konfirmasi Kata Sandi Baru</label>
+                            <input type="password" id="confirm-password" name="confirm_password" required
+                                   class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground">
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" 
+                                    class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                Ubah Kata Sandi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Sidebar Column -->
+            <div class="space-y-6">
+                <!-- Privacy Settings -->
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">
+                        <i class="fas fa-shield-alt mr-2"></i>Privasi
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-foreground">Tampilkan Email</h4>
+                                <p class="text-sm text-muted-foreground">Izinkan pengguna lain melihat alamat email Anda</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="show_email" 
+                                       {% if profile.show_email %}checked{% endif %}
+                                       class="sr-only peer">
+                                <div class="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-foreground">Tampilkan Ulang Tahun</h4>
+                                <p class="text-sm text-muted-foreground">Izinkan pengguna lain melihat tanggal ulang tahun Anda</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="show_birthdate" 
+                                       {% if profile.show_birthdate %}checked{% endif %}
+                                       class="sr-only peer">
+                                <div class="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Username Change -->
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">
+                        <i class="fas fa-user-edit mr-2"></i>Ubah Nama Pengguna
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-foreground">Nama Pengguna Baru</label>
+                            <div class="relative">
+                                <input type="text" id="username" name="username" 
+                                       class="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground"
+                                       placeholder="Masukkan nama pengguna baru"
+                                       title="Nama pengguna harus 3-20 karakter dan hanya boleh berisi huruf, angka, garis bawah, dan tanda hubung">
+                                <div id="username-status" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
+                                    <i id="username-icon" class="fas"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-muted-foreground mt-1">Saat ini: <strong>{{ user.username }}</strong> • 3-20 karakter, huruf, angka, garis bawah, dan tanda hubung saja</p>
+                            <p id="username-feedback" class="text-xs mt-1 hidden"></p>
+                        </div>
+                        
+                        <button id="change-username-btn" 
+                                class="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            Ubah Nama Pengguna
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Write Access Status -->
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">
+                        <i class="fas fa-pen-fancy mr-2"></i>Akses Menulis
+                    </h3>
+                    
+                    {% if user.write_access is none %}
+                        <!-- No request submitted -->
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-yellow-500 mr-2"></i>
+                                <span class="text-sm text-muted-foreground">Tidak ada permintaan yang diajukan</span>
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                Minta akses menulis untuk membuat album dan cerita.
+                            </p>
+                            <a href="{{ url_for('user_profile.write_access_request') }}" 
+                               class="block w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium text-center transition-colors">
+                                Minta Akses Menulis
+                            </a>
+                        </div>
+                    {% elif has_write_access(user) %}
+                        <!-- Access granted -->
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span class="text-sm text-foreground">Akses diberikan</span>
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                Anda sekarang dapat membuat album dan cerita.
+                            </p>
+                            <div class="space-y-2">
+                                <a href="{{ url_for('albums.create_album') }}" 
+                                   class="block w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium text-center transition-colors">
+                                    Buat Album
+                                </a>
+                                <a href="{{ url_for('user_profile.create_user_story', username=user.username) }}" 
+                                   class="block w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium text-center transition-colors">
+                                    Tulis Cerita
+                                </a>
+                            </div>
+                        </div>
+                    {% elif user.write_access == false %}
+                        <!-- Access denied -->
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                                <span class="text-sm text-foreground">Akses ditolak</span>
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                Permintaan Anda untuk akses menulis telah ditolak. Hubungi administrator untuk informasi lebih lanjut.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Account Summary -->
+                <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">
+                        <i class="fas fa-info-circle mr-2"></i>Ringkasan Akun
+                    </h3>
+                    <dl class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <dt class="text-muted-foreground">Nama Pengguna</dt>
+                            <dd class="font-medium text-foreground">{{ user.username }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-muted-foreground">Email</dt>
+                            <dd class="font-medium text-foreground">{{ user.email or '-' }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-muted-foreground">Status</dt>
+                            <dd class="font-medium">
+                                {% if user.has_premium_access %}
+                                    <span class="text-green-600">Premium</span>
+                                {% else %}
+                                    <span class="text-muted-foreground">Standar</span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-muted-foreground">Anggota Sejak</dt>
+                            <dd class="font-medium text-foreground">{{ user.created_at.strftime('%d %b %Y') }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-muted-foreground">Login Terakhir</dt>
+                            <dd class="font-medium text-foreground">
+                                {% if user.last_login %}
+                                    {{ user.last_login.strftime('%d %b %Y') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Username Change Confirmation Modal -->
+<div id="username-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-card rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-foreground">Konfirmasi Perubahan Nama Pengguna</h3>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <p class="text-sm text-muted-foreground mb-4">
+                Apakah Anda yakin ingin mengubah nama pengguna dari <strong class="text-foreground">"<span id="old-username"></span>"</strong> menjadi <strong class="text-foreground">"<span id="new-username"></span>"</strong>?
+            </p>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-yellow-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h4 class="text-sm font-medium text-yellow-800">Pemberitahuan Penting</h4>
+                        <ul class="text-sm text-yellow-700 mt-2 space-y-1">
+                            <li>• URL profil Anda akan berubah</li>
+                            <li>• Bookmark ke profil Anda mungkin rusak</li>
+                            <li>• Tautan yang dibagikan dengan nama pengguna lama tidak akan berfungsi</li>
+                            <li>• Tindakan ini tidak dapat dengan mudah dibatalkan</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <label for="modal-current-password" class="block text-sm font-medium text-foreground mb-2">Kata Sandi Saat Ini <span class="text-red-500">*</span></label>
+                <input type="password" id="modal-current-password" 
+                       class="block w-full border-border rounded-md shadow-sm focus:ring-primary focus:border-primary bg-background text-foreground px-3 py-2"
+                       placeholder="Masukkan kata sandi saat ini untuk konfirmasi">
+                <p class="text-xs text-muted-foreground mt-1">Diperlukan untuk mengkonfirmasi perubahan nama pengguna</p>
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button id="cancel-username-change" 
+                    class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Batal
+            </button>
+            <button id="confirm-username-change" 
+                    class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                Ubah Nama Pengguna
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Username availability checking
+    const usernameInput = document.getElementById('username');
+    const usernameStatus = document.getElementById('username-status');
+    const usernameIcon = document.getElementById('username-icon');
+    const usernameFeedback = document.getElementById('username-feedback');
+    let usernameCheckTimeout;
+    
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            const username = this.value.trim();
+            const originalUsername = '{{ user.username }}';
+            
+            // Clear previous timeout
+            clearTimeout(usernameCheckTimeout);
+            
+            // Hide status if username is empty or same as original
+            if (!username || username === originalUsername) {
+                usernameStatus.classList.add('hidden');
+                usernameFeedback.classList.add('hidden');
+                return;
+            }
+            
+            // Validate format
+            const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+            if (!usernameRegex.test(username)) {
+                usernameStatus.classList.remove('hidden');
+                usernameIcon.className = 'fas fa-exclamation-triangle text-yellow-500';
+                usernameFeedback.classList.remove('hidden');
+                usernameFeedback.textContent = 'Format nama pengguna tidak valid';
+                usernameFeedback.className = 'text-xs mt-1 text-yellow-600';
+                return;
+            }
+            
+            // Show loading state
+            usernameStatus.classList.remove('hidden');
+            usernameIcon.className = 'fas fa-spinner fa-spin text-blue-500';
+            usernameFeedback.classList.remove('hidden');
+            usernameFeedback.textContent = 'Memeriksa ketersediaan...';
+            usernameFeedback.className = 'text-xs mt-1 text-blue-600';
+            
+            // Check availability after 500ms delay
+            usernameCheckTimeout = setTimeout(() => {
+                fetch('/api/username/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.available) {
+                        usernameIcon.className = 'fas fa-check text-green-500';
+                        usernameFeedback.textContent = 'Nama pengguna tersedia';
+                        usernameFeedback.className = 'text-xs mt-1 text-green-600';
+                    } else {
+                        usernameIcon.className = 'fas fa-times text-red-500';
+                        usernameFeedback.textContent = 'Nama pengguna sudah digunakan';
+                        usernameFeedback.className = 'text-xs mt-1 text-red-600';
+                    }
+                })
+                .catch(error => {
+                    usernameIcon.className = 'fas fa-exclamation-triangle text-yellow-500';
+                    usernameFeedback.textContent = 'Error memeriksa ketersediaan';
+                    usernameFeedback.className = 'text-xs mt-1 text-yellow-600';
+                });
+            }, 500);
+        });
+    }
+    
+    // Profile form submission
+    const profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                first_name: document.getElementById('first_name').value,
+                last_name: document.getElementById('last_name').value,
+                email: document.getElementById('email').value,
+                pronouns: document.getElementById('pronouns').value,
+                short_bio: document.getElementById('short_bio').value,
+                location: document.getElementById('location').value,
+                website: document.getElementById('website').value,
+                birthdate: document.getElementById('birthdate').value,
+                bio: document.getElementById('bio').value
+            };
+            
+            fetch('/api/profile/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Profil berhasil diperbarui!');
+                    
+                    // If username was changed, redirect to new profile URL
+                    if (isUsernameChanged && data.new_username) {
+                        setTimeout(() => {
+                            window.location.href = '/user/' + data.new_username + '/settings';
+                        }, 1000);
+                    }
+                } else {
+                    alert('Error memperbarui profil: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error memperbarui profil');
+            });
+        });
+    }
+    
+    // Social form submission
+    const socialForm = document.getElementById('social-form');
+    if (socialForm) {
+        socialForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                social_links: {
+                    twitter: document.getElementById('twitter').value,
+                    instagram: document.getElementById('instagram').value,
+                    facebook: document.getElementById('facebook').value,
+                    youtube: document.getElementById('youtube').value
+                }
+            };
+            
+            fetch('/api/profile/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Tautan sosial berhasil diperbarui!');
+                } else {
+                    alert('Error memperbarui tautan sosial: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error memperbarui tautan sosial');
+            });
+        });
+    }
+    
+    // Password form submission
+    const passwordForm = document.getElementById('password-form');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(passwordForm);
+            const newPassword = formData.get('new_password');
+            const confirmPassword = formData.get('confirm_password');
+            
+            if (newPassword !== confirmPassword) {
+                alert('Kata sandi baru tidak cocok');
+                return;
+            }
+            
+            fetch('/api/user/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    current_password: formData.get('current_password'),
+                    new_password: newPassword
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    if (data.message.includes('successfully')) {
+                        passwordForm.reset();
+                    }
+                } else {
+                    alert('Kata sandi berhasil diubah!');
+                    passwordForm.reset();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error mengubah kata sandi');
+            });
+        });
+    }
+    
+    // Username change button handler
+    const changeUsernameBtn = document.getElementById('change-username-btn');
+    if (changeUsernameBtn) {
+        changeUsernameBtn.addEventListener('click', function() {
+            const username = document.getElementById('username').value.trim();
+            const originalUsername = '{{ user.username }}';
+            
+            // Check if username is being changed
+            if (username === originalUsername) {
+                alert('Silakan masukkan nama pengguna yang berbeda');
+                return;
+            }
+            
+            // Validate username format
+            const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+            if (!usernameRegex.test(username)) {
+                alert('Nama pengguna harus 3-20 karakter dan hanya boleh berisi huruf, angka, garis bawah, dan tanda hubung');
+                return;
+            }
+            
+            // Show confirmation modal
+            const modal = document.getElementById('username-confirm-modal');
+            const oldUsernameSpan = document.getElementById('old-username');
+            const newUsernameSpan = document.getElementById('new-username');
+            const passwordInput = document.getElementById('modal-current-password');
+            
+            oldUsernameSpan.textContent = originalUsername;
+            newUsernameSpan.textContent = username;
+            passwordInput.value = ''; // Clear previous password
+            modal.classList.remove('hidden');
+            passwordInput.focus(); // Focus on password input
+        });
+    }
+    
+    // Username confirmation modal handlers
+    const modal = document.getElementById('username-confirm-modal');
+    const cancelBtn = document.getElementById('cancel-username-change');
+    const confirmBtn = document.getElementById('confirm-username-change');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            modal.classList.add('hidden');
+            document.getElementById('modal-current-password').value = '';
+        });
+    }
+    
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            const password = document.getElementById('modal-current-password').value;
+            
+            if (!password) {
+                alert('Silakan masukkan kata sandi saat ini');
+                document.getElementById('modal-current-password').focus();
+                return;
+            }
+            
+            const username = document.getElementById('username').value.trim();
+            
+            // Submit the username change
+            fetch('/api/profile/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    current_password: password
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Profil berhasil diperbarui!');
+                        
+                        // If username was changed, redirect to new profile URL
+                        if (data.new_username) {
+                            setTimeout(() => {
+                                window.location.href = '/user/' + data.new_username + '/settings';
+                            }, 1000);
+                        }
+                    } else {
+                        alert('Error memperbarui profil: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error memperbarui profil');
+                })
+                .finally(() => {
+                    modal.classList.add('hidden');
+                    document.getElementById('modal-current-password').value = '';
+                });
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                document.getElementById('modal-current-password').value = '';
+            }
+        });
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+            document.getElementById('modal-current-password').value = '';
+        }
+    });
+});
+</script>
+{% endblock %}

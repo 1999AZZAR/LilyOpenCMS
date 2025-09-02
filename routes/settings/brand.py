@@ -203,7 +203,7 @@ def update_brand_identity_text():
     if field is None or value is None:
         return jsonify({"error": "Missing field or value"}), 400
     
-    if field not in ["brand_name", "tagline", "homepage_design", "categories_display_location", "card_design", "enable_comments", "enable_ratings", "enable_ads", "enable_campaigns"]:
+    if field not in ["brand_name", "tagline", "brand_description", "homepage_design", "categories_display_location", "card_design", "enable_comments", "enable_ratings", "enable_ads", "enable_campaigns"]:
         return jsonify({"error": "Invalid field"}), 400
     
     brand = BrandIdentity.query.first()
