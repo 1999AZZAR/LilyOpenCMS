@@ -1,6 +1,5 @@
-from routes import main_blueprint
 from .common_imports import *
-from models import Album, AlbumChapter, News, Category, CategoryGroup, Image, User, UserRole, Rating, default_utcnow
+from models import Album, AlbumChapter, News, Category, CategoryGroup, Image, User, UserRole, Rating, default_utcnow, ShareLog
 from optimizations import cache_with_args, cache_query_result, CACHE_TIMEOUTS
 from optimizations import optimize_news_query, optimize_image_query, monitor_ssr_render
 from optimizations.cache_config import safe_cache_get, safe_cache_set
@@ -1868,4 +1867,3 @@ def update_ads_preferences():
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-

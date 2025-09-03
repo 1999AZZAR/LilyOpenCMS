@@ -7,6 +7,42 @@ class ContentDeletionRequestsManager {
         this.init();
     }
 
+    // Project-styled confirmation modal returning a Promise<boolean>
+    async showConfirmDialog({ title = 'Konfirmasi', message = 'Apakah Anda yakin?', confirmText = 'Ya', cancelText = 'Batal' } = {}) {
+        return new Promise((resolve) => {
+            // Remove existing modal if any
+            const existing = document.getElementById('confirm-modal-overlay');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'confirm-modal-overlay';
+            overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/40';
+
+            const modal = document.createElement('div');
+            modal.className = 'bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-md mx-4';
+            modal.innerHTML = `
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">${title}</h3>
+                </div>
+                <div class="px-6 py-5 text-gray-700">${message}</div>
+                <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+                    <button id="confirm-cancel-btn" class="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">${cancelText}</button>
+                    <button id="confirm-accept-btn" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">${confirmText}</button>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            const cleanup = () => overlay.remove();
+            modal.querySelector('#confirm-cancel-btn').addEventListener('click', () => { cleanup(); resolve(false); });
+            modal.querySelector('#confirm-accept-btn').addEventListener('click', () => { cleanup(); resolve(true); });
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) { cleanup(); resolve(false); }
+            });
+        });
+    }
+
     init() {
         this.bindEvents();
         // Show default "no data" message
@@ -90,13 +126,21 @@ class ContentDeletionRequestsManager {
     showNoDataMessage(tabName) {
         if (tabName === 'news-requests') {
             const container = document.getElementById('news-requests-list');
+            const noRequestsMsg = document.getElementById('news-no-requests');
             if (container) {
-                container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem; font-style: italic;">Tidak ada permintaan penghapusan artikel yang menunggu.</p>';
+                container.innerHTML = '';
+            }
+            if (noRequestsMsg) {
+                noRequestsMsg.classList.remove('hidden');
             }
         } else if (tabName === 'album-requests') {
             const container = document.getElementById('album-requests-list');
+            const noRequestsMsg = document.getElementById('album-no-requests');
             if (container) {
-                container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem; font-style: italic;">Tidak ada permintaan penghapusan album yang menunggu.</p>';
+                container.innerHTML = '';
+            }
+            if (noRequestsMsg) {
+                noRequestsMsg.classList.remove('hidden');
             }
         }
     }
@@ -171,8 +215,18 @@ class ContentDeletionRequestsManager {
         }
 
         console.log('News requests to render:', this.newsRequests.length);
+        
+        // Hide no-requests message if there are requests
+        const noRequestsMsg = document.getElementById('news-no-requests');
+        if (noRequestsMsg) {
+            noRequestsMsg.classList.add('hidden');
+        }
+        
         if (this.newsRequests.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem; font-style: italic;">Tidak ada permintaan penghapusan artikel yang menunggu.</p>';
+            container.innerHTML = '';
+            if (noRequestsMsg) {
+                noRequestsMsg.classList.remove('hidden');
+            }
             return;
         }
 
@@ -221,8 +275,17 @@ class ContentDeletionRequestsManager {
         const container = document.getElementById('album-requests-list');
         if (!container) return;
 
+        // Hide no-requests message if there are requests
+        const noRequestsMsg = document.getElementById('album-no-requests');
+        if (noRequestsMsg) {
+            noRequestsMsg.classList.add('hidden');
+        }
+        
         if (this.albumRequests.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem; font-style: italic;">Tidak ada permintaan penghapusan album yang menunggu.</p>';
+            container.innerHTML = '';
+            if (noRequestsMsg) {
+                noRequestsMsg.classList.remove('hidden');
+            }
             return;
         }
 
@@ -329,7 +392,13 @@ class ContentDeletionRequestsManager {
 
     renderFilteredNewsRequests(requests) {
         const container = document.getElementById('news-requests-list');
+        const noRequestsMsg = document.getElementById('news-no-requests');
         if (!container) return;
+
+        // Hide no-requests message when showing filtered results
+        if (noRequestsMsg) {
+            noRequestsMsg.classList.add('hidden');
+        }
 
         if (requests.length === 0) {
             container.innerHTML = '<p class="text-gray-500 text-center py-8">Tidak ada permintaan yang sesuai dengan filter.</p>';
@@ -374,7 +443,13 @@ class ContentDeletionRequestsManager {
 
     renderFilteredAlbumRequests(requests) {
         const container = document.getElementById('album-requests-list');
+        const noRequestsMsg = document.getElementById('album-no-requests');
         if (!container) return;
+
+        // Hide no-requests message when showing filtered results
+        if (noRequestsMsg) {
+            noRequestsMsg.classList.add('hidden');
+        }
 
         if (requests.length === 0) {
             container.innerHTML = '<p class="text-gray-500 text-center py-8">Tidak ada permintaan yang sesuai dengan filter.</p>';
@@ -417,9 +492,15 @@ class ContentDeletionRequestsManager {
         `).join('');
     }
 
-    async approveNewsDeletion(newsId) {
-        if (!confirm('Apakah Anda yakin ingin menyetujui penghapusan artikel ini?')) {
-            return;
+    async approveNewsDeletion(newsId, { skipConfirm = false } = {}) {
+        if (!skipConfirm) {
+            const confirmed = await this.showConfirmDialog({
+                title: 'Setujui Penghapusan',
+                message: 'Apakah Anda yakin ingin menyetujui penghapusan artikel ini?',
+                confirmText: 'Setujui',
+                cancelText: 'Batal'
+            });
+            if (!confirmed) return;
         }
 
         try {
@@ -443,9 +524,15 @@ class ContentDeletionRequestsManager {
         }
     }
 
-    async rejectNewsDeletion(newsId) {
-        if (!confirm('Apakah Anda yakin ingin menolak permintaan penghapusan artikel ini?')) {
-            return;
+    async rejectNewsDeletion(newsId, { skipConfirm = false } = {}) {
+        if (!skipConfirm) {
+            const confirmed = await this.showConfirmDialog({
+                title: 'Tolak Permintaan',
+                message: 'Apakah Anda yakin ingin menolak permintaan penghapusan artikel ini?',
+                confirmText: 'Tolak',
+                cancelText: 'Batal'
+            });
+            if (!confirmed) return;
         }
 
         try {
@@ -469,9 +556,15 @@ class ContentDeletionRequestsManager {
         }
     }
 
-    async approveAlbumDeletion(albumId) {
-        if (!confirm('Apakah Anda yakin ingin menyetujui penghapusan album ini?')) {
-            return;
+    async approveAlbumDeletion(albumId, { skipConfirm = false } = {}) {
+        if (!skipConfirm) {
+            const confirmed = await this.showConfirmDialog({
+                title: 'Setujui Penghapusan',
+                message: 'Apakah Anda yakin ingin menyetujui penghapusan album ini?',
+                confirmText: 'Setujui',
+                cancelText: 'Batal'
+            });
+            if (!confirmed) return;
         }
 
         try {
@@ -495,9 +588,15 @@ class ContentDeletionRequestsManager {
         }
     }
 
-    async rejectAlbumDeletion(albumId) {
-        if (!confirm('Apakah Anda yakin ingin menolak permintaan penghapusan album ini?')) {
-            return;
+    async rejectAlbumDeletion(albumId, { skipConfirm = false } = {}) {
+        if (!skipConfirm) {
+            const confirmed = await this.showConfirmDialog({
+                title: 'Tolak Permintaan',
+                message: 'Apakah Anda yakin ingin menolak permintaan penghapusan album ini?',
+                confirmText: 'Tolak',
+                cancelText: 'Batal'
+            });
+            if (!confirmed) return;
         }
 
         try {
@@ -522,24 +621,50 @@ class ContentDeletionRequestsManager {
     }
 
     async bulkApproveNewsRequests() {
-        const selectedRequests = this.newsRequests.filter(r => 
-            document.querySelector(`input[data-news-id="${r.id}"]:checked`)
-        );
+        // Single confirmation for bulk action
+        const count = this.newsRequests.length;
+        if (count === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan artikel yang menunggu');
+            return;
+        }
+        const confirmed = await this.showConfirmDialog({
+            title: 'Setujui Semua',
+            message: `Apakah Anda yakin ingin menyetujui penghapusan ${count} artikel?`,
+            confirmText: 'Setujui Semua',
+            cancelText: 'Batal'
+        });
+        if (!confirmed) return;
 
-        if (selectedRequests.length === 0) {
-            showToast('warning', 'Pilih artikel yang akan disetujui');
+
+        if (this.newsRequests.length === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan artikel yang menunggu');
             return;
         }
 
-        if (!confirm(`Apakah Anda yakin ingin menyetujui penghapusan ${selectedRequests.length} artikel?`)) {
-            return;
-        }
 
         try {
-            for (const request of selectedRequests) {
-                await this.approveNewsDeletion(request.id);
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const request of this.newsRequests) {
+                try {
+                    await this.approveNewsDeletion(request.id, { skipConfirm: true });
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    console.error(`Error approving news deletion ${request.id}:`, error);
+                }
             }
-            showToast('success', `${selectedRequests.length} artikel berhasil dihapus`);
+            
+            if (successCount > 0) {
+                showToast('success', `${successCount} artikel berhasil dihapus`);
+            }
+            if (errorCount > 0) {
+                showToast('error', `${errorCount} artikel gagal dihapus`);
+            }
+            
+            // Reload the data
+            await this.loadNewsRequests();
         } catch (error) {
             console.error('Error bulk approving news requests:', error);
             showToast('error', 'Gagal menyetujui penghapusan massal');
@@ -547,24 +672,49 @@ class ContentDeletionRequestsManager {
     }
 
     async bulkRejectNewsRequests() {
-        const selectedRequests = this.newsRequests.filter(r => 
-            document.querySelector(`input[data-news-id="${r.id}"]:checked`)
-        );
+        const count = this.newsRequests.length;
+        if (count === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan artikel yang menunggu');
+            return;
+        }
+        const confirmed = await this.showConfirmDialog({
+            title: 'Tolak Semua',
+            message: `Apakah Anda yakin ingin menolak ${count} permintaan penghapusan?`,
+            confirmText: 'Tolak Semua',
+            cancelText: 'Batal'
+        });
+        if (!confirmed) return;
 
-        if (selectedRequests.length === 0) {
-            showToast('warning', 'Pilih artikel yang akan ditolak');
+
+        if (this.newsRequests.length === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan artikel yang menunggu');
             return;
         }
 
-        if (!confirm(`Apakah Anda yakin ingin menolak ${selectedRequests.length} permintaan penghapusan?`)) {
-            return;
-        }
 
         try {
-            for (const request of selectedRequests) {
-                await this.rejectNewsDeletion(request.id);
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const request of this.newsRequests) {
+                try {
+                    await this.rejectNewsDeletion(request.id, { skipConfirm: true });
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    console.error(`Error rejecting news deletion ${request.id}:`, error);
+                }
             }
-            showToast('success', `${selectedRequests.length} permintaan ditolak`);
+            
+            if (successCount > 0) {
+                showToast('success', `${successCount} permintaan ditolak`);
+            }
+            if (errorCount > 0) {
+                showToast('error', `${errorCount} permintaan gagal ditolak`);
+            }
+            
+            // Reload the data
+            await this.loadNewsRequests();
         } catch (error) {
             console.error('Error bulk rejecting news requests:', error);
             showToast('error', 'Gagal menolak permintaan massal');
@@ -572,24 +722,49 @@ class ContentDeletionRequestsManager {
     }
 
     async bulkApproveAlbumRequests() {
-        const selectedRequests = this.albumRequests.filter(r => 
-            document.querySelector(`input[data-album-id="${r.id}"]:checked`)
-        );
+        const count = this.albumRequests.length;
+        if (count === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan album yang menunggu');
+            return;
+        }
+        const confirmed = await this.showConfirmDialog({
+            title: 'Setujui Semua',
+            message: `Apakah Anda yakin ingin menyetujui penghapusan ${count} album?`,
+            confirmText: 'Setujui Semua',
+            cancelText: 'Batal'
+        });
+        if (!confirmed) return;
 
-        if (selectedRequests.length === 0) {
-            showToast('warning', 'Pilih album yang akan disetujui');
+
+        if (this.albumRequests.length === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan album yang menunggu');
             return;
         }
 
-        if (!confirm(`Apakah Anda yakin ingin menyetujui penghapusan ${selectedRequests.length} album?`)) {
-            return;
-        }
 
         try {
-            for (const request of selectedRequests) {
-                await this.approveAlbumDeletion(request.id);
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const request of this.albumRequests) {
+                try {
+                    await this.approveAlbumDeletion(request.id, { skipConfirm: true });
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    console.error(`Error approving album deletion ${request.id}:`, error);
+                }
             }
-            showToast('success', `${selectedRequests.length} album berhasil dihapus`);
+            
+            if (successCount > 0) {
+                showToast('success', `${successCount} album berhasil dihapus`);
+            }
+            if (errorCount > 0) {
+                showToast('error', `${errorCount} album gagal dihapus`);
+            }
+            
+            // Reload the data
+            await this.loadAlbumRequests();
         } catch (error) {
             console.error('Error bulk approving album requests:', error);
             showToast('error', 'Gagal menyetujui penghapusan massal');
@@ -597,24 +772,49 @@ class ContentDeletionRequestsManager {
     }
 
     async bulkRejectAlbumRequests() {
-        const selectedRequests = this.albumRequests.filter(r => 
-            document.querySelector(`input[data-album-id="${r.id}"]:checked`)
-        );
+        const count = this.albumRequests.length;
+        if (count === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan album yang menunggu');
+            return;
+        }
+        const confirmed = await this.showConfirmDialog({
+            title: 'Tolak Semua',
+            message: `Apakah Anda yakin ingin menolak ${count} permintaan penghapusan?`,
+            confirmText: 'Tolak Semua',
+            cancelText: 'Batal'
+        });
+        if (!confirmed) return;
 
-        if (selectedRequests.length === 0) {
-            showToast('warning', 'Pilih album yang akan ditolak');
+
+        if (this.albumRequests.length === 0) {
+            showToast('warning', 'Tidak ada permintaan penghapusan album yang menunggu');
             return;
         }
 
-        if (!confirm(`Apakah Anda yakin ingin menolak ${selectedRequests.length} permintaan penghapusan?`)) {
-            return;
-        }
 
         try {
-            for (const request of selectedRequests) {
-                await this.rejectAlbumDeletion(request.id);
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const request of this.albumRequests) {
+                try {
+                    await this.rejectAlbumDeletion(request.id, { skipConfirm: true });
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    console.error(`Error rejecting album deletion ${request.id}:`, error);
+                }
             }
-            showToast('success', `${selectedRequests.length} permintaan ditolak`);
+            
+            if (successCount > 0) {
+                showToast('success', `${successCount} permintaan ditolak`);
+            }
+            if (errorCount > 0) {
+                showToast('error', `${errorCount} permintaan gagal ditolak`);
+            }
+            
+            // Reload the data
+            await this.loadAlbumRequests();
         } catch (error) {
             console.error('Error bulk rejecting album requests:', error);
             showToast('error', 'Gagal menolak permintaan massal');

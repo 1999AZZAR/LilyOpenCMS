@@ -1,5 +1,22 @@
 from routes import main_blueprint
 from .common_imports import *
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+
+
+def _get_serializer():
+    secret_key = current_app.config.get("SECRET_KEY", "change-me")
+    return URLSafeTimedSerializer(secret_key, salt="email-verify")
+
+def _send_verification_email(user):
+    try:
+        s = _get_serializer()
+        token = s.dumps({"user_id": user.id, "email": user.email or ""})
+        verify_url = url_for("main.verify_email", token=token, _external=True)
+        current_app.logger.info(f"Verification link for {user.username}: {verify_url}")
+        user.last_verification_sent_at = datetime.now(timezone.utc)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.warning(f"Failed to send verification email: {e}")
 
 @main_blueprint.route("/register", methods=["GET", "POST"])
 def register():
@@ -37,6 +54,9 @@ def register():
             db.session.commit()
             
             # Record registration activity (disabled - method not available)
+            # Send verification email/log link
+            if new_user.email:
+                _send_verification_email(new_user)
             
             flash("Registration successful! Your account is pending approval.", "success")
             return redirect(url_for("main.login"))
@@ -46,6 +66,40 @@ def register():
             return render_template("public/login.html")
 
     return render_template("public/login.html")
+
+
+@main_blueprint.route("/verify-email")
+def verify_email():
+    token = request.args.get("token", "")
+    if not token:
+        flash("Invalid verification link.", "error")
+        return redirect(url_for("main.login"))
+    try:
+        s = _get_serializer()
+        data = s.loads(token, max_age=60*60*24*3)  # 3 days
+        user = User.query.get(data.get("user_id"))
+        if not user:
+            flash("Invalid verification token.", "error")
+            return redirect(url_for("main.login"))
+        if not user.verified:
+            user.verified = True
+            user.email_verified_at = datetime.now(timezone.utc)
+            # Hybrid policy: auto-approve verified low-risk users; leave others pending
+            try:
+                from routes.utils.risk_policy import should_auto_approve
+                if should_auto_approve(user):
+                    user.is_active = True
+            except Exception as _e:
+                current_app.logger.info(f"Risk policy unavailable or errored: {_e}")
+            db.session.commit()
+        flash("Email verified successfully.", "success")
+        return redirect(url_for("main.login"))
+    except SignatureExpired:
+        flash("Verification link has expired.", "error")
+        return redirect(url_for("main.login"))
+    except BadSignature:
+        flash("Invalid verification token.", "error")
+        return redirect(url_for("main.login"))
 
 
 @main_blueprint.route("/api/registrations/pending", methods=["GET"])

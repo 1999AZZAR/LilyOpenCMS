@@ -163,6 +163,8 @@ class User(db.Model, UserMixin):
     is_premium = db.Column(db.Boolean, default=False, nullable=False)
     tier = db.Column(db.Integer, default=0, nullable=False)
     verified = db.Column(db.Boolean, default=False, nullable=False)
+    email_verified_at = db.Column(db.DateTime, nullable=True)
+    last_verification_sent_at = db.Column(db.DateTime, nullable=True)
     
     # New fields for enhanced user management
     email = db.Column(db.String(255), unique=True, nullable=True, index=True)

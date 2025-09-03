@@ -47,7 +47,7 @@
                 </div>
             </div>
             
-            <form id="create-story-form" class="flex flex-col lg:flex-row gap-6" method="POST" action="{{ url_for('main.create_news_api') }}" enctype="multipart/form-data" role="form" aria-label="Form create story">
+            <form id="create-story-form" class="flex flex-col lg:flex-row gap-6" method="POST" action="{{ url_for('user_profile.create_user_news_api') }}" enctype="multipart/form-data" role="form" aria-label="Form create story" novalidate>
                 <!-- Step 1: Details Section (Full Width) -->
                 <div id="step-1-content" class="w-full">
                     <div class="h-full flex flex-col">
@@ -272,43 +272,23 @@
                 </div>
 
                 <!-- Step 2: Content Section (Hidden by default) -->
-                <div id="step-2-content" class="w-full hidden" role="complementary" aria-label="Story content">
+                <div id="step-2-content" class="w-full hidden" role="complementary" aria-label="Konten cerita">
                     <div class="h-full flex flex-col">
-                        <!-- Content Editor Card -->
-                        <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden mb-6">
-                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-border">
-                                                                        <h3 class="text-lg font-semibold text-foreground flex items-center">
-                                            <i class="fas fa-edit text-primary mr-3"></i>
-                                            Editor Konten Cerita
-                                        </h3>
-                                        <p class="text-sm text-muted-foreground mt-1">Tulis konten cerita Anda dengan format yang kaya</p>
-                            </div>
-                            <div class="p-6">
                                 <!-- Content Editor -->
-                                <div id="simplemde-wrapper" class="flex flex-col min-h-[600px]" role="textbox" aria-label="Story content editor">
-                                    <div id="custom-toolbar" class="flex flex-wrap gap-3 bg-card border border-border p-3 rounded-t-lg mb-3" role="toolbar" aria-label="Editor toolbar">
-                                        <button type="button" data-cmd="bold" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Bold"><i class="fa fa-bold" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="italic" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Italic"><i class="fa fa-italic" aria-hidden="true"></i></button>
+                        <div id="simplemde-wrapper" class="flex flex-col flex-1 overflow-hidden" role="textbox" aria-label="Editor konten cerita">
+                            <div id="custom-toolbar" class="flex flex-wrap gap-3 bg-card border border-border p-2 rounded-t-lg mb-2" role="toolbar" aria-label="Toolbar editor">
+                                <button type="button" data-cmd="bold" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Tebal"><i class="fa fa-bold" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="italic" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Miring"><i class="fa fa-italic" aria-hidden="true"></i></button>
                                         <button type="button" data-cmd="heading" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Heading"><i class="fa fa-header" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="quote" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Quote"><i class="fa fa-quote-left" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="unordered-list" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Unordered list"><i class="fa fa-list-ul" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="ordered-list" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Ordered list"><i class="fa fa-list-ol" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="link" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Link"><i class="fa fa-link" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="image" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Image"><i class="fa fa-image" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="preview" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Preview"><i class="fa fa-eye" aria-hidden="true"></i></button>
-                                        <button type="button" data-cmd="guide" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Markdown guide"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="quote" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Kutipan"><i class="fa fa-quote-left" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="unordered-list" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Daftar tidak berurutan"><i class="fa fa-list-ul" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="ordered-list" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Daftar berurutan"><i class="fa fa-list-ol" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="link" onclick="window.openLinkInsertModal()" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Tautan"><i class="fa fa-link" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="image" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Gambar"><i class="fa fa-image" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="preview" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Pratinjau"><i class="fa fa-eye" aria-hidden="true"></i></button>
+                                <button type="button" data-cmd="guide" class="bg-card border border-border text-foreground p-2 rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Panduan Markdown"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
                                     </div>
-                                    <textarea id="story-content" name="content" class="custom-mde flex-1 min-h-[500px] resize-none" 
-                                              placeholder="Mulai menulis cerita Anda di sini...
-
-Tips:
-- Mulai dengan pengantar yang menarik
-- Gunakan heading untuk struktur
-- Tambahkan gambar untuk visual yang lebih baik
-- Gunakan daftar untuk informasi yang mudah dibaca" 
-                                              aria-label="Story content editor"></textarea>
-                                </div>
-                            </div>
+                            <textarea id="story-content" name="content" class="custom-mde flex-1" placeholder="Mulai menulis cerita Anda di sini...\n\nTips:\n- Mulai dengan pengantar yang menarik\n- Gunakan heading untuk struktur\n- Tambahkan gambar untuk visual yang lebih baik\n- Gunakan daftar untuk informasi yang mudah dibaca" aria-label="Editor konten cerita"></textarea>
                         </div>
                         
                         <!-- Publication Section -->
@@ -319,35 +299,27 @@ Tips:
                                             <i class="fas fa-rocket text-orange-600 mr-3"></i>
                                             Publikasi
                                         </h3>
-                                        <p class="text-sm text-muted-foreground mt-1">Simpan atau terbitkan cerita Anda</p>
+                                    <p class="text-sm text-muted-foreground mt-1">Simpan atau terbitkan cerita</p>
                                 </div>
                                 <div class="p-6">
                                     <div class="flex flex-col sm:flex-row gap-3">
                                         <!-- Back Button -->
-                                        <button type="button" id="prev-step-btn" 
-                                                class="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" 
-                                                aria-label="Back to details">
+                                        <button type="button" id="prev-step-btn" class="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300" aria-label="Kembali ke detail">
                                             <i class="fas fa-arrow-left mr-2"></i>Kembali ke Detail
                                         </button>
                                         
                                         <!-- Cancel Button -->
-                                        <button type="button" id="cancel-edit-btn" 
-                                                class="bg-card hover:bg-muted text-foreground border border-border py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-muted transition-all duration-200" 
-                                                aria-label="Cancel and go back">
+                                        <button type="button" id="cancel-edit-btn" class="bg-card hover:bg-muted text-foreground border border-border py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-muted transition-all duration-200" aria-label="Batal dan kembali">
                                             <i class="fas fa-times mr-2"></i>Batal
                                         </button>
                                         
                                         <!-- Save Hidden Button -->
-                                        <button type="submit" name="save-draft" 
-                                                class="bg-muted hover:bg-muted/80 text-foreground border border-border py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-muted transition-all duration-200 flex items-center justify-center" 
-                                                aria-label="Save and keep hidden">
+                                        <button type="submit" name="save-draft" class="bg-muted hover:bg-muted/80 text-foreground border border-border py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-muted transition-all duration-200 flex items-center justify-center" aria-label="Simpan dan tetap sembunyi">
                                             <i class="fas fa-eye-slash mr-2"></i>Simpan Tersembunyi
                                         </button>
                                         
                                         <!-- Save and Show (Publish) Button -->
-                                        <button type="submit" name="publish" 
-                                                class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 flex items-center justify-center" 
-                                                aria-label="Save and show to public">
+                                        <button type="submit" name="publish" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 flex items-center justify-center" aria-label="Simpan dan tampilkan ke publik">
                                             <i class="fas fa-eye mr-2"></i>Simpan & Tampilkan
                                         </button>
                                     </div>
@@ -356,15 +328,14 @@ Tips:
                                     <div class="text-center pt-4 space-y-1">
                                         <p class="text-xs text-muted-foreground">
                                             <i class="fas fa-info-circle mr-1"></i>
-                                            Pastikan semua field yang diperlukan telah diisi.
+                                            Pastikan field wajib telah diisi.
                                         </p>
                                         <p class="text-xs text-muted-foreground">
                                             <i class="fas fa-eye-slash mr-1"></i>
                                             <span>"Simpan Tersembunyi" menyimpan cerita tetapi tidak menampilkannya ke publik.</span>
                                         </p>
                                         <p class="text-xs text-muted-foreground">
-                                            <i class="fas fa-eye mr-1"></i>
-                                            <span>"Simpan & Tampilkan" menyimpan dan segera menampilkan cerita ke publik.</span>
+                                            <span>"Simpan & Tampilkan" menyimpan dan langsung menampilkan cerita ke publik.</span>
                                         </p>
                                     </div>
                                 </div>
@@ -388,7 +359,7 @@ Tips:
       <label class="inline-flex items-center"><input type="radio" name="image-source-create" value="library" checked class="form-radio text-blue-500" aria-label="Pilih dari perpustakaan"><span class="ml-2 text-gray-700">Perpustakaan</span></label>
       <label class="inline-flex items-center ml-4"><input type="radio" name="image-source-create" value="url" class="form-radio text-blue-500" aria-label="Gunakan URL eksternal"><span class="ml-2 text-gray-700">URL Eksternal</span></label>
     </div>
-    <div id="image-library-section-create" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" role="list" aria-label="Daftar gambar perpustakaan"></div>
+    <div id="image-library-section-create" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4 py-4" role="list" aria-label="Daftar gambar perpustakaan"></div>
     <!-- Pagination for Content Image Library (Create) -->
     <div id="content-image-pagination-controls-create" class="mt-4 mb-4" role="navigation" aria-label="Navigasi halaman gambar">
         <!-- Create content image pagination will be generated here -->
@@ -415,7 +386,7 @@ Tips:
       <input id="header-upload-url-create" type="url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://contoh.com/gambar.jpg" aria-label="URL gambar">
       <button type="button" id="header-upload-btn-create" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300" aria-label="Unggah gambar">Unggah</button>
     </div>
-    <div id="header-image-library-create" class="grid grid-cols-1 md:grid-cols-3 gap-4" role="list" aria-label="Daftar gambar unggulan"></div>
+    <div id="header-image-library-create" class="grid grid-cols-1 md:grid-cols-3 gap-6 py-4" role="list" aria-label="Daftar gambar unggulan"></div>
     <!-- Pagination for Header Image Library (Create) -->
     <div id="header-image-pagination-controls-create" class="mt-4 mb-4" role="navigation" aria-label="Navigasi halaman gambar unggulan">
         <!-- Create header image pagination will be generated here -->
@@ -448,66 +419,115 @@ Tips:
 {% endblock %}
 
 {% block extra_scripts %}
-<style>
-/* Enhanced Content Editor Styles */
-#simplemde-wrapper {
-    min-height: 600px;
-}
-
-#story-content {
-    min-height: 500px !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    background-color: var(--card);
-    color: var(--foreground);
-}
-
-/* SimpleMDE Custom Styles */
-.EasyMDEContainer {
-    min-height: 500px !important;
-}
-
-.EasyMDEContainer .CodeMirror {
-    min-height: 500px !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    background-color: var(--card);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-}
-
-.EasyMDEContainer .CodeMirror-focused {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary/20);
-}
-
-/* Toolbar Enhancement */
-#custom-toolbar {
-    background: linear-gradient(135deg, var(--card) 0%, var(--muted) 100%);
-    border: 1px solid var(--border);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-#custom-toolbar button {
-    transition: all 0.2s ease;
-}
-
-#custom-toolbar button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-</style>
+{# Load dependent scripts first #}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+{# Provide endpoint for user creation (used by news-create.js if present) #}
 <script>
-// 2-Step Process Functionality
+  window.NEWS_CREATE_ENDPOINT = '/api/user/news';
+  window.CURRENT_USERNAME = '{{ user.username }}';
+</script>
+{# Load the main script for this page #}
+<script src="{{ url_for('static', filename='js/news-create.js') }}"></script>
+
+{# Custom CSS for better editor sizing #}
+<style>
+    /* Suppress expected console warnings */
+    .suppress-warnings {
+        /* This class is used to suppress expected console warnings */
+    }
+    
+    /* Ensure SimpleMDE editor has proper height */
+    /* Ensure SimpleMDE editor has proper height */
+    .CodeMirror {
+    min-height: 500px !important;
+        height: auto !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Make the editor wrapper take full available height */
+    #simplemde-wrapper {
+        min-height: 600px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    /* Ensure the textarea has proper height before SimpleMDE initializes */
+    #story-content {
+    min-height: 500px !important;
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Make sure the editor grows to fill available space */
+    .CodeMirror-scroll {
+        min-height: 500px !important;
+    }
+    
+    /* Ensure proper spacing in the content area */
+    .CodeMirror-lines {
+        padding: 20px !important;
+    }
+
+    /* Hide SimpleMDE default toolbar and statusbar to prevent conflicts with custom toolbar */
+    /* Global hide as a safety net (SimpleMDE may insert toolbar outside our wrapper) */
+    .editor-toolbar,
+    .editor-statusbar,
+    #simplemde-wrapper .editor-toolbar,
+    #simplemde-wrapper .editor-statusbar {
+        display: none !important;
+    }
+
+    /* Remove extra top spacing where the default toolbar would be */
+    #simplemde-wrapper .CodeMirror {
+        margin-top: 0 !important;
+        background: transparent !important;
+        border-color: var(--border);
+    }
+
+    #simplemde-wrapper .CodeMirror-scroll {
+        background: transparent !important;
+    }
+</style>
+
+{# Provide server data to JS without inline Jinja in JS code #}
+<script id="news-meta" type="application/json">{{ news_id|default(None)|tojson }}</script>
+
+<script>
+// Ultra-early title prefill to avoid delays
+(function() {
+  try {
+    const metaEl = document.getElementById('news-meta');
+    if (!metaEl || !metaEl.textContent) return;
+    const id = JSON.parse(metaEl.textContent);
+    if (!id) return;
+    fetch(`/api/news/${id}`).then(r => r.ok ? r.json() : null).then(a => {
+      if (!a) return;
+      const setIf = (el, val) => { if (el && val != null && String(val).length) el.value = val; };
+      // Prefer visible story-title first so user sees it immediately
+      const visibleTitle = document.getElementById('story-title') || document.getElementById('news-title');
+      setIf(visibleTitle, a.title || '');
+      // Keep hidden mapped title in sync if present
+      const hiddenTitle = document.getElementById('news-title');
+      if (hiddenTitle && hiddenTitle !== visibleTitle) setIf(hiddenTitle, a.title || '');
+      // Also update header texts quickly
+      const h1 = document.querySelector('h1.text-3xl'); if (h1) h1.textContent = 'Edit Cerita';
+      const t2 = document.getElementById('create-story-title'); if (t2) t2.textContent = 'Edit Cerita';
+    }).catch(()=>{});
+  } catch(e) {}
+})();
+</script>
+
+<script>
+// Field ID mapping: map story-* IDs to news-* IDs so admin JS can work
+// 
+// Note: Some console warnings are expected and normal:
+// - "cdn.tailwindcss.com should not be used in production" - This is expected in development
+// - "SimpleMDE: Error. No element was found" - This resolves once SimpleMDE initializes
+// - "Mobile menu elements not found" - This is expected if mobile menu isn't used on this page
+// - "Force Scaling: Detected scale: 1" - This is informational, not an error
 (function() {
     'use strict';
     
@@ -521,22 +541,289 @@ Tips:
     }
     
     ready(function() {
-        console.log('2-Step Process JavaScript loaded');
+        console.log('Setting up field ID mapping for user story form...');
         
-        // Get news ID and draft storage key
-        const NEWS_ID = document.getElementById('news-id').value;
-        const DRAFT_KEY = NEWS_ID ? `story-draft-${NEWS_ID}` : 'story-draft-create';
+        // Map story-* field IDs to news-* IDs that the admin JS expects
+        const fieldMappings = {
+            'story-title': 'news-title',
+            'story-category': 'news-category', 
+            'story-tags': 'news-tagar',
+            'story-writer': 'news-writer',
+            'story-age-rating': 'news-age-rating',
+            'story-external-source': 'news-external-source',
+            'story-date': 'news-date',
+            'story-is-premium': 'news-is-premium',
+            'story-prize': 'news-prize',
+            'story-prize-coin-type': 'news-prize-coin-type',
+            'story-content': 'news-content',
+            'story-image-id': 'news-image-id'
+        };
         
-        // Get elements
-        const step1Content = document.getElementById('step-1-content');
-        const step2Content = document.getElementById('step-2-content');
+        // Create news-* fields and sync them with story-* fields
+        Object.entries(fieldMappings).forEach(([storyId, newsId]) => {
+            const storyField = document.getElementById(storyId);
+            if (storyField) {
+                // For the category field, we need to replace it entirely so admin JS can populate it
+                if (storyId === 'story-category') {
+                    // Clone the story field to create news-category
+                    const newsField = storyField.cloneNode(true);
+                    newsField.id = newsId;
+                    newsField.name = 'category';
+                    
+                    // Replace the story field with the news field
+                    storyField.parentNode.replaceChild(newsField, storyField);
+                    
+                    // Update the label to point to the new field
+                    const label = document.querySelector(`label[for="${storyId}"]`);
+                    if (label) {
+                        label.setAttribute('for', newsId);
+                    }
+                    
+                    console.log(`Replaced ${storyId} with ${newsId} for categories`);
+                } else if (storyId === 'story-content') {
+                    // For the content field, we need to replace it entirely so admin JS can initialize SimpleMDE
+                    const newsField = storyField.cloneNode(true);
+                    newsField.id = newsId;
+                    newsField.name = 'content';
+                    
+                    // Replace the story field with the news field
+                    storyField.parentNode.replaceChild(newsField, storyField);
+                    
+                    console.log(`Replaced ${storyId} with ${newsId} for content editor`);
+                } else {
+                    // For other fields, create hidden news fields and sync them
+                    const newsField = document.createElement('input');
+                    newsField.type = 'hidden';
+                    newsField.id = newsId;
+                    newsField.name = storyField.name;
+                    newsField.value = storyField.value;
+                    
+                    // Insert after the story field
+                    storyField.parentNode.insertBefore(newsField, storyField.nextSibling);
+                    
+                    // Sync values when story field changes
+                    storyField.addEventListener('input', function() {
+                        newsField.value = this.value;
+                    });
+                    
+                    // Sync values when story field changes (for selects)
+                    storyField.addEventListener('change', function() {
+                        newsField.value = this.value;
+                    });
+                    
+                    // For checkboxes, sync checked state
+                    if (storyField.type === 'checkbox') {
+                        storyField.addEventListener('change', function() {
+                            newsField.value = this.checked ? 'true' : 'false';
+                        });
+                    }
+                    
+                    console.log(`Mapped ${storyId} -> ${newsId}`);
+                }
+            }
+        });
+        
+        // Also map the form ID
+        const storyForm = document.getElementById('create-story-form');
+        if (storyForm) {
+            storyForm.id = 'add-news-form';
+            storyForm.setAttribute('novalidate', 'novalidate'); // disable native validation; we validate via JS
+            console.log('Mapped form ID: create-story-form -> add-news-form (novalidate)');
+        }
+        
+        // Map step indicators
         const step1Indicator = document.getElementById('step-1-indicator');
         const step2Indicator = document.getElementById('step-2-indicator');
+        if (step1Indicator) step1Indicator.id = 'step-1-indicator';
+        if (step2Indicator) step2Indicator.id = 'step-2-indicator';
+        
+        // Map step content divs
+        const step1Content = document.getElementById('step-1-content');
+        const step2Content = document.getElementById('step-2-content');
+        if (step1Content) step1Content.id = 'step-1-content';
+        if (step2Content) step2Content.id = 'step-2-content';
+        
+        // Map navigation buttons
         const nextStepBtn = document.getElementById('next-step-btn');
         const prevStepBtn = document.getElementById('prev-step-btn');
+        if (nextStepBtn) nextStepBtn.id = 'next-step-btn';
+        if (prevStepBtn) prevStepBtn.id = 'prev-step-btn';
+        
+        console.log('Field ID mapping complete - admin JS should now work with user form');
+        
+        // Prefill helper: wait for category select options to load
+        async function waitForCategoryOptions(selectId = 'news-category', maxWaitMs = 2000) {
+            const start = Date.now();
+            return new Promise((resolve) => {
+                const tick = () => {
+                    const sel = document.getElementById(selectId);
+                    if (sel && sel.options && sel.options.length > 1) {
+                        resolve(sel);
+                        return;
+                    }
+                    if (Date.now() - start > maxWaitMs) {
+                        resolve(sel);
+                        return;
+                    }
+                    setTimeout(tick, 100);
+                };
+                tick();
+            });
+        }
+
+        // Cache and helpers for prefill
+        function getNewsId() {
+            const rawId = document.getElementById('news-id')?.value || null;
+            const metaEl = document.getElementById('news-meta');
+            let metaId = null;
+            if (metaEl && metaEl.textContent) {
+                try { metaId = JSON.parse(metaEl.textContent) || null; } catch (e) {}
+            }
+            return rawId || metaId;
+        }
+        let prefetchedArticle = null;
+        async function fetchArticleFast(id) {
+            if (prefetchedArticle) return prefetchedArticle;
+            const resp = await fetch(`/api/news/${id}`);
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            prefetchedArticle = data;
+            return data;
+        }
+        // Early prefill: set title and simple fields ASAP (no waiting)
+        (async function earlyPrefill() {
+            const newsId = getNewsId();
+            if (!newsId) return;
+            const a = await fetchArticleFast(newsId);
+            if (!a) return;
+            const setIf = (el, val) => { if (el && val != null && String(val).length) el.value = val; };
+            // Title: set both possible IDs to avoid waiting for mapping
+            setIf(document.getElementById('news-title') || document.getElementById('story-title'), a.title || '');
+            setIf(document.getElementById('news-writer') || document.getElementById('story-writer'), a.writer || '');
+            setIf(document.getElementById('news-tagar') || document.getElementById('story-tags'), a.tagar || '');
+            setIf(document.getElementById('news-external-source') || document.getElementById('story-external-source'), a.external_source || '');
+            if (a.date) setIf(document.getElementById('news-date') || document.getElementById('story-date'), a.date.substring(0,10));
+            if (a.age_rating) setIf(document.getElementById('news-age-rating') || document.getElementById('story-age-rating'), a.age_rating);
+        })();
+
+        // Prefill form for edit mode (full prefill, runs after editor ready)
+        async function prefillEditIfNeeded() {
+            try {
+                const newsId = getNewsId();
+                if (!newsId) return; // create mode
+
+                // Fetch data (use cache if available)
+                const data = (prefetchedArticle) || await fetchArticleFast(newsId);
+                if (!data) return;
+
+                // Title (set both visible and hidden mapped fields)
+                const storyTitleEl = document.getElementById('story-title');
+                const newsTitleEl = document.getElementById('news-title');
+                if (storyTitleEl && data.title) storyTitleEl.value = data.title;
+                if (newsTitleEl && data.title) newsTitleEl.value = data.title;
+
+                // Category (wait for options)
+                const categoryEl = await waitForCategoryOptions('news-category');
+                if (categoryEl && data.category_id) {
+                    categoryEl.value = String(data.category_id);
+                    const evt = new Event('change', { bubbles: true });
+                    categoryEl.dispatchEvent(evt);
+                }
+
+                // Date (convert ISO to yyyy-mm-dd)
+                const dateEl = document.getElementById('news-date');
+                if (dateEl && data.date) {
+                    try { dateEl.value = data.date.substring(0, 10); } catch (e) {}
+                }
+
+                // Age rating
+                const ageEl = document.getElementById('news-age-rating');
+                if (ageEl && data.age_rating) ageEl.value = data.age_rating;
+
+                // Writer
+                const writerEl = document.getElementById('news-writer');
+                if (writerEl && data.writer) writerEl.value = data.writer;
+
+                // External source
+                const extEl = document.getElementById('news-external-source');
+                if (extEl && data.external_source) extEl.value = data.external_source;
+
+                // Tags
+                const tagsEl = document.getElementById('news-tagar');
+                if (tagsEl && data.tagar) tagsEl.value = data.tagar;
+
+                // Premium fields
+                const isPremiumEl = document.getElementById('news-is-premium');
+                const prizeEl = document.getElementById('news-prize');
+                const prizeTypeEl = document.getElementById('news-prize-coin-type');
+                const prizeSection = document.getElementById('prize-input-section');
+                if (isPremiumEl) {
+                    const isPrem = !!data.is_premium || (typeof data.prize === 'number' && data.prize > 0);
+                    isPremiumEl.value = isPrem ? 'true' : 'false';
+                    isPremiumEl.checked = isPrem;
+                    if (prizeSection) prizeSection.classList.toggle('hidden', !isPrem);
+                }
+                if (prizeEl && typeof data.prize === 'number') prizeEl.value = data.prize;
+                if (prizeTypeEl && data.prize_coin_type) prizeTypeEl.value = data.prize_coin_type;
+
+                // Featured image
+                const imgIdInput = document.getElementById('news-image-id');
+                const preview = document.getElementById('featured-preview-create');
+                const noImagePlaceholder = document.getElementById('no-image-placeholder');
+                if (data.header_image) {
+                    if (imgIdInput && data.header_image.id) imgIdInput.value = data.header_image.id;
+                    if (preview && data.header_image.url) {
+                        preview.src = data.header_image.url;
+                        preview.classList.remove('hidden');
+                        if (noImagePlaceholder) noImagePlaceholder.classList.add('hidden');
+                    }
+                }
+
+                // Content: wait for SimpleMDE, else fallback to textarea
+                const setContent = () => {
+                    const content = data.content || '';
+                    // Try SimpleMDE
+                    if (window.addSimplemde && window.addSimplemde.codemirror) {
+                        try { window.addSimplemde.codemirror.setValue(content); return; } catch (e) {}
+                    } else if (window.SimpleMDE && window.SimpleMDE.instances && window.SimpleMDE.instances.length > 0) {
+                        try { window.SimpleMDE.instances[0].value(content); return; } catch (e) {}
+                    }
+                    // Fallback
+                    const ta = document.getElementById('news-content') || document.getElementById('story-content');
+                    if (ta) ta.value = content;
+                };
+                if (window.addSimplemde || (window.SimpleMDE && window.SimpleMDE.instances && window.SimpleMDE.instances.length > 0)) {
+                    setContent();
+                } else {
+                    setTimeout(setContent, 300);
+                }
+
+                // Adjust header text for edit mode
+                const h1 = document.querySelector('h1.text-3xl');
+                if (h1) h1.textContent = 'Edit Cerita';
+                const titleBlock = document.getElementById('create-story-title');
+                if (titleBlock) titleBlock.textContent = 'Edit Cerita';
+            } catch (e) {
+                console.warn('Prefill edit failed:', e);
+            }
+        }
+
+        // Step Navigation Logic (using the already declared variables)
+        console.log('Setting up step navigation...');
+        
+        console.log('Step elements found:', {
+            step1Content: !!step1Content,
+            step2Content: !!step2Content,
+            step1Indicator: !!step1Indicator,
+            step2Indicator: !!step2Indicator,
+            nextStepBtn: !!nextStepBtn,
+            prevStepBtn: !!prevStepBtn
+        });
         
         // Simple toast function
         function showToast(message, type = 'info') {
+            console.log('Toast:', message, type);
+            
             const toast = document.createElement('div');
             toast.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 transform transition-all duration-300 translate-x-full`;
             
@@ -578,13 +865,13 @@ Tips:
             if (step2Content) step2Content.classList.add('hidden');
             
             if (step1Indicator) {
-                step1Indicator.classList.remove('bg-muted', 'text-muted-foreground');
-                step1Indicator.classList.add('bg-primary', 'text-primary-foreground');
+                step1Indicator.classList.remove('bg-gray-300', 'text-gray-600');
+                step1Indicator.classList.add('bg-blue-600', 'text-white');
             }
             
             if (step2Indicator) {
-                step2Indicator.classList.remove('bg-primary', 'text-primary-foreground');
-                step2Indicator.classList.add('bg-muted', 'text-muted-foreground');
+                step2Indicator.classList.remove('bg-blue-600', 'text-white');
+                step2Indicator.classList.add('bg-gray-300', 'text-gray-600');
             }
             
             // Update step labels
@@ -592,13 +879,13 @@ Tips:
             const step2Label = document.querySelector('#step-2-indicator + span');
             
             if (step1Label) {
-                step1Label.classList.remove('text-muted-foreground');
-                step1Label.classList.add('text-foreground');
+                step1Label.classList.remove('text-gray-500');
+                step1Label.classList.add('text-gray-700');
             }
             
             if (step2Label) {
-                step2Label.classList.remove('text-foreground');
-                step2Label.classList.add('text-muted-foreground');
+                step2Label.classList.remove('text-gray-700');
+                step2Label.classList.add('text-gray-500');
             }
         }
         
@@ -606,37 +893,44 @@ Tips:
         function showStep2() {
             console.log('Showing Step 2 (Content)');
             
-            // Validate required fields in step 1
-            const titleInput = document.getElementById('story-title');
-            const categoryInput = document.getElementById('story-category');
-            const dateInput = document.getElementById('story-date');
-            const ageRatingInput = document.getElementById('story-age-rating');
+            // Validate required fields in step 1 (details)
+            const titleInput = document.getElementById('news-title');
+            const categoryInput = document.getElementById('news-category');
+            const dateInput = document.getElementById('news-date');
+            const ageRatingInput = document.getElementById('news-age-rating');
             
             const title = titleInput ? titleInput.value.trim() : '';
             const category = categoryInput ? categoryInput.value : '';
             const date = dateInput ? dateInput.value : '';
             const ageRating = ageRatingInput ? ageRatingInput.value : '';
             
+            console.log('Validation check:', { 
+                title: title, 
+                category: category,
+                date: date,
+                ageRating: ageRating
+            });
+            
             if (!title) {
-                showToast('Judul cerita diperlukan', 'error');
+                showToast('Judul artikel harus diisi', 'error');
                 if (titleInput) titleInput.focus();
                 return;
             }
             
             if (!category) {
-                showToast('Kategori diperlukan', 'error');
+                showToast('Kategori harus dipilih', 'error');
                 if (categoryInput) categoryInput.focus();
                 return;
             }
             
             if (!date) {
-                showToast('Tanggal publikasi diperlukan', 'error');
+                showToast('Tanggal publikasi harus diisi', 'error');
                 if (dateInput) dateInput.focus();
                 return;
             }
             
             if (!ageRating) {
-                showToast('Rating usia diperlukan', 'error');
+                showToast('Rating usia konten harus dipilih', 'error');
                 if (ageRatingInput) ageRatingInput.focus();
                 return;
             }
@@ -645,13 +939,13 @@ Tips:
             if (step2Content) step2Content.classList.remove('hidden');
             
             if (step1Indicator) {
-                step1Indicator.classList.remove('bg-primary', 'text-primary-foreground');
-                step1Indicator.classList.add('bg-muted', 'text-muted-foreground');
+                step1Indicator.classList.remove('bg-blue-600', 'text-white');
+                step1Indicator.classList.add('bg-gray-300', 'text-gray-600');
             }
             
             if (step2Indicator) {
-                step2Indicator.classList.remove('bg-muted', 'text-muted-foreground');
-                step2Indicator.classList.add('bg-primary', 'text-primary-foreground');
+                step2Indicator.classList.remove('bg-gray-300', 'text-gray-600');
+                step2Indicator.classList.add('bg-blue-600', 'text-white');
             }
             
             // Update step labels
@@ -659,922 +953,173 @@ Tips:
             const step2Label = document.querySelector('#step-2-indicator + span');
             
             if (step1Label) {
-                step1Label.classList.remove('text-foreground');
-                step1Label.classList.add('text-muted-foreground');
+                step1Label.classList.remove('text-gray-700');
+                step1Label.classList.add('text-gray-500');
             }
             
             if (step2Label) {
-                step2Label.classList.remove('text-muted-foreground');
-                step2Label.classList.add('text-foreground');
+                step2Label.classList.remove('text-gray-500');
+                step2Label.classList.add('text-gray-700');
             }
         }
         
-        // Event listeners
+        // Event listeners for step navigation
         if (nextStepBtn) {
+            console.log('Adding click listener to next step button');
             nextStepBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                console.log('Next step button clicked');
                 showStep2();
             });
+        } else {
+            console.error('Next step button not found!');
         }
         
         if (prevStepBtn) {
+            console.log('Adding click listener to prev step button');
             prevStepBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                console.log('Prev step button clicked');
                 showStep1();
             });
+        } else {
+            console.error('Prev step button not found!');
+        }
+
+        // Cancel button: go back to user stories page
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+        if (cancelBtn) {
+            console.log('Adding click listener to cancel button');
+            cancelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const fallbackUrl = '{{ url_for('user_profile.user_stories', username=user.username) }}';
+                // Prefer going back if there is a referrer, otherwise go to user stories
+                if (document.referrer && document.referrer !== window.location.href) {
+                    try { window.history.back(); return; } catch (_) {}
+                }
+                window.location.href = fallbackUrl;
+            });
+        } else {
+            console.error('Cancel button not found!');
         }
         
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            // Ctrl/Cmd + Enter to go to next step
+            // Ctrl/Cmd + Enter to go to next step (from details to content)
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 if (step1Content && !step1Content.classList.contains('hidden')) {
                     e.preventDefault();
                     showStep2();
                 }
             }
-            
-            // Escape to go back to previous step
-            if (e.key === 'Escape') {
-                if (step2Content && !step2Content.classList.contains('hidden')) {
-                    e.preventDefault();
-                    showStep1();
-                }
-            }
         });
         
-        // Auto-save functionality
-        let autoSaveTimer;
-        function setupAutoSave() {
-            const titleInput = document.getElementById('story-title');
-            const contentTextarea = document.getElementById('story-content');
-            
-            if (!titleInput) {
-                console.log('Title input not found, skipping auto-save setup');
+        console.log('Step navigation setup complete!');
+        
+        // Debug: Check if we're properly logged in and can access images
+        console.log('Current user context:', {
+            username: '{{ user.username }}',
+            role: '{{ user.role }}',
+            customRole: '{{ user.custom_role.name if user.custom_role else "None" }}'
+        });
+        
+        // Completely replace the admin's image rendering with our robust version (set this early)
+        console.log('Setting up custom renderImageLibraryCreate function...');
+        window.renderImageLibraryCreate = function(images) {
+            console.log('🎯 OUR CUSTOM renderImageLibraryCreate function called with', images?.length || 0, 'images');
+            try {
+                const container = document.getElementById('image-library-section-create');
+                if (!container) {
+                    console.warn('Image library container not found');
+                    return;
+                }
+                
+                if (!images || images.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <i class="fas fa-images text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-gray-500 mb-2">Belum ada gambar</p>
+                            <p class="text-sm text-gray-400">Upload gambar baru menggunakan form di atas</p>
+                        </div>
+                    `;
                 return;
             }
             
-            // Get all form elements for auto-save
-            const categoryInput = document.getElementById('story-category');
-            const dateInput = document.getElementById('story-date');
-            const tagsInput = document.getElementById('story-tags');
-            const writerInput = document.getElementById('story-writer');
-            const externalSourceInput = document.getElementById('story-external-source');
-            const ageRatingInput = document.getElementById('story-age-rating');
-            const prizeInput = document.getElementById('story-prize');
-            const coinTypeSelect = document.getElementById('story-prize-coin-type');
-            
-            function autoSave() {
-                const title = titleInput.value.trim();
+                console.log('Rendering', images.length, 'images with our custom function');
                 
-                // Get content from textarea first, then try SimpleMDE
-                let content = contentTextarea ? contentTextarea.value.trim() : '';
-                
-                if (!content) {
-                    let simplemde = window.simplemde || window.addSimplemde;
-                    if (simplemde) {
-                        try {
-                            if (typeof simplemde.value === 'function') {
-                                content = simplemde.value().trim();
-                            } else if (simplemde.codemirror && simplemde.codemirror.getValue) {
-                                content = simplemde.codemirror.getValue().trim();
-                            }
-                        } catch (e) {
-                            console.error('Error getting SimpleMDE content for auto-save:', e);
-                        }
+                // Use our own robust rendering
+                const imageHtml = images.map(img => {
+                    // Debug the image object structure
+                    console.log('Processing image in custom renderer:', img);
+                    
+                    // Try different possible URL field names
+                    let imageUrl = img.url || img.image_url || img.file_url || img.path || img.filename;
+                    let description = img.description || img.alt || img.name || img.title || 'Image';
+                    
+                    console.log('Extracted URL:', imageUrl, 'Description:', description);
+                    
+                    // Ensure we have a proper URL
+                    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                        imageUrl = '/' + imageUrl;
                     }
-                }
-                
-                // Get details fields
-                const category = categoryInput ? categoryInput.value : '';
-                const date = dateInput ? dateInput.value : '';
-                const tags = tagsInput ? tagsInput.value.trim() : '';
-                const writer = writerInput ? writerInput.value.trim() : '';
-                const externalSource = externalSourceInput ? externalSourceInput.value.trim() : '';
-                const ageRating = ageRatingInput ? ageRatingInput.value : '';
-                const prize = prizeInput ? prizeInput.value : '';
-                const coinType = coinTypeSelect ? coinTypeSelect.value : '';
-                
-                if (title || content || category || date || tags || writer || externalSource || ageRating || prize || coinType) {
-                    // Save to localStorage as draft
-                    const draft = {
-                        title: title,
-                        content: content,
-                        category: category,
-                        date: date,
-                        tags: tags,
-                        writer: writer,
-                        externalSource: externalSource,
-                        ageRating: ageRating,
-                        prize: prize,
-                        coinType: coinType,
-                        timestamp: new Date().toISOString()
-                    };
-                    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
                     
-                    // Show subtle indicator
-                    const indicator = document.createElement('div');
-                    indicator.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-3 py-1 rounded-lg text-sm opacity-0 transition-opacity duration-300';
-                    indicator.textContent = 'Draft tersimpan';
-                    document.body.appendChild(indicator);
+                    // If still no valid URL, skip this image
+                    if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined') {
+                        console.warn('Skipping image with invalid URL:', img);
+                        return '';
+                    }
                     
+                    console.log('Processing image:', img.id, 'Final URL:', imageUrl, 'Description:', description);
+                    
+                    return `
+                        <div class="relative group cursor-pointer border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200" 
+                             onclick="window.insertImageFromLibrary('${imageUrl}', '${description}')">
+                            <img src="${imageUrl}" alt="${description}" 
+                                 class="w-full h-40 object-cover"
+                                 onload="console.log('Image loaded successfully:', '${imageUrl}')"
+                                 onerror="console.error('Image failed to load:', '${imageUrl}')">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                                <span class="text-white opacity-0 group-hover:opacity-100 font-medium">Sisipkan</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                console.log('Setting container HTML with custom renderer');
+                container.innerHTML = imageHtml;
+                
+                // Debug: check what's actually in the container
                     setTimeout(() => {
-                        indicator.classList.remove('opacity-0');
+                    console.log('Container after custom rendering:', container.innerHTML.substring(0, 200));
+                    const images = container.querySelectorAll('img');
+                    console.log('Found', images.length, 'img elements in container with custom renderer');
                     }, 100);
                     
-                    setTimeout(() => {
-                        indicator.classList.add('opacity-0');
-                        setTimeout(() => {
-                            if (document.body.contains(indicator)) {
-                                document.body.removeChild(indicator);
-                            }
-                        }, 300);
-                    }, 2000);
-                }
-            }
-            
-            // Auto-save every 30 seconds
-            function startAutoSave() {
-                autoSaveTimer = setInterval(autoSave, 30000);
-            }
-            
-            function stopAutoSave() {
-                if (autoSaveTimer) {
-                    clearInterval(autoSaveTimer);
-                }
-            }
-            
-            // Start auto-save when user starts typing
-            titleInput.addEventListener('input', function() {
-                stopAutoSave();
-                startAutoSave();
-            });
-            
-            // Start auto-save when user changes details fields
-            const formInputs = [categoryInput, dateInput, tagsInput, writerInput, externalSourceInput, ageRatingInput, prizeInput, coinTypeSelect];
-            formInputs.forEach(input => {
-                if (input) {
-                    input.addEventListener('input', function() {
-                        stopAutoSave();
-                        startAutoSave();
-                    });
-                    input.addEventListener('change', function() {
-                        stopAutoSave();
-                        startAutoSave();
-                    });
-                }
-            });
-            
-            // Listen for SimpleMDE changes
-            let simplemde = window.simplemde || window.addSimplemde;
-            if (simplemde && simplemde.codemirror) {
-                simplemde.codemirror.on('change', function() {
-                    stopAutoSave();
-                    startAutoSave();
-                });
-            } else if (contentTextarea) {
-                contentTextarea.addEventListener('input', function() {
-                    stopAutoSave();
-                    startAutoSave();
-                });
-            }
-            
-            // Load draft on page load
-            try { localStorage.removeItem('story-draft'); } catch(e) {}
-            const savedDraft = localStorage.getItem(DRAFT_KEY);
-            if (savedDraft) {
-                try {
-                    const draft = JSON.parse(savedDraft);
-                    
-                    // Load title
-                    if (draft.title) titleInput.value = draft.title;
-                    
-                    // Load details fields
-                    if (draft.category && categoryInput) categoryInput.value = draft.category;
-                    if (draft.date && dateInput) dateInput.value = draft.date;
-                    if (draft.tags && tagsInput) tagsInput.value = draft.tags;
-                    if (draft.writer && writerInput) writerInput.value = draft.writer;
-                    if (draft.externalSource && externalSourceInput) externalSourceInput.value = draft.externalSource;
-                    if (draft.ageRating && ageRatingInput) ageRatingInput.value = draft.ageRating;
-                    if (draft.prize && prizeInput) prizeInput.value = draft.prize;
-                    if (draft.coinType && coinTypeSelect) coinTypeSelect.value = draft.coinType;
-                    
-                    // Load content into SimpleMDE if it exists, otherwise into textarea
-                    if (draft.content) {
-                        let simplemde = window.simplemde || window.addSimplemde;
-                        if (simplemde && typeof simplemde.value === 'function') {
-                            simplemde.value(draft.content);
-                        } else if (contentTextarea) {
-                            contentTextarea.value = draft.content;
-                        }
-                    }
-                    
-                    // Show draft loaded notification
-                    showToast('Draft sebelumnya dimuat', 'info');
-                } catch (e) {
-                    console.error('Error loading draft:', e);
-                }
-            }
-        }
-        
-        // Initialize auto-save
-        setupAutoSave();
-
-        // Initialize modal event listeners
-        function setupModalEventListeners() {
-            // Attach listener for opening header modal
-            const openHeaderBtn = document.getElementById('open-header-modal-btn');
-            console.log('Looking for open-header-modal-btn:', openHeaderBtn);
-            if (openHeaderBtn) {
-                openHeaderBtn.addEventListener('click', window.openImageHeaderModalCreate);
-                console.log('Header modal open button listener attached');
-                
-                // Test if button is clickable
-                console.log('Button properties:', {
-                    disabled: openHeaderBtn.disabled,
-                    type: openHeaderBtn.type,
-                    className: openHeaderBtn.className,
-                    style: openHeaderBtn.style.display
-                });
-            } else {
-                console.error('open-header-modal-btn not found in DOM');
-            }
-            
-            // Attach listener for closing header modal
-            const closeHeaderBtn = document.getElementById('header-image-close-create');
-            console.log('Looking for header-image-close-create button:', closeHeaderBtn);
-            if (closeHeaderBtn) {
-                closeHeaderBtn.addEventListener('click', () => {
-                    console.log('Close button clicked!');
-                    window.closeImageHeaderModalCreate();
-                });
-                console.log('Header modal close button listener attached');
-            } else {
-                console.error('header-image-close-create button not found in DOM');
-            }
-            
-            // Attach listener for closing content image modal
-            const closeContentInsertBtn = document.getElementById('close-image-insert-create');
-            if (closeContentInsertBtn) {
-                closeContentInsertBtn.addEventListener('click', window.closeImageInsertModalCreate);
-                console.log('Content image modal close button listener attached');
-            }
-            
-            // Attach listener for closing link modal
-            const cancelLinkBtn = document.getElementById('cancel-link-btn');
-            if (cancelLinkBtn) {
-                cancelLinkBtn.addEventListener('click', () => {
-                    const modal = document.getElementById('link-insert-modal');
-                    if (modal) modal.classList.add('hidden');
-                });
-                console.log('Link modal close button listener attached');
-            }
-            
-            // Close modals when clicking outside
-            const modals = ['image-insert-modal-create', 'image-header-modal-create', 'link-insert-modal'];
-            modals.forEach(modalId => {
-                const modal = document.getElementById(modalId);
-                if (modal) {
-                    modal.addEventListener('click', (e) => {
-                        if (e.target === modal) {
-                            modal.classList.add('hidden');
-                            console.log(`Modal ${modalId} closed by clicking outside`);
-                        }
-                    });
-                }
-            });
-            
-            // Close modals with Escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    modals.forEach(modalId => {
-                        const modal = document.getElementById(modalId);
-                        if (modal && !modal.classList.contains('hidden')) {
-                            modal.classList.add('hidden');
-                            console.log(`Modal ${modalId} closed by Escape key`);
-                        }
-                    });
-                }
-            });
-        }
-
-        // Prize input visibility handler
-        function setupPrizeInputHandler() {
-            const premiumCheckbox = document.getElementById('story-is-premium');
-            const prizeSection = document.getElementById('prize-input-section');
-            const prizeInput = document.getElementById('story-prize');
-            const coinTypeSelect = document.getElementById('story-prize-coin-type');
-            
-            if (premiumCheckbox && prizeSection && prizeInput && coinTypeSelect) {
-                // Function to toggle prize input visibility
-                function togglePrizeInput() {
-                    if (premiumCheckbox.checked) {
-                        prizeSection.classList.remove('hidden');
-                        prizeInput.setAttribute('required', 'true');
-                        prizeInput.setAttribute('aria-required', 'true');
-                        coinTypeSelect.setAttribute('required', 'true');
-                        coinTypeSelect.setAttribute('aria-required', 'true');
-                    } else {
-                        prizeSection.classList.add('hidden');
-                        prizeInput.removeAttribute('required');
-                        prizeInput.setAttribute('aria-required', 'false');
-                        coinTypeSelect.removeAttribute('required');
-                        coinTypeSelect.setAttribute('aria-required', 'false');
-                        // Reset prize to 0 when premium is unchecked
-                        prizeInput.value = '0';
-                        coinTypeSelect.value = 'any';
-                    }
-                }
-                
-                // Add event listener
-                premiumCheckbox.addEventListener('change', togglePrizeInput);
-                
-                // Initialize state on page load
-                togglePrizeInput();
-            }
-        }
-        
-        // Initialize prize input handler
-        setupPrizeInputHandler();
-
-        // Initialize modal event listeners
-        setupModalEventListeners();
-
-        // Cancel button handler
-        const cancelBtn = document.getElementById('cancel-edit-btn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
-                if (NEWS_ID) {
-                    // If we're editing, go back to stories page
-                    window.location.href = "{{ url_for('user_profile.user_stories', username=user.username) }}";
-                } else {
-                    // If we're creating new, go back to stories page
-                    window.location.href = "{{ url_for('user_profile.user_stories', username=user.username) }}";
-                }
-            });
-        }
-        
-        // Load categories
-        async function loadCategories() {
-            try {
-                console.log('Loading categories...');
-                const response = await fetch('/api/categories?grouped=false');
-                const data = await response.json();
-                
-                console.log('Categories API response:', data);
-                
-                // Handle the actual API response structure
-                let categories = [];
-                if (Array.isArray(data)) {
-                    // Flat array response
-                    categories = data;
-                } else if (data.success && data.categories) {
-                    // Legacy response with success property
-                    categories = data.categories;
-                } else {
-                    console.error('Unexpected categories API response format:', data);
-                    throw new Error('Unexpected categories API response format');
-                }
-                
-                const select = document.getElementById('story-category');
-                if (select) {
-                    // Clear existing options first
-                    select.innerHTML = '<option value="" disabled selected>Select story category...</option>';
-                    
-                    categories.forEach(category => {
-                        const option = document.createElement('option');
-                        option.value = category.id;
-                        option.textContent = category.name;
-                        select.appendChild(option);
-                    });
-                    console.log(`Loaded ${categories.length} categories into select`);
-                    
-                    // Verify the options are actually in the DOM
-                    if (select.options.length > 1) {
-                        console.log('Categories successfully loaded into DOM');
-                    } else {
-                        console.warn('Categories may not be fully loaded into DOM');
-                    }
-                } else {
-                    console.error('Category select element not found');
-                    throw new Error('Category select element not found');
-                }
             } catch (error) {
-                console.error('Error loading categories:', error);
-                throw error; // Re-throw so we can catch it in the initialization
-            }
-        }
-        
-        // Load existing story data if editing
-        async function loadStoryData(newsId) {
-            try {
-                console.log('Loading story data for ID:', newsId);
-                const response = await fetch(`/api/news/${newsId}`);
-                console.log('API Response status:', response.status);
-                
-                if (!response.ok) {
-                    console.error('API Error:', response.status, response.statusText);
-                    const errorData = await response.json().catch(() => ({}));
-                    console.error('Error details:', errorData);
-                    showToast('error', `Failed to load story: ${errorData.error || response.statusText}`);
-                    return;
+                console.error('Error in custom renderImageLibraryCreate:', error);
+                const container = document.getElementById('image-library-section-create');
+                if (container) {
+                    container.innerHTML = '<p class="col-span-full text-center text-red-500 py-4">Error rendering images.</p>';
                 }
-                
-                const data = await response.json();
-                console.log('Story data received:', data);
-                
-                const story = data;
-                
-                // Helper functions for robust field setting
-                function setIf(el, val) { 
-                    if (el && val !== undefined && val !== null) {
-                        el.value = val;
-                        console.log(`Set ${el.id} to:`, val);
-                    }
-                }
-                
-                function setCheckedIf(el, val) { 
-                    if (el && typeof val === 'boolean') {
-                        el.checked = val;
-                        console.log(`Set ${el.id} checked to:`, val);
-                    }
-                }
-                
-                // Wait for element to be ready
-                function when(elGetter, predicate, cb, tries = 100, delay = 50) {
-                    let count = 0;
-                    (function wait() {
-                        const el = elGetter();
-                        if (predicate(el)) return cb(el);
-                        if (count++ > tries) return cb(null);
-                        setTimeout(wait, delay);
-                    })();
-                }
-                
-                // Apply category with waiting for options to load
-                function applyCategory(cat) {
-                    if (!cat) {
-                        console.log('No category to apply');
-                        return;
-                    }
-                    
-                    const select = document.getElementById('story-category');
-                    if (!select) {
-                        console.log('Category select element not found');
-                        return;
-                    }
-                    
-                    console.log('Applying category:', cat, 'to select with', select.options.length, 'options');
-                    
-                    // First try to set immediately if options are available
-                    if (select.options && select.options.length > 1) {
-                        try {
-                            const categoryValue = cat.id || cat;
-                            select.value = categoryValue;
-                            console.log(`Set category to:`, categoryValue);
-                            return;
-                        } catch(e) {
-                            console.warn('Immediate category setting error:', e);
-                        }
-                    }
-                    
-                    // If not available, wait for options to load
-                    let attempts = 0;
-                    const maxAttempts = 50; // Reduced from 100 to prevent infinite loops
-                    
-                    function trySetCategory() {
-                        attempts++;
-                        console.log(`Category attempt ${attempts}/${maxAttempts}`);
-                        
-                        if (select.options && select.options.length > 1) {
-                            try {
-                                const categoryValue = cat.id || cat;
-                                select.value = categoryValue;
-                                console.log(`Set category to:`, categoryValue);
-                                return;
-                            } catch(e) {
-                                console.warn('Category setting error:', e);
-                            }
-                        }
-                        
-                        if (attempts >= maxAttempts) {
-                            console.warn('Failed to set category after', maxAttempts, 'attempts');
-                            return;
-                        }
-                        
-                        setTimeout(trySetCategory, 100);
-                    }
-                    
-                    trySetCategory();
-                }
-                
-                // Apply content with SimpleMDE support
-                function applyContent(content) {
-                    if (!content) return;
-                    const textarea = document.getElementById('story-content');
-                    
-                    // Try SimpleMDE if present
-                    let attempts = 0;
-                    (function trySet() {
-                        attempts++;
-                        const simplemde = window.simplemde || window.addSimplemde;
-                        if (simplemde && typeof simplemde.value === 'function') {
-                            try { 
-                                simplemde.value(content); 
-                                console.log('Content set via SimpleMDE');
-                                return; 
-                            } catch (e) {
-                                console.warn('SimpleMDE setting error:', e);
-                            }
-                        }
-                        if (textarea) { 
-                            textarea.value = content; 
-                            console.log('Content set via textarea');
-                        }
-                        if (attempts < 20 && simplemde == null) setTimeout(trySet, 100);
-                    })();
-                }
-                
-                // Populate form fields
-                setIf(document.getElementById('story-title'), story.title || '');
-                setIf(document.getElementById('story-tags'), story.tagar || '');
-                setIf(document.getElementById('story-age-rating'), story.age_rating || '');
-                setIf(document.getElementById('story-external-source'), story.external_source || '');
-                setIf(document.getElementById('story-prize'), story.prize || 0);
-                setIf(document.getElementById('story-prize-coin-type'), story.prize_coin_type || 'any');
-                
-                if (story.date) {
-                    setIf(document.getElementById('story-date'), story.date.split('T')[0]);
-                }
-                
-                // Handle premium content
-                setCheckedIf(document.getElementById('story-is-premium'), !!story.is_premium);
-                
-                // Category and content (with special handling)
-                applyCategory(story.category_id);
-                applyContent(story.content || '');
-                
-                console.log('Story data loaded successfully');
-                showToast('success', 'Story data loaded successfully');
-                
-            } catch (error) {
-                console.error('Error loading story data:', error);
-                showToast('error', 'Failed to load story data');
-            }
-        }
-        
-        // Initialize
-        console.log('Initializing with NEWS_ID:', NEWS_ID);
-        
-        // Load categories first, then load story data if editing
-        async function initializePage() {
-            try {
-                await loadCategories();
-                console.log('Categories loaded');
-                
-                // Wait a bit more for categories to be fully populated in the DOM
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                if (NEWS_ID) {
-                    console.log('Loading story data for editing...');
-                    loadStoryData(NEWS_ID);
-                } else {
-                    console.log('Creating new story...');
-                }
-            } catch (error) {
-                console.error('Initialization error:', error);
-            }
-        }
-        
-        initializePage();
-        
-        // Form submission
-        document.getElementById('create-story-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitStory(e);
-        });
-        
-        async function submitStory(event) {
-            try {
-                console.log('Submitting story...');
-                
-                const formData = new FormData();
-                
-                // Get form values with error checking
-                const title = document.getElementById('story-title')?.value || '';
-                const category = document.getElementById('story-category')?.value || '';
-                const tags = document.getElementById('story-tags')?.value || '';
-                const writer = document.getElementById('story-writer')?.value || '';
-                const ageRating = document.getElementById('story-age-rating')?.value || '';
-                const content = document.getElementById('story-content')?.value || '';
-                const externalSource = document.getElementById('story-external-source')?.value || '';
-                const date = document.getElementById('story-date')?.value || '';
-                const isPremium = document.getElementById('story-is-premium')?.checked || false;
-                const prize = document.getElementById('story-prize')?.value || '0';
-                const coinType = document.getElementById('story-prize-coin-type')?.value || 'any';
-                
-                // Validate required fields
-                if (!title.trim()) {
-                    showToast('error', 'Judul cerita diperlukan');
-                    return;
-                }
-                if (!category) {
-                    showToast('error', 'Kategori diperlukan');
-                    return;
-                }
-                if (!ageRating) {
-                    showToast('error', 'Rating usia diperlukan');
-                    return;
-                }
-                if (!date) {
-                    showToast('error', 'Tanggal publikasi diperlukan');
-                    return;
-                }
-                if (!content.trim()) {
-                    showToast('error', 'Konten cerita diperlukan');
-                    return;
-                }
-                
-                formData.append('title', title);
-                formData.append('category', category);
-                formData.append('tagar', tags);
-                formData.append('writer', writer);
-                formData.append('age_rating', ageRating);
-                formData.append('content', content);
-                formData.append('external_source', externalSource);
-                formData.append('date', date);
-                formData.append('is_premium', isPremium);
-                formData.append('prize', prize);
-                formData.append('prize_coin_type', coinType);
-            
-            // Check if it's a draft or publish
-            const isDraft = event.submitter && event.submitter.name === 'save-draft';
-            formData.append('is_visible', !isDraft);
-            
-            console.log('Submitting as:', isDraft ? 'draft' : 'published');
-            
-            const url = NEWS_ID ? `/api/news/${NEWS_ID}` : '/api/news/create';
-            const method = NEWS_ID ? 'PUT' : 'POST';
-            
-            console.log('Making request to:', url, 'with method:', method);
-            
-            const response = await fetch(url, {
-                method: method,
-                body: formData
-            });
-            
-            console.log('Response status:', response.status);
-            
-            const data = await response.json();
-            console.log('Response data:', data);
-            
-            if (response.ok) {
-                showToast('success', NEWS_ID ? 'Cerita berhasil diperbarui!' : 'Cerita berhasil diterbitkan!');
-                setTimeout(() => {
-                    window.location.href = "{{ url_for('user_profile.user_stories', username=user.username) }}";
-                }, 1500);
-            } else {
-                showToast('error', data.error || data.message || 'Gagal menyimpan cerita');
-            }
-        } catch (error) {
-            console.error('Error submitting story:', error);
-            showToast('error', 'Gagal menyimpan cerita');
-        }
-        }
-        
-        console.log('2-Step Process JavaScript initialization complete');
-        
-        // Initialize SimpleMDE editor
-        let simplemde;
-        function initializeSimpleMDE() {
-            const textarea = document.getElementById('story-content');
-            if (textarea && !simplemde) {
-                simplemde = new SimpleMDE({
-                    element: textarea,
-                    spellChecker: true,
-                    autofocus: true,
-                    placeholder: "Mulai menulis cerita Anda di sini...\n\nTips:\n- Mulai dengan pengantar yang menarik\n- Gunakan heading untuk struktur\n- Tambahkan gambar untuk visual yang lebih baik\n- Gunakan daftar untuk informasi yang mudah dibaca",
-                    autosave: {
-                        enabled: true,
-                        uniqueId: "story-content-autosave",
-                        delay: 1000,
-                    },
-                    toolbar: false, // Use custom toolbar
-                    renderingConfig: {
-                        singleLineBreaks: false,
-                        codeSyntaxHighlighting: true,
-                    },
-                });
-                
-                // Make SimpleMDE globally accessible
-                window.simplemde = simplemde;
-                window.addSimplemde = simplemde;
-                
-                console.log('SimpleMDE initialized successfully');
-            }
-        }
-        
-        // Initialize SimpleMDE when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeSimpleMDE);
-        } else {
-            initializeSimpleMDE();
-        }
-        
-        // Make functions globally available immediately
-        window.openImageInsertModalCreate = function() {
-            const modal = document.getElementById('image-insert-modal-create');
-            if (!modal) {
-                console.error("Content image insert modal (#image-insert-modal-create) not found.");
-                return;
-            }
-            modal.classList.remove('hidden');
-
-            const librarySection = document.getElementById('image-library-section-create');
-            const urlSection = document.getElementById('image-url-section-create');
-            const libraryRadio = document.querySelector('input[name="image-source-create"][value="library"]');
-
-            if (librarySection && urlSection && libraryRadio) {
-                librarySection.classList.remove('hidden');
-                urlSection.classList.add('hidden');
-                libraryRadio.checked = true;
-            }
-
-            document.getElementsByName('image-source-create').forEach(radio => {
-                if (!radio.dataset.listenerAttached) {
-                    radio.addEventListener('change', e => {
-                        const val = e.target.value;
-                        if (librarySection) librarySection.classList.toggle('hidden', val === 'url');
-                        if (urlSection) urlSection.classList.toggle('hidden', val !== 'url');
-                    });
-                    radio.dataset.listenerAttached = 'true';
-                }
-            });
-
-            fetchAndDisplayContentImagesCreate(1);
-        };
-        
-        window.openImageHeaderModalCreate = function() {
-            console.log('openImageHeaderModalCreate function called');
-            const modal = document.getElementById('image-header-modal-create');
-            if (modal) {
-                modal.classList.remove('hidden');
-                console.log('Modal opened successfully');
-                loadHeaderLibraryCreate(1);
-            } else {
-                console.error("Featured image modal (#image-header-modal-create) not found.");
             }
         };
         
-        window.closeImageInsertModalCreate = function() {
-            const modal = document.getElementById('image-insert-modal-create');
-            if (modal) {
-                modal.classList.add('hidden');
-                console.log('Content image modal closed');
-            } else {
-                console.error('Content image modal not found');
-            }
-        };
-        
-        window.closeImageHeaderModalCreate = function() {
-            console.log('closeImageHeaderModalCreate function called');
-            const modal = document.getElementById('image-header-modal-create');
-            console.log('Modal element found:', modal);
-            if (modal) {
-                console.log('Modal classes before:', modal.className);
-                modal.classList.add('hidden');
-                console.log('Modal classes after:', modal.className);
-                console.log('Header image modal closed');
-            } else {
-                console.error('Header image modal not found');
-            }
-        };
-        
-        // Clear featured image function
-        window.clearFeaturedImageCreate = function() {
-            const preview = document.getElementById('featured-preview-create');
-            const imageIdInput = document.getElementById('story-image-id');
-            const noImagePlaceholder = document.getElementById('no-image-placeholder');
-            
-            if (preview && imageIdInput && noImagePlaceholder) {
-                preview.src = '/static/pic/placeholder.png';
-                imageIdInput.value = '';
-                preview.classList.add('hidden');
-                noImagePlaceholder.classList.remove('hidden');
-                console.log('Featured image cleared');
-            } else {
-                console.error('Featured image elements not found');
-            }
-        };
-        
-        // Image Modal Functionality
-        // Pagination Helpers
-        function generatePageNumbers(currentPage, totalPages, edgeCount = 1, currentCount = 2) {
-            if (totalPages <= 1) return [];
-            const pages = new Set();
-            for (let i = 1; i <= Math.min(edgeCount, totalPages); i++) pages.add(i);
-            for (let i = Math.max(1, totalPages - edgeCount + 1); i <= totalPages; i++) pages.add(i);
-            for (let i = Math.max(1, currentPage - currentCount); i <= Math.min(totalPages, currentPage + currentCount); i++) pages.add(i);
-            const sortedPages = Array.from(pages).sort((a, b) => a - b);
-            const result = [];
-            let lastPage = 0;
-            for (const page of sortedPages) {
-                if (page > lastPage + 1) result.push(null); // Ellipsis
-                result.push(page);
-                lastPage = page;
-            }
-            return result;
-        }
-
-        function createPaginationElement(tag, classes, content, ariaLabel = null, title = null, disabled = false, onClick = null) {
-            const el = document.createElement(tag);
-            el.className = classes;
-            el.innerHTML = content;
-            if (ariaLabel) el.setAttribute('aria-label', ariaLabel);
-            if (title) el.title = title;
-            if (disabled) el.setAttribute('aria-disabled', 'true');
-            if (onClick && !disabled) el.onclick = () => onClick();
-            return el;
-        }
-
-        // Content Image Insert Modal Pagination
-        function updateContentImagePaginationControlsCreate(paginationData) {
-            const controlsContainer = document.getElementById('content-image-pagination-controls-create');
-            if (!controlsContainer) return;
-            controlsContainer.innerHTML = '';
-            if (!paginationData || paginationData.total_pages <= 1) return;
-
-            const { page: currentPage, total_pages: totalPages } = paginationData;
-            const nav = document.createElement('nav');
-            nav.setAttribute('aria-label', 'Content Image Pagination');
-            nav.className = 'flex flex-wrap items-center justify-center mt-4 gap-2 overflow-x-auto';
-
-            const buttonClasses = 'px-3 py-1 rounded-md hover:bg-blue-100 text-sm border border-gray-300';
-            const disabledClasses = 'px-3 py-1 rounded-md opacity-50 cursor-not-allowed text-sm border border-gray-300';
-            const currentClasses = 'px-3 py-1 rounded-md text-sm bg-blue-600 text-white';
-            const ellipsisClasses = 'h-8 px-1 inline-flex items-center text-gray-500 text-sm font-medium';
-            const firstIcon = `&laquo;`, prevIcon = `&lsaquo;`, nextIcon = `&rsaquo;`, lastIcon = `&raquo;`;
-
-            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, firstIcon, 'First Page', 'First Page', currentPage <= 1, () => fetchAndDisplayContentImagesCreate(1)));
-            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, prevIcon, 'Previous Page', 'Previous Page', currentPage <= 1, () => fetchAndDisplayContentImagesCreate(currentPage - 1)));
-            generatePageNumbers(currentPage, totalPages, 1, 1).forEach(page_num => {
-                if (page_num === null) nav.appendChild(createPaginationElement('span', ellipsisClasses, '...', null, null, true));
-                else if (page_num === currentPage) {
-                    const el = createPaginationElement('span', currentClasses, page_num, null, `Page ${page_num}`, true);
-                    el.setAttribute('aria-current', 'page');
-                    nav.appendChild(el);
-                } else nav.appendChild(createPaginationElement('button', buttonClasses, page_num, `Go to page ${page_num}`, `Go to page ${page_num}`, false, () => fetchAndDisplayContentImagesCreate(page_num)));
-            });
-            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, nextIcon, 'Next Page', 'Next Page', currentPage >= totalPages, () => fetchAndDisplayContentImagesCreate(currentPage + 1)));
-            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, lastIcon, 'Last Page', 'Last Page', currentPage >= totalPages, () => fetchAndDisplayContentImagesCreate(totalPages)));
-            controlsContainer.appendChild(nav);
-        }
-
-        // Header Image Library Pagination
-        function updateHeaderImagePaginationControlsCreate(paginationData) {
-            const controlsContainer = document.getElementById('header-image-pagination-controls-create');
-            if (!controlsContainer) return;
-            controlsContainer.innerHTML = '';
-            if (!paginationData || paginationData.total_pages <= 1) return;
-
-            const { page: currentPage, total_pages: totalPages } = paginationData;
-            const nav = document.createElement('nav');
-            nav.setAttribute('aria-label', 'Header Image Pagination');
-            nav.className = 'flex flex-wrap items-center justify-center mt-4 gap-2 overflow-x-auto';
-
-            const buttonClasses = 'px-3 py-1 rounded-md hover:bg-blue-100 text-sm border border-gray-300';
-            const disabledClasses = 'px-3 py-1 rounded-md opacity-50 cursor-not-allowed text-sm border border-gray-300';
-            const currentClasses = 'px-3 py-1 rounded-md text-sm bg-blue-600 text-white';
-            const ellipsisClasses = 'h-8 px-1 inline-flex items-center text-gray-500 text-sm font-medium';
-            const firstIcon = `&laquo;`, prevIcon = `&lsaquo;`, nextIcon = `&rsaquo;`, lastIcon = `&raquo;`;
-
-            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, firstIcon, 'First Page', 'First Page', currentPage <= 1, () => loadHeaderLibraryCreate(1)));
-            nav.appendChild(createPaginationElement(currentPage > 1 ? 'button' : 'span', currentPage > 1 ? buttonClasses : disabledClasses, prevIcon, 'Previous Page', 'Previous Page', currentPage <= 1, () => loadHeaderLibraryCreate(currentPage - 1)));
-            generatePageNumbers(currentPage, totalPages, 1, 1).forEach(page_num => {
-                if (page_num === null) nav.appendChild(createPaginationElement('span', ellipsisClasses, '...', null, null, true));
-                else if (page_num === currentPage) {
-                    const el = createPaginationElement('span', currentClasses, page_num, null, `Page ${page_num}`, true);
-                    el.setAttribute('aria-current', 'page');
-                    nav.appendChild(el);
-                } else nav.appendChild(createPaginationElement('button', buttonClasses, page_num, `Go to page ${page_num}`, `Go to page ${page_num}`, false, () => loadHeaderLibraryCreate(page_num)));
-            });
-            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, nextIcon, 'Next Page', 'Next Page', currentPage >= totalPages, () => loadHeaderLibraryCreate(currentPage + 1)));
-            nav.appendChild(createPaginationElement(currentPage < totalPages ? 'button' : 'span', currentPage < totalPages ? buttonClasses : disabledClasses, lastIcon, 'Last Page', 'Last Page', currentPage >= totalPages, () => loadHeaderLibraryCreate(totalPages)));
-            controlsContainer.appendChild(nav);
-        }
-
-        // Content Image Functions
-        async function fetchAndDisplayContentImagesCreate(page = 1) {
+        // Override the admin's image loading functions to ensure user-appropriate images only
+        window.fetchAndDisplayContentImagesCreate = async function(page = 1) {
+            console.log('User-specific content images loading...');
             const librarySection = document.getElementById('image-library-section-create');
             const paginationContainer = document.getElementById('content-image-pagination-controls-create');
             if (!librarySection || !paginationContainer) return;
+            
             librarySection.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">Loading your images...</p>';
             paginationContainer.innerHTML = '';
+            
             try {
+                // Call the API with visibility=visible to get only visible images
                 const response = await fetch(`/api/images?page=${page}&per_page=12&visibility=visible`);
                 if (!response.ok) throw new Error('Failed to load content images');
                 const data = await response.json();
-                console.log('Content images loaded:', data.items.length, 'visible images');
+                console.log('User content images loaded:', data.items.length, 'visible images');
                 
                 // Show message if no images found
                 if (data.items.length === 0) {
@@ -1586,63 +1131,22 @@ Tips:
                         </div>
                     `;
                 } else {
-                    renderImageLibraryCreate(data.items);
-                    updateContentImagePaginationControlsCreate(data);
+                    // Use the admin's rendering function but with our data
+                    if (window.renderImageLibraryCreate) {
+                        window.renderImageLibraryCreate(data.items);
+                        if (window.updateContentImagePaginationControlsCreate) {
+                            window.updateContentImagePaginationControlsCreate(data);
+                        }
+                    }
                 }
             } catch (err) {
                 librarySection.innerHTML = '<p class="col-span-full text-red-500 py-4">Error loading images.</p>';
-                console.error("Content image load error (create):", err);
+                console.error("Content image load error (user):", err);
             }
-        }
-
-        function renderImageLibraryCreate(imgs) {
-            const container = document.getElementById('image-library-section-create');
-            if (!container) return;
-
-            container.innerHTML = (imgs || []).map(image => {
-                const placeholderImg = '/static/pic/placeholder.png';
-                const fullImageUrl = image.file_url || image.url || '/static/pic/placeholder.png';
-                let squareThumbUrl = placeholderImg;
-
-                if (image.filepath) {
-                    const pathWithoutStatic = image.filepath.replace('static/', '', 1);
-                    const lastDotIndex = pathWithoutStatic.lastIndexOf('.');
-                    if (lastDotIndex !== -1) {
-                        const base_path = pathWithoutStatic.substring(0, lastDotIndex);
-                        const extension = pathWithoutStatic.substring(lastDotIndex);
-                        squareThumbUrl = `/static/${base_path}_thumb_square${extension}`;
-                    } else {
-                        squareThumbUrl = fullImageUrl;
-                    }
-                } else {
-                    squareThumbUrl = fullImageUrl;
-                }
-                return `
-                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition p-3 flex flex-col gap-2 group cursor-pointer hover:border-blue-400">
-                    <img src="${squareThumbUrl}" onerror="this.onerror=null;this.src='${placeholderImg}'" alt="${image.filename||'Image'}" class="w-full aspect-square object-cover rounded-lg mb-2 shadow-sm group-hover:shadow-md">
-                    <button class="select-image-create bg-blue-600 text-white py-1 rounded-lg font-semibold" data-url="${fullImageUrl}" data-alt="${image.filename||''}">Select</button>
-                    </div>
-                `;
-            }).join('');
-
-            // Re-attach listeners after rendering
-            document.querySelectorAll('.select-image-create').forEach(btn => {
-                const newBtn = btn.cloneNode(true);
-                btn.parentNode.replaceChild(newBtn, btn);
-                newBtn.addEventListener('click', () => {
-                    const url = newBtn.dataset.url;
-                    const alt = newBtn.dataset.alt;
-                    let simplemde = window.simplemde || window.addSimplemde;
-                    if (simplemde && simplemde.codemirror) {
-                        simplemde.codemirror.replaceSelection(`![${alt||null}](${url})`);
-                    }
-                    closeImageInsertModalCreate();
-                });
-            });
-        }
-
-        // Header Image Functions
-        async function loadHeaderLibraryCreate(page = 1) {
+        };
+        
+        window.loadHeaderLibraryCreate = async function(page = 1) {
+            console.log('User-specific header images loading...');
             const container = document.getElementById('header-image-library-create');
             const paginationContainer = document.getElementById('header-image-pagination-controls-create');
             if (!container || !paginationContainer) return;
@@ -1651,62 +1155,82 @@ Tips:
             paginationContainer.innerHTML = '';
 
             try {
-                const response = await fetch(`/api/images?page=${page}&per_page=12&visibility=visible`);
-                if (!response.ok) throw new Error('Failed to load header images');
-                const data = await response.json();
-                const imgs = data.items || [];
-                console.log('Header images loaded:', imgs.length, 'visible images');
-
-                container.innerHTML = imgs.map(image => {
-                    const placeholderImg = '/static/pic/placeholder.png';
-                    const fullImageUrl = image.file_url || image.url || '/static/pic/placeholder.png';
-                    let squareThumbUrl = placeholderImg;
-                    let landscapeThumbUrl = placeholderImg;
-
-                    if (image.filepath) {
-                        const pathWithoutStatic = image.filepath.replace('static/', '', 1);
-                        const lastDotIndex = pathWithoutStatic.lastIndexOf('.');
-                        if (lastDotIndex !== -1) {
-                            const base_path = pathWithoutStatic.substring(0, lastDotIndex);
-                            const extension = pathWithoutStatic.substring(lastDotIndex);
-                            squareThumbUrl = `/static/${base_path}_thumb_square${extension}`;
-                            landscapeThumbUrl = `/static/${base_path}_thumb_landscape${extension}`;
-                        } else {
-                            squareThumbUrl = fullImageUrl;
-                            landscapeThumbUrl = fullImageUrl;
-                        }
-                    } else {
-                        squareThumbUrl = fullImageUrl;
-                        landscapeThumbUrl = fullImageUrl;
-                    }
-                    return `
-                    <div class="p-2 group cursor-pointer border border-transparent hover:border-yellow-400 rounded-lg transition duration-150">
-                        <img src="${squareThumbUrl}" onerror="this.onerror=null;this.src='${placeholderImg}'" alt="${image.filename || 'Image'}" class="w-full aspect-square object-cover rounded-lg mb-2 shadow-sm group-hover:shadow-md" loading="lazy">
-                        <button class="select-header-create mt-2 w-full bg-yellow-500 text-gray-900 py-1 rounded-lg font-semibold" data-thumb-url="${landscapeThumbUrl}" data-id="${image.id}">Select</button>
-                    </div>
-                    `;
-                }).join('');
-
-                // Re-attach listeners
-                container.querySelectorAll('.select-header-create').forEach(btn => {
-                    const newBtn = btn.cloneNode(true);
-                    btn.parentNode.replaceChild(newBtn, btn);
-                    newBtn.addEventListener('click', () => {
-                        const preview = document.getElementById('featured-preview-create');
-                        const imageIdInput = document.getElementById('story-image-id');
-                        if (preview && imageIdInput) {
-                            preview.src = newBtn.dataset.thumbUrl;
-                            imageIdInput.value = newBtn.dataset.id;
-                            preview.classList.remove('hidden');
-                            document.getElementById('no-image-placeholder').classList.add('hidden');
-                        }
-                        window.closeImageHeaderModalCreate();
-                    });
-                });
-
-                updateHeaderImagePaginationControlsCreate(data);
+                // Try to get ALL visible images from all users using different API parameters
+                console.log('Attempting to get all visible images from all users...');
                 
-                // Show message if no images found
+                // First try: request all images without user filtering
+                const response = await fetch(`/api/images?page=${page}&per_page=50&visibility=visible&all_users=true`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const imgs = data.items || [];
+                    console.log('Successfully got all visible images:', imgs.length, 'images from all users');
+                    return data;
+                }
+                
+                // Second try: request with different visibility parameter
+                console.log('First attempt failed, trying alternative parameters...');
+                const response2 = await fetch(`/api/images?page=${page}&per_page=50&visibility=public`);
+                if (response2.ok) {
+                    const data = await response2.json();
+                    const imgs = data.items || [];
+                    console.log('Successfully got public images:', imgs.length, 'images from all users');
+                    return data;
+                }
+                
+                // Third try: request without visibility filter (might return all)
+                console.log('Second attempt failed, trying without visibility filter...');
+                const response3 = await fetch(`/api/images?page=${page}&per_page=50`);
+                if (response3.ok) {
+                    const data = await response3.json();
+                    const imgs = data.items || [];
+                    console.log('Got images without filter:', imgs.length, 'total images');
+                    
+                    // Filter to only visible images on the client side
+                    const visibleImages = imgs.filter(img => img.visibility === 'visible' || img.visibility === 'public' || img.is_visible === true);
+                    console.log('Filtered to visible images:', visibleImages.length, 'visible images');
+                    
+                    return { ...data, items: visibleImages };
+                }
+                
+                // Final fallback: use original endpoint
+                console.log('All attempts failed, using fallback endpoint...');
+                const fallbackResponse = await fetch(`/api/images?page=${page}&per_page=12&visibility=visible`);
+                if (!fallbackResponse.ok) throw new Error('Failed to load header images');
+                const fallbackData = await fallbackResponse.json();
+                console.log('Using fallback endpoint, found:', fallbackData.items.length, 'images (user only)');
+                return fallbackData;
+                
+            } catch (err) {
+                console.error('Error loading header images:', err);
+                throw err;
+            }
+        };
+        
+        // New function to actually load and display the images
+        window.loadAndDisplayHeaderImages = async function(page = 1) {
+            console.log('Loading and displaying header images...');
+            const container = document.getElementById('header-image-library-create');
+            const paginationContainer = document.getElementById('header-image-pagination-controls-create');
+            if (!container || !paginationContainer) return;
+
+            container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">Loading your images...</p>';
+            paginationContainer.innerHTML = '';
+
+            try {
+                const data = await window.loadHeaderLibraryCreate(page);
+                const imgs = data.items || [];
+                console.log('Images loaded:', imgs.length, 'total images');
+                console.log('Full API response:', data);
+                console.log('Images array:', imgs);
+                
+                if (imgs.length > 0) {
+                    console.log('First image object:', imgs[0]);
+                    console.log('First image keys:', Object.keys(imgs[0]));
+                    console.log('First image values:', Object.values(imgs[0]));
+                }
+
+                // Always use our own fallback rendering for featured images to ensure reliability
+                console.log('Using our own rendering for featured images');
                 if (imgs.length === 0) {
                     container.innerHTML = `
                         <div class="col-span-full text-center py-8">
@@ -1715,197 +1239,504 @@ Tips:
                             <p class="text-sm text-gray-400">Upload gambar baru menggunakan form di atas</p>
                         </div>
                     `;
+                    } else {
+                    console.log('Rendering', imgs.length, 'images to container');
+                    
+                    const imageHtml = imgs.map(img => {
+                        // Debug the image object structure
+                        console.log('Raw image object:', img);
+                        
+                        // Try different possible URL field names
+                        let imageUrl = img.url || img.image_url || img.file_url || img.path || img.filename;
+                        let description = img.description || img.alt || img.name || img.title || 'Image';
+                        
+                        console.log('Extracted URL:', imageUrl, 'Description:', description);
+                        
+                        // Ensure we have a proper URL
+                        if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+                            imageUrl = '/' + imageUrl;
+                        }
+                        
+                        // If still no valid URL, skip this image
+                        if (!imageUrl || imageUrl === 'null' || imageUrl === 'undefined') {
+                            console.warn('Skipping image with invalid URL:', img);
+                            return '';
+                        }
+                        
+                        console.log('Processing image:', img.id, 'Final URL:', imageUrl, 'Description:', description);
+                        
+                        return `
+                            <div class="relative group cursor-pointer border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200" 
+                                 onclick="selectHeaderImage('${imageUrl}', ${img.id})">
+                                <img src="${imageUrl}" alt="${description}" 
+                                     class="w-full h-40 object-cover"
+                                     onload="console.log('Image loaded successfully:', '${imageUrl}')"
+                                     onerror="console.error('Image failed to load:', '${imageUrl}')">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                                    <span class="text-white opacity-0 group-hover:opacity-100 font-medium">Pilih</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    console.log('Setting container HTML:', imageHtml.substring(0, 100) + '...');
+                    container.innerHTML = imageHtml;
+                    console.log('Container HTML set, current innerHTML length:', container.innerHTML.length);
+                    
+                    // Debug: check what's actually in the container
+                    setTimeout(() => {
+                        console.log('Container after rendering:', container.innerHTML.substring(0, 200));
+                        const images = container.querySelectorAll('img');
+                        console.log('Found', images.length, 'img elements in container');
+                        images.forEach((img, index) => {
+                            console.log(`Image ${index}:`, img.src, img.alt);
+                            console.log(`Image ${index} natural dimensions:`, img.naturalWidth, 'x', img.naturalHeight);
+                            console.log(`Image ${index} current dimensions:`, img.width, 'x', img.height);
+                            console.log(`Image ${index} complete:`, img.complete);
+                            console.log(`Image ${index} readyState:`, img.readyState);
+                        });
+                        
+                        // Check if images are actually visible
+                        const imageContainers = container.querySelectorAll('.relative.group.cursor-pointer');
+                        console.log('Found', imageContainers.length, 'image containers');
+                        imageContainers.forEach((container, index) => {
+                            const rect = container.getBoundingClientRect();
+                            console.log(`Container ${index} dimensions:`, rect.width, 'x', rect.height);
+                            console.log(`Container ${index} visible:`, rect.width > 0 && rect.height > 0);
+                        });
+                    }, 100);
+                    
+                    // Add pagination controls
+                    if (data.total_pages > 1) {
+                        console.log('Adding pagination controls for', data.total_pages, 'pages');
+                        const paginationHtml = generatePaginationControls(data, page);
+                        paginationContainer.innerHTML = paginationHtml;
+                    }
                 }
             } catch (err) {
                 console.error('Error loading header images:', err);
                 container.innerHTML = '<p class="col-span-full text-center text-red-500 py-4">Error loading images.</p>';
             }
-        }
-
-
-
-        // Link Insert Modal
-        function openLinkInsertModal(editor) {
-            const modal = document.getElementById('link-insert-modal');
-            const linkTextInput = document.getElementById('link-text');
-            const linkUrlInput = document.getElementById('link-url');
-            const insertBtn = document.getElementById('insert-link-btn');
-            const cancelBtn = document.getElementById('cancel-link-btn');
-
-            if (!modal || !linkTextInput || !linkUrlInput || !insertBtn || !cancelBtn) {
-                console.error("Link insert modal elements not found!");
-                return;
-            }
-
-            const cm = editor.codemirror;
-            const selectedText = cm.getSelection();
-            linkTextInput.value = selectedText || '';
-            linkUrlInput.value = 'https://';
-
-            modal.classList.remove('hidden');
-
-            const insertLink = () => {
-                const text = linkTextInput.value.trim();
-                const url = linkUrlInput.value.trim();
-                if (url && url !== 'https://') {
-                    const markdownLink = `[${text || url}](${url})`;
-                    cm.replaceSelection(markdownLink);
-                    closeModal();
-                } else {
-                    console.warn("URL is required to insert a link.");
-                    linkUrlInput.focus();
-                }
-            };
-
-            const closeModal = () => {
-                modal.classList.add('hidden');
-                linkTextInput.value = '';
-                linkUrlInput.value = '';
-                insertBtn.removeEventListener('click', insertLink);
-                cancelBtn.removeEventListener('click', closeModal);
-                linkUrlInput.removeEventListener('keypress', handleEnter);
-            };
-
-            const handleEnter = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    insertLink();
-                }
-            };
-
-            insertBtn.addEventListener('click', insertLink);
-            cancelBtn.addEventListener('click', closeModal);
-            linkUrlInput.addEventListener('keypress', handleEnter);
-            linkUrlInput.focus();
-        }
-
-        // Make link function globally available
-        window.openLinkInsertModal = openLinkInsertModal;
-
-        // Attach additional event listeners
-        function setupAdditionalEventListeners() {
-            // Attach listener for clear featured image button
-            const clearFeaturedBtn = document.getElementById('clear-featured-image-btn');
-            if (clearFeaturedBtn) {
-                clearFeaturedBtn.addEventListener('click', window.clearFeaturedImageCreate);
-                console.log('Clear featured image button listener attached');
-            } else {
-                console.error('clear-featured-image-btn not found in DOM');
+        };
+        
+        // Function to generate pagination controls
+        function generatePaginationControls(data, currentPage) {
+            const totalPages = data.total_pages;
+            const totalItems = data.total_items;
+            const perPage = data.per_page;
+            
+            let paginationHtml = `
+                <div class="flex items-center justify-between text-sm text-gray-700 mb-4">
+                    <div>
+                        Showing ${((currentPage - 1) * perPage) + 1} to ${Math.min(currentPage * perPage, totalItems)} of ${totalItems} images
+                    </div>
+                    <div class="flex space-x-2">
+            `;
+            
+            // Previous button
+            if (currentPage > 1) {
+                paginationHtml += `
+                    <button onclick="window.loadAndDisplayHeaderImages(${currentPage - 1})" 
+                            class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        <i class="fas fa-chevron-left mr-1"></i>Previous
+                    </button>
+                `;
             }
             
-            // Attach listener for uploading header image
-            const uploadHeaderBtn = document.getElementById('header-upload-btn-create');
-            if (uploadHeaderBtn) {
-                uploadHeaderBtn.addEventListener('click', async () => {
-                    const fileInput = document.getElementById('header-upload-file-create');
-                    const urlInput = document.getElementById('header-upload-url-create');
-                    const nameInput = document.getElementById('header-upload-name-create');
-                    const urlValue = urlInput.value.trim();
-                    const nameValue = nameInput.value.trim();
-                    const fd = new FormData();
-
-                    if (fileInput.files.length) {
-                        fd.append('file', fileInput.files[0]);
-                    } else if (urlValue) {
-                        fd.append('url', urlValue);
-                    } else {
-                        showToast('Pilih berkas atau masukkan URL.', 'warning');
-                        return;
-                    }
-                    if (nameValue) fd.append('name', nameValue);
-                    fd.append('is_visible', 'true');
-
-                    try {
-                        const resp = await fetch('/api/images', { method: 'POST', body: fd });
-                        const data = await resp.json();
-                        if (!resp.ok) throw new Error(data.error || 'Upload failed');
-
-                        nameInput.value = '';
-                        fileInput.value = '';
-                        urlInput.value = '';
-
-                        await loadHeaderLibraryCreate();
-                        showToast('Gambar berhasil diunggah!', 'success');
-                    } catch (err) {
-                        console.error('Header image upload error:', err);
-                        showToast('Gagal mengunggah gambar: ' + err.message, 'error');
-                    }
-                });
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    paginationHtml += `
+                        <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">${i}</span>
+                    `;
+                } else {
+                    paginationHtml += `
+                        <button onclick="window.loadAndDisplayHeaderImages(${i})" 
+                                class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                            ${i}
+                        </button>
+                    `;
+                }
             }
-
-            // Attach listener for inserting image from URL (content modal)
-            const insertContentUrlBtn = document.getElementById('insert-image-btn-create');
-            if (insertContentUrlBtn) {
-                insertContentUrlBtn.addEventListener('click', () => {
-                    const source = document.querySelector('input[name="image-source-create"]:checked').value;
-                    let simplemde = window.simplemde || window.addSimplemde;
-                    if (simplemde && simplemde.codemirror) {
-                        const cm = simplemde.codemirror;
-                        if (source === 'url') {
-                            const urlInput = document.getElementById('image-url-input-create');
-                            const altInput = document.getElementById('image-alt-input-create');
-                            const url = urlInput.value.trim();
-                            const alt = altInput.value.trim();
-                            if (url) {
-                                cm.replaceSelection(`![${alt||null}](${url})`);
-                                window.closeImageInsertModalCreate();
-                            } else {
-                                showToast('Masukkan URL gambar.', 'warning');
-                                urlInput.focus();
-                            }
-                        }
-                    }
-                });
+            
+            // Next button
+            if (currentPage < totalPages) {
+                paginationHtml += `
+                    <button onclick="window.loadAndDisplayHeaderImages(${currentPage + 1})" 
+                            class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                        Next<i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                `;
             }
-
-            // Attach event listeners for custom toolbar
-            document.querySelectorAll('#custom-toolbar button[data-cmd]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const cmd = btn.getAttribute('data-cmd');
-                    let simplemde = window.simplemde || window.addSimplemde;
-                    if (simplemde && simplemde.codemirror) {
-                        const cm = simplemde.codemirror;
-                        switch (cmd) {
-                            case 'bold': 
-                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleBold(simplemde); 
-                                break;
-                            case 'italic': 
-                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleItalic(simplemde); 
-                                break;
-                            case 'heading': 
-                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleHeadingSmaller(simplemde); 
-                                break;
-                            case 'quote': 
-                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleBlockquote(simplemde); 
-                                break;
-                            case 'unordered-list': 
-                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleUnorderedList(simplemde); 
-                                break;
-                            case 'ordered-list': 
-                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.toggleOrderedList(simplemde); 
-                                break;
-                            case 'link': 
-                                window.openLinkInsertModal(simplemde); 
-                                break;
-                            case 'image': 
-                                window.openImageInsertModalCreate(); 
-                                break;
-                            case 'preview': 
-                                if (typeof SimpleMDE !== 'undefined') SimpleMDE.togglePreview(simplemde); 
-                                break;
-                            case 'guide': 
-                                window.open('https://www.markdownguide.org/cheat-sheet/', '_blank'); 
-                                break;
-                        }
-                    }
-                });
-            });
+            
+            paginationHtml += `
+                    </div>
+                </div>
+            `;
+            
+            return paginationHtml;
         }
 
-        // Initialize additional event listeners
-        setupAdditionalEventListeners();
+
         
-        console.log('2-Step Process JavaScript initialization complete');
+        // Helper functions for image selection
+        window.insertImageFromLibrary = function(imageUrl, altText) {
+            console.log('🎯 insertImageFromLibrary called with:', imageUrl, altText);
+            
+            // Try multiple ways to get the SimpleMDE editor
+            let cm = null;
+            let simplemde = null;
+            
+            // Method 1: Check if addSimplemde is available
+            if (window.addSimplemde) {
+                if (window.addSimplemde.codemirror) {
+                    cm = window.addSimplemde.codemirror;
+                    simplemde = window.addSimplemde;
+                    console.log('Found editor via addSimplemde.codemirror');
+                } else if (window.addSimplemde.simplemde && window.addSimplemde.simplemde.codemirror) {
+                    cm = window.addSimplemde.simplemde.codemirror;
+                    simplemde = window.addSimplemde.simplemde;
+                    console.log('Found editor via addSimplemde.simplemde.codemirror');
+                }
+            }
+            
+            // Method 2: Check global SimpleMDE instances
+            if (!cm && window.SimpleMDE && window.SimpleMDE.instances && window.SimpleMDE.instances.length > 0) {
+                cm = window.SimpleMDE.instances[0].codemirror;
+                simplemde = window.SimpleMDE.instances[0];
+                console.log('Found editor via SimpleMDE.instances[0]');
+            }
+            
+            // Method 3: Check if there's a textarea we can work with directly
+            if (!cm) {
+                const textarea = document.getElementById('news-content') || document.getElementById('story-content');
+                if (textarea) {
+                    console.log('Found textarea, inserting markdown directly');
+                    const markdown = `![${altText || 'Image'}](${imageUrl})`;
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = textarea.value.substring(0, cursorPos);
+                    const textAfter = textarea.value.substring(cursorPos);
+                    textarea.value = textBefore + markdown + textAfter;
+                    
+                    // Set cursor position after the inserted markdown
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + markdown.length;
+                    
+                    // Trigger input event to notify any listeners
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    // Close the modal
+                    const modal = document.getElementById('image-insert-modal-create');
+                    if (modal) modal.classList.add('hidden');
+                    
+                    console.log('✅ Image markdown inserted directly into textarea');
+                    return;
+                }
+            }
+            
+            // Method 4: Try to use the editor if we found it
+            if (cm) {
+                try {
+                    const markdown = `![${altText || 'Image'}](${imageUrl})`;
+                    cm.replaceSelection(markdown);
+                    console.log('✅ Image markdown inserted via CodeMirror');
+                    
+                    // Close the modal
+                    const modal = document.getElementById('image-insert-modal-create');
+                    if (modal) modal.classList.add('hidden');
+        } catch (error) {
+                    console.error('Error inserting via CodeMirror:', error);
+                    // Fallback to textarea method
+                    const textarea = document.getElementById('news-content') || document.getElementById('story-content');
+                    if (textarea) {
+                        const markdown = `![${altText || 'Image'}](${imageUrl})`;
+                        const cursorPos = textarea.selectionStart;
+                        const textBefore = textarea.value.substring(0, cursorPos);
+                        const textAfter = textarea.value.substring(cursorPos);
+                        textarea.value = textBefore + markdown + textAfter;
+                        textarea.selectionStart = textarea.selectionEnd = cursorPos + markdown.length;
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        
+                        const modal = document.getElementById('image-insert-modal-create');
+                        if (modal) modal.classList.add('hidden');
+                        
+                        console.log('✅ Image markdown inserted via fallback textarea method');
+                    }
+                }
+        } else {
+                console.warn('❌ No editor or textarea found, cannot insert image');
+                // Show user feedback
+                alert('Tidak dapat menyisipkan gambar. Silakan salin URL gambar dan sisipkan secara manual.');
+            }
+        };
+        
+        window.selectHeaderImage = function(imageUrl, imageId) {
+            console.log('Selected header image:', imageUrl, 'ID:', imageId);
+            // Update the featured image preview
+            const preview = document.getElementById('featured-preview-create');
+            const noImagePlaceholder = document.getElementById('no-image-placeholder');
+            const imageIdInput = document.getElementById('news-image-id');
+            
+            if (preview) {
+                preview.src = imageUrl;
+                preview.classList.remove('hidden');
+            }
+            if (noImagePlaceholder) {
+                noImagePlaceholder.classList.add('hidden');
+            }
+            if (imageIdInput) {
+                imageIdInput.value = imageId;
+            }
+            
+            // Close the modal
+            const modal = document.getElementById('image-header-modal-create');
+            if (modal) modal.classList.add('hidden');
+        };
+        
+        // Override the admin's modal opening functions to ensure images load
+        window.openImageHeaderModalCreate = function() {
+            console.log('Opening featured image modal...');
+            const modal = document.getElementById('image-header-modal-create');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Load images immediately when modal opens
+                setTimeout(() => {
+                    if (window.loadAndDisplayHeaderImages) {
+                        window.loadAndDisplayHeaderImages(1);
+                    } else if (window.loadHeaderLibraryCreate) {
+                        window.loadHeaderLibraryCreate(1);
+                    }
+                }, 100);
+            }
+        };
+        
+        window.closeImageHeaderModalCreate = function() {
+            console.log('Closing featured image modal...');
+            const modal = document.getElementById('image-header-modal-create');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+        
+        // Ensure the form action includes proper user context
+        const form = document.getElementById('add-news-form');
+        if (form) {
+            // Add a hidden input to ensure user context is preserved
+            const userContextInput = document.createElement('input');
+            userContextInput.type = 'hidden';
+            userContextInput.name = 'user_context';
+            userContextInput.value = '{{ user.username }}';
+            form.appendChild(userContextInput);
+            console.log('Added user context to form');
+        }
+        
+        // Wait for SimpleMDE to be properly initialized
+        function waitForSimpleMDE(callback, maxAttempts = 100) {
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                attempts++;
+                
+                // Check if SimpleMDE is available
+                if (window.addSimplemde && window.addSimplemde.codemirror) {
+                    clearInterval(checkInterval);
+                    console.log('✅ SimpleMDE found after', attempts, 'attempts via addSimplemde.codemirror');
+                    callback();
+                } else if (window.addSimplemde && window.addSimplemde.simplemde && window.addSimplemde.simplemde.codemirror) {
+                    clearInterval(checkInterval);
+                    console.log('✅ SimpleMDE found after', attempts, 'attempts via addSimplemde.simplemde.codemirror');
+                    callback();
+                } else if (window.SimpleMDE && window.SimpleMDE.instances && window.SimpleMDE.instances.length > 0) {
+                    clearInterval(checkInterval);
+                    console.log('✅ SimpleMDE instances found after', attempts, 'attempts');
+                    callback();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    console.warn('⚠️ SimpleMDE not found after', maxAttempts, 'attempts - will use fallback methods');
+                    callback(); // Still call callback to initialize fallback functionality
+                }
+                
+                // Log progress every 10 attempts
+                if (attempts % 10 === 0) {
+                    console.log(`Checking SimpleMDE... attempt ${attempts}/${maxAttempts}`);
+                }
+            }, 100);
+        }
+        
+                // Initialize SimpleMDE-dependent functionality
+        waitForSimpleMDE(() => {
+            console.log('SimpleMDE is ready, initializing image functionality...');
+            // After editor ready, attempt prefill if editing
+            prefillEditIfNeeded();
+            
+            // Our custom renderImageLibraryCreate function is already defined above
+            console.log('Custom image rendering function is ready');
+            
+            // Test image insertion functionality
+            console.log('Testing image insertion methods...');
+            
+            // Check what's available
+            if (window.addSimplemde && window.addSimplemde.codemirror) {
+                console.log('✅ addSimplemde.codemirror available');
+            } else if (window.addSimplemde && window.addSimplemde.simplemde) {
+                console.log('✅ addSimplemde.simplemde available');
+            } else if (window.SimpleMDE && window.SimpleMDE.instances) {
+                console.log('✅ SimpleMDE.instances available:', window.SimpleMDE.instances.length);
+                } else {
+                console.log('⚠️ No SimpleMDE found, will use textarea fallback');
+            }
+            
+            // Check if textarea is available as fallback
+            const textarea = document.getElementById('news-content') || document.getElementById('story-content');
+            if (textarea) {
+                console.log('✅ Textarea fallback available:', textarea.id);
+                    } else {
+                console.log('❌ No textarea fallback available');
+            }
+        });
+        
+        // Add link modal functionality that doesn't depend on SimpleMDE
+        window.openLinkInsertModal = function() {
+            console.log('🔗 openLinkInsertModal called');
+            const modal = document.getElementById('link-insert-modal');
+            if (modal) {
+                console.log('✅ Link modal found, showing it');
+                modal.classList.remove('hidden');
+                // Focus on the link text input
+                const linkTextInput = document.getElementById('link-text');
+                if (linkTextInput) {
+                    linkTextInput.focus();
+                    console.log('✅ Link text input focused');
+                        } else {
+                    console.warn('❌ Link text input not found');
+                        }
+                    } else {
+                console.error('❌ Link modal not found');
+            }
+        };
+        
+        window.insertLink = function() {
+            console.log('🔗 insertLink called');
+            const linkText = document.getElementById('link-text')?.value.trim();
+            const linkUrl = document.getElementById('link-url')?.value.trim();
+            
+            console.log('Link text:', linkText, 'Link URL:', linkUrl);
+            
+            if (!linkUrl) {
+                alert('URL harus diisi');
+                return;
+            }
+            
+            // Try to insert into SimpleMDE
+            let cm = null;
+            if (window.addSimplemde && window.addSimplemde.codemirror) {
+                cm = window.addSimplemde.codemirror;
+            } else if (window.SimpleMDE && window.SimpleMDE.instances && window.SimpleMDE.instances.length > 0) {
+                cm = window.SimpleMDE.instances[0].codemirror;
+            }
+            
+            if (cm) {
+                const markdown = linkText ? `[${linkText}](${linkUrl})` : `[${linkUrl}](${linkUrl})`;
+                cm.replaceSelection(markdown);
+                } else {
+                console.warn('SimpleMDE not available, cannot insert link');
+            }
+            
+            // Close modal
+            const modal = document.getElementById('link-insert-modal');
+            if (modal) modal.classList.add('hidden');
+            
+            // Clear inputs
+            if (document.getElementById('link-text')) document.getElementById('link-text').value = '';
+            if (document.getElementById('link-url')) document.getElementById('link-url').value = '';
+        };
+        
+        // Add event listeners for link modal
+        function setupLinkModalListeners() {
+            console.log('🔗 Setting up link modal event listeners...');
+            
+            const insertLinkBtn = document.getElementById('insert-link-btn');
+            const cancelLinkBtn = document.getElementById('cancel-link-btn');
+            const closeImageInsertBtn = document.getElementById('close-image-insert-create');
+            
+            if (insertLinkBtn) {
+                insertLinkBtn.addEventListener('click', window.insertLink);
+                console.log('✅ Insert link button listener added');
+            } else {
+                console.warn('❌ Insert link button not found');
+            }
+            
+            if (cancelLinkBtn) {
+                cancelLinkBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('link-insert-modal');
+                    if (modal) modal.classList.add('hidden');
+                    console.log('🔗 Link modal closed via cancel button');
+                });
+                console.log('✅ Cancel link button listener added');
+                    } else {
+                console.warn('❌ Cancel link button not found');
+            }
+            
+            if (closeImageInsertBtn) {
+                closeImageInsertBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('image-insert-modal-create');
+                    if (modal) modal.classList.add('hidden');
+                    console.log('🖼️ Image insert modal closed');
+                });
+                console.log('✅ Close image insert button listener added');
+            } else {
+                console.warn('❌ Close image insert button not found');
+            }
+        }
+        
+        // Set up listeners when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupLinkModalListeners);
+                            } else {
+            setupLinkModalListeners();
+        }
+        
+        // Check if admin functions are available and log status
+        setTimeout(() => {
+            console.log('Checking admin image functions availability:');
+            console.log('- renderImageLibraryCreate:', !!window.renderImageLibraryCreate);
+            console.log('- renderHeaderLibraryCreate:', !!window.renderHeaderLibraryCreate);
+            console.log('- updateContentImagePaginationControlsCreate:', !!window.updateContentImagePaginationControlsCreate);
+            console.log('- updateHeaderImagePaginationControlsCreate:', !!window.updateHeaderImagePaginationControlsCreate);
+            
+            // Test image loading directly
+            console.log('Testing image loading directly...');
+            if (window.loadHeaderLibraryCreate) {
+                window.loadHeaderLibraryCreate(1);
+            } else {
+                console.log('loadHeaderLibraryCreate not available, testing API call directly...');
+                // Test the API call directly
+                fetch('/api/images?page=1&per_page=12&visibility=visible')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Direct API test successful:', data.items.length, 'images found');
+                        const container = document.getElementById('header-image-library-create');
+                        if (container && data.items.length > 0) {
+                            container.innerHTML = data.items.map(img => `
+                                <div class="relative group cursor-pointer border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200" 
+                                     onclick="selectHeaderImage('${img.url}', ${img.id})">
+                                    <img src="${img.url}" alt="${img.description || 'Image'}" 
+                                         class="w-full h-32 object-cover">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                                        <span class="text-white opacity-0 group-hover:opacity-100 font-medium">Pilih</span>
+                                    </div>
+                                </div>
+                            `).join('');
+                        } else if (container) {
+                            container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">No images found</p>';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Direct API test failed:', err);
+                    });
+            }
+        }, 2000);
     });
 })();
 </script>

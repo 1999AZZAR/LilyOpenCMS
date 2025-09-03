@@ -43,12 +43,20 @@ def get_images():
     # Base query
     query = Image.query
 
+    # Check if all_users parameter is requested
+    all_users = request.args.get('all_users', 'false').lower() == 'true'
+    
     # Scope by ownership based on role
     # Superuser/Admin: unrestricted. Subadmin (custom role): unrestricted.
     # Editor (custom role): own + assigned writers' images. Others: own only.
     custom_name = (current_user.custom_role.name.lower() if getattr(current_user, 'custom_role', None) and current_user.custom_role.name else "")
     is_admin_tier = current_user.role in [UserRole.SUPERUSER, UserRole.ADMIN] or custom_name == "subadmin"
-    if is_admin_tier:
+    
+    # If all_users is requested, bypass ownership restrictions for visible images
+    if all_users:
+        # Only show visible images when requesting all users
+        query = query.filter(Image.is_visible == True)
+    elif is_admin_tier:
         pass
     else:
         # Join uploader to allow including admin-tier uploads for everyone
@@ -87,6 +95,12 @@ def get_images():
 
     # Apply ordering and pagination
     images_pagination = query.order_by(Image.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Debug logging
+    current_app.logger.info(f"API Images: page={page}, per_page={per_page}, all_users={all_users}, "
+                          f"visibility_filter={visibility_filter}, total_found={images_pagination.total}, "
+                          f"items_returned={len(images_pagination.items)}")
+    
     return jsonify({
         'items': [image.to_dict() for image in images_pagination.items],
         'page': images_pagination.page,

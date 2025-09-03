@@ -1,5 +1,4 @@
 from .common_imports import *
-main_blueprint = Blueprint("main", __name__)
 
 from .routes_auth import *
 from .routes_chategories import *
@@ -21,6 +20,8 @@ from .routes_albums import *
 from .routes_seo import *
 from .routes_user_dashboard import *
 from .routes_library import *
+from .routes_public_api import *
+from .routes_api_xlate import *
 
 __all__ = [
     "main_blueprint",
@@ -43,4 +44,6 @@ __all__ = [
     "routes_seo",
     "routes_user_dashboard",
     "routes_library",
+    "routes_public_api",
+    "routes_api_xlate",
 ]

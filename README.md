@@ -97,7 +97,7 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Bulk Operations**: Efficient bulk approve/reject functionality for multiple requests
 - **Request Management**: Dedicated admin interface for managing deletion requests
 - **Audit Trail**: Complete tracking of who requested, when, and approval status
-- **Enhanced Security**: Prevents unauthorized content deletion while maintaining consistent workflow
+- **Enhanced Security**: Prevents unauthorized content deletion while maintaining consistent workflownn### 🌐 Public API Endpointsn- **Multiplatform Access**: JSON endpoints for mobile apps, desktop clients, and third-party integrationsn- **News API**: Public endpoints for news articles and lists with filtering and paginationn- **Albums API**: Public endpoints for albums, chapters, and related contentn- **User Profiles API**: Public user profile data, statistics, and library accessn- **Categories & Tags API**: Public access to content categories and tag systemn- **Comments API**: Public comment retrieval with threading and moderationn- **Unified Search API**: Cross-content search with type filtering and paginationn- **No Authentication Required**: All endpoints are publicly accessible for multiplatform usage
 
 ### 💬 Comment & Rating System
 - **Nested Comments**: Threaded comment system with replies

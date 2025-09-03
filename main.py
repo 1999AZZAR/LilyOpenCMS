@@ -544,6 +544,16 @@ except ImportError as e:
 except Exception as e:
     app.logger.error(f"❌ Unexpected error during blueprint registration: {e}", exc_info=True)
 
+# Register translation-layer API blueprint (read-only)
+try:
+    from routes.routes_api_xlate import api_xlate
+    app.register_blueprint(api_xlate)
+    app.logger.info("✅ Blueprint 'api_xlate' registered successfully.")
+except ImportError as e:
+    app.logger.error(f"❌ Failed to import or register blueprint 'api_xlate': {e}")
+except Exception as e:
+    app.logger.error(f"❌ Unexpected error during api_xlate registration: {e}", exc_info=True)
+
 try:
     from routes.settings.root_seo import root_seo_bp
     app.register_blueprint(root_seo_bp)

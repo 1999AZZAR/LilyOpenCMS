@@ -219,6 +219,9 @@ if (!setupFormHandling()) {
         
         try {
             const formData = new FormData(form);
+            
+            // Ensure visibility is set to hidden (draft)
+            formData.set('is_visible', 'false');
             const response = await fetch('/api/news/upload-docx', {
                 method: 'POST',
                 body: formData
@@ -227,7 +230,7 @@ if (!setupFormHandling()) {
             const data = await response.json();
             
             if (response.ok) {
-                showToast('Artikel berhasil dibuat!', 'success');
+                showToast('Draft artikel berhasil dibuat! Artikel tersimpan sebagai draft dan tidak terlihat publik.', 'success');
                 clearForm();
             } else {
                 showToast(data.error || 'Terjadi kesalahan saat upload.', 'error');
@@ -239,7 +242,7 @@ if (!setupFormHandling()) {
             // Reset button state
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload & Buat Artikel';
+                submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload & Buat Draft';
             }
         }
     }

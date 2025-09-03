@@ -4,22 +4,28 @@
 
 | **Category** | **Completed** | **In Progress** | **Pending** | **Total** |
 |--------------|---------------|-----------------|-------------|-----------|
-| **Core Features** | 67 | 0 | 0 | 67 |
+| **Core Features** | 68 | 0 | 0 | 68 |
 | **Admin Area** | 30 | 0 | 0 | 30 |
 | **Security & Performance** | 19 | 0 | 1 | 20 |
 | **Ads System** | 6 | 0 | 0 | 6 |
 | **Advanced Features** | 10 | 0 | 10 | 20 |
 | **Documentation & Testing** | 8 | 0 | 2 | 10 |
 | **Infrastructure** | 6 | 0 | 4 | 10 |
-| **Total** | **144** | **0** | **14** | **158** |
+| **Total** | **145** | **0** | **14** | **159** |
 
 ---
+
+### 🛠️ Recent Fixes (2025-09-03)
+- Public API stability: fixed 500 error in `/api/public/albums/{id}` by aligning image serialization with `models.Image` (`file_url` now derived via `Image.to_dict()` and fallbacks to `url/filepath`).
+- Routes alignment: updated `routes/routes_public_api.py` to use `author` relations and `User.get_full_name()`; removed references to non-existent fields.
+- Docs sync: refreshed `docs/api.md` and `docs/openapi.yml` to reflect current public endpoints; removed conflicting “simple” endpoints from docs.
 
 ## ✅ **COMPLETED FEATURES** (Recent Accomplishments)
 
 ### 🎯 **Core Content Management**
 | **Feature** | **Status** | **Completion Date** | **Child Steps Completed** |
 |-------------|------------|-------------------|---------------------------|
+| **Public API Endpoints for Multiplatform Access** | ✅ **COMPLETED** | 2025-09-01 | • **NEW: Comprehensive public API endpoints for all major content types**<br>• **NEW: News API endpoints (/api/public/news/{id}, /api/public/news) with filtering, pagination, and sorting**<br>• **NEW: Albums API endpoints (/api/public/albums/{id}, /api/public/albums, /api/public/albums/{id}/chapters/{id})**<br>• **NEW: User Profile API endpoints (/api/public/user/{username}, /api/public/user/{username}/stats, /api/public/user/{username}/library)**<br>• **NEW: Categories & Tags API endpoints (/api/public/categories, /api/public/tags)**<br>• **NEW: Comments API endpoints (/api/public/comments/{type}/{id}, /api/public/comments/{id}/replies)**<br>• **NEW: Unified Search API endpoint (/api/public/search) with cross-content search capabilities**<br>• **NEW: Premium content handling with limited info for premium content**<br>• **NEW: Rich data enrichment with related content, user info, and media assets**<br>• **NEW: Advanced filtering, pagination, and sorting options**<br>• **NEW: Comprehensive error handling with proper HTTP status codes**<br>• **NEW: No authentication required for public access**<br>• **NEW: Complete API documentation (docs/PUBLIC_API_ENDPOINTS.md)**<br>• **NEW: Implementation summary (docs/PUBLIC_API_IMPLEMENTATION_SUMMARY.md)**<br>• **NEW: Testing script (test/test_public_api.py) for endpoint verification**<br>• **NEW: Updated README.md with new API features**<br>• **NEW: Enables multiplatform apps, mobile clients, and third-party integrations** |
 | **Album Delete Request System** | ✅ **COMPLETED** | 2025-09-01 | • **NEW: Album deletion request functionality for user profile pages**<br>• **NEW: "Request Delete" buttons on published and draft albums in profile_list.html**<br>• **NEW: Confirmation modal with album title display and admin review warning**<br>• **NEW: User-facing API endpoint `/api/albums/{id}/request-deletion` in user_profile_bp**<br>• **NEW: Visual indicators for albums with pending deletion requests**<br>• **NEW: Disabled "Request Pending" buttons for albums already requested**<br>• **NEW: Toast notifications for success and error feedback**<br>• **NEW: Integration with existing deletion request workflow**<br>• **NEW: Security checks for album ownership and verification status**<br>• **NEW: Consistent UI/UX with stories delete request functionality**<br>• **NEW: Updated API documentation with new user-facing endpoint** |
 | **Save to Library Functionality** | ✅ **COMPLETED** | 2025-09-01 | • **NEW: Added "Save to Library" buttons to album_detail.html, chapter_reader.html, and reader.html**<br>• **NEW: Implemented library status checking on page load**<br>• **NEW: Added visual feedback for saved/unsaved states**<br>• **NEW: Created toggle functionality (save/unsave)**<br>• **NEW: Added library check API endpoint**<br>• **NEW: Integrated with existing library.html page**<br>• **NEW: Added proper error handling and toast notifications**<br>• **NEW: Updated API documentation** |
 | **Profile List Card Design Unification** | ✅ **COMPLETED** | 2025-09-01 | • **NEW: Unified card design matching other user profile pages (stories.html, library.html)**<br>• **NEW: Replaced custom album card grid with uniform list layout using space-y-6 spacing**<br>• **NEW: Implemented consistent flex layout with image container (sm:w-1/3 lg:w-2/5 xl:w-1/3) and text container**<br>• **NEW: Same hover effects, transitions, badge styling, and icon usage as other profile pages**<br>• **NEW: Responsive design with mobile stacked layout, tablet side-by-side, desktop optimized proportions**<br>• **NEW: Removed dependency on custom albums.css file for cleaner codebase**<br>• **NEW: Better information hierarchy with title/badges header, category link, description with line clamping**<br>• **NEW: Metadata footer with icons for date, views, and chapters**<br>• **NEW: Performance improvements with lazy loading and proper ARIA labels**<br>• **NEW: Consistent visual experience across all user profile pages** |
@@ -284,6 +290,13 @@ See also: [Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATI
 | 🔶 **MEDIUM** | API Documentation | Low | Swagger setup | ⏳ **PENDING** |
 | 🔶 **MEDIUM** | Accessibility | Low | WCAG compliance | ⏳ **PENDING** |
 | 🔶 **MEDIUM** | Email System | Medium | SMTP config | ⏳ **PENDING** |
+
+##### Email & Risk Policy (Hybrid Verification/Approval) – Detailed TODOs
+- [ ] Implement SMTP email delivery for verification links using MAIL_* envs (logged for now)
+- [ ] Admin-configurable trusted/blocked domain lists in `routes/utils/risk_policy.py`
+- [ ] Tune risk thresholds and signals (profile completeness, IP/device heuristics)
+- [ ] Add admin UI to preview risk score and override auto-approval rules
+- [ ] Add resend verification endpoint and rate limiting
 
 #### Swagger/OpenAPI Documentation Plan
 - Define OpenAPI 3.0 spec (YAML/JSON) for all public and admin APIs

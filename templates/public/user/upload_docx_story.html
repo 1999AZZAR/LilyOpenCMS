@@ -36,7 +36,7 @@
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-blue-800">Upload Cerita DOCX</h3>
                     <div class="mt-2 text-sm text-blue-700">
-                        <p>Upload dokumen Word (.docx) dan konversi otomatis menjadi cerita dengan metadata yang sesuai.</p>
+                        <p>Upload dokumen Word (.docx) dan konversi otomatis menjadi draft cerita dengan metadata yang sesuai. Cerita akan tersimpan sebagai draft (tidak terlihat publik) hingga Anda mempublikasikannya.</p>
                         <div class="mt-3 flex flex-wrap gap-3">
                             <a href="{{ url_for('main.download_docx_template') }}" target="_blank" class="inline-flex items-center px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-md border border-blue-300 text-sm">
                                 <i class="fas fa-download mr-2"></i>
@@ -55,6 +55,9 @@
         <!-- Upload Form -->
         <div class="bg-card rounded-lg shadow-sm border border-border p-6">
             <form id="docxUploadForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <!-- Hidden field to set visibility to hidden/draft -->
+                <input type="hidden" name="is_visible" value="false">
+                
                 <!-- File Upload -->
                 <div class="space-y-2">
                     <label for="docxFile" class="block text-sm font-medium text-foreground">
@@ -188,7 +191,7 @@
                     <button type="submit" id="submitBtn"
                             class="px-6 py-2 bg-primary border border-transparent rounded-md text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-upload mr-2"></i>
-                        Upload & Buat Cerita
+                        Upload & Buat Draft
                     </button>
                 </div>
             </form>
@@ -236,6 +239,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const formData = new FormData(form);
         
+        // Ensure visibility is set to hidden (draft)
+        formData.set('is_visible', 'false');
+        
+        // Debug: Log form data
+        console.log('Form data being sent:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + value);
+        }
+        
         // Show loading state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengunggah...';
@@ -247,19 +259,19 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Cerita berhasil diunggah!');
+                alert('Draft cerita berhasil diunggah! Cerita tersimpan sebagai draft dan tidak terlihat publik.');
                 window.location.href = data.redirect_url || '/user/' + '{{ user.username }}' + '/stories';
             } else {
                 alert('Error mengunggah cerita: ' + data.error);
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload & Buat Cerita';
+                submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload & Buat Draft';
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert('Error mengunggah cerita');
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload & Buat Cerita';
+            submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload & Buat Draft';
         });
     });
 });

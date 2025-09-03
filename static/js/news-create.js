@@ -1,24 +1,64 @@
-// Initialize SimpleMDE editor
-const addSimplemde = new SimpleMDE({
-    element: document.getElementById("news-content"),
-    spellChecker: true,
-    autofocus: true,
-    placeholder: "Tulis artikel Anda di sini:\n- Mulai dengan pengantar yang menarik.\n- Gunakan heading, daftar, atau teks tebal untuk struktur.\n- Klik toolbar untuk opsi format atau 'Panduan' untuk bantuan Markdown",
-    autosave: {
-        enabled: true,
-        uniqueId: "news-content-autosave",
-        delay: 1000,
-    },
-    toolbar: false, // Use custom toolbar
-    renderingConfig: {
-        singleLineBreaks: false,
-        codeSyntaxHighlighting: true,
-    },
-});
+// Initialize SimpleMDE editor (guarded, supports both #news-content and #story-content)
+let addSimplemde = null;
+window.addSimplemde = null;
+window.simplemde = null; // compatibility
 
-// Make SimpleMDE globally accessible
-window.addSimplemde = addSimplemde;
-window.simplemde = addSimplemde; // Also set as simplemde for compatibility
+function initSimpleMDEWith(el) {
+    try {
+        addSimplemde = new SimpleMDE({
+            element: el,
+            spellChecker: true,
+            autofocus: true,
+            placeholder: "Tulis artikel Anda di sini:\n- Mulai dengan pengantar yang menarik.\n- Gunakan heading, daftar, atau teks tebal untuk struktur.\n- Klik toolbar untuk opsi format atau 'Panduan' untuk bantuan Markdown",
+            autosave: {
+                enabled: true,
+                uniqueId: "news-content-autosave",
+                delay: 1000,
+            },
+            toolbar: false, // Hide default toolbar; we provide a custom one
+            status: false, // Hide default status bar
+            forceSync: true, // Keep underlying textarea in sync
+            autoDownloadFontAwesome: false,
+            renderingConfig: {
+                singleLineBreaks: false,
+                codeSyntaxHighlighting: true,
+            },
+        });
+        window.addSimplemde = addSimplemde;
+        window.simplemde = addSimplemde;
+        return true;
+    } catch (e) {
+        console.error('SimpleMDE init failed:', e);
+        return false;
+    }
+}
+
+function waitAndInitSimpleMDE(maxAttempts = 80, intervalMs = 100) {
+    let attempts = 0;
+    const timer = setInterval(() => {
+        attempts++;
+        // Critical: only initialize once the mapped textarea #news-content exists,
+        // to avoid binding to #story-content which is replaced later.
+        const el = document.getElementById('news-content');
+        if (el && el.tagName && el.tagName.toLowerCase() === 'textarea') {
+            clearInterval(timer);
+            initSimpleMDEWith(el);
+        } else if (attempts >= maxAttempts) {
+            clearInterval(timer);
+            // Final fallback: try again for #news-content; if still missing, do nothing to avoid broken init
+            const fallback = document.getElementById('news-content');
+            if (fallback && fallback.tagName && fallback.tagName.toLowerCase() === 'textarea') {
+                initSimpleMDEWith(fallback);
+            } else {
+                console.warn('SimpleMDE not initialized: #news-content not found.');
+            }
+        }
+    }, intervalMs);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    waitAndInitSimpleMDE();
+});
 
 // Get news_id from URL parameters to determine if we're in edit mode
 const urlParams = new URLSearchParams(window.location.search);
@@ -423,6 +463,25 @@ function closeImageHeaderModalCreate() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchCategories();
 
+    // Edit-mode quick prefill for date and age rating on public create_story.html
+    if (isEditMode) {
+        (async () => {
+            try {
+                const res = await fetch(`/api/news/${newsId}`);
+                if (!res.ok) throw new Error('Failed to fetch article');
+                const a = await res.json();
+                const dateEl = document.getElementById('news-date');
+                if (dateEl && a && a.date) {
+                    try { dateEl.value = (a.date || '').split('T')[0]; } catch (_) {}
+                }
+                const ageEl = document.getElementById('news-age-rating');
+                if (ageEl && a && a.age_rating) {
+                    ageEl.value = a.age_rating;
+                }
+            } catch (_) {}
+        })();
+    }
+
     // Attach listener for the featured image modal button
     const openHeaderBtn = document.getElementById('open-header-modal-btn');
     if (openHeaderBtn) {
@@ -478,11 +537,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Form Tambah Berita Pengiriman
-    const addNewsForm = document.getElementById('add-news-form');
+    // Resolve form element once and use it for direct binding
+    const addNewsForm = document.getElementById('add-news-form') || document.getElementById('create-story-form');
     if (addNewsForm) {
-        addNewsForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // Ensure native validation does not block custom flow
+        try { addNewsForm.setAttribute('novalidate', 'novalidate'); } catch(_) {}
+        addNewsForm.addEventListener('submit', handleNewsFormSubmit);
+    }
+
+    // Delegated submit (captures even if form id changes later)
+    document.addEventListener('submit', function(e) {
+        const t = e.target;
+        if (!t || !(t instanceof HTMLFormElement)) return;
+        const id = t.id || '';
+        if (id === 'add-news-form' || id === 'create-story-form') {
+            handleNewsFormSubmit(e);
+        }
+    }, true);
+
+    // Unified submit handler (can be used with direct binding or delegated capture)
+    async function handleNewsFormSubmit(e) {
+        e.preventDefault();
 
             // Basic validation
             const title = document.getElementById('news-title').value.trim();
@@ -547,10 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         prize: document.getElementById('news-prize').value || '0',
                         prize_coin_type: document.getElementById('news-prize-coin-type').value || 'any'
                     };
-                    // Only set visibility when explicitly publishing; otherwise retain existing value on server
-                    if (isPublishButton) {
-                        jsonData.is_visible = true;
-                    }
+                    // Set visibility based on which button was clicked
+                    jsonData.is_visible = !!isPublishButton;
                     
                     response = await fetch(`/api/news/${newsId}`, {
                         method: 'PUT',
@@ -565,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (albumId) {
                         formData.append('album_id', albumId);
                     }
-                    response = await fetch('/api/news', {
+                    response = await fetch((window.NEWS_CREATE_ENDPOINT || '/api/news'), {
                         method: 'POST',
                         body: formData,
                     });
@@ -581,19 +654,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('success', `Berita berhasil ${action}!`);
                 }
 
-                // Handle redirect based on context
+                // Handle redirect based on context (prefer server-provided redirect for user flow)
                 setTimeout(() => {
+                    if (data && data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                        return;
+                    }
+                    if (data && data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                        return;
+                    }
                     if (albumId) {
-                        // If we're in album context, redirect back to chapters page
                         window.location.href = `/admin/albums/${albumId}/chapters`;
+                    } else if (window.CURRENT_USERNAME) {
+                        // Prefer user stories page for both create and edit flows when username is available
+                        window.location.href = `/user/${window.CURRENT_USERNAME}/stories`;
                     } else if (isEditMode) {
-                        // If we're editing, redirect back to manage news page
+                        // Admin fallback
                         window.location.href = '/settings/manage_news';
                     } else {
-                        // If we're creating new, redirect to manage news page
                         window.location.href = '/settings/manage_news';
                     }
-                }, 1500);
+                }, 800);
 
                 // Only reset form if not in edit mode
                 if (!isEditMode) {
@@ -608,11 +690,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const action = isEditMode ? 'memperbarui' : (isPublishButton ? 'menerbitkan' : 'menyimpan draf');
                 if (typeof showToast === 'function') showToast('error', `Gagal ${action} berita: ${error.message}`);
             }
-        });
-    }
+        }
 
-    // Clear Featured Image Button Logic
-    const clearBtn = document.getElementById('clear-featured-image-btn');
+
+// Clear Featured Image Button Logic
+const clearBtn = document.getElementById('clear-featured-image-btn');
     if (clearBtn) {
         clearBtn.addEventListener('click', () => {
             const imageIdInput = document.getElementById('news-image-id');

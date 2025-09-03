@@ -4,6 +4,70 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 
 ---
 
+## 🌐 **Public API Endpoints for Multiplatform Access**
+
+These endpoints provide JSON equivalents for resources previously only available as HTML pages. All public API endpoints are read-only (`GET` requests) and do not require authentication, enabling mobile apps, desktop clients, and third-party integrations.
+
+### **News Public API**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/public/news/<int:news_id>`         | No   | Get single news article details with rich data enrichment |
+| GET    | `/api/public/news`                       | No   | Get paginated list of news with filtering, search, and sorting |
+| GET    | `/api/public/news/<int:news_id>/detail` | No | Get news detail with comprehensive data (new endpoint) |
+| GET    | `/api/public/news/list` | No | Get news list using existing search logic (new endpoint) |
+
+### **Albums Public API**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/public/albums/<int:album_id>`      | No   | Get single album details with chapters and metadata |
+| GET    | `/api/public/albums`                     | No   | Get paginated list of albums with filtering and sorting |
+| GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_id>` | No | Get single chapter details with navigation |
+| GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_number>` | No | Get single chapter details by chapter number with navigation |
+| GET    | `/api/public/albums/<int:album_id>/detail` | No | Get album detail with chapters (new endpoint) |
+| GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_id>/detail` | No | Get chapter detail with content (new endpoint) |
+| GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_number>/detail` | No | Get chapter detail with content (by chapter number) |
+| GET    | `/api/public/albums/list` | No | Get albums list using existing search logic (new endpoint) |
+
+### **User Profile Public API**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/public/user/<username>`            | No   | Get public user profile information |
+| GET    | `/api/public/user/<username>/stats`      | No   | Get user statistics and performance metrics |
+| GET    | `/api/public/user/<username>/library`    | No   | Get user's public library and reading history |
+
+### **Categories & Tags Public API**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/public/categories`                 | No   | Get list of active categories with content counts |
+| GET    | `/api/public/tags`                       | No   | Get list of tags with optional search filtering |
+
+### **Comments Public API**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/public/comments/<string:content_type>/<int:content_id>` | No | Get comments for content with pagination |
+| GET    | `/api/public/comments/<int:comment_id>/replies` | No | Get comment replies with pagination |
+
+### **Unified Search Public API**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/public/search`                     | No   | Cross-content search across news and albums |
+
+### **Homepage Public API**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| GET    | `/api/public/homepage`                   | No   | Get comprehensive homepage data with featured content |
+
+**Features:**
+- **Premium Content Handling**: Returns limited info for premium content with appropriate messaging
+- **Rich Data Enrichment**: Related content, user info, media assets, and metadata
+- **Advanced Filtering**: Search, categories, status, and content type filtering
+- **Pagination**: Configurable page sizes with navigation metadata
+- **Sorting Options**: Latest, popular, oldest, and relevance-based sorting
+- **Error Handling**: Proper HTTP status codes and JSON error responses
+- **No Authentication**: Public access for multiplatform development
+
+---
+
 ## News (Cerita & Bab)
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
@@ -205,7 +269,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 ## Images
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| GET    | `/api/images`                            | Yes  | List images (with filters)                  |
+| GET    | `/api/images`                            | Yes  | List images (with filters: page, per_page, visibility, all_users) |
 | POST   | `/api/images`                            | Yes  | Upload a new image                          |
 | GET    | `/api/images/<image_id>`                 | Yes  | Get image details                           |
 | PUT    | `/api/images/<image_id>`                 | Yes  | Update image                                |
@@ -218,6 +282,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 > Image visibility & scoping rules:
 > - Default upload visibility: Uploads by custom roles Writer/Editor default to hidden; uploads by others default to visible (can be overridden via is_visible form value).
 > - Picker scoping: Superuser/Admin/Subadmin see all images; Editor sees own and assigned writers' images; others see only their own images.
+> - **NEW: `all_users=true` parameter**: When specified, bypasses ownership restrictions and returns all visible images from all users (useful for image pickers in story creation).
 
 ## Videos (YouTube)
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -247,7 +312,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 ## Tags
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
-| GET    | `/api/tags`                              | Yes  | List tags                                   |
+| GET    | `/api/tags`                              | No  | List tags                                   |
 
 ## Navigation Links
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -549,6 +614,7 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 |--------|------------------------------------------|------|---------------------------------------------|
 | GET    | `/register`                              | No   | Registration page                           |
 | POST   | `/register`                              | No   | Register a new user                         |
+| GET    | `/verify-email`                          | No   | Verify user email with token; upon success may auto-approve low-risk users per hybrid policy |
 | GET    | `/login`                                 | No   | Login page                                  |
 | POST   | `/login`                                 | No   | Login action                                |
 | GET    | `/logout`                                | Yes  | Logout action                               |
@@ -557,6 +623,11 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 | POST   | `/api/registrations/<user_id>/reject`    | Yes  | Reject user registration (fixed: proper role checks) |
 | POST   | `/api/registrations/bulk/approve`        | Yes  | Bulk approve registrations (fixed: proper role checks) |
 | POST   | `/api/registrations/bulk/reject`         | Yes  | Bulk reject registrations (fixed: proper role checks) |
+
+Hybrid verification/approval flow:
+- Registration creates users as pending (`is_active=false`, `verified=false`).
+- A signed verification link is sent/logged; `GET /verify-email?token=...` marks `verified=true`.
+- If risk score is low (see `routes/utils/risk_policy.py`), the user is auto-approved (`is_active=true`); otherwise remains pending for admin review.
 
 ## Settings/Admin Pages
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -668,6 +739,13 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 
 ### **Recent Backend Updates**
 
+#### **Image API Enhancement for Story Creation**
+- **`all_users=true` Parameter Support**: Added support for `all_users=true` parameter in `/api/images` endpoint to bypass ownership restrictions
+- **Story Creation Image Picker**: Users can now select from all visible images (including admin/suadmin uploads) when creating stories
+- **Backend Logic Update**: Modified `routes/routes_images.py` to handle `all_users` parameter and return all visible images regardless of uploader
+- **Frontend Integration**: Enhanced `create_story.html` with robust image loading, pagination, and fallback rendering for SimpleMDE editor
+- **Error Handling**: Added comprehensive error handling and fallback mechanisms for image rendering and SimpleMDE integration
+
 #### **Profile List Card Design Unification**
 - **Unified Card Design**: Updated `profile_list.html` to use consistent card design matching other user profile pages (stories.html, library.html)
 - **Layout Consistency**: Replaced custom album card grid with uniform list layout using `space-y-6` spacing
@@ -759,248 +837,4 @@ A comprehensive, grouped list of all CRUD and callable endpoints in LilyOpenCMS,
 #### **Performance Dashboard System**
 - **Comprehensive Database Statistics**: Enhanced `/api/database/status` with detailed statistics for all content types (users, news, albums, chapters, categories, comments, ratings)
 - **Database Optimization**: `/api/database/optimize` now targets all 25+ database tables including albums, chapters, categories, comments, and ratings
-- **Enhanced Cleanup Operations**: `/api/database/cleanup` removes orphaned images, chapters, comments, ratings, and old user activities
-
-#### **User Management CRUD System Fixes**
-- **Missing Method Resolution**: Fixed `is_suspended_now()`, `update_login_info()`, `record_activity()`, and `to_dict()` method errors by implementing proper alternatives
-- **Foreign Key Constraint Resolution**: Resolved `sqlite3.IntegrityError: NOT NULL constraint failed: comment.user_id` by adding proper cascade relationships
-- **Cascade Delete Implementation**: Added explicit relationships for comments, ratings, comment_likes, and comment_reports with `cascade="all, delete-orphan"`
-- **User Deletion Safety**: Ensured user deletion properly cascades to all related data (comments, ratings, activities, etc.)
-- **API Serialization Fixes**: Replaced missing `to_dict()` calls with inline dictionary creation for proper user data serialization
-- **CRUD Operations Stability**: All user management CRUD operations now work without errors or constraint violations
-- **Database Backup System**: `/api/database/backup` creates timestamped backups with file metadata and source path tracking
-- **Performance Metrics**: Real-time calculation of query performance, average response times, and slow query estimation
-- **Cache Management**: Comprehensive cache invalidation for news, albums, chapters, and users with pattern-based clearing
-- **Frontend Integration**: Dynamic JavaScript updates with proper element targeting and error handling
-- **Path Resolution**: Intelligent database path detection supporting multiple common locations
-- **Permission System**: Role-based access control for all performance dashboard operations
-- **Error Handling**: Comprehensive error handling with detailed error messages and fallback mechanisms
-- **get_full_name() Method**: Added comprehensive `get_full_name()` method to User model for performance leaderboards and user exports
-- **has_permission() Error Resolution**: Replaced all `has_permission()` calls with direct role checks in routes_auth.py and routes_roles.py
-- **record_activity() Error Resolution**: Disabled activity logging calls with `pass` statements to prevent method errors
-- **SQLAlchemy Relationship Fixes**: Fixed AlbumChapter and News model relationships to prevent foreign key constraint violations
-- **Complete API Stability**: All user management endpoints now work without errors or database constraint violations
-- **Performance Leaderboard Fixes**: Resolved `AttributeError: 'User' object has no attribute 'get_full_name'` in performance APIs
-- **User Export Functionality**: Fixed CSV export functionality with proper user name handling
-- **Registration Management**: Fixed pending registrations API with proper role-based access control
-- **Bulk Operations**: All bulk user operations (status, role, verify, suspend, delete, export) working correctly
-- **User Activity Tracking**: Fixed user activity retrieval and display in management interface
-
-#### **Enhanced User Management System**
-- **Advanced User Listing**: Enhanced `/api/users` endpoint with pagination, search, and filtering (role, status, verification)
-- **User Creation API**: New `/api/users` POST endpoint for creating users with role assignment and premium status
-- **User Details API**: New `/api/users/<user_id>/details` endpoint for comprehensive user information
-- **Password Reset API**: New `/api/users/<user_id>/reset-password` endpoint for admin password resets
-- **User Statistics API**: New `/api/users/stats` endpoint for overall user statistics and role distribution
-- **Pending Statistics API**: New `/api/pending/stats` endpoint for pending registration analytics
-- **Frontend Integration**: Complete JavaScript integration with modals, forms, and dynamic content loading
-- **User Management Interface**: Enhanced `users_management.html` with create user modal, user details modal, and password reset functionality
-- **Statistics Dashboard**: Real-time user statistics, role distribution, and pending registration metrics
-- **Pagination System**: Client-side pagination with dynamic controls and proper API integration
-- **Form Validation**: Comprehensive validation for user creation and password reset forms
-- **Modal Management**: Advanced modal system for user creation, details viewing, and password reset
-- **Error Handling**: Robust error handling with user-friendly messages and fallback mechanisms
-
-#### **SEO Leveling System**
-- **Hierarchical SEO Management**: Content-specific SEO takes precedence over root SEO
-- **Context Processor**: Updated `inject_seo_data()` to handle SEO leveling logic
-- **URL Pattern Detection**: Automatic detection of news articles (`/news/<id>/<title>`) and albums (`/album/<id>/<title>`)
-- **Content-Specific Overrides**: News and album SEO fields override root SEO settings
-- **Template Integration**: Updated `base.html` to use unified `seo_data` structure
-
-#### **Achievement System Implementation**
-- **Comprehensive Gamification**: Complete achievement system with 7 categories and 40+ achievements
-- **Database Models**: AchievementCategory, Achievement, UserAchievement, AchievementProgress, UserStreak, UserPoints, PointTransaction
-- **Streak Tracking**: Login, activity, and reading streaks with daily consistency tracking
-- **Points & Leveling**: Point-based progression system with automatic level-ups and transaction history
-- **Achievement Categories**: Login Streaks, Activity Streaks, Reading Streaks, Contributions, Exploration, Community, Milestones
-- **Progress Tracking**: Detailed progress history with timestamps and context data
-- **Helper Scripts**: AchievementTracker class for easy activity tracking integration
-- **Initialization System**: Default achievement data population with comprehensive categories
-- **Performance Optimized**: Database indexes and efficient tracking with minimal overhead
-- **Documentation**: Complete system guide with setup, integration, and customization instructions
-- **Testing Suite**: Comprehensive test coverage for all achievement system components
-- **Integration Ready**: Easy integration with existing routes and user activities
-
-#### **Enhanced Account Management System**
-- **Comprehensive Statistics API**: New `/api/account/stats` endpoint providing total articles, visible articles, total reads, albums, chapters, and comments
-- **Albums Management API**: New `/api/account/albums` endpoint with pagination, search, and filtering (status, type)
-- **Comments Overview API**: New `/api/account/comments` endpoint showing user's recent comments with article context
-- **Activity Tracking API**: New `/api/account/activity` endpoint displaying user's recent activities with human-readable descriptions
-- **Enhanced UI Components**: Updated account management page with comprehensive statistics, albums listing, and activity tracking
-- **Real-time Updates**: Refresh buttons for all data sections with proper error handling
-- **Responsive Design**: Consistent gray/blue color scheme with edit buttons on all cards
-- **Frontend Integration**: Complete JavaScript integration with debounced search and pagination controls
-- **Error Handling**: Robust error handling with user-friendly messages and fallback mechanisms
-- **Backend Implementation**: Complete backend support with proper authentication and user-specific data filtering
-- **Database Integration**: Efficient queries with proper model relationships and pagination support
-- **Security Features**: Role-based access control and user-specific data isolation
-- **API Documentation**: Comprehensive endpoint documentation with proper categorization
-- **SEO Override Blocks**: Enhanced `reader.html` and `album_detail.html` with content-specific SEO blocks
-- **Proper OG Types**: Articles use `og:type=article`, albums use `og:type=book`
-- **Fallback System**: Root SEO provides sensible defaults when content-specific SEO is not available
-- **Backward Compatibility**: Existing SEO settings continue to work without database changes
-- **Documentation**: Comprehensive documentation in `docs/seo_leveling_system.md`
-- **Testing**: Complete test suite in `test/test_seo_leveling.py`
-
-#### **Unified News System**
-- **Single Template**: Consolidated `hypes.html`, `articles.html`, `utama.html`, and `news.html` into one dynamic `news.html` template
-- **AJAX Loading**: Dynamic content loading via JavaScript `fetch` requests to avoid full page reloads
-- **Unified API Endpoint**: `/api/search/news` serving filtered and sorted news data with comprehensive parameters
-- **URL Parameters**: Support for `type`, `q`, `category`, `category_name`, `tag`, `sort`, `page`, `per_page` parameters
-- **Content Types**: Differentiated filtering for 'general' news, 'news' (berita), 'articles', and 'utama' (main/featured) content
-- **Search & Filtering**: Text search, category filtering (by ID or name), and tag filtering
-- **Sorting Options**: 'newest', 'oldest', 'popular', and 'least-popular' with proper database queries using `created_at` field
-- **HTTP Redirection**: Flask redirects (301/302) for old news-related URLs ensuring backward compatibility
-- **Frontend JavaScript**: DOM management, user input handling, debounced search, URL state updates, dynamic content rendering
-- **Thumbnailing Integration**: Uses project's existing thumbnailing mechanism for image display
-- **Search Integration**: Leverages existing search functionality from `base.html` without requiring `index.html` modifications
-- **Unit Testing**: Comprehensive test script (`test_unified_news.py`) for API and redirect functionality
-- **Documentation**: Complete system documentation (`docs/UNIFIED_NEWS_SYSTEM.md`) with implementation details
-- **Enhanced Card Design**: 12 cards per page with improved layout and star rating display
-- **Star Rating System**: Integrated rating display with 5-star system and rating statistics
-- **Category Handling**: Improved category display with fallback for undefined categories
-- **Badge Positioning**: Fixed overlapping badges with responsive positioning
-
-#### **Homepage Design Switching System**
-- **Database Field**: `homepage_design` field in brand identity for design preference
-- **API Endpoint**: `/api/brand-identity/text` for updating homepage design setting
-- **Template Logic**: Dynamic template selection based on design preference
-- **Designs Supported**: News-focused (`index.html`) and albums-focused (`index_albums.html`)
-- **Real-time Switching**: Admin UI controls for instant design changes
-- **Categories Integration**: Dynamic categories with content counts (news_count for news design, album_count for albums design)
-- **Common Coloring**: Uses project's CSS variables instead of hardcoded colors for consistent theming
-
-#### **Categories Display Location System**
-- **Database Field**: `categories_display_location` field in brand identity for display preference
-- **API Endpoint**: `/api/brand-identity/text` for updating categories display location setting
-- **Display Options**: Body display (traditional cards in content area) and search area dropdown display
-- **Template Logic**: Dynamic categories rendering based on display location preference
-- **Search Area Integration**: Categories dropdown beside search bar for natural filtering interface
-- **Mobile Support**: Categories section in mobile menu beside search functionality
-- **Real-time Switching**: Admin UI controls for instant display location changes
-- **Backward Compatibility**: Default to body display to maintain existing behavior
-
-#### **Card Design System**
-- **Database Field**: `card_design` field in brand identity for design preference
-- **API Endpoint**: `/api/brand-identity/text` for updating card design setting
-- **Design Options**: 4 distinct card designs (classic, modern, minimal, featured)
-- **Template Integration**: Dynamic CSS class application based on selected design
-- **Real-time Switching**: Admin UI controls for instant design changes without server restart
-- **JavaScript Integration**: Automatic initialization and real-time updates on news page
-- **Public API**: `/api/brand-info` endpoint for unauthenticated access to brand info
-- **Design Variants**: Classic (traditional), Modern (horizontal layout), Minimal (typography-focused), Featured (magazine-style)
-- **Backward Compatibility**: Default to classic design for existing installations
-- **Comprehensive Documentation**: Complete system documentation and troubleshooting guide
-
-#### **Enhanced Album Search & Display**
-- **Server-side Search**: Full database search across all albums with fuzzy matching
-- **Advanced Filtering**: Category, status, rating (1-5 stars minimum) filtering
-- **Sorting Options**: newest, oldest, popular, least-popular, highest-rated
-- **Rating Integration**: Secondary sorting by rating system across all sort options
-- **Thumbnailing System**: Automatic thumbnail generation with `_thumb_portrait` and `_thumb_square` suffixes
-- **Responsive Design**: Mobile-optimized search with real-time AJAX updates
-
-#### **Thumbnailing Mechanism**
-- **Image Processing**: Automatic thumbnail generation for all uploaded images
-- **Aspect Ratios**: Portrait (`_thumb_portrait`) and square (`_thumb_square`) thumbnails
-- **Template Integration**: Jinja2 templating for dynamic thumbnail URL generation
-- **Fallback System**: Placeholder images for missing thumbnails
-- **Performance**: Lazy loading and optimized image delivery
-
-#### **Premium Content System Implementation**
-- **Server-side Content Filtering**: Secure content truncation for non-premium users
-- **User Premium Status Detection**: Integration with User model for access control
-- **Content Processing**: Utilities in `routes/utils/premium_content.py`
-- **Beautiful Content Mask**: Animated overlay with subscription call-to-action
-- **Statistics Tracking**: Word count, truncation status, and premium content metrics
-
-#### **Weighted Rating System**
-- **Formula**: `Σ(Chapter Rating × Chapter Weight) / Σ(Chapter Weights)`
-- **Chapter Weight**: `1 + (chapter_read_count / max_read_count_in_album) × 0.5`
-- **API Endpoint**: `/api/ratings/album/<album_id>/weighted`
-- **Features**: Popularity-based weighting, comprehensive statistics, rating distribution
-
-#### **Comprehensive SEO Management System**
-- **Multi-Content SEO**: Articles, Albums, Chapters, and Root Pages management
-- **Real-time Status Tracking**: Complete, incomplete, missing SEO status indicators
-- **SEO Score Calculation**: Automatic scoring based on field completeness
-- **Advanced Filtering**: Search, status, category, and SEO status filters
-- **API Endpoints**: Complete CRUD operations for all content types
-- **Chapters Tab**: Full chapters SEO management with editing capabilities
-- **SEO Injection System**: Automated SEO data generation for all content types
-
-#### **Enhanced SEO Injection System**
-- **Dynamic Configuration**: SEO injection settings stored in database with `SEOInjectionSettings` model
-- **Website Information Management**: Centralized website name, URL, description, language, and organization details
-- **Automatic SEO Generation**: Intelligent generation of meta descriptions, keywords, OG tags, and schema markup
-- **Content Type Support**: News articles, albums, chapters, and root pages with specialized injectors
-- **Markdown Processing**: Advanced content cleaning and text extraction for SEO optimization
-- **SEO Score Calculation**: Real-time scoring based on field completeness (0-100)
-- **Bulk Operations**: Mass SEO injection with progress tracking and comprehensive statistics
-- **Lock System**: SEO lock mechanism to prevent overwriting manually edited SEO data
-- **API Integration**: RESTful endpoints for injection operations and status monitoring
-- **Statistics Dashboard**: Comprehensive SEO statistics and health monitoring
-- **Individual Injectors**: Specialized injectors for each content type with dynamic settings
-- **Error Handling**: Robust error handling with rollback mechanisms and detailed logging
-- **Documentation**: Complete documentation and testing suite
-- **Database Integration**: Dynamic retrieval of website settings from `seo_injection_settings` table
-- **Fallback System**: Graceful fallback to default values when settings are unavailable
-- **URL Normalization**: Proper handling of internal vs external image URLs and canonical URLs
-
-### **Frontend Enhancements**
-- **Album Card Design**: Standardized album cards with badges, ratings, and thumbnails
-- **News Card Optimization**: Larger mobile cards with improved typography and spacing
-- **Responsive Layout**: Grid layouts optimized for different screen sizes
-- **Content Limiting**: Homepage displays limited to 4 featured albums for better UX
-- **Visual Hierarchy**: Improved spacing and typography for better readability
-
-### **Admin Sidebar & Settings Management Enhancement**
-- **Sub-group Navigation**: Implemented hierarchical navigation with collapsible sub-groups
-- **Permission-Based Visibility**: Dynamic sidebar content based on user permissions
-- **Quick Toggles System**: Real-time feature toggles for comments, ratings, ads, and campaigns
-- **LocalStorage Persistence**: Toggle states saved and restored across sessions
-- **Search Functionality**: Advanced search with highlighting and filtering
-- **Auto-expansion Logic**: Smart expansion of groups containing current page
-- **Settings Management Integration**: Updated settings page to use permission system
-- **Missing Cards Addition**: Added pending registrations, brand management, and album analytics cards
-- **Responsive Design**: Mobile-optimized sidebar with touch-friendly controls
-- **Accessibility Features**: ARIA labels, keyboard navigation, and screen reader support
-- **JavaScript Integration**: Comprehensive sidebar management with event handling
-- **CSS Styling**: Modern toggle switches with smooth animations and visual feedback
-
-### **Performance Optimizations**
-- **Redis Auto-Configuration**: Text-based configuration with Unix socket support
-- **Asset Optimization**: Compression stats with 80% average savings
-- **Image Optimization**: 62.5-75% size reduction across all asset types
-- **Cache Management**: Comprehensive cache invalidation and optimization
-- **Database Optimization**: Proper indexing and query optimization
-
-### **Security & Testing**
-- **Comprehensive Test Suite**: 12 test files with 100% core system coverage
-- **Error Handling**: Robust error handling with graceful fallbacks
-- **Input Validation**: Enhanced validation for all user inputs
-- **Security Headers**: Implementation of security best practices
-
-### **Content Deletion Request System**
-- **✅ COMPLETED: Content deletion request API endpoints for news (`/api/news/<id>/request-deletion`, `/api/news/deletion-requests`, `/api/news/<id>/approve-deletion`, `/api/news/<id>/reject-deletion`)**
-- **✅ COMPLETED: Content deletion request API endpoints for albums (`/admin/albums/<id>/request-deletion`, `/admin/albums/deletion-requests`, `/admin/albums/<id>/approve-deletion`, `/admin/albums/<id>/reject-deletion`)**
-- **✅ COMPLETED: Consistent deletion workflow (all users must request deletion for approval)**
-- **✅ COMPLETED: Admin approval workflow for content deletion with proper security checks**
-- **✅ COMPLETED: Content deletion requests management UI (`/settings/content-deletion-requests`) with bulk operations**
-- **✅ COMPLETED: Database migration for content deletion request fields (`deletion_requested`, `deletion_requested_at`, `deletion_requested_by`)**
-- **✅ COMPLETED: Enhanced content management with deletion request statistics**
-- **✅ COMPLETED: SQLAlchemy relationship fixes for User.news and User.albums with explicit foreign_keys**
-- **✅ COMPLETED: Navigation integration with admin sidebar**
-- **✅ COMPLETED: Complete frontend JavaScript integration with error handling**
-
-### **DOCX Upload Tool System**
-- **DOCX to News Conversion**: Complete API endpoint (`/api/news/upload-docx`) for uploading and converting DOCX files to news articles
-- **Content Processing**: Mammoth library integration for DOCX parsing with HTML-to-Markdown conversion
-- **Content Cleanup**: Aggressive regex patterns to remove tags, keywords, and metadata from parsed content
-- **Smart Formatting**: Intelligent Markdown formatting with proper heading, list, and paragraph structure
-- **File Downloads**: Template and example DOCX file serving (`/admin/tools/docx-template`, `/admin/tools/docx-contoh`)
-- **User Experience**: Success toast notifications, form clearing, and dynamic file selection feedback
-- **Organized Structure**: Clean folder organization (`templates/admin/tools/docx_uploader/`, `static/js/tools/docx_uploader/`)
-- **Code Separation**: HTML and JavaScript properly separated into individual files
-- **Extensible Framework**: Foundation for future admin tools with organized structure 
+- **Enhanced Cleanup Operations**: `/api/database/cleanup`

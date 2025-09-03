@@ -1,0 +1,5100 @@
+openapi: 3.0.3
+info:
+  title: LilyOpenCMS API
+  description: |
+    A comprehensive API for LilyOpenCMS content management system.
+    
+    ## Features
+    - **Content Management**: News, albums, chapters, and media
+    - **User Management**: Profiles, authentication, and permissions
+    - **Public API**: Multiplatform access for mobile apps and third-party integrations
+    - **SEO Management**: Comprehensive SEO tools and analytics
+    - **Analytics**: Performance monitoring and user statistics
+    
+    ## Authentication
+    Most endpoints require authentication via session cookies or JWT tokens.
+    Public API endpoints (`/api/public/*`) do not require authentication.
+    
+    ## Rate Limiting
+    API endpoints are rate-limited to prevent abuse. Please implement appropriate retry logic.
+    
+    ## Support
+    For API support, please refer to the documentation or contact the development team.
+  version: 1.0.0
+  contact:
+    name: LilyOpenCMS Development Team
+    email: support@lilyopencms.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.lilyopencms.com
+    description: Production server
+
+tags:
+  - name: Public API
+    description: Public endpoints for multiplatform access (no authentication required)
+  - name: Xlate
+    description: Read-only translation-layer endpoints used for app development
+  - name: News
+    description: News articles and stories management
+  - name: Albums
+    description: Album and chapter management
+  - name: Users
+    description: User management and authentication
+  - name: Comments
+    description: Comment system and moderation
+  - name: Ratings
+    description: Rating system and analytics
+  - name: Categories
+    description: Category and tag management
+  - name: SEO
+    description: SEO management and analytics
+  - name: Media
+    description: Image and video management
+  - name: Analytics
+    description: System analytics and performance monitoring
+
+paths:
+  # NOTE: Removed duplicate simple endpoints to avoid path key collisions with authenticated endpoints.
+
+  # =============================================================================
+  # PUBLIC API ENDPOINTS (with "public" prefix)
+  # =============================================================================
+  
+  /api/public/news/{news_id}:
+    get:
+      tags:
+        - Public API
+      summary: Get single news article details
+      description: |
+        Retrieve detailed information for a specific news article with rich data enrichment.
+        This endpoint provides JSON equivalents for resources previously only available as HTML pages.
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: The unique identifier of the news article
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with news article details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsResponse'
+        '404':
+          description: News article not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/news:
+    get:
+      tags:
+        - Public API
+      summary: Get list of news articles
+      description: |
+        Retrieve a paginated list of news articles with filtering, search, and sorting options.
+        Supports advanced filtering by category, search queries, and multiple sorting options.
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: category
+          in: query
+          description: Filter by category ID
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Search query for title, content, or excerpt
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Sorting order
+          schema:
+            type: string
+            enum: [latest, popular]
+            default: latest
+      responses:
+        '200':
+          description: Successful response with news list and pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/albums/{album_id}:
+    get:
+      tags:
+        - Public API
+      summary: Get single album details
+      description: |
+        Retrieve detailed information for a specific album with chapters and metadata.
+        Includes rich data enrichment with related content and user information.
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          description: The unique identifier of the album
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with album details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumResponse'
+        '404':
+          description: Album not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/albums:
+    get:
+      tags:
+        - Public API
+      summary: Get list of albums
+      description: |
+        Retrieve a paginated list of albums with filtering and sorting options.
+        Supports filtering by category, search queries, and multiple sorting options.
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: category
+          in: query
+          description: Filter by category ID
+          schema:
+            type: integer
+        - name: search
+          in: query
+          description: Search query for title or description
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Sorting order
+          schema:
+            type: string
+            enum: [latest, popular, chapters]
+            default: latest
+      responses:
+        '200':
+          description: Successful response with albums list and pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumsListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/albums/{album_id}/chapters/{chapter_id}:
+    get:
+      tags:
+        - Public API
+      summary: Get single album chapter details
+      description: |
+        Retrieve detailed information for a specific chapter within an album.
+        Includes navigation information for next/previous chapters.
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          description: The unique identifier of the parent album
+          schema:
+            type: integer
+            minimum: 1
+        - name: chapter_id
+          in: path
+          required: true
+          description: The unique identifier of the chapter
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with chapter details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicChapterResponse'
+        '404':
+          description: Chapter or album not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/albums/{album_id}/chapters/{chapter_number}:
+    get:
+      tags:
+        - Public API
+      summary: Get single album chapter details by chapter number
+      description: |
+        Retrieve detailed information for a specific chapter within an album using chapter_number.
+        Includes navigation information for next/previous chapters.
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          description: The unique identifier of the parent album
+          schema:
+            type: integer
+            minimum: 1
+        - name: chapter_number
+          in: path
+          required: true
+          description: The sequential chapter number within the album
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with chapter details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicChapterResponse'
+        '404':
+          description: Chapter or album not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/user/{username}:
+    get:
+      tags:
+        - Public API
+      summary: Get public user profile information
+      description: |
+        Retrieve public profile information for a specific user.
+        Includes basic profile data, social links, and activity information.
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The username of the user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserProfileResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/user/{username}/stats:
+    get:
+      tags:
+        - Public API
+      summary: Get user statistics
+      description: |
+        Retrieve public statistics for a specific user.
+        Includes content creation metrics and performance data.
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The username of the user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with user statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserStatsResponse'
+        '404':
+          description: User or statistics not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/user/{username}/library:
+    get:
+      tags:
+        - Public API
+      summary: Get user's public library
+      description: |
+        Retrieve public library items for a specific user.
+        Includes favorited content and reading history.
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The username of the user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with user library
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserLibraryResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/categories:
+    get:
+      tags:
+        - Public API
+      summary: Get list of active categories
+      description: |
+        Retrieve a list of all active categories with content counts.
+        Useful for building navigation and filtering interfaces.
+      responses:
+        '200':
+          description: Successful response with categories list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCategoriesResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/tags:
+    get:
+      tags:
+        - Public API
+      summary: Get list of tags
+      description: |
+        Retrieve a list of all tags with optional search filtering.
+        Includes content counts for news and albums.
+      parameters:
+        - name: search
+          in: query
+          description: Search query to filter tags by name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with tags list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicTagsResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/comments/{content_type}/{content_id}:
+    get:
+      tags:
+        - Public API
+      summary: Get comments for content
+      description: |
+        Retrieve a paginated list of top-level comments for specific content.
+        Supports pagination and includes reply counts.
+      parameters:
+        - name: content_type
+          in: path
+          required: true
+          description: Type of content (news or album_chapter)
+          schema:
+            type: string
+            enum: [news, album_chapter]
+        - name: content_id
+          in: path
+          required: true
+          description: The ID of the content item
+          schema:
+            type: integer
+            minimum: 1
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Successful response with comments list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCommentsResponse'
+        '400':
+          description: Invalid content type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Content not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/comments/{comment_id}/replies:
+    get:
+      tags:
+        - Public API
+      summary: Get comment replies
+      description: |
+        Retrieve a paginated list of replies for a specific parent comment.
+        Supports pagination and chronological ordering.
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          description: The ID of the parent comment
+          schema:
+            type: integer
+            minimum: 1
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Successful response with replies list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCommentRepliesResponse'
+        '404':
+          description: Parent comment not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/search:
+    get:
+      tags:
+        - Public API
+      summary: Unified search across content types
+      description: |
+        Perform a search across news articles and albums with options to filter by content type.
+        Supports multiple sorting options and pagination.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: The search query
+          schema:
+            type: string
+            minLength: 1
+        - name: type
+          in: query
+          description: Filter results by content type
+          schema:
+            type: string
+            enum: [all, news, albums, users]
+            default: all
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: Sorting order
+          schema:
+            type: string
+            enum: [relevance, latest, popular]
+            default: relevance
+      responses:
+        '200':
+          description: Successful response with search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicSearchResponse'
+        '400':
+          description: Missing search query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # =============================================================================
+  # ADDITIONAL PUBLIC API ENDPOINTS (Newly Implemented)
+  # =============================================================================
+
+  /api/public/albums/{album_id}/detail:
+    get:
+      tags:
+        - Public API
+      summary: Get album detail with chapters
+      description: |
+        Retrieve detailed information for a specific album including all visible chapters.
+        Returns comprehensive album data with chapter listings.
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          description: The unique identifier of the album
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with album details and chapters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  album:
+                    $ref: '#/components/schemas/AlbumDetailResponse'
+        '404':
+          description: Album not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/albums/{album_id}/chapters/{chapter_id}/detail:
+    get:
+      tags:
+        - Public API
+      summary: Get chapter detail with content
+      description: |
+        Retrieve detailed information for a specific chapter including its news content.
+        Returns chapter metadata and associated news article content.
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          description: The unique identifier of the parent album
+          schema:
+            type: integer
+            minimum: 1
+        - name: chapter_id
+          in: path
+          required: true
+          description: The unique identifier of the chapter
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with chapter details and content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  chapter:
+                    $ref: '#/components/schemas/ChapterDetailResponse'
+        '404':
+          description: Chapter or album not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/albums/{album_id}/chapters/{chapter_number}/detail:
+    get:
+      tags:
+        - Public API
+      summary: Get chapter detail with content by chapter number
+      description: |
+        Retrieve detailed information for a specific chapter including its news content using chapter_number.
+        Returns chapter metadata and associated news article content.
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          description: The unique identifier of the parent album
+          schema:
+            type: integer
+            minimum: 1
+        - name: chapter_number
+          in: path
+          required: true
+          description: The sequential chapter number within the album
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with chapter details and content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  chapter:
+                    $ref: '#/components/schemas/ChapterDetailResponse'
+        '404':
+          description: Chapter or album not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/albums/list:
+    get:
+      tags:
+        - Public API
+      summary: Get albums list using existing search logic
+      description: |
+        Retrieve a list of albums using the existing search functionality.
+        This endpoint provides compatibility with existing album search features.
+      responses:
+        '200':
+          description: Successful response with albums list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlbumsListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/news/{news_id}/detail:
+    get:
+      tags:
+        - Public API
+      summary: Get news detail with comprehensive data
+      description: |
+        Retrieve detailed information for a specific news article.
+        Returns comprehensive news data including content, metadata, and status.
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          description: The unique identifier of the news article
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful response with news details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  news:
+                    $ref: '#/components/schemas/NewsDetailResponse'
+        '404':
+          description: News not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/news/list:
+    get:
+      tags:
+        - Public API
+      summary: Get news list using existing search logic
+      description: |
+        Retrieve a list of news articles using the existing search functionality.
+        This endpoint provides compatibility with existing news search features.
+      responses:
+        '200':
+          description: Successful response with news list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/public/homepage:
+    get:
+      tags:
+        - Public API
+      summary: Get homepage data with comprehensive content
+      description: |
+        Retrieve comprehensive homepage data including featured news, albums, and categories.
+        Returns structured data for building homepage interfaces.
+      responses:
+        '200':
+          description: Successful response with homepage data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  homepage:
+                    $ref: '#/components/schemas/HomepageResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # =============================================================================
+  # AUTHENTICATED NEWS ENDPOINTS (CRUD, visibility, deletion workflow, share, upload)
+  # =============================================================================
+
+  /api/news:
+    get:
+      tags:
+        - News
+      summary: List news articles/stories (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: q
+          in: query
+          description: Search query
+          schema: { type: string }
+        - name: category
+          in: query
+          description: Filter by category id
+          schema: { type: integer }
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [newest, oldest, popular, least-popular]
+            default: newest
+      responses:
+        '200':
+          description: List of news
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsListResponse'
+    post:
+      tags:
+        - News
+      summary: Create a new story/chapter (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                content: { type: string }
+                category: { type: integer, nullable: true }
+                date: { type: string, format: date-time, nullable: true }
+                age_rating: { type: string, nullable: true }
+                is_news: { type: boolean, default: false }
+                is_main_news: { type: boolean, default: false }
+                is_premium: { type: boolean, default: false }
+                is_visible: { type: boolean, default: false }
+                writer: { type: integer, nullable: true }
+                external_source: { type: string, nullable: true }
+                image_id: { type: integer, nullable: true }
+                prize: { type: number, nullable: true }
+                prize_coin_type: { type: string, enum: [achievement, topup], nullable: true }
+                album_id: { type: integer, nullable: true }
+              required: [title]
+      responses:
+        '201':
+          description: News created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsResponse'
+
+  /api/news/owned:
+    get:
+      tags:
+        - News
+      summary: List stories/chapters owned by current user
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Owned news list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsListResponse'
+
+  /api/news/{news_id}:
+    get:
+      tags:
+        - News
+      summary: Get story/chapter details (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: News details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsResponse'
+        '404': { description: Not found }
+    put:
+      tags:
+        - News
+      summary: Update story/chapter (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsUpdatePayload'
+      responses:
+        '200':
+          description: News updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsResponse'
+        '404': { description: Not found }
+    delete:
+      tags:
+        - News
+      summary: Delete story/chapter (admin-tier)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/news/{news_id}/visibility:
+    patch:
+      tags:
+        - News
+      summary: Toggle story/chapter visibility
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_visible: { type: boolean }
+              required: [is_visible]
+      responses:
+        '200': { description: Visibility updated }
+        '404': { description: Not found }
+
+  /api/news/{news_id}/request-deletion:
+    post:
+      tags:
+        - News
+      summary: Request story/chapter deletion (non-admin users)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Deletion requested }
+        '400': { description: Invalid request }
+        '404': { description: Not found }
+
+  /api/news/deletion-requests:
+    get:
+      tags:
+        - News
+      summary: Get story/chapter deletion requests (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Requests list }
+        '403': { description: Forbidden }
+
+  /api/news/{news_id}/approve-deletion:
+    post:
+      tags:
+        - News
+      summary: Approve story/chapter deletion (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Deletion approved }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/news/{news_id}/reject-deletion:
+    post:
+      tags:
+        - News
+      summary: Reject story/chapter deletion (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Deletion rejected }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/news/{news_id}/track-share:
+    post:
+      tags:
+        - News
+      summary: Track a share action for a story/chapter (public)
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                platform: { type: string }
+      responses:
+        '200': { description: Tracked }
+
+  /api/news/{news_id}/share-data:
+    get:
+      tags:
+        - News
+      summary: Get share counts for a story/chapter (public)
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Share stats returned }
+
+  /api/search/news:
+    get:
+      tags:
+        - News
+      summary: Unified news search API (public)
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: integer }
+        - name: category_name
+          in: query
+          schema: { type: string }
+        - name: tag
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [general, news, articles, utama]
+            default: general
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, oldest, popular, least-popular]
+            default: newest
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsListResponse'
+
+  /api/news/upload-docx:
+    post:
+      tags:
+        - News
+      summary: Upload DOCX file and convert to story/chapter (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                title: { type: string }
+                category: { type: integer, nullable: true }
+                date: { type: string, format: date-time, nullable: true }
+                age_rating: { type: string, nullable: true }
+                writer: { type: integer, nullable: true }
+                external_source: { type: string, nullable: true }
+                prize: { type: number, nullable: true }
+                prize_coin_type: { type: string, enum: [achievement, topup], nullable: true }
+      responses:
+        '201': { description: News created from DOCX }
+
+  # =============================================================================
+  # AUTHENTICATED ALBUMS & CHAPTERS ENDPOINTS
+  # =============================================================================
+
+  /api/albums:
+    get:
+      tags:
+        - Albums
+      summary: List albums (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: q
+          in: query
+          description: Search query
+          schema: { type: string }
+        - name: category
+          in: query
+          description: Filter by category id
+          schema: { type: integer }
+        - name: status
+          in: query
+          description: Filter by album status
+          schema:
+            type: string
+            enum: [ongoing, completed, hiatus]
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [newest, oldest, popular, least-popular, most-viewed, least-viewed, highest-rated]
+            default: newest
+      responses:
+        '200':
+          description: List of albums
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumsListResponse'
+    post:
+      tags:
+        - Albums
+      summary: Create a new album (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                category_id: { type: integer, nullable: true }
+                is_premium: { type: boolean, default: false }
+                is_completed: { type: boolean, default: false }
+                is_hiatus: { type: boolean, default: false }
+                image_id: { type: integer, nullable: true }
+              required: [title]
+      responses:
+        '201':
+          description: Album created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumResponse'
+
+  /api/albums/{album_id}:
+    get:
+      tags:
+        - Albums
+      summary: Get album details (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Album details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumResponse'
+        '404': { description: Not found }
+    put:
+      tags:
+        - Albums
+      summary: Update album (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+                category_id: { type: integer, nullable: true }
+                is_premium: { type: boolean }
+                is_completed: { type: boolean }
+                is_hiatus: { type: boolean }
+                image_id: { type: integer, nullable: true }
+      responses:
+        '200':
+          description: Album updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumResponse'
+        '404': { description: Not found }
+    delete:
+      tags:
+        - Albums
+      summary: Delete album (admin-tier)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/albums/{album_id}/visibility:
+    patch:
+      tags:
+        - Albums
+      summary: Toggle album visibility
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_visible: { type: boolean }
+              required: [is_visible]
+      responses:
+        '200': { description: Visibility updated }
+        '404': { description: Not found }
+
+  /api/albums/{album_id}/archive:
+    patch:
+      tags:
+        - Albums
+      summary: Archive album
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Album archived }
+        '404': { description: Not found }
+
+  /api/albums/{album_id}/unarchive:
+    patch:
+      tags:
+        - Albums
+      summary: Unarchive album
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Album unarchived }
+        '404': { description: Not found }
+
+  /api/albums/{album_id}/chapters:
+    post:
+      tags:
+        - Albums
+      summary: Add chapter to album
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                news_id: { type: integer, description: ID of the news/story to attach as chapter }
+                chapter_number: { type: integer, nullable: true }
+                chapter_title: { type: string, nullable: true }
+              required: [news_id]
+      responses:
+        '201': { description: Chapter added }
+        '404': { description: Not found }
+
+  /api/albums/{album_id}/chapters/{chapter_id}:
+    delete:
+      tags:
+        - Albums
+      summary: Remove chapter from album
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: chapter_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Chapter removed }
+        '404': { description: Not found }
+
+  /api/albums/{album_id}/track-share:
+    post:
+      tags:
+        - Albums
+      summary: Track a share action for an album (public)
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                platform: { type: string }
+      responses:
+        '200': { description: Tracked }
+
+  /api/albums/{album_id}/share-data:
+    get:
+      tags:
+        - Albums
+      summary: Get share counts for an album (public)
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Share stats returned }
+
+  /admin/albums/api/album-stats/{album_id}:
+    get:
+      tags:
+        - Albums
+      summary: Get album statistics (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Album statistics returned }
+        '404': { description: Not found }
+
+  /api/search/albums:
+    get:
+      tags:
+        - Albums
+      summary: Search albums across entire database (public)
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: integer }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ongoing, completed, hiatus]
+        - name: rating
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 5 }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, oldest, popular, least-popular, most-viewed, least-viewed, highest-rated]
+            default: newest
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumsListResponse'
+
+  # =============================================================================
+  # USERS MANAGEMENT & ACCOUNT ENDPOINTS
+  # =============================================================================
+
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: List users with pagination, search, and filtering
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: q
+          in: query
+          description: Search by username/email/full name
+          schema: { type: string }
+        - name: role
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: verified
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200': { description: Users list returned }
+    post:
+      tags:
+        - Users
+      summary: Create a new user with role assignment and premium status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: { type: string }
+                email: { type: string }
+                password: { type: string }
+                role: { type: string }
+                is_premium: { type: boolean, default: false }
+      responses:
+        '201': { description: User created }
+
+  /api/users/{user_id}:
+    get:
+      tags:
+        - Users
+      summary: Get comprehensive user details and statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: User details returned }
+        '404': { description: Not found }
+    put:
+      tags:
+        - Users
+      summary: Update user details
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                first_name: { type: string }
+                last_name: { type: string }
+                is_active: { type: boolean }
+                verified: { type: boolean }
+      responses:
+        '200': { description: User updated }
+        '404': { description: Not found }
+    delete:
+      tags:
+        - Users
+      summary: Delete user (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/users/{user_id}/reset-password:
+    post:
+      tags:
+        - Users
+      summary: Reset user password (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_password: { type: string }
+              required: [new_password]
+      responses:
+        '200': { description: Password reset }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/users/stats:
+    get:
+      tags:
+        - Users
+      summary: Get overall user statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Stats returned }
+
+  /api/pending/stats:
+    get:
+      tags:
+        - Users
+      summary: Get pending registration statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Pending stats returned }
+
+  /api/users/{user_id}/performance:
+    get:
+      tags:
+        - Users
+      summary: Get user performance metrics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Performance returned }
+        '404': { description: Not found }
+
+  /api/users/performance/leaderboard:
+    get:
+      tags:
+        - Users
+      summary: Get user performance leaderboard
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Leaderboard returned }
+
+  /api/registrations/pending:
+    get:
+      tags:
+        - Users
+      summary: Get pending user registrations (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Pending registrations returned }
+        '403': { description: Forbidden }
+
+  /api/users/deletion-requests:
+    get:
+      tags:
+        - Users
+      summary: Get pending account deletion requests (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Requests returned }
+        '403': { description: Forbidden }
+
+  /api/users/{id}/approve-deletion:
+    post:
+      tags:
+        - Users
+      summary: Approve account deletion request (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Approved }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/users/{id}/reject-deletion:
+    post:
+      tags:
+        - Users
+      summary: Reject account deletion request (admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Rejected }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+
+  /api/user/role:
+    get:
+      tags:
+        - Users
+      summary: Get current user's role
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Role returned }
+
+  /api/settings/verified-users:
+    get:
+      tags:
+        - Users
+      summary: List verified users
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Verified users returned }
+
+  # Roles & Permissions (backup endpoints)
+  /api/roles:
+    get:
+      tags:
+        - Users
+      summary: List roles
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Roles returned }
+    post:
+      tags:
+        - Users
+      summary: Create role
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+      responses:
+        '201': { description: Role created }
+
+  /api/permissions:
+    get:
+      tags:
+        - Users
+      summary: List permissions
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Permissions returned }
+
+  # Account endpoints for current user
+  /api/account/profile:
+    get:
+      tags:
+        - Users
+      summary: Get current user's profile data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Profile returned }
+    put:
+      tags:
+        - Users
+      summary: Update current user's profile data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string }
+                birthdate: { type: string, format: date }
+      responses:
+        '200': { description: Profile updated }
+
+  /api/account/stats:
+    get:
+      tags:
+        - Users
+      summary: Get comprehensive account statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Account stats returned }
+
+  /api/account/albums:
+    get:
+      tags:
+        - Users
+      summary: Get user's albums with pagination and filtering
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { type: string }
+      responses:
+        '200': { description: User albums returned }
+
+  /api/account/comments:
+    get:
+      tags:
+        - Users
+      summary: Get user's recent comments
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Recent comments returned }
+
+  /api/account/activity:
+    get:
+      tags:
+        - Users
+      summary: Get user's recent activity
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Activity returned }
+
+  # =============================================================================
+  # IMAGES ENDPOINTS
+  # =============================================================================
+
+  /api/images:
+    get:
+      tags:
+        - Media
+      summary: List images with pagination and filters
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: visibility
+          in: query
+          description: Filter by visibility (visible/hidden)
+          schema: { type: string }
+        - name: all_users
+          in: query
+          description: When true, bypass ownership restrictions and return all visible images
+          schema: { type: boolean }
+      responses:
+        '200': { description: Images list returned }
+    post:
+      tags:
+        - Media
+      summary: Upload a new image
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                is_visible: { type: boolean }
+      responses:
+        '201': { description: Image uploaded }
+
+  /api/images/{image_id}:
+    get:
+      tags:
+        - Media
+      summary: Get image details
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Image details returned }
+        '404': { description: Not found }
+    put:
+      tags:
+        - Media
+      summary: Update image
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: string }
+      responses:
+        '200': { description: Image updated }
+        '404': { description: Not found }
+    delete:
+      tags:
+        - Media
+      summary: Delete image
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+        '404': { description: Not found }
+
+  /api/images/{image_id}/visibility:
+    patch:
+      tags:
+        - Media
+      summary: Toggle image visibility
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_visible: { type: boolean }
+              required: [is_visible]
+      responses:
+        '200': { description: Visibility updated }
+        '404': { description: Not found }
+
+  /api/images/bulk-delete:
+    post:
+      tags:
+        - Media
+      summary: Bulk delete images
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items: { type: integer }
+              required: [ids]
+      responses:
+        '200': { description: Bulk delete completed }
+
+  /api/images/bulk-visibility:
+    post:
+      tags:
+        - Media
+      summary: Bulk update image visibility
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items: { type: integer }
+                is_visible: { type: boolean }
+              required: [ids, is_visible]
+      responses:
+        '200': { description: Bulk visibility updated }
+
+  /api/images/{image_id}/usage:
+    get:
+      tags:
+        - Media
+      summary: Get image usage statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Image usage returned }
+        '404': { description: Not found }
+
+  # =============================================================================
+  # RATINGS ENDPOINTS
+  # =============================================================================
+
+  # =============================================================================
+  # COMMENTS ENDPOINTS
+  # =============================================================================
+
+  /api/comments/{content_type}/{content_id}:
+    get:
+      tags:
+        - Comments
+      summary: Get comments for content (news/album)
+      description: Returns paginated top-level comments with reply counts
+      parameters:
+        - name: content_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [news, album, chapter]
+        - name: content_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200': { description: Comments returned }
+        '404': { description: Not found }
+
+  /api/comments:
+    post:
+      tags:
+        - Comments
+      summary: Create a new comment
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content_type:
+                  type: string
+                  enum: [news, album, album_chapter]
+                content_id: { type: integer }
+                content: { type: string }
+                parent_id: { type: integer, nullable: true }
+              required: [content_type, content_id, content]
+      responses:
+        '201': { description: Comment created }
+
+  /api/comments/{comment_id}:
+    put:
+      tags:
+        - Comments
+      summary: Update comment
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: { type: string }
+              required: [content]
+      responses:
+        '200': { description: Comment updated }
+        '404': { description: Not found }
+    delete:
+      tags:
+        - Comments
+      summary: Delete comment
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+        '404': { description: Not found }
+
+  /api/comments/{comment_id}/like:
+    post:
+      tags:
+        - Comments
+      summary: Like/dislike comment
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [like, dislike]
+              required: [action]
+      responses:
+        '200': { description: Reaction recorded }
+        '404': { description: Not found }
+
+  /api/comments/{comment_id}/report:
+    post:
+      tags:
+        - Comments
+      summary: Report comment
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+              required: [reason]
+      responses:
+        '200': { description: Report submitted }
+        '404': { description: Not found }
+
+  /api/comments/reports:
+    get:
+      tags:
+        - Comments
+      summary: Get comment reports (admin)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Reports returned }
+        '403': { description: Forbidden }
+
+  /api/comments/{comment_id}/moderate:
+    put:
+      tags:
+        - Comments
+      summary: Moderate comment (approve/reject)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [approve, reject]
+              required: [status]
+      responses:
+        '200': { description: Moderation applied }
+        '404': { description: Not found }
+
+  /api/ratings/{content_type}/{content_id}:
+    get:
+      tags:
+        - Ratings
+      summary: Get ratings for content (news/album)
+      parameters:
+        - name: content_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [news, album]
+        - name: content_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Ratings returned }
+    delete:
+      tags:
+        - Ratings
+      summary: Delete rating (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: content_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [news, album]
+        - name: content_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+
+  /api/ratings:
+    post:
+      tags:
+        - Ratings
+      summary: Create or update rating (authenticated)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content_type:
+                  type: string
+                  enum: [news, album]
+                content_id: { type: integer }
+                rating: { type: integer, minimum: 1, maximum: 5 }
+              required: [content_type, content_id, rating]
+      responses:
+        '200': { description: Rating created/updated }
+
+  /api/ratings/stats:
+    get:
+      tags:
+        - Ratings
+      summary: Get overall rating statistics
+      responses:
+        '200': { description: Rating stats returned }
+
+  /api/ratings/user/{user_id}:
+    get:
+      tags:
+        - Ratings
+      summary: Get user's ratings (public)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: User ratings returned }
+
+  /api/ratings/album/{album_id}/weighted:
+    get:
+      tags:
+        - Ratings
+      summary: Get weighted rating statistics for album (public)
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Weighted stats returned }
+
+  /api/ratings/analytics:
+    get:
+      tags:
+        - Ratings
+      summary: Get rating analytics (admin)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Analytics returned }
+
+  # =============================================================================
+  # SEO MANAGEMENT & ANALYTICS ENDPOINTS
+  # =============================================================================
+
+  /api/seo/leveling/status:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO leveling system status and configuration
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Status returned }
+
+  /api/seo/leveling/refresh:
+    post:
+      tags:
+        - SEO
+      summary: Refresh SEO leveling cache and data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Refreshed }
+
+  /api/seo/leveling/content/{content_type}/{content_id}:
+    get:
+      tags:
+        - SEO
+      summary: Get content-specific SEO data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: content_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [news, albums, chapters, root]
+        - name: content_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: SEO data returned }
+        '404': { description: Not found }
+    put:
+      tags:
+        - SEO
+      summary: Update content-specific SEO data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: content_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [news, albums, chapters, root]
+        - name: content_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: SEO data updated }
+        '404': { description: Not found }
+
+  /api/seo/articles:
+    get:
+      tags:
+        - SEO
+      summary: List articles with SEO data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Articles SEO list }
+
+  /api/seo/articles/{article_id}:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO data for an article
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: article_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Article SEO data }
+        '404': { description: Not found }
+    put:
+      tags:
+        - SEO
+      summary: Update SEO data for an article
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: article_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Article SEO updated }
+        '404': { description: Not found }
+
+  /api/seo/albums:
+    get:
+      tags:
+        - SEO
+      summary: List albums with SEO data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Albums SEO list }
+
+  /api/seo/albums/{album_id}:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO data for an album
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Album SEO data }
+        '404': { description: Not found }
+    put:
+      tags:
+        - SEO
+      summary: Update SEO data for an album
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Album SEO updated }
+        '404': { description: Not found }
+
+  /api/seo/chapters:
+    get:
+      tags:
+        - SEO
+      summary: List chapters with SEO data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Chapters SEO list }
+
+  /api/seo/chapters/{chapter_id}:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO data for a chapter
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Chapter SEO data }
+        '404': { description: Not found }
+    put:
+      tags:
+        - SEO
+      summary: Update SEO data for a chapter
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Chapter SEO updated }
+        '404': { description: Not found }
+
+  /api/seo/root:
+    get:
+      tags:
+        - SEO
+      summary: List root pages with SEO data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Root SEO list }
+    post:
+      tags:
+        - SEO
+      summary: Create root page SEO entry
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Root SEO created }
+
+  /api/seo/root/{root_id}:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO data for a root page
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: root_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Root SEO data }
+        '404': { description: Not found }
+    put:
+      tags:
+        - SEO
+      summary: Update SEO data for a root page
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: root_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Root SEO updated }
+        '404': { description: Not found }
+
+  /api/seo/bulk-update:
+    post:
+      tags:
+        - SEO
+      summary: Bulk update SEO data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Bulk update completed }
+
+  /api/seo/stats/overview:
+    get:
+      tags:
+        - SEO
+      summary: Get comprehensive SEO overview statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Overview returned }
+
+  /api/seo/stats/score-distribution:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO score distribution across content types
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Distribution returned }
+
+  /api/seo/stats/content-performance:
+    get:
+      tags:
+        - SEO
+      summary: Get content performance metrics by type
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Performance returned }
+
+  /api/seo/stats/status-breakdown:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO status breakdown
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Breakdown returned }
+
+  /api/seo/activity/recent:
+    get:
+      tags:
+        - SEO
+      summary: Get recent SEO activity and audit history
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Recent activity returned }
+
+  /api/seo/recommendations:
+    get:
+      tags:
+        - SEO
+      summary: Get SEO improvement recommendations
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Recommendations returned }
+
+  /api/seo/articles/{article_id}/inject:
+    post:
+      tags:
+        - SEO
+      summary: Inject SEO data for individual article
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: article_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Injected }
+
+  /api/seo/albums/{album_id}/inject:
+    post:
+      tags:
+        - SEO
+      summary: Inject SEO data for individual album
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Injected }
+
+  /api/seo/chapters/{chapter_id}/inject:
+    post:
+      tags:
+        - SEO
+      summary: Inject SEO data for individual chapter
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Injected }
+
+  /api/seo/global-settings:
+    get:
+      tags:
+        - SEO
+      summary: Get global SEO settings
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Global settings returned }
+    post:
+      tags:
+        - SEO
+      summary: Update global SEO settings
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Global settings updated }
+
+  /api/root-seo:
+    get:
+      tags:
+        - SEO
+      summary: List root SEO settings
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Root SEO list }
+    post:
+      tags:
+        - SEO
+      summary: Create root SEO setting
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Root SEO created }
+
+  /api/root-seo/{page_identifier}:
+    get:
+      tags:
+        - SEO
+      summary: Get root SEO for specific page
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page_identifier
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Root SEO returned }
+        '404': { description: Not found }
+    put:
+      tags:
+        - SEO
+      summary: Update root SEO for specific page
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page_identifier
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Root SEO updated }
+        '404': { description: Not found }
+
+  /api/root-seo/bulk-update:
+    post:
+      tags:
+        - SEO
+      summary: Bulk update root SEO settings
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Root SEO bulk update completed }
+
+  /api/brand-identity:
+    get:
+      tags:
+        - SEO
+      summary: Get brand identity assets
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Brand identity returned }
+    post:
+      tags:
+        - SEO
+      summary: Update brand identity assets
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Brand identity updated }
+
+  /api/brand-info:
+    get:
+      tags:
+        - SEO
+      summary: Get public brand info (no auth required)
+      responses:
+        '200': { description: Brand info returned }
+
+  /api/brand-identity/text:
+    post:
+      tags:
+        - SEO
+      summary: Update brand text fields and feature toggles
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Brand text updated }
+
+  # =============================================================================
+  # SYSTEM / PERFORMANCE / ADMIN UTILITIES
+  # =============================================================================
+
+  /api/database/status:
+    get:
+      tags:
+        - Analytics
+      summary: Get comprehensive database statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Database status returned }
+
+  /api/database/optimize:
+    post:
+      tags:
+        - Analytics
+      summary: Optimize all database tables
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Optimization completed }
+
+  /api/database/cleanup:
+    post:
+      tags:
+        - Analytics
+      summary: Clean up orphaned data and old activities
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Cleanup completed }
+
+  /api/database/backup:
+    post:
+      tags:
+        - Analytics
+      summary: Create timestamped database backup
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '201': { description: Backup created }
+
+  /api/database/backups:
+    get:
+      tags:
+        - Analytics
+      summary: List all available database backups
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Backups listed }
+
+  /api/cache/status:
+    get:
+      tags:
+        - Analytics
+      summary: Get cache performance metrics and status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Cache status returned }
+
+  /api/cache/clear:
+    post:
+      tags:
+        - Analytics
+      summary: Clear all cache data
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Cache cleared }
+
+  /api/cache/invalidate/{pattern}:
+    post:
+      tags:
+        - Analytics
+      summary: Invalidate cache by pattern
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: pattern
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Cache invalidated }
+
+  /api/cache/keys:
+    get:
+      tags:
+        - Analytics
+      summary: List cache keys
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Cache keys listed }
+
+  /api/performance/summary:
+    get:
+      tags:
+        - Analytics
+      summary: Get comprehensive performance metrics and statistics
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Performance summary returned }
+
+  /api/performance/clear-cache:
+    post:
+      tags:
+        - Analytics
+      summary: Clear performance cache
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Cleared }
+
+  /api/performance/alerts:
+    get:
+      tags:
+        - Analytics
+      summary: Get performance alerts
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Alerts returned }
+
+  /api/performance/recommendations:
+    get:
+      tags:
+        - Analytics
+      summary: Get performance recommendations
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Recommendations returned }
+
+  /api/asset-optimization/compress:
+    post:
+      tags:
+        - Analytics
+      summary: Compress static assets
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Compression completed }
+
+  /api/asset-optimization/clear-cache:
+    post:
+      tags:
+        - Analytics
+      summary: Clear asset cache
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Asset cache cleared }
+
+  /api/asset-optimization/regenerate-hashes:
+    post:
+      tags:
+        - Analytics
+      summary: Regenerate asset hashes
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Hashes regenerated }
+
+  /api/asset-optimization/minify:
+    post:
+      tags:
+        - Analytics
+      summary: Minify CSS/JS assets
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Minification completed }
+
+  /api/ssr-optimization/clear-cache:
+    post:
+      tags:
+        - Analytics
+      summary: Clear SSR template cache
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: SSR cache cleared }
+
+  /api/ssr-optimization/optimize-cache:
+    post:
+      tags:
+        - Analytics
+      summary: Optimize SSR cache
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: SSR cache optimized }
+
+  /api/ssr-optimization/cache-template:
+    post:
+      tags:
+        - Analytics
+      summary: Cache specific template
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                template: { type: string }
+              required: [template]
+      responses:
+        '200': { description: Template cached }
+
+  /api/system/status:
+    get:
+      tags:
+        - Analytics
+      summary: Get system health and resource usage
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: System status returned }
+
+  /health:
+    get:
+      tags:
+        - Analytics
+      summary: Health check endpoint
+      responses:
+        '200': { description: OK }
+
+  # =============================================================================
+  # PREMIUM CONTENT & COINS
+  # =============================================================================
+
+  /api/premium/check-access:
+    get:
+      tags:
+        - Ratings
+      summary: Check user's premium access status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Premium access status returned }
+
+  /api/premium/content-stats:
+    get:
+      tags:
+        - Ratings
+      summary: Get premium content statistics
+      responses:
+        '200': { description: Premium content stats returned }
+
+  /api/premium/process-content:
+    post:
+      tags:
+        - Ratings
+      summary: Process content for premium filtering
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Content processed }
+
+  /api/premium/user-status:
+    get:
+      tags:
+        - Ratings
+      summary: Get current user's premium status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: User premium status returned }
+
+  /api/news/{news_id}/purchase:
+    post:
+      tags:
+        - Ratings
+      summary: Purchase access to premium story content with coins
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Purchase completed }
+
+  /api/user/coins:
+    get:
+      tags:
+        - Ratings
+      summary: Get user's coin balance and premium status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Coins returned }
+
+  /api/user/coins/add-achievement:
+    post:
+      tags:
+        - Ratings
+      summary: Add achievement coins to user balance
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Coins added }
+
+  /api/user/coins/add-topup:
+    post:
+      tags:
+        - Ratings
+      summary: Add topup coins to user balance
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Coins added }
+
+  /api/user/coins/spend:
+    post:
+      tags:
+        - Ratings
+      summary: Spend coins for content purchase
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Coins spent }
+
+  /api/user/coins/transactions:
+    get:
+      tags:
+        - Ratings
+      summary: Get user's coin transaction history
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Transactions returned }
+
+  /api/user/coins/can-afford:
+    get:
+      tags:
+        - Ratings
+      summary: Check if user can afford content with coins
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Afford status returned }
+
+  # =============================================================================
+  # YOUTUBE VIDEOS
+  # =============================================================================
+
+  /api/youtube_videos:
+    get:
+      tags:
+        - Media
+      summary: List YouTube videos
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Videos listed }
+    post:
+      tags:
+        - Media
+      summary: Add a new YouTube video
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Video created }
+
+  /api/youtube_videos/{video_id}:
+    get:
+      tags:
+        - Media
+      summary: Get YouTube video details
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: video_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Video details returned }
+        '404': { description: Not found }
+    put:
+      tags:
+        - Media
+      summary: Update YouTube video
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: video_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Video updated }
+        '404': { description: Not found }
+    delete:
+      tags:
+        - Media
+      summary: Delete YouTube video
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: video_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+        '404': { description: Not found }
+
+  /api/youtube_videos/bulk-delete:
+    post:
+      tags:
+        - Media
+      summary: Bulk delete YouTube videos
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items: { type: integer }
+              required: [ids]
+      responses:
+        '200': { description: Bulk delete completed }
+
+  /api/youtube_videos/bulk-visibility:
+    post:
+      tags:
+        - Media
+      summary: Bulk update YouTube video visibility
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items: { type: integer }
+                is_visible: { type: boolean }
+              required: [ids, is_visible]
+      responses:
+        '200': { description: Bulk visibility updated }
+
+  /api/youtube_videos/latest:
+    get:
+      tags:
+        - Media
+      summary: Get latest YouTube videos
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Latest videos returned }
+
+  # =============================================================================
+  # CATEGORIES & CATEGORY GROUPS
+  # =============================================================================
+
+  /api/categories:
+    get:
+      tags:
+        - Categories
+      summary: List categories (supports grouped view)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: grouped
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200': { description: Categories listed }
+    post:
+      tags:
+        - Categories
+      summary: Create a new category
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Category created }
+
+  /api/categories/{category_id}:
+    put:
+      tags:
+        - Categories
+      summary: Update category
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Category updated }
+    delete:
+      tags:
+        - Categories
+      summary: Delete category
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+
+  /api/categories/{category_id}/safe-delete:
+    post:
+      tags:
+        - Categories
+      summary: Safe delete category with dependency reassignment
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: category_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Category safely deleted }
+
+  /api/category-groups:
+    get:
+      tags:
+        - Categories
+      summary: List category groups
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Groups listed }
+    post:
+      tags:
+        - Categories
+      summary: Create a new category group
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Group created }
+
+  /api/category-groups/{group_id}:
+    put:
+      tags:
+        - Categories
+      summary: Update category group
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Group updated }
+    delete:
+      tags:
+        - Categories
+      summary: Delete category group
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+
+  # =============================================================================
+  # TAGS
+  # =============================================================================
+
+  /api/tags:
+    get:
+      tags:
+        - Categories
+      summary: List tags
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Tags listed }
+
+  # =============================================================================
+  # NAVIGATION LINKS
+  # =============================================================================
+
+  /api/navigation-links/bulk-status:
+    put:
+      tags:
+        - Categories
+      summary: Bulk update navigation links active status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                link_ids:
+                  type: array
+                  items: { type: integer }
+                is_active: { type: boolean }
+              required: [link_ids, is_active]
+      responses:
+        '200': { description: Bulk status updated }
+
+  /api/navigation-links:
+    get:
+      tags:
+        - Categories
+      summary: List navigation links
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Links listed }
+    post:
+      tags:
+        - Categories
+      summary: Create a new navigation link
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Link created }
+
+  /api/navigation-links/{link_id}:
+    put:
+      tags:
+        - Categories
+      summary: Update navigation link
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: link_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Link updated }
+    delete:
+      tags:
+        - Categories
+      summary: Delete navigation link
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: link_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+
+  /api/navigation-links/bulk-update:
+    post:
+      tags:
+        - Categories
+      summary: Bulk update navigation links status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Bulk update completed }
+
+  /api/navigation-links/bulk-delete:
+    delete:
+      tags:
+        - Categories
+      summary: Bulk delete navigation links
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Bulk delete completed }
+
+  /api/navigation-links/copy:
+    post:
+      tags:
+        - Categories
+      summary: Copy navigation links between locations
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Links copied }
+
+  # =============================================================================
+  # EDITOR–WRITER MANAGEMENT
+  # =============================================================================
+
+  /api/editor-writer/editors:
+    get:
+      tags:
+        - Users
+      summary: List available editors
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Editors listed }
+
+  /api/editor-writer/writers:
+    get:
+      tags:
+        - Users
+      summary: List available writers
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Writers listed }
+
+  /api/editor-writer/{editor_id}/list:
+    get:
+      tags:
+        - Users
+      summary: Get writers assigned to an editor
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: editor_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Assignment list returned }
+
+  /api/editor-writer/{editor_id}/assign:
+    post:
+      tags:
+        - Users
+      summary: Replace assigned writers for an editor
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: editor_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                writer_ids:
+                  type: array
+                  items: { type: integer }
+              required: [writer_ids]
+      responses:
+        '200': { description: Assignments updated }
+
+  # =============================================================================
+  # SOCIAL MEDIA
+  # =============================================================================
+
+  /api/social-media:
+    get:
+      tags:
+        - Users
+      summary: List social media links
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Social links listed }
+    post:
+      tags:
+        - Users
+      summary: Add a new social media link
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Social link created }
+
+  /api/social-media/{social_id}:
+    get:
+      tags:
+        - Users
+      summary: Get social media link details
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: social_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Details returned }
+        '404': { description: Not found }
+    put:
+      tags:
+        - Users
+      summary: Update social media link
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: social_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Social link updated }
+        '404': { description: Not found }
+    delete:
+      tags:
+        - Users
+      summary: Delete social media link
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: social_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Deleted }
+        '404': { description: Not found }
+
+  # =============================================================================
+  # SUBSCRIPTIONS
+  # =============================================================================
+
+  /api/subscriptions/plans:
+    get:
+      tags:
+        - Users
+      summary: Get subscription plans
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Plans returned }
+
+  /api/subscriptions/create:
+    post:
+      tags:
+        - Users
+      summary: Create subscription
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201': { description: Subscription created }
+
+  /api/subscriptions/cancel:
+    post:
+      tags:
+        - Users
+      summary: Cancel subscription
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Subscription cancelled }
+
+  /api/subscriptions/status:
+    get:
+      tags:
+        - Users
+      summary: Get subscription status
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Status returned }
+
+  /api/subscriptions/update-ad-preferences:
+    post:
+      tags:
+        - Users
+      summary: Update ad preferences
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Preferences updated }
+
+  /api/subscriptions/check-premium-access:
+    get:
+      tags:
+        - Users
+      summary: Check premium access
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Access status returned }
+
+  /api/admin/subscriptions:
+    get:
+      tags:
+        - Users
+      summary: List all subscriptions (admin)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200': { description: Subscriptions listed }
+
+  /api/admin/subscriptions/{subscription_id}:
+    put:
+      tags:
+        - Users
+      summary: Update subscription (admin)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200': { description: Subscription updated }
+
+  # =============================================================================
+  # XLATE (TRANSLATION-LAYER) ENDPOINTS
+  # =============================================================================
+
+  /api/xlate/news:
+    get:
+      tags:
+        - Xlate
+      summary: List news (translation layer)
+      description: Read-only, denormalized news list for app clients
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: integer }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [latest, popular]
+            default: latest
+      responses:
+        '200':
+          description: List of news (translation layer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsListResponse'
+
+  /api/xlate/news/{news_id}:
+    get:
+      tags:
+        - Xlate
+      summary: Get news detail (translation layer)
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: News detail (translation layer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicNewsResponse'
+        '404': { description: Not found }
+
+  /api/xlate/albums:
+    get:
+      tags:
+        - Xlate
+      summary: List albums (translation layer)
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: integer }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [latest, popular, chapters]
+            default: latest
+      responses:
+        '200':
+          description: Albums list (translation layer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumsListResponse'
+
+  /api/xlate/albums/{album_id}:
+    get:
+      tags:
+        - Xlate
+      summary: Get album detail (translation layer)
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Album detail (translation layer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAlbumResponse'
+        '404': { description: Not found }
+
+  /api/xlate/albums/{album_id}/chapters/{chapter_id}:
+    get:
+      tags:
+        - Xlate
+      summary: Get chapter detail (translation layer)
+      description: Returns chapter with content, links to news and album, and navigation
+      parameters:
+        - name: album_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: chapter_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Chapter detail (translation layer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicChapterResponse'
+        '404': { description: Not found }
+
+  /api/xlate/images:
+    get:
+      tags:
+        - Xlate
+      summary: List images (translation layer)
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: visibility
+          in: query
+          schema: { type: string }
+        - name: all_users
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200': { description: Images list returned }
+
+  /api/xlate/images/{image_id}:
+    get:
+      tags:
+        - Xlate
+      summary: Get image detail (translation layer)
+      parameters:
+        - name: image_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: Image detail returned }
+        '404': { description: Not found }
+
+components:
+  schemas:
+    # =============================================================================
+    # PUBLIC API RESPONSE SCHEMAS
+    # =============================================================================
+    
+    NewsUpdatePayload:
+      type: object
+      properties:
+        title: { type: string }
+        content: { type: string }
+        category: { type: integer, nullable: true }
+        date: { type: string, format: date-time, nullable: true }
+        age_rating: { type: string, nullable: true }
+        is_news: { type: boolean }
+        is_main_news: { type: boolean }
+        is_premium: { type: boolean }
+        is_visible: { type: boolean }
+        writer: { type: integer, nullable: true }
+        external_source: { type: string, nullable: true }
+        image_id: { type: integer, nullable: true }
+        prize: { type: number, nullable: true }
+        prize_coin_type: { type: string, enum: [achievement, topup], nullable: true }
+        album_id: { type: integer, nullable: true }
+    
+    PublicNewsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the news article
+        title:
+          type: string
+          description: Title of the news article
+        content:
+          type: string
+          description: Full content of the article (may be redacted for premium content)
+        excerpt:
+          type: string
+          description: Short excerpt or summary
+        is_premium:
+          type: boolean
+          description: Whether this is premium content
+        is_news:
+          type: boolean
+          description: Whether this is classified as news
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        view_count:
+          type: integer
+          description: Number of times this article has been read
+        share_count:
+          type: integer
+          description: Number of times this article has been shared
+        category:
+          $ref: '#/components/schemas/CategoryInfo'
+        header_image:
+          $ref: '#/components/schemas/ImageInfo'
+        author:
+          $ref: '#/components/schemas/UserInfo'
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags associated with the article
+        related_news:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelatedNewsItem'
+        message:
+          type: string
+          description: Additional message (e.g., premium content notice)
+      required:
+        - id
+        - title
+        - is_premium
+        - is_news
+
+    PublicNewsListResponse:
+      type: object
+      properties:
+        news:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicNewsListItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        filters:
+          $ref: '#/components/schemas/NewsFilters'
+
+    PublicNewsListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        excerpt:
+          type: string
+        is_premium:
+          type: boolean
+        is_news:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        view_count:
+          type: integer
+        share_count:
+          type: integer
+        category:
+          $ref: '#/components/schemas/CategoryInfo'
+        header_image:
+          $ref: '#/components/schemas/ImageInfo'
+
+    PublicAlbumResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the album
+        title:
+          type: string
+          description: Title of the album
+        description:
+          type: string
+          description: Detailed description of the album
+        is_premium:
+          type: boolean
+          description: Whether this is premium content
+        is_completed:
+          type: boolean
+          description: Whether the album is completed
+        is_hiatus:
+          type: boolean
+          description: Whether the album is on hiatus
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        read_count:
+          type: integer
+        category:
+          $ref: '#/components/schemas/CategoryInfo'
+        header_image:
+          $ref: '#/components/schemas/ImageInfo'
+        author:
+          $ref: '#/components/schemas/UserInfo'
+        tags:
+          type: array
+          items:
+            type: string
+        chapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterInfo'
+
+    PublicAlbumsListResponse:
+      type: object
+      properties:
+        albums:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicAlbumListItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        filters:
+          $ref: '#/components/schemas/AlbumFilters'
+
+    PublicAlbumListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        is_premium:
+          type: boolean
+        is_completed:
+          type: boolean
+        is_hiatus:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        read_count:
+          type: integer
+        chapter_count:
+          type: integer
+        category:
+          $ref: '#/components/schemas/CategoryInfo'
+        header_image:
+          $ref: '#/components/schemas/ImageInfo'
+
+    PublicChapterResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        chapter_number:
+          type: integer
+        chapter_title:
+          type: string
+        content:
+          type: string
+          description: Chapter content (may be redacted for premium content)
+        is_premium:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        album:
+          $ref: '#/components/schemas/AlbumInfo'
+        news_content:
+          $ref: '#/components/schemas/NewsContentInfo'
+        navigation:
+          $ref: '#/components/schemas/ChapterNavigation'
+        message:
+          type: string
+          description: Additional message (e.g., premium content notice)
+
+    # Alias schema for chapter detail endpoints
+    ChapterDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/PublicChapterResponse'
+
+    PublicUserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        display_name:
+          type: string
+        avatar_url:
+          type: string
+        bio:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+        social_links:
+          type: object
+          additionalProperties:
+            type: string
+        member_since:
+          type: string
+          format: date-time
+        last_active:
+          type: string
+          format: date-time
+        is_premium_user:
+          type: boolean
+        followers_count:
+          type: integer
+        following_count:
+          type: integer
+        write_access:
+          type: boolean
+
+    PublicUserStatsResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        total_news_published:
+          type: integer
+        total_albums_published:
+          type: integer
+        total_chapters_published:
+          type: integer
+        total_comments_made:
+          type: integer
+        total_ratings_given:
+          type: integer
+        total_reads_on_content:
+          type: integer
+        total_shares_on_content:
+          type: integer
+        last_activity:
+          type: string
+          format: date-time
+        most_viewed_news_id:
+          type: integer
+        most_viewed_album_id:
+          type: integer
+        average_rating_received:
+          type: number
+          format: float
+
+    PublicUserLibraryResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        username:
+          type: string
+        favorited_albums:
+          type: array
+          items:
+            $ref: '#/components/schemas/FavoritedAlbum'
+        favorited_news:
+          type: array
+          items:
+            $ref: '#/components/schemas/FavoritedNews'
+        reading_history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReadingHistoryItem'
+
+    PublicCategoriesResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryInfo'
+
+    PublicTagsResponse:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagInfo'
+
+    PublicCommentsResponse:
+      type: object
+      properties:
+        content_type:
+          type: string
+        content_id:
+          type: integer
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentInfo'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PublicCommentRepliesResponse:
+      type: object
+      properties:
+        parent_comment_id:
+          type: integer
+        replies:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentInfo'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PublicSearchResponse:
+      type: object
+      properties:
+        search_query:
+          type: string
+        content_type_filter:
+          type: string
+        sort_by:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    # =============================================================================
+    # COMMON SCHEMAS
+    # =============================================================================
+    
+    CategoryInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        slug:
+          type: string
+        content_count:
+          type: integer
+
+    ImageInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        alt_text:
+          type: string
+        caption:
+          type: string
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        display_name:
+          type: string
+        avatar_url:
+          type: string
+
+    ChapterInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        chapter_number:
+          type: integer
+        chapter_title:
+          type: string
+        is_premium:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        view_count:
+          type: integer
+          nullable: true
+
+    AlbumInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        is_premium:
+          type: boolean
+
+    NewsContentInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        excerpt:
+          type: string
+        is_premium:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    ChapterNavigation:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/NavigationChapter'
+        previous:
+          $ref: '#/components/schemas/NavigationChapter'
+
+    NavigationChapter:
+      type: object
+      properties:
+        id:
+          type: integer
+        chapter_title:
+          type: string
+        chapter_number:
+          type: integer
+
+    FavoritedAlbum:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        is_premium:
+          type: boolean
+        added_at:
+          type: string
+          format: date-time
+
+    FavoritedNews:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        excerpt:
+          type: string
+        is_premium:
+          type: boolean
+        added_at:
+          type: string
+          format: date-time
+
+    ReadingHistoryItem:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [news, album_chapter]
+        id:
+          type: integer
+        title:
+          type: string
+        album_id:
+          type: integer
+        last_read_at:
+          type: string
+          format: date-time
+
+    TagInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        news_count:
+          type: integer
+        album_count:
+          type: integer
+
+    CommentInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserInfo'
+        likes:
+          type: integer
+        dislikes:
+          type: integer
+        replies_count:
+          type: integer
+
+    SearchResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [news, album]
+        id:
+          type: integer
+        title:
+          type: string
+        excerpt:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        read_count:
+          type: integer
+        is_premium:
+          type: boolean
+        category:
+          type: string
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+
+    NewsFilters:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryInfo'
+        current_category:
+          type: integer
+        current_search:
+          type: string
+        current_sort:
+          type: string
+
+    AlbumFilters:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryInfo'
+        current_category:
+          type: integer
+        current_search:
+          type: string
+        current_sort:
+          type: string
+
+    RelatedNewsItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        excerpt:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+      required:
+        - error
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Session-based authentication via cookies
+    
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+
+security:
+  - sessionAuth: []
+  - bearerAuth: []

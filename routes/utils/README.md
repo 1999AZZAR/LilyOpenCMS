@@ -1,3 +1,7 @@
+# Routes Utils
+
+Helper utilities for routes.
+
 # Routes Utils Package
 
 This package contains utility modules for the LilyOpenCMS routes system, providing comprehensive permission and role management functionality.

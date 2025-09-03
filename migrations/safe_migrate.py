@@ -585,7 +585,16 @@ def safe_migrate():
                     print(f"   {i:2d}. {col}")
                 
                 # Check for reading history and library columns
-                user_required_columns = ['reading_history_id', 'user_library_id', 'birthdate', 'deletion_requested', 'deletion_requested_at']
+                user_required_columns = [
+                    'reading_history_id',
+                    'user_library_id',
+                    'birthdate',
+                    'deletion_requested',
+                    'deletion_requested_at',
+                    # Hybrid verification flow fields
+                    'email_verified_at',
+                    'last_verification_sent_at'
+                ]
                 missing_user_cols = [col for col in user_required_columns if col not in user_columns]
                 
                 if missing_user_cols:
@@ -607,6 +616,12 @@ def safe_migrate():
                             elif col == 'deletion_requested_at':
                                 db.session.execute(text("ALTER TABLE user ADD COLUMN deletion_requested_at TIMESTAMP"))
                                 print("✅ Added deletion_requested_at column to user")
+                            elif col == 'email_verified_at':
+                                db.session.execute(text("ALTER TABLE user ADD COLUMN email_verified_at TIMESTAMP"))
+                                print("✅ Added email_verified_at column to user")
+                            elif col == 'last_verification_sent_at':
+                                db.session.execute(text("ALTER TABLE user ADD COLUMN last_verification_sent_at TIMESTAMP"))
+                                print("✅ Added last_verification_sent_at column to user")
                         except Exception as e:
                             print(f"⚠️ Column {col} might already exist: {e}")
                     db.session.commit()

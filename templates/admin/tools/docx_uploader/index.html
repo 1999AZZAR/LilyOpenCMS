@@ -16,7 +16,7 @@
                 Upload DOCX untuk Artikel dan Cerita
             </h1>
             <p class="text-gray-600">
-                Upload dokumen Word (.docx) dan konversi otomatis menjadi artikel dan cerita dengan metadata yang sesuai.
+                Upload dokumen Word (.docx) dan konversi otomatis menjadi draft artikel dan cerita dengan metadata yang sesuai. Konten akan tersimpan sebagai draft (tidak terlihat publik) hingga Anda mempublikasikannya.
             </p>
             <div class="mt-3 flex space-x-3">
                 <a href="/admin/tools/docx-template" class="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md border border-gray-300">
@@ -158,6 +158,9 @@
 
                 <!-- Submit Button -->
                 <div class="flex justify-between items-center">
+                    <!-- Hidden field to set visibility to hidden/draft -->
+                    <input type="hidden" name="is_visible" value="false">
+                    
                     <a href="{{ url_for('main.manage_news') }}" 
                        class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md border border-gray-300 transition-colors duration-200">
                         <i class="fas fa-newspaper mr-2"></i>
@@ -166,7 +169,7 @@
                     <button type="submit" id="submitBtn"
                             class="px-6 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-upload mr-2"></i>
-                        Upload & Buat Artikel dan Cerita
+                        Upload & Buat Draft
                     </button>
                 </div>
             </form>

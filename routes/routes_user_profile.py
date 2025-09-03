@@ -234,6 +234,94 @@ def upload_docx_story(username):
                          today=today)
 
 
+@user_profile_bp.route('/api/user/news', methods=['POST'])
+@login_required
+def create_user_news_api():
+    """Create a new news/story by a regular user with write access.
+    Accepts form-data with the same fields as admin `/api/news`.
+    """
+    # Permission: must have write access
+    if not has_write_access(current_user):
+        return jsonify({"error": "Write access required"}), 403
+
+    data = request.form
+
+    # Required fields
+    title = (data.get('title') or '').strip()
+    content = (data.get('content') or '').strip()
+    category_id_str = (data.get('category') or '').strip()
+    date_str = (data.get('date') or '').strip()  # yyyy-mm-dd
+
+    missing = []
+    if not title: missing.append('title')
+    if not content: missing.append('content')
+    if not category_id_str: missing.append('category')
+    if not date_str: missing.append('date')
+    if missing:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
+
+    # Parse category
+    try:
+        category_id = int(category_id_str)
+    except ValueError:
+        return jsonify({"error": f"Invalid category id: {category_id_str}"}), 400
+    category = Category.query.get(category_id)
+    if not category:
+        return jsonify({"error": "Category not found"}), 400
+
+    # Parse date
+    try:
+        from datetime import datetime, timezone
+        try:
+            news_date = datetime.fromisoformat(date_str)
+        except ValueError:
+            news_date = datetime.strptime(date_str, "%Y-%m-%d")
+        if news_date.tzinfo is None:
+            news_date = news_date.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD or ISO"}), 400
+
+    # Optional fields
+    tagar = (data.get('tagar') or '').strip()
+    age_rating = (data.get('age_rating') or '').strip() or 'SU'
+    writer = (data.get('writer') or '').strip() or current_user.username
+    external_source = (data.get('external_source') or '').strip()
+    is_premium = (data.get('is_premium') in ("on", "true", "1", True))
+    prize = int((data.get('prize') or 0)) if (data.get('prize') or '').isdigit() else 0
+    prize_coin_type = (data.get('prize_coin_type') or 'any')
+    image_id = data.get('image_id') or None
+    is_visible = str(data.get('is_visible', 'false')).lower() == 'true'
+
+    # Create News owned by current user (not main news)
+    news = News(
+        title=title,
+        content=content,
+        tagar=tagar,
+        date=news_date,
+        category_id=category.id,
+        user_id=current_user.id,
+        writer=writer,
+        external_source=external_source,
+        is_premium=is_premium,
+        is_news=False,
+        is_main_news=False,
+        is_visible=is_visible,
+        prize=prize,
+        prize_coin_type=prize_coin_type,
+        image_id=int(image_id) if image_id and str(image_id).isdigit() else None,
+    )
+
+    db.session.add(news)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "id": news.id,
+        "is_visible": news.is_visible,
+        "redirect_url": url_for('user_profile.user_stories', username=current_user.username)
+    }), 201
+
+
 @user_profile_bp.route('/api/user/upload-docx-story', methods=['POST'])
 @login_required
 def upload_docx_story_api():
@@ -251,6 +339,7 @@ def upload_docx_story_api():
         age_rating = request.form.get('age_rating', '')
         writer = request.form.get('writer', '').strip()
         external_source = request.form.get('external_source', '').strip()
+        is_visible = request.form.get('is_visible', 'true').lower() == 'true'  # Default to visible if not specified
         
         # Validate required fields
         if not file:
@@ -487,7 +576,7 @@ def upload_docx_story_api():
                 is_news=False,  # This is a story, not news
                 is_premium=False,
                 is_main_news=False,
-                is_visible=True,
+                is_visible=is_visible,
                 is_archived=False,
                 user_id=current_user.id,
                 writer=writer if writer else current_user.username,
