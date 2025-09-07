@@ -161,7 +161,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ album.title }}</div>
-                                    <div class="text-sm text-gray-500">{{ album.author.username if album.author else 'Tidak Diketahui' }}</div>
+                                    <div class="text-sm text-gray-500">{{ album.author if album.author else (album.owner.username if album.owner else 'Tidak Diketahui') }}</div>
                                 </div>
                             </div>
                         </td>

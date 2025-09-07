@@ -65,6 +65,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const newsId = urlParams.get('news_id');
 const albumId = urlParams.get('album_id');
 const isEditMode = newsId !== null;
+let isSubmitting = false; // guard to prevent double submission
 
 // Modal Sisipkan Tautan Logika
 function openLinkInsertModal(editor) {
@@ -516,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; // No file or URL provided
             }
             if (nameValue) fd.append('name', nameValue);
-            fd.append('is_visible', 'true'); // Make uploaded header images visible by default?
+            fd.append('is_visible', 'false'); // Make uploaded header images hidden by default
 
             try {
                 const resp = await fetch('/api/images', { method: 'POST', body: fd });
@@ -545,19 +546,13 @@ document.addEventListener('DOMContentLoaded', () => {
         addNewsForm.addEventListener('submit', handleNewsFormSubmit);
     }
 
-    // Delegated submit (captures even if form id changes later)
-    document.addEventListener('submit', function(e) {
-        const t = e.target;
-        if (!t || !(t instanceof HTMLFormElement)) return;
-        const id = t.id || '';
-        if (id === 'add-news-form' || id === 'create-story-form') {
-            handleNewsFormSubmit(e);
-        }
-    }, true);
+    // Note: Avoid adding a delegated submit handler to prevent double submission
 
     // Unified submit handler (can be used with direct binding or delegated capture)
     async function handleNewsFormSubmit(e) {
         e.preventDefault();
+        if (isSubmitting) return; // prevent duplicate sends
+        isSubmitting = true;
 
             // Basic validation
             const title = document.getElementById('news-title').value.trim();
@@ -590,15 +585,20 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('date', document.getElementById('news-date').value);
             formData.append('category', document.getElementById('news-category').value);
             formData.append('age_rating', document.getElementById('news-age-rating').value);
-            formData.append('is_news', document.getElementById('news-is-premium').checked); // Fixed: use correct element ID
+            // Handle elements that may not exist in user story form
+            const isPremiumElement = document.getElementById('news-is-premium');
+            const prizeElement = document.getElementById('news-prize');
+            const prizeCoinTypeElement = document.getElementById('news-prize-coin-type');
+            
+            formData.append('is_news', isPremiumElement ? isPremiumElement.checked : false);
             formData.append('is_main_news', false); // Fixed: news-main element doesn't exist, default to false
-            formData.append('is_premium', document.getElementById('news-is-premium').checked);
+            formData.append('is_premium', isPremiumElement ? isPremiumElement.checked : false);
             formData.append('is_visible', isPublishButton);
             formData.append('writer', document.getElementById('news-writer').value.trim());
             formData.append('external_source', document.getElementById('news-external-source').value.trim());
             formData.append('image_id', document.getElementById('news-image-id').value); // Send the selected image ID
-            formData.append('prize', document.getElementById('news-prize').value || '0'); // Add prize field
-            formData.append('prize_coin_type', document.getElementById('news-prize-coin-type').value || 'any'); // Add coin type field
+            formData.append('prize', prizeElement ? prizeElement.value || '0' : '0'); // Add prize field
+            formData.append('prize_coin_type', prizeCoinTypeElement ? prizeCoinTypeElement.value || 'any' : 'any'); // Add coin type field
 
             try {
                 let response;
@@ -613,14 +613,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         date: document.getElementById('news-date').value,
                         category: document.getElementById('news-category').value,
                         age_rating: document.getElementById('news-age-rating').value,
-                        is_news: document.getElementById('news-is-premium').checked,
+                        is_news: isPremiumElement ? isPremiumElement.checked : false,
                         is_main_news: false, // Fixed: news-main element doesn't exist, default to false
-                        is_premium: document.getElementById('news-is-premium').checked,
+                        is_premium: isPremiumElement ? isPremiumElement.checked : false,
                         writer: document.getElementById('news-writer').value.trim(),
                         external_source: document.getElementById('news-external-source').value.trim(),
                         image_id: document.getElementById('news-image-id').value,
-                        prize: document.getElementById('news-prize').value || '0',
-                        prize_coin_type: document.getElementById('news-prize-coin-type').value || 'any'
+                        prize: prizeElement ? prizeElement.value || '0' : '0',
+                        prize_coin_type: prizeCoinTypeElement ? prizeCoinTypeElement.value || 'any' : 'any'
                     };
                     // Set visibility based on which button was clicked
                     jsonData.is_visible = !!isPublishButton;
@@ -689,6 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error mengirim berita:', error);
                 const action = isEditMode ? 'memperbarui' : (isPublishButton ? 'menerbitkan' : 'menyimpan draf');
                 if (typeof showToast === 'function') showToast('error', `Gagal ${action} berita: ${error.message}`);
+                isSubmitting = false; // allow retry after failure
             }
         }
 

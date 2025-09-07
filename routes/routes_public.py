@@ -1516,14 +1516,24 @@ def album_detail(album_id, album_title):
     # Get related albums using refined similarity algorithm
     related_albums = get_similar_albums(album, limit=4)
     
-    # Get albums by the same author (excluding current)
+    # Get albums by the same author/owner (excluding current)
+    # Find albums that match either the author name OR the owner ID
+    from sqlalchemy import or_
+    
     author_albums = (
-        Album.query.filter_by(
-            user_id=album.user_id,
-            is_visible=True,
-            is_archived=False
+        Album.query.filter(
+            or_(
+                # Match by author name (if author exists)
+                (Album.author == album.author) if album.author else False,
+                # Match by owner ID (if owner exists)
+                (Album.owner_id == album.owner_id) if album.owner_id else False,
+                # Fallback: match by creator ID
+                (Album.user_id == album.user_id) if not album.author and not album.owner_id else False
+            ),
+            Album.is_visible == True,
+            Album.is_archived == False,
+            Album.id != album_id
         )
-        .filter(Album.id != album_id)
         .order_by(Album.created_at.desc())
         .limit(6)
         .all()

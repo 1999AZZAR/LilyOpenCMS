@@ -149,6 +149,19 @@ def list_albums():
         elif album_type == 'regular':
             query = query.filter(Album.is_premium == False)
         
+        # User filter (by owner_id or author)
+        user_id = request.args.get('user', type=int)
+        if user_id:
+            query = query.filter(
+                (Album.owner_id == user_id) | 
+                (Album.author.in_([u.username for u in User.query.filter_by(id=user_id).all()]))
+            )
+        
+        # Author filter
+        author = request.args.get('author', '').strip()
+        if author:
+            query = query.filter(Album.author.ilike(f'%{author}%'))
+        
         # Get total count for pagination
         total_albums = query.count()
         
@@ -159,6 +172,9 @@ def list_albums():
                      .all()
         
         # Categories are provided by context processor
+        
+        # Get users for filter dropdown
+        users = User.query.order_by(User.username).all()
         
         # Calculate pagination info
         total_pages = (total_albums + per_page - 1) // per_page
@@ -183,7 +199,8 @@ def list_albums():
                              has_next=has_next,
                              prev_page=prev_page,
                              next_page=next_page,
-                             query_string=query_string)
+                             query_string=query_string,
+                             users=users)
     
     except Exception as e:
         logger.error(f"Error loading albums list: {e}")
@@ -281,7 +298,9 @@ def create_album():
             title=data['title'],
             description=data.get('description', ''),
             category_id=data.get('category_id'),
-            user_id=current_user.id,
+            user_id=current_user.id,  # Creator is always the current user
+            owner_id=data.get('owner_id'),  # Owner can be different from creator
+            author=data.get('author'),  # Set the author name
             is_premium=data.get('is_premium', False),
             is_completed=data.get('is_completed', False),
             is_hiatus=data.get('is_hiatus', False),
@@ -333,6 +352,8 @@ def edit_album(album_id):
         album.title = data.get('title', album.title)
         album.description = data.get('description', album.description)
         album.category_id = data.get('category_id', album.category_id)
+        album.author = data.get('author', album.author)  # Update author field
+        album.owner_id = data.get('owner_id', album.owner_id)  # Update owner field
         album.is_premium = data.get('is_premium', album.is_premium)
         album.is_completed = data.get('is_completed', album.is_completed)
         album.is_hiatus = data.get('is_hiatus', album.is_hiatus)
@@ -554,6 +575,15 @@ def manage_chapters(album_id):
         if search_query:
             news_query = news_query.filter(News.title.ilike(f'%{search_query}%'))
         
+        # Get filter parameters
+        user_filter = request.args.get('user', '').strip()
+        if user_filter:
+            news_query = news_query.join(User, News.user_id == User.id).filter(User.username == user_filter)
+        
+        category_filter = request.args.get('category', '').strip()
+        if category_filter:
+            news_query = news_query.join(Category, News.category_id == Category.id).filter(Category.name == category_filter)
+        
         # Get pagination parameters
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 12, type=int)  # Show 12 articles per page
@@ -569,10 +599,27 @@ def manage_chapters(album_id):
         
         available_news = pagination.items
         
+        # Get all available users and categories for filters (not just from current page)
+        # Get users who have created news articles (for filter dropdown)
+        available_users = db.session.query(User).join(News, User.id == News.user_id).distinct().all()
+        
+        # Add news count for each user
+        for user in available_users:
+            user.news_count = News.query.filter(News.user_id == user.id).count()
+        
+        # Get categories that have news articles (for filter dropdown)
+        available_categories = db.session.query(Category).join(News, Category.id == News.category_id).distinct().all()
+        
+        # Add news count for each category
+        for category in available_categories:
+            category.news_count = News.query.filter(News.category_id == category.id).count()
+        
         return render_template('admin/albums/chapters.html',
                              album=album,
                              chapters=chapters,
                              available_news=available_news,
+                             available_users=available_users,
+                             available_categories=available_categories,
                              pagination=pagination)
     
     except Exception as e:
@@ -1075,8 +1122,8 @@ def get_album_deletion_requests():
             requests_data.append({
                 "id": album.id,
                 "title": album.title,
-                "author": album.author.get_full_name() if album.author else "Unknown",
-                "author_username": album.author.username if album.author else "unknown",
+                "author": album.author if album.author else "Unknown",
+                "author_username": album.creator.username if album.creator else "unknown",
                 "category": album.category.name if album.category else "Uncategorized",
                 "created_at": album.created_at.isoformat(),
                 "deletion_requested_at": album.deletion_requested_at.isoformat() if album.deletion_requested_at else None,

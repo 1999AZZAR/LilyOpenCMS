@@ -98,7 +98,8 @@ def safe_migrate():
                 'total_views', 'average_rating', 'age_rating', 
                 'view_count', 'rating_count', 'is_premium',
                 'reading_history_id', 'user_library_id',
-                'deletion_requested', 'deletion_requested_at', 'deletion_requested_by'
+                'deletion_requested', 'deletion_requested_at', 'deletion_requested_by',
+                'author', 'owner_id'  # New fields for author and owner
             ]
             missing_album_columns = [col for col in required_album_columns if col not in columns]
             
@@ -140,6 +141,12 @@ def safe_migrate():
                         elif col == 'deletion_requested_by':
                             db.session.execute(text("ALTER TABLE album ADD COLUMN deletion_requested_by INTEGER REFERENCES user(id)"))
                             print("✅ Added deletion_requested_by column to album")
+                        elif col == 'author':
+                            db.session.execute(text("ALTER TABLE album ADD COLUMN author VARCHAR(100)"))
+                            print("✅ Added author column to album")
+                        elif col == 'owner_id':
+                            db.session.execute(text("ALTER TABLE album ADD COLUMN owner_id INTEGER REFERENCES user(id)"))
+                            print("✅ Added owner_id column to album")
                     except Exception as e:
                         print(f"⚠️ Column {col} might already exist: {e}")
 
@@ -183,8 +190,10 @@ def safe_migrate():
                     return False
                 else:
                     print("✅ All required album columns are now present")
+                    print("✅ Author and owner_id fields added for album ownership system")
             else:
                 print("✅ All required album columns are already present")
+                print("✅ Author and owner_id fields are present for album ownership system")
 
             # ===== ALBUM CHAPTER TABLE MIGRATIONS =====
             print("\n" + "="*50)
@@ -1002,12 +1011,15 @@ def safe_migrate():
                         CREATE TABLE comment (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             user_id INTEGER NOT NULL,
-                            content_type VARCHAR(20) NOT NULL,
+                            content_type VARCHAR(50) NOT NULL,
                             content_id INTEGER NOT NULL,
                             parent_id INTEGER,
                             content TEXT NOT NULL,
                             is_approved BOOLEAN DEFAULT 1 NOT NULL,
+                            is_spam BOOLEAN DEFAULT 0 NOT NULL,
                             is_deleted BOOLEAN DEFAULT 0 NOT NULL,
+                            ip_address VARCHAR(45),
+                            user_agent VARCHAR(500),
                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
@@ -1017,6 +1029,29 @@ def safe_migrate():
                     print("✅ Created comment table")
                 except Exception as e:
                     print(f"⚠️ Could not create comment table: {e}")
+            else:
+                # Align existing comment table with model fields
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(comment)"))
+                    comment_cols = [row[1] for row in result.fetchall()]
+                    to_add = []
+                    if 'is_spam' not in comment_cols:
+                        to_add.append("ADD COLUMN is_spam BOOLEAN DEFAULT 0 NOT NULL")
+                    if 'ip_address' not in comment_cols:
+                        to_add.append("ADD COLUMN ip_address VARCHAR(45)")
+                    if 'user_agent' not in comment_cols:
+                        to_add.append("ADD COLUMN user_agent VARCHAR(500)")
+                    if 'updated_at' not in comment_cols:
+                        to_add.append("ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP")
+                    for clause in to_add:
+                        try:
+                            db.session.execute(text(f"ALTER TABLE comment {clause}"))
+                        except Exception as e:
+                            print(f"⚠️ Could not {clause}: {e}")
+                    if to_add:
+                        db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not align comment table: {e}")
             
             # Check if rating table exists
             if 'rating' not in existing_tables:
@@ -1026,11 +1061,9 @@ def safe_migrate():
                         CREATE TABLE rating (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             user_id INTEGER NOT NULL,
-                            content_type VARCHAR(20) NOT NULL,
+                            content_type VARCHAR(50) NOT NULL,
                             content_id INTEGER NOT NULL,
-                            rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-                            review TEXT,
-                            is_approved BOOLEAN DEFAULT 1 NOT NULL,
+                            rating_value INTEGER NOT NULL CHECK (rating_value >= 1 AND rating_value <= 5),
                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
@@ -1040,6 +1073,31 @@ def safe_migrate():
                     print("✅ Created rating table")
                 except Exception as e:
                     print(f"⚠️ Could not create rating table: {e}")
+            else:
+                # Align existing rating table with model fields
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(rating)"))
+                    rating_cols = [row[1] for row in result.fetchall()]
+                    if 'rating_value' not in rating_cols:
+                        try:
+                            db.session.execute(text("ALTER TABLE rating ADD COLUMN rating_value INTEGER"))
+                            # Migrate data from legacy 'rating' column if exists
+                            if 'rating' in rating_cols:
+                                db.session.execute(text("UPDATE rating SET rating_value = rating WHERE rating_value IS NULL"))
+                            # Add constraint best-effort (SQLite won't add CHECK easily post-hoc)
+                            db.session.commit()
+                            print("✅ Added rating_value column and migrated existing values")
+                        except Exception as e:
+                            print(f"⚠️ Could not add/migrate rating_value: {e}")
+                    # ensure timestamps
+                    if 'updated_at' not in rating_cols:
+                        try:
+                            db.session.execute(text("ALTER TABLE rating ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
+                            db.session.commit()
+                        except Exception as e:
+                            print(f"⚠️ Could not add rating.updated_at: {e}")
+                except Exception as e:
+                    print(f"⚠️ Could not align rating table: {e}")
             
             # Check if comment_like table exists
             if 'comment_like' not in existing_tables:
@@ -1048,9 +1106,12 @@ def safe_migrate():
                     db.session.execute(text("""
                         CREATE TABLE comment_like (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            is_like BOOLEAN NOT NULL,
+                            is_deleted BOOLEAN NOT NULL DEFAULT 0,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             user_id INTEGER NOT NULL,
                             comment_id INTEGER NOT NULL,
-                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
                             FOREIGN KEY (comment_id) REFERENCES comment (id) ON DELETE CASCADE,
                             UNIQUE(user_id, comment_id)
@@ -1059,6 +1120,20 @@ def safe_migrate():
                     print("✅ Created comment_like table")
                 except Exception as e:
                     print(f"⚠️ Could not create comment_like table: {e}")
+            else:
+                # Align existing comment_like table with model fields
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(comment_like)"))
+                    like_cols = [row[1] for row in result.fetchall()]
+                    if 'is_like' not in like_cols:
+                        db.session.execute(text("ALTER TABLE comment_like ADD COLUMN is_like BOOLEAN"))
+                    if 'is_deleted' not in like_cols:
+                        db.session.execute(text("ALTER TABLE comment_like ADD COLUMN is_deleted BOOLEAN DEFAULT 0 NOT NULL"))
+                    if 'updated_at' not in like_cols:
+                        db.session.execute(text("ALTER TABLE comment_like ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
+                    db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not align comment_like table: {e}")
             
             # Check if comment_report table exists
             if 'comment_report' not in existing_tables:
@@ -1071,18 +1146,50 @@ def safe_migrate():
                             comment_id INTEGER NOT NULL,
                             reason VARCHAR(100) NOT NULL,
                             description TEXT,
-                            status VARCHAR(20) DEFAULT 'pending' NOT NULL,
-                            reviewed_by_id INTEGER,
-                            reviewed_at DATETIME,
+                            is_resolved BOOLEAN DEFAULT 0 NOT NULL,
+                            resolved_by INTEGER,
+                            resolved_at DATETIME,
                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
                             FOREIGN KEY (comment_id) REFERENCES comment (id) ON DELETE CASCADE,
-                            FOREIGN KEY (reviewed_by_id) REFERENCES user (id)
+                            FOREIGN KEY (resolved_by) REFERENCES user (id)
                         )
                     """))
                     print("✅ Created comment_report table")
                 except Exception as e:
                     print(f"⚠️ Could not create comment_report table: {e}")
+            else:
+                # Align existing comment_report table with model fields
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(comment_report)"))
+                    cr_cols = [row[1] for row in result.fetchall()]
+                    if 'is_resolved' not in cr_cols:
+                        db.session.execute(text("ALTER TABLE comment_report ADD COLUMN is_resolved BOOLEAN DEFAULT 0 NOT NULL"))
+                    if 'resolved_by' not in cr_cols and 'reviewed_by_id' in cr_cols:
+                        # Add new column and try migrate value
+                        db.session.execute(text("ALTER TABLE comment_report ADD COLUMN resolved_by INTEGER"))
+                        try:
+                            db.session.execute(text("UPDATE comment_report SET resolved_by = reviewed_by_id WHERE resolved_by IS NULL"))
+                        except Exception:
+                            pass
+                    if 'resolved_at' not in cr_cols and 'reviewed_at' in cr_cols:
+                        db.session.execute(text("ALTER TABLE comment_report ADD COLUMN resolved_at DATETIME"))
+                        try:
+                            db.session.execute(text("UPDATE comment_report SET resolved_at = reviewed_at WHERE resolved_at IS NULL"))
+                        except Exception:
+                            pass
+                    if 'updated_at' not in cr_cols:
+                        db.session.execute(text("ALTER TABLE comment_report ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
+                    # Attempt to migrate legacy status -> is_resolved
+                    if 'status' in cr_cols:
+                        try:
+                            db.session.execute(text("UPDATE comment_report SET is_resolved = 1 WHERE LOWER(status) IN ('resolved','approved','done')"))
+                        except Exception:
+                            pass
+                    db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not align comment_report table: {e}")
 
             # ===== WEBSITE MANAGEMENT TABLES =====
             print("\n" + "="*50)
@@ -1098,9 +1205,11 @@ def safe_migrate():
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             name VARCHAR(100) NOT NULL,
                             url VARCHAR(255) NOT NULL,
-                            position INTEGER DEFAULT 0,
+                            location VARCHAR(50) NOT NULL,
+                            "order" INTEGER DEFAULT 0,
                             is_active BOOLEAN DEFAULT 1 NOT NULL,
                             is_external BOOLEAN DEFAULT 0 NOT NULL,
+                            user_id INTEGER,
                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
                         )
@@ -1108,6 +1217,20 @@ def safe_migrate():
                     print("✅ Created navigation_link table")
                 except Exception as e:
                     print(f"⚠️ Could not create navigation_link table: {e}")
+            else:
+                # Align existing navigation_link table
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(navigation_link)"))
+                    nl_cols = [row[1] for row in result.fetchall()]
+                    if 'location' not in nl_cols:
+                        db.session.execute(text("ALTER TABLE navigation_link ADD COLUMN location VARCHAR(50)"))
+                    if 'order' not in nl_cols:
+                        db.session.execute(text("ALTER TABLE navigation_link ADD COLUMN \"order\" INTEGER DEFAULT 0"))
+                    if 'user_id' not in nl_cols:
+                        db.session.execute(text("ALTER TABLE navigation_link ADD COLUMN user_id INTEGER"))
+                    db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not align navigation_link table: {e}")
             
             # Check if youtube_video table exists
             if 'youtube_video' not in existing_tables:
@@ -1116,21 +1239,36 @@ def safe_migrate():
                     db.session.execute(text("""
                         CREATE TABLE youtube_video (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            title VARCHAR(255) NOT NULL,
-                            description TEXT,
-                            video_id VARCHAR(20) NOT NULL UNIQUE,
-                            thumbnail_url VARCHAR(255),
+                            youtube_id VARCHAR(11) NOT NULL UNIQUE,
+                            link VARCHAR(255) NOT NULL UNIQUE,
+                            title VARCHAR(255),
                             duration INTEGER,
-                            view_count INTEGER DEFAULT 0,
-                            like_count INTEGER DEFAULT 0,
-                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            is_visible BOOLEAN DEFAULT 1 NOT NULL,
                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            user_id INTEGER NOT NULL,
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
                         )
                     """))
                     print("✅ Created youtube_video table")
                 except Exception as e:
                     print(f"⚠️ Could not create youtube_video table: {e}")
+            else:
+                # Align existing youtube_video table
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(youtube_video)"))
+                    yv_cols = [row[1] for row in result.fetchall()]
+                    if 'youtube_id' not in yv_cols:
+                        db.session.execute(text("ALTER TABLE youtube_video ADD COLUMN youtube_id VARCHAR(11)"))
+                    if 'link' not in yv_cols:
+                        db.session.execute(text("ALTER TABLE youtube_video ADD COLUMN link VARCHAR(255)"))
+                    if 'is_visible' not in yv_cols:
+                        db.session.execute(text("ALTER TABLE youtube_video ADD COLUMN is_visible BOOLEAN DEFAULT 1 NOT NULL"))
+                    if 'user_id' not in yv_cols:
+                        db.session.execute(text("ALTER TABLE youtube_video ADD COLUMN user_id INTEGER"))
+                    db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not align youtube_video table: {e}")
             
             # Check if share_log table exists
             if 'share_log' not in existing_tables:
@@ -1139,17 +1277,47 @@ def safe_migrate():
                     db.session.execute(text("""
                         CREATE TABLE share_log (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            user_id INTEGER,
-                            content_type VARCHAR(20) NOT NULL,
-                            content_id INTEGER NOT NULL,
-                            platform VARCHAR(50) NOT NULL,
-                            shared_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL
+                            news_id INTEGER NOT NULL UNIQUE,
+                            whatsapp_count INTEGER DEFAULT 0 NOT NULL,
+                            facebook_count INTEGER DEFAULT 0 NOT NULL,
+                            twitter_count INTEGER DEFAULT 0 NOT NULL,
+                            instagram_count INTEGER DEFAULT 0 NOT NULL,
+                            bluesky_count INTEGER DEFAULT 0 NOT NULL,
+                            clipboard_count INTEGER DEFAULT 0 NOT NULL,
+                            first_shared_at DATETIME,
+                            latest_shared_at DATETIME,
+                            FOREIGN KEY (news_id) REFERENCES news (id) ON DELETE CASCADE
                         )
                     """))
                     print("✅ Created share_log table")
                 except Exception as e:
                     print(f"⚠️ Could not create share_log table: {e}")
+            else:
+                # Align existing share_log table
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(share_log)"))
+                    sl_cols = [row[1] for row in result.fetchall()]
+                    if 'news_id' not in sl_cols:
+                        # If legacy generic share_log exists, we won't auto-destruct; add columns to support model usage
+                        db.session.execute(text("ALTER TABLE share_log ADD COLUMN news_id INTEGER"))
+                    for col, definition in [
+                        ('whatsapp_count','INTEGER DEFAULT 0 NOT NULL'),
+                        ('facebook_count','INTEGER DEFAULT 0 NOT NULL'),
+                        ('twitter_count','INTEGER DEFAULT 0 NOT NULL'),
+                        ('instagram_count','INTEGER DEFAULT 0 NOT NULL'),
+                        ('bluesky_count','INTEGER DEFAULT 0 NOT NULL'),
+                        ('clipboard_count','INTEGER DEFAULT 0 NOT NULL'),
+                        ('first_shared_at','DATETIME'),
+                        ('latest_shared_at','DATETIME'),
+                    ]:
+                        if col not in sl_cols:
+                            try:
+                                db.session.execute(text(f"ALTER TABLE share_log ADD COLUMN {col} {definition}"))
+                            except Exception as e:
+                                print(f"⚠️ Could not add share_log.{col}: {e}")
+                    db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not align share_log table: {e}")
             
             # Check if social_media table exists
             if 'social_media' not in existing_tables:
@@ -1663,6 +1831,59 @@ def safe_migrate():
             else:
                 print("\n✅ SEO Injection Settings table exists")
                 
+                # Align existing seo_injection_settings columns with model
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(seo_injection_settings)"))
+                    sis_cols = [row[1] for row in result.fetchall()]
+                    columns_to_add = [
+                        ("website_name", "VARCHAR(200)"),
+                        ("website_url", "VARCHAR(255)"),
+                        ("website_description", "TEXT"),
+                        ("website_language", "VARCHAR(10) DEFAULT 'id'"),
+                        ("website_logo", "VARCHAR(255)"),
+                        ("organization_name", "VARCHAR(200)"),
+                        ("organization_logo", "VARCHAR(255)"),
+                        ("organization_description", "TEXT"),
+                        ("organization_type", "VARCHAR(100)"),
+                        ("facebook_url", "VARCHAR(255)"),
+                        ("twitter_url", "VARCHAR(255)"),
+                        ("instagram_url", "VARCHAR(255)"),
+                        ("youtube_url", "VARCHAR(255)"),
+                        ("linkedin_url", "VARCHAR(255)"),
+                        ("contact_email", "VARCHAR(255)"),
+                        ("contact_phone", "VARCHAR(50)"),
+                        ("contact_address", "TEXT"),
+                        ("default_meta_description", "TEXT"),
+                        ("default_meta_keywords", "TEXT"),
+                        ("default_meta_author", "VARCHAR(100)"),
+                        ("default_meta_robots", "VARCHAR(50) DEFAULT 'index, follow'"),
+                        ("default_og_title", "VARCHAR(200)"),
+                        ("default_og_description", "TEXT"),
+                        ("default_og_image", "VARCHAR(255)"),
+                        ("default_twitter_card", "VARCHAR(50) DEFAULT 'summary'"),
+                        ("default_twitter_title", "VARCHAR(200)"),
+                        ("default_twitter_description", "TEXT"),
+                        ("default_structured_data_type", "VARCHAR(50) DEFAULT 'Article'"),
+                        ("default_canonical_url", "VARCHAR(255)"),
+                        ("default_meta_language", "VARCHAR(10) DEFAULT 'id'"),
+                        ("auto_inject_news", "BOOLEAN DEFAULT 1 NOT NULL"),
+                        ("auto_inject_albums", "BOOLEAN DEFAULT 1 NOT NULL"),
+                        ("auto_inject_chapters", "BOOLEAN DEFAULT 1 NOT NULL"),
+                        ("auto_inject_root", "BOOLEAN DEFAULT 1 NOT NULL"),
+                        ("created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP"),
+                        ("updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP")
+                    ]
+                    for col_name, col_def in columns_to_add:
+                        if col_name not in sis_cols:
+                            try:
+                                db.session.execute(text(f"ALTER TABLE seo_injection_settings ADD COLUMN {col_name} {col_def}"))
+                                print(f"✅ Added seo_injection_settings.{col_name}")
+                            except Exception as e:
+                                print(f"⚠️ Could not add seo_injection_settings.{col_name}: {e}")
+                    db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not align seo_injection_settings table: {e}")
+
                 # Check if default settings exist
                 try:
                     from models import SEOInjectionSettings
@@ -1731,6 +1952,9 @@ def safe_migrate():
                 
                 migrate_write_access_requests(db.session)
                 print("✅ Write access requests migration completed")
+                
+                migrate_enhanced_ads_system(db.session)
+                print("✅ Enhanced ads system migration completed")
             except Exception as e:
                 print(f"⚠️ Could not migrate user profile system: {e}")
             
@@ -1748,6 +1972,7 @@ def safe_migrate():
             print("✅ Brand identity SEO fields added")
             print("✅ Root SEO table and columns created")
             print("✅ SEO columns added to News, Album, and AlbumChapter tables")
+            print("✅ Author and owner_id fields added to Album table for ownership system")
             print("✅ Default root SEO pages initialized")
             print("✅ Database indexes optimized for performance")
             print("✅ Database health verified")
@@ -1899,6 +2124,68 @@ def migrate_user_profile_system(db_session):
     except sqlite3.OperationalError as e:
         print(f"⚠️  Error creating indexes: {e}")
 
+def migrate_enhanced_ads_system(db_session):
+    """Add enhanced image management fields to Ad model."""
+    print("\n📸 Migrating enhanced ads system...")
+    
+    try:
+        # Add new image management fields to ad table
+        new_columns = [
+            ("image_filename", "VARCHAR(255)"),
+            ("image_upload_path", "VARCHAR(500)"),
+            ("image_width", "INTEGER"),
+            ("image_height", "INTEGER"),
+            ("image_file_size", "INTEGER"),
+            ("content_type", "VARCHAR(50) DEFAULT 'text'"),
+            ("created_by", "INTEGER REFERENCES user(id)"),
+            ("updated_by", "INTEGER REFERENCES user(id)")
+        ]
+        
+        for column_name, column_type in new_columns:
+            try:
+                from sqlalchemy import text
+                db_session.execute(text(f"ALTER TABLE ad ADD COLUMN {column_name} {column_type}"))
+                print(f"✅ Added column: {column_name}")
+            except sqlite3.OperationalError as e:
+                if "duplicate column name" in str(e).lower():
+                    print(f"⚠️  Column {column_name} already exists")
+                else:
+                    print(f"⚠️  Error adding column {column_name}: {e}")
+        
+        # Create indexes for better performance
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_ad_image_filename ON ad(image_filename)",
+            "CREATE INDEX IF NOT EXISTS idx_ad_image_upload_path ON ad(image_upload_path)",
+            "CREATE INDEX IF NOT EXISTS idx_ad_type_content_type ON ad(ad_type, content_type)",
+            "CREATE INDEX IF NOT EXISTS idx_ad_created_by ON ad(created_by)",
+            "CREATE INDEX IF NOT EXISTS idx_ad_updated_by ON ad(updated_by)",
+            "CREATE INDEX IF NOT EXISTS idx_ad_is_active ON ad(is_active)"
+        ]
+        
+        for index_sql in indexes:
+            try:
+                from sqlalchemy import text
+                db_session.execute(text(index_sql))
+                print(f"✅ Created index: {index_sql.split('idx_')[1].split(' ON')[0]}")
+            except sqlite3.OperationalError as e:
+                print(f"⚠️  Error creating index: {e}")
+        
+        # Create static/uploads/ads directory if it doesn't exist
+        import os
+        uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'uploads', 'ads')
+        if not os.path.exists(uploads_dir):
+            os.makedirs(uploads_dir, exist_ok=True)
+            print(f"✅ Created directory: {uploads_dir}")
+        else:
+            print(f"✅ Directory already exists: {uploads_dir}")
+        
+        db_session.commit()
+        print("✅ Enhanced ads system migration completed")
+        
+    except Exception as e:
+        print(f"❌ Error in enhanced ads system migration: {e}")
+        db_session.rollback()
+
 def main():
     """Main function to run comprehensive safe migration."""
     print("🛡️ Comprehensive Safe Database Migration Script")
@@ -1925,6 +2212,7 @@ def main():
         print("✅ Brand identity SEO fields added")
         print("✅ Root SEO table and columns created")
         print("✅ SEO columns added to News, Album, and AlbumChapter tables")
+        print("✅ Author and owner_id fields added to Album table for ownership system")
         print("✅ Default root SEO pages initialized")
         print("\n💡 You can now run the application or add test data:")
         print("   python helper/add_test_albums.py")

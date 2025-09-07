@@ -93,7 +93,7 @@
                         'id': 'dashboard',
                         'title': 'Dashboard',
                         'icon': 'fas fa-tachometer-alt',
-                        'visible': can_access_admin(),
+                        'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'dashboard-main',
@@ -101,7 +101,7 @@
                                 'icon': 'fas fa-tachometer-alt',
                                 'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_dashboard'), 'icon': 'fas fa-gears', 'label': 'Dasbor', 'visible': can_access_admin()}
+                                    {'url': url_for('main.settings_dashboard'), 'icon': 'fas fa-gears', 'label': 'Dasbor', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             },
                             {
@@ -122,46 +122,46 @@
                         'id': 'content',
                         'title': 'Manajemen Konten',
                         'icon': 'fas fa-newspaper',
-                        'visible': can_manage_content() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'cerita',
                                 'title': 'Cerita',
                                 'icon': 'fas fa-newspaper',
-                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete', 'publish']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                                'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'visible': has_permission('news', 'create') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'visible': has_any_permission('news', ['read', 'update', 'delete', 'publish']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.create_news'), 'icon': 'fas fa-plus-circle', 'label': 'Buat Cerita', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('main.manage_news'), 'icon': 'fas fa-pen-to-square', 'label': 'Kelola Cerita', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             },
                             {
                                 'id': 'album',
                                 'title': 'Album',
                                 'icon': 'fas fa-book-open',
-                                'visible': has_any_permission('news', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                                'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'visible': has_permission('news', 'read') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'visible': has_permission('news', 'read') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'visible': has_permission('news', 'read') or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('albums.dashboard'), 'icon': 'fas fa-book-open', 'label': 'Dashboard Album', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('albums.list_albums'), 'icon': 'fas fa-list', 'label': 'Daftar Album', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('albums.analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Analitik Album', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             },
                             {
                                 'id': 'media',
                                 'title': 'Media',
                                 'icon': 'fas fa-photo-video',
-                                'visible': has_any_permission('images', ['read', 'create', 'update', 'delete']) or has_any_permission('videos', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                                'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'visible': has_any_permission('images', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'visible': has_any_permission('videos', ['read', 'create', 'update', 'delete']) or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.settingsimage'), 'icon': 'fas fa-image', 'label': 'Manajemen Gambar', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('main.settings_youtube'), 'icon': 'fab fa-youtube', 'label': 'Manajemen Video', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             },
                             {
                                 'id': 'kategori',
                                 'title': 'Kategori',
                                 'icon': 'fas fa-tags',
-                                'visible': can_manage_categories() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                                'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                                 'links': [
-                                    {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'visible': can_manage_categories() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.settings_categories'), 'icon': 'fas fa-tags', 'label': 'Manajemen Kategori', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             }
                         ]
@@ -170,7 +170,7 @@
                         'id': 'ads',
                         'title': 'Manajemen Iklan',
                         'icon': 'fas fa-ad',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'ads-dashboard',
@@ -198,7 +198,8 @@
                                 'visible': True,
                                 'links': [
                                     {'url': url_for('ads.placements_list'), 'icon': 'fas fa-map-marker-alt', 'label': 'Penempatan Iklan', 'visible': True},
-                                    {'url': url_for('ads.analytics_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Analitik Iklan', 'visible': True}
+                                    {'url': url_for('ads.analytics_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Analitik Iklan', 'visible': True},
+                                    {'url': url_for('ads.manage_images'), 'icon': 'fas fa-images', 'label': 'Kelola Gambar Iklan', 'visible': True}
                                 ]
                             }
                         ]
@@ -207,7 +208,7 @@
                         'id': 'engagement',
                         'title': 'Engagement & Feedback',
                         'icon': 'fas fa-comments',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'engagement-moderation',
@@ -234,7 +235,7 @@
                         'id': 'users',
                         'title': 'Manajemen Pengguna',
                         'icon': 'fas fa-users',
-                        'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'users-accounts',
@@ -242,8 +243,8 @@
                                 'icon': 'fas fa-user',
                                 'visible': True,
                                 'links': [
-                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.content_deletion_requests'), 'icon': 'fas fa-trash-alt', 'label': 'Permintaan Penghapusan Konten', 'visible': current_user.is_admin_tier()}
+                                    {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN},
+                                    {'url': url_for('main.content_deletion_requests'), 'icon': 'fas fa-trash-alt', 'label': 'Permintaan Penghapusan Konten', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             },
 
@@ -253,7 +254,7 @@
                                 'icon': 'fas fa-user-edit',
                                 'visible': True,
                                 'links': [
-                                    {'url': url_for('main.editor_writer_management'), 'icon': 'fas fa-user-edit', 'label': 'Relasi Editor-Penulis', 'visible': can_manage_users() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER or (current_user.custom_role and current_user.custom_role.name.lower() in ['subadmin','editor'])}
+                                    {'url': url_for('main.editor_writer_management'), 'icon': 'fas fa-user-edit', 'label': 'Relasi Editor-Penulis', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             },
                             {
@@ -262,7 +263,7 @@
                                 'icon': 'fas fa-user-clock',
                                 'visible': True,
                                 'links': [
-                                    {'url': url_for('main.pending_registrations'), 'icon': 'fas fa-user-clock', 'label': 'Registrasi Tertunda', 'visible': can_manage_users()}
+                                    {'url': url_for('main.pending_registrations'), 'icon': 'fas fa-user-clock', 'label': 'Registrasi Tertunda', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             }
                         ]
@@ -271,39 +272,39 @@
                         'id': 'brand',
                         'title': 'Brand & Identitas',
                         'icon': 'fas fa-palette',
-                        'visible': can_manage_settings() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'brand-identity',
                                 'title': 'Brand',
                                 'icon': 'fas fa-palette',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                                'visible': current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.settings_brand_identity'), 'icon': 'fas fa-palette', 'label': 'Brand Identity', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_info'), 'icon': 'fas fa-info-circle', 'label': 'Info Brand', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_design'), 'icon': 'fas fa-paint-brush', 'label': 'Desain Brand', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_assets'), 'icon': 'fas fa-images', 'label': 'Asset Brand', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_brand_colors'), 'icon': 'fas fa-palette', 'label': 'Warna Brand', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.navigation_management'), 'icon': 'fas fa-link', 'label': 'Manajemen Navigasi', 'visible': current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'brand-social',
                                 'title': 'Sosial',
                                 'icon': 'fas fa-share-alt',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
+                                'visible': current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
-                                    {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.settings_social_media'), 'icon': 'fas fa-share-alt', 'label': 'Media Sosial', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('main.settings_contact_details'), 'icon': 'fas fa-address-book', 'label': 'Detail Kontak', 'visible': current_user.role == UserRole.SUPERUSER}
                                 ]
                             },
                             {
                                 'id': 'brand-team',
                                 'title': 'Tim',
                                 'icon': 'fas fa-user-friends',
-                                'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
+                                'visible': current_user.role == UserRole.SUPERUSER,
                                 'links': [
-                                    {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
+                                    {'url': url_for('main.settings_team_members'), 'icon': 'fas fa-user-friends', 'label': 'Anggota Tim', 'visible': current_user.role == UserRole.SUPERUSER}
                                 ]
                             }
                         ]
@@ -312,18 +313,18 @@
                         'id': 'seo',
                         'title': 'SEO Management',
                         'icon': 'fas fa-search',
-                        'visible': can_manage_settings() or current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER,
                         'links': [
-                            {'url': url_for('main.seo_management'), 'icon': 'fas fa-globe', 'label': 'Manajemen SEO', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
-                            {'url': url_for('main.seo_settings'), 'icon': 'fas fa-cog', 'label': 'Pengaturan SEO', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER},
-                            {'url': url_for('main.seo_analytics'), 'icon': 'fas fa-chart-line', 'label': 'Analitik SEO', 'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER}
+                            {'url': url_for('main.seo_management'), 'icon': 'fas fa-globe', 'label': 'Manajemen SEO', 'visible': current_user.role == UserRole.SUPERUSER},
+                            {'url': url_for('main.seo_settings'), 'icon': 'fas fa-cog', 'label': 'Pengaturan SEO', 'visible': current_user.role == UserRole.SUPERUSER},
+                            {'url': url_for('main.seo_analytics'), 'icon': 'fas fa-chart-line', 'label': 'Analitik SEO', 'visible': current_user.role == UserRole.SUPERUSER}
                         ]
                     },
                     {
                         'id': 'analytics',
                         'title': 'Analitik & Performa',
                         'icon': 'fas fa-chart-line',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER,
                         'subgroups': [
                             {
                                 'id': 'analytics-dashboard',
@@ -351,7 +352,7 @@
                         'id': 'legal',
                         'title': 'Legal & Kebijakan',
                         'icon': 'fas fa-shield-alt',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'legal-policies',
@@ -380,7 +381,7 @@
                         'id': 'tools',
                         'title': 'Tools & Utilitas',
                         'icon': 'fas fa-tools',
-                        'visible': current_user.is_owner() or current_user.role == UserRole.ADMIN or current_user.role == UserRole.SUPERUSER,
+                        'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN,
                         'subgroups': [
                             {
                                 'id': 'tools-content',

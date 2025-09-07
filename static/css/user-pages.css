@@ -1,0 +1,61 @@
+/* User pages specific button visibility fixes */
+
+/* Ensure primary buttons remain high contrast on hover */
+button.bg-primary,
+a.bg-primary,
+#next-step-btn,
+#prev-step-btn {
+  color: hsl(var(--primary-foreground));
+}
+
+button.bg-primary:hover,
+a.bg-primary:hover,
+#next-step-btn:hover,
+#prev-step-btn:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: 1px solid hsl(var(--primary)) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+/* Muted and card buttons: keep foreground readable and add border on hover */
+button.bg-muted:hover,
+a.bg-muted:hover,
+button.bg-card:hover,
+a.bg-card:hover,
+.hover\:bg-muted\/80:hover {
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* Destructive/confirm styles retain contrast on hover */
+button.bg-green-600:hover,
+a.bg-green-600:hover,
+button.bg-red-600:hover,
+a.bg-red-600:hover {
+  filter: brightness(0.95);
+  color: #fff !important;
+}
+
+/* Subtle washout on hover for interactive elements only (avoid affecting whole page/cards) */
+button:hover,
+button[class*="bg-"]:hover,
+a[class*="bg-"]:hover,
+[role="button"][class*="bg-"]:hover,
+.button-primary:hover,
+.button-secondary:hover,
+.button-outline:hover,
+.button-ghost:hover {
+  filter: saturate(0.94) brightness(0.98);
+}
+
+/* Give focus-visible outline for accessibility */
+button:focus-visible,
+a.button:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+

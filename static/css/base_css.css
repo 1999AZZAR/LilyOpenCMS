@@ -158,3 +158,47 @@ body {
 .tab-content.active {
     display: block;
 }
+
+/* Accessibility: ensure sufficient contrast on hover for common button patterns */
+/* Primary background buttons keep readable foreground on hover */
+button.bg-primary:hover,
+a.bg-primary:hover,
+.button-primary:hover {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Muted background buttons keep standard foreground on hover */
+button.bg-muted:hover,
+a.bg-muted:hover,
+.button-secondary:hover,
+.button-outline:hover,
+.button-ghost:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Outline and bordered buttons keep visible borders on hover */
+button.border:hover,
+a.border:hover,
+.button-outline:hover {
+  border-color: hsl(var(--primary)) !important;
+}
+
+/* Card-like buttons should not fade text on hover */
+button.bg-card:hover,
+a.bg-card:hover {
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Support literal utility class names used in templates (without Tailwind JIT) */
+/* Ensure hover background applies for .hover:bg-primary/90 */
+.hover\:bg-primary\/90:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Ensure hover background applies for .hover:bg-muted/80 */
+.hover\:bg-muted\/80:hover {
+  background-color: hsl(var(--muted) / 0.8) !important;
+  color: hsl(var(--foreground)) !important;
+}

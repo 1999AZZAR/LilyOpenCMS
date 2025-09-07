@@ -7,11 +7,13 @@ Welcome to the LilyOpenCMS documentation! This directory contains comprehensive 
 - **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Complete deployment guide for DirectAdmin hosting and other environments
 - **[Contact Details Guide](CONTACT_DETAILS_GUIDE.md)** - How to manage contact information in the footer
 - **[Development Roadmap](TODO.md)** - Current development status and progress tracking
+- **[API Central Guide](API_CENTRAL.md)** - Unified API overview, OpenAPI preview, examples, and troubleshooting
 
 ## 📖 Core Documentation
 
 ### System Documentation
-- **[API Documentation](api.md)** - Complete API reference with endpoints and examples
+- **[API Documentation](api.md)** - Complete API reference with endpoints and examples (see also: **[API Central Guide](API_CENTRAL.md)**)
+  - Swagger UI: open `/api/docs` on a running server (spec at `/api/openapi.yml`)
 - **[Admin UI Guide](admin_ui.md)** - Comprehensive admin interface documentation
 - **[Sitemap Documentation](SITEMAP_DOCUMENTATION.md)** - Complete sitemap system guide
 - **[Card Design System](CARD_DESIGN_SYSTEM.md)** - Complete card design system with 4 distinct designs

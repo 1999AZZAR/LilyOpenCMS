@@ -1,6 +1,6 @@
-# Public API Endpoints Documentation
+# Public API Endpoints Documentation (Consolidated in API_CENTRAL.md)
 
-This document describes the new public API endpoints that provide JSON equivalents for HTML pages, enabling multiplatform access to the system's content.
+This content is centralized in `docs/API_CENTRAL.md`. This file remains as a focused reference for public endpoints.
 
 ## Overview
 

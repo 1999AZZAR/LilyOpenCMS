@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
-from models import db, User, UserProfile, UserStats, News, Album, UserLibrary, ReadingHistory, Category, WriteAccessRequest
+from models import db, User, UserProfile, UserStats, News, Album, UserLibrary, ReadingHistory, Category, WriteAccessRequest, Comment, Image
 from sqlalchemy import text
 import json
 from datetime import datetime, timedelta
@@ -48,9 +48,22 @@ def user_profile(username):
             flash('Write access required to view albums', 'error')
             return redirect(url_for('user_profile.write_access_request'))
         
-        # Get user's albums
-        published_albums = Album.query.filter_by(user_id=user.id, is_visible=True).all()
-        draft_albums = Album.query.filter_by(user_id=user.id, is_visible=False).all()
+        # Get user's albums (both as creator and as owner)
+        from sqlalchemy import or_
+        published_albums = Album.query.filter(
+            or_(
+                Album.user_id == user.id,  # Albums created by user
+                Album.owner_id == user.id   # Albums owned by user
+            ),
+            Album.is_visible == True
+        ).all()
+        draft_albums = Album.query.filter(
+            or_(
+                Album.user_id == user.id,  # Albums created by user
+                Album.owner_id == user.id   # Albums owned by user
+            ),
+            Album.is_visible == False
+        ).all()
         
         return render_template('public/user/profile_list.html', 
                              user=user, 
@@ -339,7 +352,7 @@ def upload_docx_story_api():
         age_rating = request.form.get('age_rating', '')
         writer = request.form.get('writer', '').strip()
         external_source = request.form.get('external_source', '').strip()
-        is_visible = request.form.get('is_visible', 'true').lower() == 'true'  # Default to visible if not specified
+        is_visible = request.form.get('is_visible', 'false').lower() == 'true'  # Default to hidden if not specified
         
         # Validate required fields
         if not file:
@@ -646,16 +659,55 @@ def user_library(username):
         Album, db.and_(ReadingHistory.content_type == 'album', ReadingHistory.content_id == Album.id)
     ).filter(ReadingHistory.user_id == user.id).order_by(ReadingHistory.last_read_at.desc()).all()
     
-    # Get user's own albums
-    own_albums = Album.query.filter_by(user_id=user.id, is_visible=True).order_by(Album.created_at.desc()).all()
+    # Get user's own albums (both as creator and as owner)
+    from sqlalchemy import or_
+    own_albums = Album.query.filter(
+        or_(
+            Album.user_id == user.id,  # Albums created by user
+            Album.owner_id == user.id   # Albums owned by user
+        ),
+        Album.is_visible == True
+    ).order_by(Album.created_at.desc()).all()
+    
+    # Get user's own stories (as creator)
+    own_stories = News.query.filter(
+        News.user_id == user.id,  # Stories created by user
+        News.is_visible == True
+    ).order_by(News.created_at.desc()).all()
+    
+    # Get user's comments with content details
+    user_comments = db.session.query(Comment, News, Album).outerjoin(
+        News, db.and_(Comment.content_type == 'news', Comment.content_id == News.id)
+    ).outerjoin(
+        Album, db.and_(Comment.content_type == 'album', Comment.content_id == Album.id)
+    ).filter(
+        Comment.user_id == user.id,
+        Comment.is_deleted == False,
+        Comment.is_spam == False
+    ).order_by(Comment.created_at.desc()).all()
     
     # Get active tab from URL parameter
     active_tab = request.args.get('tab', 'your-list')
+    
+    # Calculate counts for different content types
+    saved_stories_count = sum(1 for item, news, album in library_items if news is not None)
+    saved_albums_count = sum(1 for item, news, album in library_items if album is not None)
+    
+    history_stories_count = sum(1 for item, news, album in reading_history if news is not None)
+    history_albums_count = sum(1 for item, news, album in reading_history if album is not None)
+    
+    # Calculate actual comment count for Tanggapan tab
+    comments_count = len(user_comments)
     
     # Debug output
     print(f"DEBUG: Library items count: {len(library_items)}")
     print(f"DEBUG: Reading history count: {len(reading_history)}")
     print(f"DEBUG: Own albums count: {len(own_albums)}")
+    print(f"DEBUG: Saved stories count: {saved_stories_count}")
+    print(f"DEBUG: Saved albums count: {saved_albums_count}")
+    print(f"DEBUG: History stories count: {history_stories_count}")
+    print(f"DEBUG: History albums count: {history_albums_count}")
+    print(f"DEBUG: Comments count: {comments_count}")
     print(f"DEBUG: Active tab: {active_tab}")
     
     return render_template('public/user/library.html', 
@@ -663,7 +715,14 @@ def user_library(username):
                          library_items=library_items,
                          reading_history=reading_history,
                          own_albums=own_albums,
-                         active_tab=active_tab)
+                         own_stories=own_stories,
+                         user_comments=user_comments,
+                         active_tab=active_tab,
+                         saved_stories_count=saved_stories_count,
+                         saved_albums_count=saved_albums_count,
+                         history_stories_count=history_stories_count,
+                         history_albums_count=history_albums_count,
+                         comments_count=comments_count)
 
 
 @user_profile_bp.route('/user/<username>/stories/create')
@@ -1156,3 +1215,178 @@ def user_following(username):
         current_following_ids=current_following_ids,
         active_tab=active_tab
     )
+
+
+@user_profile_bp.route('/user/<username>/images')
+@login_required
+def user_images(username):
+    """User image management page."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Check if user can access this page (own images or admin)
+    if user.id != current_user.id and not current_user.is_admin_tier():
+        flash('You can only manage your own images', 'error')
+        return redirect(url_for('user_profile.user_profile', username=current_user.username))
+    
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Query user's images with pagination
+    images_pagination = Image.query.filter_by(user_id=user.id)\
+        .order_by(Image.created_at.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template(
+        'public/user/images.html',
+        user=user,
+        images_pagination=images_pagination,
+        pagination_route='user_profile.user_images'
+    )
+
+
+@user_profile_bp.route('/user/<username>/images/upload', methods=['POST'])
+@login_required
+def user_upload_image(username):
+    """Upload image for user."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    # Check if user can upload (own images or admin)
+    if user.id != current_user.id and not current_user.is_admin_tier():
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    # Get form data
+    data = request.form
+    file = request.files.get("file")
+    image_url = data.get("url")
+    description = data.get("description", "")
+    name = data.get("name", "")
+    is_visible_param = data.get("is_visible", "false")  # Default to hidden
+    
+    if not file and not image_url:
+        return jsonify({'success': False, 'error': 'Either a file or a URL must be provided'}), 400
+    
+    if file and image_url:
+        return jsonify({'success': False, 'error': 'Cannot provide both a file and a URL'}), 400
+    
+    try:
+        # Import image processing functions
+        from routes.routes_helper import save_file, download_image, process_single_image
+        import os
+        
+        # Process File Upload
+        if file:
+            filename, file_path = save_file(file, name)
+        else:
+            filename, file_path = download_image(image_url)
+        
+        # Process image (convert to WebP, create thumbnails)
+        result = process_single_image(file_path)
+        if result != "ok":
+            return jsonify({'success': False, 'error': result}), 500
+        
+        # Update filename to webp version
+        base_name, _ = os.path.splitext(filename)
+        new_filename = f"{base_name}.webp"
+        new_filepath = os.path.join(os.path.dirname(file_path), new_filename)
+        
+        # Determine visibility
+        is_visible = str(is_visible_param).lower() in ("true", "1", "on", "yes")
+        
+        # Create image record
+        image = Image(
+            filename=new_filename,
+            filepath=new_filepath,
+            description=description,
+            is_visible=is_visible,
+            user_id=user.id,
+        )
+        db.session.add(image)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Image uploaded successfully', 
+            'image': image.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@user_profile_bp.route('/user/<username>/images/<int:image_id>/update', methods=['PUT'])
+@login_required
+def user_update_image(username, image_id):
+    """Update image details."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    image = Image.query.filter_by(id=image_id, user_id=user.id).first()
+    if not image:
+        return jsonify({'success': False, 'error': 'Image not found'}), 404
+    
+    # Check if user can update (own image or admin)
+    if user.id != current_user.id and not current_user.is_admin_tier():
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    try:
+        data = request.get_json()
+        
+        # Update fields
+        if 'description' in data:
+            image.description = data['description']
+        if 'is_visible' in data:
+            image.is_visible = bool(data['is_visible'])
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Image updated successfully',
+            'image': image.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@user_profile_bp.route('/user/<username>/images/<int:image_id>/delete', methods=['DELETE'])
+@login_required
+def user_delete_image(username, image_id):
+    """Delete image."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    
+    image = Image.query.filter_by(id=image_id, user_id=user.id).first()
+    if not image:
+        return jsonify({'success': False, 'error': 'Image not found'}), 404
+    
+    # Check if user can delete (own image or admin)
+    if user.id != current_user.id and not current_user.is_admin_tier():
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    try:
+        # Delete file from filesystem
+        image.delete_file()
+        
+        # Delete from database
+        db.session.delete(image)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Image deleted successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500

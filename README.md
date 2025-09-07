@@ -5,6 +5,9 @@ A comprehensive Flask-based content management system with advanced SEO features
 ## 🚀 Features
 
 ### 🔧 Recent System Improvements (2025-01-08)
+- **✅ Comment Edit & Delete System**: Comprehensive comment management with inline editing and deletion in user library
+- **✅ User Image Management**: Dedicated image management page with upload, edit, delete, and visibility controls
+- **✅ Enhanced Profile Layout**: Optimized profile.html to use more viewport width with improved spacing and layout
 - **✅ Content Deletion Request System**: Role-based content deletion with admin approval workflow for news and albums
 - **✅ SQLAlchemy Relationship Fixes**: Fixed User.news and User.albums relationships with explicit foreign_keys
 - **✅ Content Deletion Management UI**: Admin interface for managing content deletion requests with bulk operations
@@ -42,6 +45,9 @@ A comprehensive Flask-based content management system with advanced SEO features
 
 ### 🎨 Media Management
 - **Automatic Image Optimization**: WebP conversion, compression, and multiple thumbnail sizes
+- **User Image Management**: Dedicated image management page with upload, edit, delete, and visibility controls
+- **Image Visibility Control**: Toggle image visibility with proper permission checks
+- **Image Gallery Integration**: Seamless integration with content creation workflows
 - **YouTube Integration**: Embed and manage YouTube videos
 - **Gallery Management**: Organize and display image collections
 - **Media Usage Tracking**: See which images are used where
@@ -101,10 +107,13 @@ A comprehensive Flask-based content management system with advanced SEO features
 
 ### 💬 Comment & Rating System
 - **Nested Comments**: Threaded comment system with replies
+- **Inline Comment Editing**: Edit comments directly in the user library with real-time updates
+- **Comment Deletion**: Delete comments with confirmation dialogs and DOM updates
 - **Like/Dislike System**: Users can like or dislike comments
 - **Comment Moderation**: Admin approval system with spam detection
 - **Comment Reporting**: Users can report inappropriate comments
 - **Spam Detection**: Automatic spam filtering with configurable rules
+- **User Library Integration**: Comment management in user library with edit/delete capabilities
 - **5-Star Rating System**: Rate news articles and albums (1-5 stars)
 - **Rating Statistics**: Average ratings, distribution, and analytics
 - **Rating Analytics**: Comprehensive rating dashboard for admins
@@ -453,8 +462,9 @@ chmod +x optimizations/setup_redis.sh
 ### Comment System
 - `GET /api/comments/<content_type>/<content_id>` - Get comments for news/album with pagination
 - `POST /api/comments` - Create new comment (requires authentication)
-- `PUT /api/comments/<comment_id>` - Update comment (owner or admin only)
-- `DELETE /api/comments/<comment_id>` - Delete comment (soft delete)
+- `PUT /api/comments/<comment_id>` - Update comment with success response (owner or admin only)
+- `DELETE /api/comments/<comment_id>` - Delete comment with success response (owner or admin only)
+- `GET /api/account/library/comments` - Get user's library comments with edit/delete capabilities
 - `POST /api/comments/<comment_id>/like` - Like/unlike comment
 - `POST /api/comments/<comment_id>/report` - Report comment for moderation
 - `GET /admin/comments` - Admin comment moderation interface
@@ -484,6 +494,10 @@ chmod +x optimizations/setup_redis.sh
 - `PUT /api/images/<id>` - Update image
 - `DELETE /api/images/<id>` - Delete image
 - `PATCH /api/images/<id>/visibility` - Toggle image visibility
+- `GET /user/<username>/images` - User image management page
+- `POST /user/<username>/images/upload` - Upload image to user gallery
+- `PUT /user/<username>/images/<image_id>/update` - Update user image
+- `DELETE /user/<username>/images/<image_id>/delete` - Delete user image
 - `GET /api/youtube_videos` - List YouTube videos
 - `POST /api/youtube_videos` - Add YouTube video
 - `PUT /api/youtube_videos/<id>` - Update video

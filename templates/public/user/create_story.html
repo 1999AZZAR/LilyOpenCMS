@@ -2,6 +2,10 @@
 
 {% block title %}{% if news_id %}Edit Cerita{% else %}Tulis Cerita Baru{% endif %}{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-background">
     <!-- Header -->
@@ -150,67 +154,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Display Settings Card -->
-                                <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-border">
-                                        <h3 class="text-lg font-semibold text-foreground flex items-center">
-                                            <i class="fas fa-eye text-purple-600 mr-3"></i>
-                                            Pengaturan Tampilan
-                                        </h3>
-                                        <p class="text-sm text-muted-foreground mt-1">Konfigurasi di mana cerita Anda akan ditampilkan</p>
-                                    </div>
-                                    <div class="p-6">
-                                        <div class="space-y-4">
-                                            <!-- Premium Content -->
-                                            <div class="flex items-start space-x-3 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                                                <input type="checkbox" id="story-is-premium" name="is_premium" 
-                                                       class="mt-1 rounded border-border text-yellow-600 focus:ring-yellow-500" 
-                                                       aria-label="Premium content">
-                                                <div class="flex-1">
-                                                    <label class="text-sm font-medium text-foreground cursor-pointer" for="story-is-premium">Konten Premium</label>
-                                                    <p class="text-xs text-muted-foreground mt-1">Akses khusus untuk konten premium</p>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Prize Input (Hidden by default) -->
-                                            <div id="prize-input-section" class="hidden">
-                                                <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <!-- Prize Amount -->
-                                                        <div>
-                                                            <label class="block text-sm font-medium text-foreground mb-2" for="story-prize">
-                                                                <i class="fas fa-coins text-green-600 mr-2"></i>Harga (Koin) <span class="text-red-500">*</span>
-                                                            </label>
-                                                            <input type="number" id="story-prize" name="prize" min="0" value="0" 
-                                                                   class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 p-3 transition-colors" 
-                                                                   placeholder="0" aria-label="Price in coins" required aria-required="true">
-                                                        </div>
-                                                        
-                                                        <!-- Coin Type -->
-                                                        <div>
-                                                            <label class="block text-sm font-medium text-foreground mb-2" for="story-prize-coin-type">
-                                                                <i class="fas fa-tag text-primary mr-2"></i>Jenis Koin <span class="text-red-500">*</span>
-                                                            </label>
-                                                            <select id="story-prize-coin-type" name="prize_coin_type" 
-                                                                    class="w-full bg-card border border-border text-foreground text-sm rounded-lg focus:ring-2 focus:ring-primary focus:border-primary p-3 transition-colors" 
-                                                                    required aria-required="true">
-                                                                <option value="any">Kedua Jenis Koin</option>
-                                                                <option value="achievement">Koin Prestasi Saja</option>
-                                                                <option value="topup">Koin Top-up Saja</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <p class="text-xs text-muted-foreground mt-2">
-                                                        <i class="fas fa-info-circle mr-1"></i>
-                                                        <strong>Koin Prestasi:</strong> Diperoleh dari prestasi/hadiah. 
-                                                        <strong>Koin Top-up:</strong> Dibeli dengan uang asli. 
-                                                        <strong>Kedua Jenis:</strong> Dapat menggunakan keduanya.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                             
                             <!-- Right Column: Featured Image -->
@@ -380,7 +323,14 @@
   <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
     <h2 id="header-image-title" class="text-xl font-semibold mb-4 text-gray-800">Pilih Gambar Unggulan</h2>
     <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg" role="group" aria-label="Unggah gambar baru">
-      <h3 class="text-lg font-semibold text-gray-800 mb-2">Unggah Gambar Baru</h3>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold text-gray-800">Unggah Gambar Baru</h3>
+        <a href="{{ url_for('user_profile.user_images', username=user.username) }}" 
+           class="text-sm text-blue-600 hover:text-blue-800 flex items-center" 
+           target="_blank">
+          <i class="fas fa-cog mr-1"></i>Kelola Gambar
+        </a>
+      </div>
       <input id="header-upload-name-create" type="text" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nama gambar (opsional)" aria-label="Nama gambar">
       <input id="header-upload-file-create" type="file" accept="image/*" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" aria-label="Pilih file gambar">
       <input id="header-upload-url-create" type="url" class="w-full bg-white border border-gray-300 text-gray-700 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://contoh.com/gambar.jpg" aria-label="URL gambar">
@@ -552,9 +502,6 @@
             'story-age-rating': 'news-age-rating',
             'story-external-source': 'news-external-source',
             'story-date': 'news-date',
-            'story-is-premium': 'news-is-premium',
-            'story-prize': 'news-prize',
-            'story-prize-coin-type': 'news-prize-coin-type',
             'story-content': 'news-content',
             'story-image-id': 'news-image-id'
         };
@@ -752,19 +699,6 @@
                 const tagsEl = document.getElementById('news-tagar');
                 if (tagsEl && data.tagar) tagsEl.value = data.tagar;
 
-                // Premium fields
-                const isPremiumEl = document.getElementById('news-is-premium');
-                const prizeEl = document.getElementById('news-prize');
-                const prizeTypeEl = document.getElementById('news-prize-coin-type');
-                const prizeSection = document.getElementById('prize-input-section');
-                if (isPremiumEl) {
-                    const isPrem = !!data.is_premium || (typeof data.prize === 'number' && data.prize > 0);
-                    isPremiumEl.value = isPrem ? 'true' : 'false';
-                    isPremiumEl.checked = isPrem;
-                    if (prizeSection) prizeSection.classList.toggle('hidden', !isPrem);
-                }
-                if (prizeEl && typeof data.prize === 'number') prizeEl.value = data.prize;
-                if (prizeTypeEl && data.prize_coin_type) prizeTypeEl.value = data.prize_coin_type;
 
                 // Featured image
                 const imgIdInput = document.getElementById('news-image-id');
@@ -992,7 +926,7 @@
             console.log('Adding click listener to cancel button');
             cancelBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const fallbackUrl = '{{ url_for('user_profile.user_stories', username=user.username) }}';
+                const fallbackUrl = '{{ url_for("user_profile.user_stories", username=user.username) }}';
                 // Prefer going back if there is a referrer, otherwise go to user stories
                 if (document.referrer && document.referrer !== window.location.href) {
                     try { window.history.back(); return; } catch (_) {}
@@ -1115,11 +1049,11 @@
             paginationContainer.innerHTML = '';
             
             try {
-                // Call the API with visibility=visible to get only visible images
-                const response = await fetch(`/api/images?page=${page}&per_page=12&visibility=visible`);
+                // Call the API with all_users=true to get all images (visible and hidden) owned by the user
+                const response = await fetch(`/api/images?page=${page}&per_page=12&all_users=true`);
                 if (!response.ok) throw new Error('Failed to load content images');
                 const data = await response.json();
-                console.log('User content images loaded:', data.items.length, 'visible images');
+                console.log('User content images loaded:', data.items.length, 'images (visible and hidden) with ownership filtering');
                 
                 // Show message if no images found
                 if (data.items.length === 0) {
@@ -1155,49 +1089,46 @@
             paginationContainer.innerHTML = '';
 
             try {
-                // Try to get ALL visible images from all users using different API parameters
-                console.log('Attempting to get all visible images from all users...');
+                // Try to get ALL images (visible and hidden) owned by the user using different API parameters
+                console.log('Attempting to get all images (visible and hidden) owned by the user...');
                 
-                // First try: request all images without user filtering
-                const response = await fetch(`/api/images?page=${page}&per_page=50&visibility=visible&all_users=true`);
+                // First try: request all images without visibility filtering
+                const response = await fetch(`/api/images?page=${page}&per_page=50&all_users=true`);
                 if (response.ok) {
                     const data = await response.json();
                     const imgs = data.items || [];
-                    console.log('Successfully got all visible images:', imgs.length, 'images from all users');
+                    console.log('Successfully got all images (visible and hidden):', imgs.length, 'images owned by the user');
                     return data;
                 }
                 
-                // Second try: request with different visibility parameter
-                console.log('First attempt failed, trying alternative parameters...');
-                const response2 = await fetch(`/api/images?page=${page}&per_page=50&visibility=public`);
+                // Second try: request without all_users parameter (should still get user's own images)
+                console.log('First attempt failed, trying without all_users parameter...');
+                const response2 = await fetch(`/api/images?page=${page}&per_page=50`);
                 if (response2.ok) {
                     const data = await response2.json();
                     const imgs = data.items || [];
-                    console.log('Successfully got public images:', imgs.length, 'images from all users');
+                    console.log('Successfully got user images:', imgs.length, 'images owned by the user');
                     return data;
                 }
                 
-                // Third try: request without visibility filter (might return all)
-                console.log('Second attempt failed, trying without visibility filter...');
-                const response3 = await fetch(`/api/images?page=${page}&per_page=50`);
+                // Third try: request with all_users=true (should get all user's images)
+                console.log('Second attempt failed, trying with all_users=true...');
+                const response3 = await fetch(`/api/images?page=${page}&per_page=50&all_users=true`);
                 if (response3.ok) {
                     const data = await response3.json();
                     const imgs = data.items || [];
-                    console.log('Got images without filter:', imgs.length, 'total images');
+                    console.log('Got all user images with all_users=true:', imgs.length, 'total images');
                     
-                    // Filter to only visible images on the client side
-                    const visibleImages = imgs.filter(img => img.visibility === 'visible' || img.visibility === 'public' || img.is_visible === true);
-                    console.log('Filtered to visible images:', visibleImages.length, 'visible images');
-                    
-                    return { ...data, items: visibleImages };
+                    // Return all images (no filtering needed - we want both visible and hidden)
+                    return data;
                 }
                 
-                // Final fallback: use original endpoint
-                console.log('All attempts failed, using fallback endpoint...');
-                const fallbackResponse = await fetch(`/api/images?page=${page}&per_page=12&visibility=visible`);
+                // Final fallback: use endpoint with all_users=true (no visibility filter)
+                console.log('All attempts failed, using fallback endpoint with all_users=true...');
+                const fallbackResponse = await fetch(`/api/images?page=${page}&per_page=12&all_users=true`);
                 if (!fallbackResponse.ok) throw new Error('Failed to load header images');
                 const fallbackData = await fallbackResponse.json();
-                console.log('Using fallback endpoint, found:', fallbackData.items.length, 'images (user only)');
+                console.log('Using fallback endpoint with all_users=true, found:', fallbackData.items.length, 'images');
                 return fallbackData;
                 
             } catch (err) {
@@ -1712,7 +1643,7 @@
             } else {
                 console.log('loadHeaderLibraryCreate not available, testing API call directly...');
                 // Test the API call directly
-                fetch('/api/images?page=1&per_page=12&visibility=visible')
+                fetch('/api/images?page=1&per_page=12&all_users=true')
                     .then(response => response.json())
                     .then(data => {
                         console.log('Direct API test successful:', data.items.length, 'images found');

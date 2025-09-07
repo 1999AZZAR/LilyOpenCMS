@@ -251,15 +251,34 @@ def create_ad():
     
     if request.method == 'POST':
         try:
-            data = request.get_json()
+            # Handle both JSON and form data
+            if request.is_json:
+                data = request.get_json()
+            else:
+                data = request.form.to_dict()
+            
+            # Handle image upload if present
+            image_info = None
+            if 'image_file' in request.files:
+                image_file = request.files['image_file']
+                if image_file and image_file.filename:
+                    from routes.utils.ad_image_utils import save_ad_image
+                    image_info, errors = save_ad_image(image_file)
+                    if errors:
+                        return jsonify({'success': False, 'error': '; '.join(errors)}), 400
             
             ad = Ad(
                 title=data['title'],
                 description=data.get('description'),
                 ad_type=data['ad_type'],
                 content_type=data['content_type'],
-                image_url=data.get('image_url'),
+                image_url=data.get('image_url') if not image_info else None,
+                image_filename=image_info['filename'] if image_info else None,
+                image_upload_path=image_info['upload_path'] if image_info else None,
                 image_alt=data.get('image_alt'),
+                image_width=image_info['width'] if image_info else None,
+                image_height=image_info['height'] if image_info else None,
+                image_file_size=image_info['file_size'] if image_info else None,
                 text_content=data.get('text_content'),
                 html_content=data.get('html_content'),
                 target_url=data.get('target_url'),
@@ -317,13 +336,50 @@ def edit_ad(ad_id):
     
     if request.method == 'POST':
         try:
-            data = request.get_json()
+            # Handle both JSON and form data
+            if request.is_json:
+                data = request.get_json()
+            else:
+                data = request.form.to_dict()
+            
+            # Handle image upload if present
+            image_info = None
+            if 'image_file' in request.files:
+                image_file = request.files['image_file']
+                if image_file and image_file.filename:
+                    from routes.utils.ad_image_utils import save_ad_image, delete_ad_image
+                    
+                    # Delete old image if exists
+                    if ad.image_upload_path:
+                        delete_ad_image(ad.image_upload_path)
+                    
+                    # Save new image
+                    image_info, errors = save_ad_image(image_file)
+                    if errors:
+                        return jsonify({'success': False, 'error': '; '.join(errors)}), 400
             
             ad.title = data['title']
             ad.description = data.get('description')
             ad.ad_type = data['ad_type']
             ad.content_type = data['content_type']
-            ad.image_url = data.get('image_url')
+            
+            # Update image fields
+            if image_info:
+                ad.image_url = None  # Clear external URL if uploading new image
+                ad.image_filename = image_info['filename']
+                ad.image_upload_path = image_info['upload_path']
+                ad.image_width = image_info['width']
+                ad.image_height = image_info['height']
+                ad.image_file_size = image_info['file_size']
+            elif data.get('image_url'):
+                # If setting external URL, clear uploaded image fields
+                ad.image_url = data.get('image_url')
+                ad.image_filename = None
+                ad.image_upload_path = None
+                ad.image_width = None
+                ad.image_height = None
+                ad.image_file_size = None
+            
             ad.image_alt = data.get('image_alt')
             ad.text_content = data.get('text_content')
             ad.html_content = data.get('html_content')
@@ -368,6 +424,11 @@ def delete_ad(ad_id):
     ad = Ad.query.get_or_404(ad_id)
     
     try:
+        # Delete associated image file if exists
+        if ad.image_upload_path:
+            from routes.utils.ad_image_utils import delete_ad_image
+            delete_ad_image(ad.image_upload_path)
+        
         db.session.delete(ad)
         db.session.commit()
         if request.is_json:
@@ -633,13 +694,27 @@ def serve_ads():
                 
             ad = placement.ad
             if ad and ad.is_active_now():
+                # Check ad type access control
+                # Internal ads: only serve to same origin (web interface)
+                # External ads: only serve to different origin or with API key (external apps)
+                is_same_origin = _same_origin_ok()
+                has_api_key = request.headers.get('X-API-Key') or data.get('api_key')
+                
+                if ad.ad_type == 'internal' and not is_same_origin:
+                    # Skip internal ads for external API calls
+                    continue
+                elif ad.ad_type == 'external' and is_same_origin and not has_api_key:
+                    # Skip external ads for same origin unless API key is provided
+                    continue
+                
                 # Get page context for styling
                 page_context = {
                     'card_style': data.get('card_style', ''),
                     'page_type': page_type,
                     'section': section,
                     'user_has_premium': user_has_premium,
-                    'user_should_show_ads': user_should_show_ads
+                    'user_should_show_ads': user_should_show_ads,
+                    'ad_type': ad.ad_type
                 }
                 
                 ads_to_serve.append({
@@ -647,7 +722,8 @@ def serve_ads():
                     'html': ad.get_rendered_html(page_context),
                     'placement_id': placement.id,
                     'position': placement.position,
-                    'position_value': placement.position_value
+                    'position_value': placement.position_value,
+                    'ad_type': ad.ad_type
                 })
                 
                 served_count += 1
@@ -775,19 +851,32 @@ def serve_ads_batch():
                     break
                 ad = placement.ad
                 if ad and ad.is_active_now():
+                    # Check ad type access control (same logic as single serve)
+                    is_same_origin = _same_origin_ok()
+                    has_api_key = request.headers.get('X-API-Key') or data.get('api_key')
+                    
+                    if ad.ad_type == 'internal' and not is_same_origin:
+                        # Skip internal ads for external API calls
+                        continue
+                    elif ad.ad_type == 'external' and is_same_origin and not has_api_key:
+                        # Skip external ads for same origin unless API key is provided
+                        continue
+                    
                     page_context = {
                         'card_style': card_style,
                         'page_type': page_type,
                         'section': section,
                         'user_has_premium': user_has_premium,
-                        'user_should_show_ads': user_should_show_ads
+                        'user_should_show_ads': user_should_show_ads,
+                        'ad_type': ad.ad_type
                     }
                     served.append({
                         'ad_id': ad.id,
                         'html': ad.get_rendered_html(page_context),
                         'placement_id': placement.id,
                         'position': placement.position,
-                        'position_value': placement.position_value
+                        'position_value': placement.position_value,
+                        'ad_type': ad.ad_type
                     })
                     count += 1
 
@@ -796,6 +885,102 @@ def serve_ads_batch():
         return jsonify({'success': True, 'adsByPlacement': ads_by_placement})
     except Exception as e:
         logger.error(f"Error batch serving ads: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@ads_bp.route('/api/external/serve', methods=['POST'])
+def serve_external_ads():
+    """Dedicated API endpoint for external apps to access external ads only."""
+    try:
+        # Check for API key authentication
+        api_key = request.headers.get('X-API-Key') or request.get_json().get('api_key') if request.is_json else None
+        if not api_key:
+            return jsonify({'success': False, 'error': 'API key required'}), 401
+        
+        # TODO: Implement API key validation against database
+        # For now, we'll accept any API key (you should implement proper validation)
+        
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'JSON required'}), 400
+        
+        data = request.get_json() or {}
+        
+        # Validate required fields
+        required_fields = ['page_type', 'section', 'position']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'success': False, 'error': f'{field} is required'}), 400
+        
+        page_type = data.get('page_type')
+        page_specific = data.get('page_specific')
+        section = data.get('section')
+        position = data.get('position')
+        position_value = data.get('position_value')
+        max_ads = int(data.get('max_ads', 1))
+        device_type = data.get('device_type', 'mobile')  # Default to mobile for external apps
+        
+        # Find matching placements for external ads only
+        query = AdPlacement.query.join(Ad).filter(
+            AdPlacement.is_active == True,
+            AdPlacement.page_type == page_type,
+            AdPlacement.section == section,
+            AdPlacement.position == position,
+            Ad.ad_type == 'external'  # Only external ads
+        )
+        
+        if position_value is not None:
+            query = query.filter(AdPlacement.position_value == position_value)
+        
+        if page_specific:
+            query = query.filter(
+                (AdPlacement.page_specific == page_specific) | 
+                (AdPlacement.page_specific.is_(None))
+            )
+        else:
+            query = query.filter(AdPlacement.page_specific.is_(None))
+        
+        placements = query.all()
+        
+        # Get ads for valid placements
+        ads_to_serve = []
+        served_count = 0
+        
+        for placement in placements:
+            if served_count >= max_ads:
+                break
+                
+            ad = placement.ad
+            if ad and ad.is_active_now():
+                # External ads only - no additional filtering needed
+                page_context = {
+                    'page_type': page_type,
+                    'section': section,
+                    'device_type': device_type,
+                    'ad_type': 'external'
+                }
+                
+                ads_to_serve.append({
+                    'ad_id': ad.id,
+                    'html': ad.get_rendered_html(page_context),
+                    'placement_id': placement.id,
+                    'position': placement.position,
+                    'position_value': placement.position_value,
+                    'ad_type': ad.ad_type,
+                    'target_url': ad.target_url,
+                    'image_url': ad.get_image_url()
+                })
+                
+                served_count += 1
+        
+        return jsonify({
+            'success': True,
+            'ads': ads_to_serve,
+            'count': len(ads_to_serve),
+            'api_version': '1.0'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error serving external ads: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1151,6 +1336,14 @@ def admin_dashboard():
     total_placements = AdPlacement.query.count()
     active_placements = AdPlacement.query.filter_by(is_active=True).count()
     
+    # Count ads with images
+    total_images = Ad.query.filter(
+        db.or_(
+            Ad.image_upload_path.isnot(None),
+            Ad.image_url.isnot(None)
+        )
+    ).count()
+    
     # Get recent activity
     recent_ads = Ad.query.order_by(desc(Ad.created_at)).limit(5).all()
     recent_campaigns = AdCampaign.query.order_by(desc(AdCampaign.created_at)).limit(5).all()
@@ -1171,4 +1364,199 @@ def admin_dashboard():
                          recent_campaigns=recent_campaigns,
                          total_impressions=total_impressions,
                          total_clicks=total_clicks,
-                         overall_ctr=overall_ctr) 
+                         overall_ctr=overall_ctr,
+                         total_images=total_images)
+
+
+# =============================================================================
+# IMAGE MANAGEMENT ROUTES
+# =============================================================================
+
+@ads_bp.route('/images')
+@login_required
+def manage_images():
+    """Image management interface for ads."""
+    # Check permissions
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        flash('You do not have permission to manage ad images.', 'error')
+        return redirect(url_for('ads.dashboard'))
+    
+    try:
+        # Get all ads with images
+        ads_with_images = Ad.query.filter(
+            db.or_(
+                Ad.image_upload_path.isnot(None),
+                Ad.image_url.isnot(None)
+            )
+        ).order_by(Ad.created_at.desc()).all()
+        
+        return render_template('admin/ads/images_management.html', 
+                             ads_with_images=ads_with_images)
+    
+    except Exception as e:
+        logger.error(f"Error loading image management: {e}")
+        flash('Error loading image management interface.', 'error')
+        return redirect(url_for('ads.dashboard'))
+
+
+@ads_bp.route('/images/upload', methods=['POST'])
+@login_required
+def upload_images():
+    """Upload multiple images for ads."""
+    # Check permissions
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    try:
+        uploaded_files = request.files.getlist('images')
+        if not uploaded_files or all(f.filename == '' for f in uploaded_files):
+            return jsonify({'success': False, 'error': 'No files provided'}), 400
+        
+        uploaded_count = 0
+        errors = []
+        
+        for file in uploaded_files:
+            if file and file.filename:
+                try:
+                    from routes.utils.ad_image_utils import save_ad_image
+                    image_info, file_errors = save_ad_image(file)
+                    
+                    if image_info:
+                        # Create a placeholder ad with the uploaded image
+                        ad = Ad(
+                            title=f"Uploaded Image - {image_info['filename']}",
+                            description="Image uploaded via image management",
+                            ad_type='internal',
+                            content_type='image',
+                            image_filename=image_info['filename'],
+                            image_upload_path=image_info['upload_path'],
+                            image_width=image_info['width'],
+                            image_height=image_info['height'],
+                            image_file_size=image_info['file_size'],
+                            is_active=False,  # Inactive by default, needs to be configured
+                            created_by=current_user.id
+                        )
+                        db.session.add(ad)
+                        uploaded_count += 1
+                    else:
+                        errors.extend(file_errors)
+                        
+                except Exception as e:
+                    errors.append(f"Error uploading {file.filename}: {str(e)}")
+        
+        if uploaded_count > 0:
+            db.session.commit()
+        
+        if errors:
+            return jsonify({
+                'success': uploaded_count > 0,
+                'message': f'Uploaded {uploaded_count} images',
+                'errors': errors
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'message': f'Successfully uploaded {uploaded_count} images'
+            })
+    
+    except Exception as e:
+        logger.error(f"Error uploading images: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'Upload failed'}), 500
+
+
+@ads_bp.route('/images/replace', methods=['POST'])
+@login_required
+def replace_image():
+    """Replace an existing ad image."""
+    # Check permissions
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    try:
+        ad_id = request.form.get('ad_id')
+        if not ad_id:
+            return jsonify({'success': False, 'error': 'Ad ID required'}), 400
+        
+        ad = Ad.query.get_or_404(ad_id)
+        
+        # Check if new image file is provided
+        if 'image_file' not in request.files:
+            return jsonify({'success': False, 'error': 'No image file provided'}), 400
+        
+        image_file = request.files['image_file']
+        if not image_file or not image_file.filename:
+            return jsonify({'success': False, 'error': 'No image file selected'}), 400
+        
+        # Delete old image file if it exists
+        if ad.image_upload_path:
+            from routes.utils.ad_image_utils import delete_ad_image
+            delete_ad_image(ad.image_upload_path)
+        
+        # Save new image
+        from routes.utils.ad_image_utils import save_ad_image
+        image_info, errors = save_ad_image(image_file)
+        
+        if errors:
+            return jsonify({'success': False, 'error': '; '.join(errors)}), 400
+        
+        # Update ad with new image info
+        ad.image_filename = image_info['filename']
+        ad.image_upload_path = image_info['upload_path']
+        ad.image_width = image_info['width']
+        ad.image_height = image_info['height']
+        ad.image_file_size = image_info['file_size']
+        ad.image_url = None  # Clear external URL
+        ad.updated_by = current_user.id
+        ad.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Image replaced successfully'})
+    
+    except Exception as e:
+        logger.error(f"Error replacing image: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'Replace failed'}), 500
+
+
+@ads_bp.route('/images/delete', methods=['POST'])
+@login_required
+def delete_image():
+    """Delete an ad image."""
+    # Check permissions
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        return jsonify({'success': False, 'error': 'Permission denied'}), 403
+    
+    try:
+        data = request.get_json()
+        ad_id = data.get('ad_id')
+        
+        if not ad_id:
+            return jsonify({'success': False, 'error': 'Ad ID required'}), 400
+        
+        ad = Ad.query.get_or_404(ad_id)
+        
+        # Delete image file if it exists
+        if ad.image_upload_path:
+            from routes.utils.ad_image_utils import delete_ad_image
+            delete_ad_image(ad.image_upload_path)
+        
+        # Clear image fields
+        ad.image_filename = None
+        ad.image_upload_path = None
+        ad.image_width = None
+        ad.image_height = None
+        ad.image_file_size = None
+        ad.image_url = None
+        ad.updated_by = current_user.id
+        ad.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Image deleted successfully'})
+    
+    except Exception as e:
+        logger.error(f"Error deleting image: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'Delete failed'}), 500 

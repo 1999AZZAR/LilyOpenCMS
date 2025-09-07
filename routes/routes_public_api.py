@@ -142,6 +142,12 @@ def api_album_detail(album_id):
             "total_views": album.total_views,
             "created_at": album.created_at.isoformat() if album.created_at else None,
             "updated_at": album.updated_at.isoformat() if album.updated_at else None,
+            "cover_image": {
+                "id": album.cover_image.id,
+                "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
+                "description": getattr(album.cover_image, "description", None),
+                "filepath": getattr(album.cover_image, "filepath", None)
+            } if album.cover_image else None,
             "chapters": [{
                 "id": ch.id,
                 "chapter_number": ch.chapter_number,
@@ -194,6 +200,12 @@ def api_chapter_detail(album_id, chapter_id):
                 "title": album.title,
                 "is_premium": album.is_premium,
             },
+            "cover_image": {
+                "id": album.cover_image.id,
+                "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
+                "description": getattr(album.cover_image, "description", None),
+                "filepath": getattr(album.cover_image, "filepath", None)
+            } if album.cover_image else None,
             "news_content": {
                 "id": news.id,
                 "title": news.title,
@@ -219,139 +231,6 @@ def api_chapter_detail(album_id, chapter_id):
                 "exception_args": str(e.args)
             }
         }), 500
-
-@main_blueprint.route("/api/public/albums/<int:album_id>/chapters/<int:chapter_number>/detail")
-def api_chapter_detail_by_number(album_id, chapter_number):
-    """API endpoint for chapter detail data (by chapter_number)."""
-    try:
-        album = Album.query.get_or_404(album_id)
-        chapter = AlbumChapter.query.filter_by(album_id=album_id, chapter_number=chapter_number, is_visible=True).first()
-        if not chapter:
-            return jsonify({"error": "Chapter not found or not visible"}), 404
-        
-        # Get the news article for this chapter
-        news = chapter.news
-        
-        # Prepare response data
-        chapter_data = {
-            "id": chapter.id,
-            "chapter_number": chapter.chapter_number,
-            "chapter_title": chapter.chapter_title,
-            "created_at": chapter.created_at.isoformat() if chapter.created_at else None,
-            "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
-            "album": {
-                "id": album.id,
-                "title": album.title,
-                "is_premium": album.is_premium,
-            },
-            "news_content": {
-                "id": news.id,
-                "title": news.title,
-                "content": news.content,
-                "excerpt": news.content[:200] + "..." if news.content and len(news.content) > 200 else news.content,
-                "is_premium": news.is_premium,
-                "created_at": news.created_at.isoformat() if news.created_at else None,
-            } if news else None,
-        }
-        
-        return jsonify({
-            "success": True,
-            "chapter": chapter_data
-        })
-        
-    except Exception as e:
-        current_app.logger.error(f"Error in api_chapter_detail_by_number: {e}", exc_info=True)
-        return jsonify({
-            "success": False,
-            "error": f"An error occurred while fetching chapter details: {str(e)}",
-            "debug": {
-                "exception_type": str(type(e)),
-                "exception_args": str(e.args)
-            }
-        }), 500
-
-@main_blueprint.route("/api/public/albums/<int:album_id>/chapters/<int:chapter_number>")
-def get_public_chapter_by_number(album_id, chapter_number):
-    """Public API: chapter detail by album_id + chapter_number (unwrapped object)."""
-    try:
-        album = Album.query.filter_by(id=album_id, is_visible=True, is_archived=False).first()
-        if not album:
-            return jsonify({"error": "Album not found or not visible"}), 404
-
-        chapter = (
-            AlbumChapter.query.filter_by(album_id=album_id, chapter_number=chapter_number, is_visible=True)
-            .first()
-        )
-        if not chapter:
-            return jsonify({"error": "Chapter not found or not visible"}), 404
-
-        news = News.query.filter_by(id=chapter.news_id, is_visible=True).first() if chapter.news_id else None
-
-        # Content and premium handling
-        if news and getattr(news, "is_premium", False):
-            content = (news.content[:200] + "..." if news.content and len(news.content) > 200 else news.content)
-            is_premium = True
-            message = "Premium content - full access requires authentication"
-        else:
-            content = news.content if news else None
-            is_premium = False
-            message = None
-
-        # Navigation based on chapter order in album
-        all_chapters = (
-            AlbumChapter.query.filter_by(album_id=album_id, is_visible=True)
-            .order_by(AlbumChapter.chapter_number)
-            .all()
-        )
-        current_index = next((i for i, ch in enumerate(all_chapters) if ch.chapter_number == chapter_number), -1)
-        navigation = {}
-        if current_index > 0:
-            prev_ch = all_chapters[current_index - 1]
-            navigation["previous"] = {
-                "id": prev_ch.id,
-                "chapter_number": prev_ch.chapter_number,
-                "chapter_title": prev_ch.chapter_title,
-            }
-        if 0 <= current_index < len(all_chapters) - 1:
-            next_ch = all_chapters[current_index + 1]
-            navigation["next"] = {
-                "id": next_ch.id,
-                "chapter_number": next_ch.chapter_number,
-                "chapter_title": next_ch.chapter_title,
-            }
-
-        # Response matches PublicChapterResponse schema
-        response = {
-            "id": chapter.id,
-            "chapter_number": chapter.chapter_number,
-            "chapter_title": chapter.chapter_title,
-            "content": content,
-            "is_premium": is_premium,
-            "created_at": chapter.created_at.isoformat() if chapter.created_at else None,
-            "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
-            "album": {
-                "id": album.id,
-                "title": album.title,
-                "is_premium": album.is_premium,
-            },
-            "news_content": {
-                "id": news.id,
-                "title": news.title,
-                "content": news.content if not is_premium else None,
-                "excerpt": (news.content[:200] + "..." if news and news.content and len(news.content) > 200 else (news.content if news else None)),
-                "is_premium": news.is_premium if news else False,
-                "created_at": news.created_at.isoformat() if news and news.created_at else None,
-            } if news else None,
-            "navigation": navigation,
-        }
-        if message:
-            response["message"] = message
-
-        return jsonify(response)
-
-    except Exception as e:
-        current_app.logger.error(f"Error in public chapter-by-number API: {e}", exc_info=True)
-        return jsonify({"error": "Internal server error"}), 500
 
 @main_blueprint.route("/api/public/albums/list")
 def api_albums_list():
@@ -729,11 +608,14 @@ def get_album_simple(album_id):
                 "name": album.category.name if album.category else None,
                 "description": album.category.description if album.category else None
             } if album.category else None,
-            "author": {
-                "id": album.author.id if album.author else None,
-                "username": album.author.username if album.author else None,
-                "display_name": album.author.get_full_name() if album.author else None
-            } if album.author else None,
+            # In models, Album.author is a string (author name). Expose it directly.
+            "author": album.author,
+            # Also expose owner (User) details if present
+            "owner": {
+                "id": album.owner.id if album.owner else None,
+                "username": album.owner.username if album.owner else None,
+                "display_name": album.owner.get_full_name() if album.owner else None
+            } if album.owner else None,
             "chapters": [{
                 "id": ch.id,
                 "chapter_number": ch.chapter_number,
@@ -846,95 +728,6 @@ def get_chapter_simple(album_id, chapter_id):
 
     except Exception as e:
         current_app.logger.error(f"Error in simple chapter API: {e}", exc_info=True)
-        return jsonify({"error": "Internal server error"}), 500
-
-@main_blueprint.route("/api/albums/<int:album_id>/chapters/<int:chapter_number>", methods=["GET"])
-def get_chapter_simple_by_number(album_id, chapter_number):
-    """
-    Simple public API endpoint to retrieve a single chapter in JSON format (by chapter_number).
-    No authentication required.
-    """
-    try:
-        # Get the chapter by chapter_number
-        chapter = AlbumChapter.query.filter_by(
-            album_id=album_id,
-            chapter_number=chapter_number,
-            is_visible=True
-        ).first()
-        
-        if not chapter:
-            return jsonify({"error": "Chapter not found or not visible"}), 404
-
-        # Get the album
-        album = Album.query.filter_by(id=album_id, is_visible=True).first()
-        if not album:
-            return jsonify({"error": "Album not found or not visible"}), 404
-
-        # Get the news content
-        news_content = News.query.filter_by(id=chapter.news_id, is_visible=True).first()
-        if not news_content:
-            return jsonify({"error": "Chapter content not found"}), 404
-
-        # Check if content is premium
-        if news_content.is_premium:
-            content = (news_content.content[:200] + "..." if news_content.content and len(news_content.content) > 200 else news_content.content)
-            is_premium = True
-            message = "Premium content - full access requires authentication"
-        else:
-            content = news_content.content
-            is_premium = False
-            message = None
-
-        # Get navigation info
-        all_chapters = (
-            AlbumChapter.query.filter_by(album_id=album_id, is_visible=True)
-            .order_by(AlbumChapter.chapter_number)
-            .all()
-        )
-        
-        current_index = next((i for i, ch in enumerate(all_chapters) if ch.chapter_number == chapter_number), -1)
-        
-        navigation = {}
-        if current_index > 0:
-            prev_chapter = all_chapters[current_index - 1]
-            navigation["previous"] = {
-                "id": prev_chapter.id,
-                "chapter_number": prev_chapter.chapter_number,
-                "chapter_title": prev_chapter.chapter_title
-            }
-        
-        if current_index < len(all_chapters) - 1:
-            next_chapter = all_chapters[current_index + 1]
-            navigation["next"] = {
-                "id": next_chapter.id,
-                "chapter_number": next_chapter.chapter_number,
-                "chapter_title": next_chapter.chapter_title
-            }
-
-        # Prepare response data
-        chapter_data = {
-            "id": chapter.id,
-            "chapter_number": chapter.chapter_number,
-            "chapter_title": chapter.chapter_title,
-            "is_premium": is_premium,
-            "created_at": chapter.created_at.isoformat() if chapter.created_at else None,
-            "updated_at": chapter.updated_at.isoformat() if chapter.updated_at else None,
-            "album": {
-                "id": album.id,
-                "title": album.title,
-                "is_premium": album.is_premium
-            },
-            "content": content,
-            "navigation": navigation
-        }
-
-        if message:
-            chapter_data["message"] = message
-
-        return jsonify(chapter_data)
-
-    except Exception as e:
-        current_app.logger.error(f"Error in simple chapter (by number) API: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
 @main_blueprint.route("/api/categories", methods=["GET"])
@@ -1204,14 +997,24 @@ def get_public_album_api(album_id):
         # related_albums = get_similar_albums(album, limit=4)
         related_albums = []
         
-        # Get albums by the same author (excluding current)
+        # Get albums by the same author/owner (excluding current)
+        # Find albums that match either the author name OR the owner ID
+        from sqlalchemy import or_
+        
         author_albums = (
-            Album.query.filter_by(
-                user_id=album.user_id,
-                is_visible=True,
-                is_archived=False
+            Album.query.filter(
+                or_(
+                    # Match by author name (if author exists)
+                    (Album.author == album.author) if album.author else False,
+                    # Match by owner ID (if owner exists)
+                    (Album.owner_id == album.owner_id) if album.owner_id else False,
+                    # Fallback: match by creator ID
+                    (Album.user_id == album.user_id) if not album.author and not album.owner_id else False
+                ),
+                Album.is_visible == True,
+                Album.is_archived == False,
+                Album.id != album_id
             )
-            .filter(Album.id != album_id)
             .order_by(Album.created_at.desc())
             .limit(6)
             .all()
@@ -1236,12 +1039,13 @@ def get_public_album_api(album_id):
                 "name": album.category.name if album.category else None,
                 "description": album.category.description if album.category else None
             } if album.category else None,
-            "author": {
-                "id": album.author.id if album.author else None,
-                "username": album.author.username if album.author else None,
-                "display_name": album.author.get_full_name() if album.author else None,
-                "avatar_url": album.author.avatar_url if hasattr(album.author, 'avatar_url') else None
-            } if album.author else None,
+            "author": album.author,  # This is now a string field
+            "owner": {
+                "id": album.owner.id if album.owner else None,
+                "username": album.owner.username if album.owner else None,
+                "display_name": album.owner.get_full_name() if album.owner else None,
+                "avatar_url": album.owner.avatar_url if hasattr(album.owner, 'avatar_url') else None
+            } if album.owner else None,
             "chapters": [{
                 "id": ch.id,
                 "chapter_number": ch.chapter_number,
@@ -1467,11 +1271,13 @@ def get_public_albums_list_api():
                     "id": album.category.id if album.category else None,
                     "name": album.category.name if album.category else None
                 } if album.category else None,
-                "author": {
-                    "id": album.author.id if album.author else None,
-                    "username": album.author.username if album.author else None,
-                    "display_name": album.author.get_full_name() if album.author else None
-                } if album.author else None
+                # Album.author is a string; expose directly. Include owner details if available.
+                "author": album.author,
+                "owner": {
+                    "id": album.owner.id if album.owner else None,
+                    "username": album.owner.username if album.owner else None,
+                    "display_name": album.owner.get_full_name() if album.owner else None
+                } if album.owner else None
             }
             
             # Add cover image if available

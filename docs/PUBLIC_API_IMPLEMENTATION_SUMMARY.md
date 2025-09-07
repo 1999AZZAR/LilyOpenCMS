@@ -1,8 +1,8 @@
-# Public API Implementation Summary
+# Public API Implementation Summary (Consolidated in API_CENTRAL.md)
 
 ## Overview
 
-This document summarizes the implementation of public API endpoints that provide JSON equivalents for HTML pages, enabling multiplatform access to the system's content.
+A centralized, up-to-date version of this summary now lives in `docs/API_CENTRAL.md`. This file remains as an implementation-focused reference.
 
 ## What Was Implemented
 

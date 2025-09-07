@@ -24,7 +24,7 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
                 <input type="text" name="search" value="{{ request.args.get('search', '') }}" 
@@ -71,7 +71,26 @@
                     <option value="premium" {% if request.args.get('type') == 'premium' %}selected{% endif %}>Premium</option>
                 </select>
             </div>
-            <div class="md:col-span-4 flex justify-between">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">User</label>
+                <select name="user" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua User</option>
+                    {% if users %}
+                        {% for user in users %}
+                        <option value="{{ user.id }}" {% if request.args.get('user')|int == user.id %}selected{% endif %}>
+                            {{ user.username }} {% if user.display_name %}({{ user.display_name }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Author</label>
+                <input type="text" name="author" value="{{ request.args.get('author', '') }}" 
+                       placeholder="Filter by author name..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="md:col-span-6 flex justify-between">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
                     <i class="fas fa-filter mr-2"></i>Terapkan Filter
                 </button>
@@ -92,6 +111,7 @@
                             <input type="checkbox" id="select-all" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buku/Seri</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author/Owner</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chapters</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -119,8 +139,21 @@
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ album.title }}</div>
                                     <div class="text-sm text-gray-500">{{ album.description[:50] + '...' if album.description and album.description|length > 50 else album.description or 'No description' }}</div>
-                                    <div class="text-xs text-gray-400">{{ album.author.username if album.author else 'Unknown' }}</div>
                                 </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {% if album.author and album.owner %}
+                                    <div><strong>Author:</strong> {{ album.author }}</div>
+                                    <div><strong>Owner:</strong> {{ album.owner.username }}</div>
+                                {% elif album.author %}
+                                    <div><strong>Author:</strong> {{ album.author }}</div>
+                                {% elif album.owner %}
+                                    <div><strong>Owner:</strong> {{ album.owner.username }}</div>
+                                {% else %}
+                                    <div class="text-gray-400">Unknown</div>
+                                {% endif %}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

@@ -1,8 +1,29 @@
 {% extends 'base.html' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
 
 {% block title %}Perpustakaan - {{ user.get_full_name() or user.username }}{% endblock %}
 
 {% block content %}
+<style>
+/* Ensure consistent image container widths across all tabs */
+.library-image-container {
+    width: 25% !important;
+    min-width: 200px !important;
+    max-width: 250px !important;
+    flex-shrink: 0 !important;
+}
+
+@media (max-width: 640px) {
+    .library-image-container {
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: none !important;
+    }
+}
+</style>
+
 <div class="min-h-screen bg-background">
     <!-- Header -->
     <div class="bg-card border-b border-border">
@@ -29,7 +50,7 @@
             <nav class="flex space-x-8" aria-label="Library tabs">
                 <button id="your-list-tab" 
                         class="py-2 px-1 border-b-2 font-medium text-sm {% if active_tab == 'your-list' %}border-primary text-primary{% else %}border-transparent text-muted-foreground hover:text-foreground hover:border-border{% endif %}">
-                    Daftar Anda ({{ own_albums|length }})
+                    Daftar Anda ({{ (own_albums|length) + (own_stories|length) }})
                 </button>
                 <button id="saved-list-tab" 
                         class="py-2 px-1 border-b-2 font-medium text-sm {% if active_tab == 'saved-list' %}border-primary text-primary{% else %}border-transparent text-muted-foreground hover:text-foreground hover:border-border{% endif %}">
@@ -41,185 +62,377 @@
                 </button>
                 <button id="response-tab" 
                         class="py-2 px-1 border-b-2 font-medium text-sm {% if active_tab == 'response' %}border-primary text-primary{% else %}border-transparent text-muted-foreground hover:text-foreground hover:border-border{% endif %}">
-                    Tanggapan
+                    Tanggapan ({{ comments_count }})
                 </button>
             </nav>
         </div>
 
         <!-- Your List Tab -->
-        <div id="your-list-content" class="space-y-6 {% if active_tab != 'your-list' %}hidden{% endif %}">
-            {% if own_albums %}
+        <div id="your-list-content" class="space-y-6">
+            {% if own_albums or own_stories %}
                 <div class="space-y-6">
-                    {% for album in own_albums %}
-                        <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
-                            <div class="flex flex-col sm:flex-row">
-                                <!-- Image Container -->
-                                <div class="sm:w-1/3 lg:w-2/5 xl:w-1/3 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
-                                    <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
-                                        {% if album.cover_image_id %}
-                                            <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
-                                                 alt="{{ album.title }}" 
-                                                 class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
-                                                 loading="lazy">
-                                        {% else %}
-                                            <div class="w-full h-full bg-muted flex items-center justify-center">
-                                                <i class="fas fa-book text-4xl text-muted-foreground"></i>
+                    <!-- Stories Section -->
+                    {% if own_stories %}
+                        <div class="mb-8">
+                            <button onclick="toggleSection('stories-section')" 
+                                    class="w-full flex items-center justify-between text-left text-lg font-semibold text-foreground mb-4 border-b border-border pb-2 hover:text-primary hover:bg-gray-50 rounded-t-lg px-3 py-2 transition-all duration-200 cursor-pointer group">
+                                <span class="flex items-center">
+                                    <i class="fas fa-newspaper mr-2 text-primary"></i>Cerita ({{ own_stories|length }})
+                                </span>
+                                <i id="stories-toggle-icon" class="fas fa-chevron-down text-sm transition-all duration-200 text-muted-foreground group-hover:text-primary"></i>
+                            </button>
+                            <div id="stories-section" class="space-y-6">
+                                {% for story in own_stories %}
+                                    <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
+                                        <div class="flex flex-col sm:flex-row">
+                                            <!-- Image Container -->
+                                            <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
+                                                <a href="{{ url_for('main.news_detail', news_id=story.id, news_title='story') }}" class="block h-full" aria-label="Read story: {{ story.title | e }}">
+                                                    {% if story.image_id %}
+                                                        <img src="{{ url_for('static', filename='uploads/' + story.image.filename) }}" 
+                                                             alt="{{ story.title }}" 
+                                                             class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                             loading="lazy">
+                                                    {% else %}
+                                                        <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                            <i class="fas fa-newspaper text-4xl text-muted-foreground"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </a>
                                             </div>
-                                        {% endif %}
-                                    </a>
-                                </div>
-                                <!-- Text Content Container -->
-                                <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
-                                    <div>
-                                        <!-- Title and Badges -->
-                                        <div class="flex justify-between items-start mb-2 gap-x-2">
-                                            <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                                                <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}">{{ album.title }}</a>
-                                            </h3>
-                                            <div class="flex gap-1 mt-0.5 flex-shrink-0">
-                                                <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Album</span>
-                                                {% if album.is_premium %}
-                                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">Premium</span>
+                                            <!-- Text Content Container -->
+                                            <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
+                                                <div>
+                                                    <!-- Title and Badges -->
+                                                    <div class="flex justify-between items-start mb-2 gap-x-2">
+                                                        <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                            <a href="{{ url_for('main.news_detail', news_id=story.id, news_title='story') }}">{{ story.title }}</a>
+                                                        </h3>
+                                                        <div class="flex gap-1 mt-0.5 flex-shrink-0">
+                                                            <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
+                                                            {% if story.is_premium %}
+                                                                <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">Premium</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <!-- Story Content -->
+                                                    <p class="text-sm text-muted-foreground mb-4 line-clamp-3">{{ story.content[:140] }}...</p>
+                                                </div>
+                                                <!-- Meta Footer: Date, Views -->
+                                                <div class="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                    <span class="flex items-center gap-x-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75 1.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
+                                                        {{ story.created_at.strftime('%d %b %Y') }}
+                                                    </span>
+                                                    <span class="flex items-center gap-x-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.415 6.11 4.96 4 8 4s5.585 2.11 6.62 3.72a.87.87 0 0 1 0 .56C13.585 9.89 11.04 12 8 12s5.585-2.11-6.62-3.72ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" /></svg>
+                                                        {{ story.total_views|default(0) }} dilihat
+                                                    </span>
+                                                </div>
+                                                
+                                                {% if current_user.is_authenticated and current_user.id == user.id %}
+                                                    <div class="mt-3 flex space-x-2">
+                                                        <a href="{{ url_for('main.create_news', news_id=story.id) }}" 
+                                                           class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
+                                                            <i class="fas fa-edit mr-1"></i>Edit
+                                                        </a>
+                                                    </div>
                                                 {% endif %}
                                             </div>
                                         </div>
-                                        <!-- Album Description -->
-                                        <p class="text-sm text-muted-foreground mb-4 line-clamp-3">{{ album.description[:140] }}...</p>
-                                    </div>
-                                    <!-- Meta Footer: Date, Views -->
-                                    <div class="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
-                                        <span class="flex items-center gap-x-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75 1.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
-                                            {{ album.created_at.strftime('%d %b %Y') }}
-                                        </span>
-                                        <span class="flex items-center gap-x-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.415 6.11 4.96 4 8 4s5.585 2.11 6.62 3.72a.87.87 0 0 1 0 .56C13.585 9.89 11.04 12 8 12s-5.585-2.11-6.62-3.72ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" /></svg>
-                                            {{ album.total_views }} dilihat
-                                        </span>
-                                    </div>
-                                    
-                                    {% if current_user.is_authenticated and current_user.id == user.id %}
-                                        <div class="mt-3 flex space-x-2">
-                                            <a href="{{ url_for('albums.edit_album', album_id=album.id) }}" 
-                                               class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
-                                                <i class="fas fa-edit mr-1"></i>Edit
-                                            </a>
-                                        </div>
-                                    {% endif %}
-                                </div>
+                                    </article>
+                                {% endfor %}
                             </div>
-                        </article>
-                    {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Albums Section -->
+                    {% if own_albums %}
+                        <div>
+                            <button onclick="toggleSection('albums-section')" 
+                                    class="w-full flex items-center justify-between text-left text-lg font-semibold text-foreground mb-4 border-b border-border pb-2 hover:text-primary hover:bg-gray-50 rounded-t-lg px-3 py-2 transition-all duration-200 cursor-pointer group">
+                                <span class="flex items-center">
+                                    <i class="fas fa-book mr-2 text-primary"></i>Album ({{ own_albums|length }})
+                                </span>
+                                <i id="albums-toggle-icon" class="fas fa-chevron-down text-sm transition-all duration-200 text-muted-foreground group-hover:text-primary"></i>
+                            </button>
+                            <div id="albums-section" class="space-y-6">
+                                {% for album in own_albums %}
+                                    <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
+                                        <div class="flex flex-col sm:flex-row">
+                                            <!-- Image Container -->
+                                            <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
+                                                <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
+                                                    {% if album.cover_image_id %}
+                                                        <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
+                                                             alt="{{ album.title }}" 
+                                                             class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                             loading="lazy">
+                                                    {% else %}
+                                                        <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                            <i class="fas fa-book text-4xl text-muted-foreground"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                            <!-- Text Content Container -->
+                                            <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
+                                                <div>
+                                                    <!-- Title and Badges -->
+                                                    <div class="flex justify-between items-start mb-2 gap-x-2">
+                                                        <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                            <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}">{{ album.title }}</a>
+                                                        </h3>
+                                                        <div class="flex gap-1 mt-0.5 flex-shrink-0">
+                                                            <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Album</span>
+                                                            {% if album.is_premium %}
+                                                                <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">Premium</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <!-- Album Description -->
+                                                    <p class="text-sm text-muted-foreground mb-4 line-clamp-3">{{ album.description[:140] }}...</p>
+                                                    
+                                                    <!-- Author/Owner Information -->
+                                                    <div class="text-xs text-muted-foreground mb-3">
+                                                        {% if album.author and album.owner %}
+                                                            <span class="inline-block mr-3">
+                                                                <i class="fas fa-user-edit mr-1"></i>
+                                                                <strong>Author:</strong> {{ album.author }}
+                                                            </span>
+                                                            <span class="inline-block">
+                                                                <i class="fas fa-user mr-1"></i>
+                                                                <strong>Owner:</strong> {{ album.owner.username }}
+                                                            </span>
+                                                        {% elif album.author %}
+                                                            <span class="inline-block">
+                                                                <i class="fas fa-user-edit mr-1"></i>
+                                                                <strong>Author:</strong> {{ album.author }}
+                                                            </span>
+                                                        {% elif album.owner %}
+                                                            <span class="inline-block">
+                                                                <i class="fas fa-user mr-1"></i>
+                                                                <strong>Owner:</strong> {{ album.owner.username }}
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <!-- Meta Footer: Date, Views -->
+                                                <div class="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                    <span class="flex items-center gap-x-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75 1.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
+                                                        {{ album.created_at.strftime('%d %b %Y') }}
+                                                    </span>
+                                                    <span class="flex items-center gap-x-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.415 6.11 4.96 4 8 4s5.585 2.11 6.62 3.72a.87.87 0 0 1 0 .56C13.585 9.89 11.04 12 8 12s5.585-2.11-6.62-3.72ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" /></svg>
+                                                        {{ album.total_views }} dilihat
+                                                    </span>
+                                                </div>
+                                                
+                                                {% if current_user.is_authenticated and current_user.id == user.id %}
+                                                    <div class="mt-3 flex space-x-2">
+                                                        <a href="{{ url_for('albums.edit_album', album_id=album.id) }}" 
+                                                           class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
+                                                            <i class="fas fa-edit mr-1"></i>Edit
+                                                        </a>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             {% else %}
                 <div class="text-center py-12">
                     <i class="fas fa-book text-4xl text-muted-foreground mb-4"></i>
-                    <h3 class="text-lg font-medium text-foreground mb-2">Belum ada album</h3>
-                    <p class="text-muted-foreground mb-4">Pengguna ini belum membuat album apapun.</p>
+                    <h3 class="text-lg font-medium text-foreground mb-2">Belum ada konten</h3>
+                    <p class="text-muted-foreground mb-4">Pengguna ini belum membuat album atau cerita apapun.</p>
                     {% if current_user.is_authenticated and current_user.id == user.id %}
-                        <a href="{{ url_for('albums.create_album') }}" 
-                           class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
-                            <i class="fas fa-plus mr-2"></i>Buat Album Pertama Anda
-                        </a>
+                        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                            <a href="{{ url_for('albums.create_album') }}" 
+                               class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Buat Album
+                            </a>
+                            <a href="{{ url_for('main.create_news') }}" 
+                               class="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Buat Cerita
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
             {% endif %}
         </div>
 
         <!-- Saved List Tab -->
-        <div id="saved-list-content" class="space-y-6 {% if active_tab != 'saved-list' %}hidden{% endif %}">
+        <div id="saved-list-content" class="space-y-6">
             {% if library_items %}
+                <!-- Saved List Content Grouping -->
                 <div class="space-y-6">
-                    {% for library_item, news, album in library_items %}
-                        <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
-                            <div class="flex flex-col sm:flex-row">
-                                <!-- Image Container -->
-                                <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
-                                    {% if news %}
-                                        <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}" class="block h-full" aria-label="Read story: {{ news.title | e }}">
-                                            {% if news.image_id %}
-                                                <img src="{{ url_for('static', filename='uploads/' + news.image.filename) }}" 
-                                                     alt="{{ news.title }}" 
-                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
-                                                     loading="lazy">
-                                            {% else %}
-                                                <div class="w-full h-full bg-muted flex items-center justify-center">
-                                                    <i class="fas fa-newspaper text-4xl text-muted-foreground"></i>
+                        <!-- Stories Section -->
+                        {% if saved_stories_count > 0 %}
+                            <div class="mb-8">
+                                <button onclick="toggleSection('saved-stories-section')" 
+                                        class="w-full flex items-center justify-between text-left text-lg font-semibold text-foreground mb-4 border-b border-border pb-2 hover:text-primary hover:bg-gray-50 rounded-t-lg px-3 py-2 transition-all duration-200 cursor-pointer group">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-newspaper mr-2 text-primary"></i>Cerita Tersimpan ({{ saved_stories_count }})
+                                    </span>
+                                    <i id="saved-stories-toggle-icon" class="fas fa-chevron-down text-sm transition-all duration-200 text-muted-foreground group-hover:text-primary"></i>
+                                </button>
+                                <div id="saved-stories-section" class="space-y-6">
+                                    {% for library_item, news, album in library_items %}
+                                        {% if news %}
+                                            <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
+                                                <div class="flex flex-col sm:flex-row">
+                                                    <!-- Image Container -->
+                                                    <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
+                                                        <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}" class="block h-full" aria-label="Read story: {{ news.title | e }}">
+                                                            {% if news.image_id %}
+                                                                <img src="{{ url_for('static', filename='uploads/' + news.image.filename) }}" 
+                                                                     alt="{{ news.title }}" 
+                                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                                     loading="lazy">
+                                                            {% else %}
+                                                                <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                                    <i class="fas fa-newspaper text-4xl text-muted-foreground"></i>
+                                                                </div>
+                                                            {% endif %}
+                                                        </a>
+                                                    </div>
+                                                    <!-- Text Content Container -->
+                                                    <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
+                                                        <div>
+                                                            <!-- Title and Badges -->
+                                                            <div class="flex justify-between items-start mb-2 gap-x-2">
+                                                                <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                                    <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}">{{ news.title }}</a>
+                                                                </h3>
+                                                                <div class="flex gap-1 mt-0.5 flex-shrink-0">
+                                                                    <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Content Excerpt -->
+                                                            <p class="text-sm text-muted-foreground mb-4 line-clamp-3">
+                                                                {{ news.content[:140] }}...
+                                                            </p>
+                                                        </div>
+                                                        <!-- Meta Footer: Date Added and Actions -->
+                                                        <div class="mt-4 pt-3 border-t border-border">
+                                                            <div class="flex items-center justify-between">
+                                                                <div class="text-xs text-muted-foreground flex items-center gap-x-1">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
+                                                                    Ditambahkan {{ library_item.added_at.strftime('%d %b %Y') }}
+                                                                </div>
+                                                                <button onclick="removeFromLibrary('{{ library_item.content_type }}', {{ library_item.content_id }})" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                                    <i class="fas fa-trash mr-1.5"></i>
+                                                                    Hapus
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            {% endif %}
-                                        </a>
-                                    {% elif album %}
-                                        <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
-                                            {% if album.cover_image_id %}
-                                                <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
-                                                     alt="{{ album.title }}" 
-                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
-                                                     loading="lazy">
-                                            {% else %}
-                                                <div class="w-full h-full bg-muted flex items-center justify-center">
-                                                    <i class="fas fa-book text-4xl text-muted-foreground"></i>
-                                                </div>
-                                            {% endif %}
-                                        </a>
-                                    {% else %}
-                                        <div class="w-full h-full bg-muted flex items-center justify-center">
-                                            <i class="fas fa-file text-4xl text-muted-foreground"></i>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <!-- Text Content Container -->
-                                <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
-                                    <div>
-                                        <!-- Title and Badges -->
-                                        <div class="flex justify-between items-start mb-2 gap-x-2">
-                                            <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                                                {% if news %}
-                                                    <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}">{{ news.title }}</a>
-                                                {% elif album %}
-                                                    <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}">{{ album.title }}</a>
-                                                {% else %}
-                                                    <span class="text-muted-foreground">Content #{{ library_item.content_id }}</span>
-                                                {% endif %}
-                                            </h3>
-                                            <div class="flex gap-1 mt-0.5 flex-shrink-0">
-                                                {% if news %}
-                                                    <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
-                                                {% elif album %}
-                                                    <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Album</span>
-                                                {% else %}
-                                                    <span class="bg-muted text-foreground px-2 py-0.5 rounded text-xs font-semibold">{{ library_item.content_type|title }}</span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <!-- Content Excerpt -->
-                                        <p class="text-sm text-muted-foreground mb-4 line-clamp-3">
-                                            {% if news %}
-                                                {{ news.content[:140] }}...
-                                            {% elif album %}
-                                                {{ album.description[:140] }}...
-                                            {% else %}
-                                                Konten tersimpan
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                    <!-- Meta Footer: Date Added and Actions -->
-                                    <div class="mt-4 pt-3 border-t border-border">
-                                        <div class="flex items-center justify-between">
-                                            <div class="text-xs text-muted-foreground flex items-center gap-x-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75 1.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
-                                                Ditambahkan {{ library_item.added_at.strftime('%d %b %Y') }}
-                                            </div>
-                                            <button onclick="removeFromLibrary('{{ library_item.content_type }}', {{ library_item.content_id }})" 
-                                                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
-                                                <i class="fas fa-trash mr-1.5"></i>
-                                                Hapus
-                                            </button>
-                                        </div>
-                                    </div>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
                                 </div>
                             </div>
-                        </article>
-                    {% endfor %}
+                        {% endif %}
+
+                        <!-- Albums Section -->
+                        {% if saved_albums_count > 0 %}
+                            <div>
+                                <button onclick="toggleSection('saved-albums-section')" 
+                                        class="w-full flex items-center justify-between text-left text-lg font-semibold text-foreground mb-4 border-b border-border pb-2 hover:text-primary hover:bg-gray-50 rounded-t-lg px-3 py-2 transition-all duration-200 cursor-pointer group">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-book mr-2 text-primary"></i>Album Tersimpan ({{ saved_albums_count }})
+                                    </span>
+                                    <i id="saved-albums-toggle-icon" class="fas fa-chevron-down text-sm transition-all duration-200 text-muted-foreground group-hover:text-primary"></i>
+                                </button>
+                                <div id="saved-albums-section" class="space-y-6">
+                                    {% for library_item, news, album in library_items %}
+                                        {% if album %}
+                                            <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
+                                                <div class="flex flex-col sm:flex-row">
+                                                    <!-- Image Container -->
+                                                    <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
+                                                        <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
+                                                            {% if album.cover_image_id %}
+                                                                <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
+                                                                     alt="{{ album.title }}" 
+                                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                                     loading="lazy">
+                                                            {% else %}
+                                                                <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                                    <i class="fas fa-book text-4xl text-muted-foreground"></i>
+                                                                </div>
+                                                            {% endif %}
+                                                        </a>
+                                                    </div>
+                                                    <!-- Text Content Container -->
+                                                    <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
+                                                        <div>
+                                                            <!-- Title and Badges -->
+                                                            <div class="flex justify-between items-start mb-2 gap-x-2">
+                                                                <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                                    <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}">{{ album.title }}</a>
+                                                                </h3>
+                                                                <div class="flex gap-1 mt-0.5 flex-shrink-0">
+                                                                    <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Album</span>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Content Excerpt -->
+                                                            <p class="text-sm text-muted-foreground mb-4 line-clamp-3">
+                                                                {{ album.description[:140] }}...
+                                                            </p>
+                                                            
+                                                            <!-- Author/Owner Information for Albums -->
+                                                            <div class="text-xs text-muted-foreground mb-3">
+                                                                {% if album.author and album.owner %}
+                                                                    <span class="inline-block mr-3">
+                                                                        <i class="fas fa-user-edit mr-1"></i>
+                                                                        <strong>Author:</strong> {{ album.author }}
+                                                                    </span>
+                                                                    <span class="inline-block">
+                                                                        <i class="fas fa-user mr-1"></i>
+                                                                        <strong>Owner:</strong> {{ album.owner.username }}
+                                                                    </span>
+                                                                {% elif album.author %}
+                                                                    <span class="inline-block">
+                                                                        <i class="fas fa-user-edit mr-1"></i>
+                                                                        <strong>Author:</strong> {{ album.author }}
+                                                                    </span>
+                                                                {% elif album.owner %}
+                                                                    <span class="inline-block">
+                                                                        <i class="fas fa-user mr-1"></i>
+                                                                        <strong>Owner:</strong> {{ album.owner.username }}
+                                                                    </span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <!-- Meta Footer: Date Added and Actions -->
+                                                        <div class="mt-4 pt-3 border-t border-border">
+                                                            <div class="flex items-center justify-between">
+                                                                <div class="text-xs text-muted-foreground flex items-center gap-x-1">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
+                                                                    Ditambahkan {{ library_item.added_at.strftime('%d %b %Y') }}
+                                                                </div>
+                                                                <button onclick="removeFromLibrary('{{ library_item.content_type }}', {{ library_item.content_id }})" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                                    <i class="fas fa-trash mr-1.5"></i>
+                                                                    Hapus
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             {% else %}
                 <div class="text-center py-12">
@@ -231,96 +444,168 @@
         </div>
 
         <!-- Reading History Tab -->
-        <div id="reading-history-content" class="space-y-6 {% if active_tab != 'reading-history' %}hidden{% endif %}">
+        <div id="reading-history-content" class="space-y-6">
             {% if reading_history %}
+                <!-- Reading History Content Grouping -->
                 <div class="space-y-6">
-                    {% for history_item, news, album in reading_history %}
-                        <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
-                            <div class="flex flex-col sm:flex-row">
-                                <!-- Image Container -->
-                                <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
-                                    {% if news %}
-                                        <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}" class="block h-full" aria-label="Read story: {{ news.title | e }}">
-                                            {% if news.image_id %}
-                                                <img src="{{ url_for('static', filename='uploads/' + news.image.filename) }}" 
-                                                     alt="{{ news.title }}" 
-                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
-                                                     loading="lazy">
-                                            {% else %}
-                                                <div class="w-full h-full bg-muted flex items-center justify-center">
-                                                    <i class="fas fa-newspaper text-4xl text-muted-foreground"></i>
+                        <!-- Stories Section -->
+                        {% if history_stories_count > 0 %}
+                            <div class="mb-8">
+                                <button onclick="toggleSection('history-stories-section')" 
+                                        class="w-full flex items-center justify-between text-left text-lg font-semibold text-foreground mb-4 border-b border-border pb-2 hover:text-primary hover:bg-gray-50 rounded-t-lg px-3 py-2 transition-all duration-200 cursor-pointer group">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-newspaper mr-2 text-primary"></i>Cerita Dibaca ({{ history_stories_count }})
+                                    </span>
+                                    <i id="history-stories-toggle-icon" class="fas fa-chevron-down text-sm transition-all duration-200 text-muted-foreground group-hover:text-primary"></i>
+                                </button>
+                                <div id="history-stories-section" class="space-y-6">
+                                    {% for history_item, news, album in reading_history %}
+                                        {% if news %}
+                                            <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
+                                                <div class="flex flex-col sm:flex-row">
+                                                    <!-- Image Container -->
+                                                    <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
+                                                        <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}" class="block h-full" aria-label="Read story: {{ news.title | e }}">
+                                                            {% if news.image_id %}
+                                                                <img src="{{ url_for('static', filename='uploads/' + news.image.filename) }}" 
+                                                                     alt="{{ news.title }}" 
+                                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                                     loading="lazy">
+                                                            {% else %}
+                                                                <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                                    <i class="fas fa-newspaper text-4xl text-muted-foreground"></i>
+                                                                </div>
+                                                            {% endif %}
+                                                        </a>
+                                                    </div>
+                                                    <!-- Text Content Container -->
+                                                    <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
+                                                        <div>
+                                                            <!-- Title and Badges -->
+                                                            <div class="flex justify-between items-start mb-2 gap-x-2">
+                                                                <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                                    <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}">{{ news.title }}</a>
+                                                                </h3>
+                                                                <div class="flex gap-1 mt-0.5 flex-shrink-0">
+                                                                    <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Content Excerpt -->
+                                                            <p class="text-sm text-muted-foreground mb-4 line-clamp-3">
+                                                                {{ news.content[:140] }}...
+                                                            </p>
+                                                        </div>
+                                                        <!-- Meta Footer: Read Count, Last Read -->
+                                                        <div class="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                            <span class="flex items-center gap-x-1">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.415 6.11 4.96 4 8 4s5.585 2.11 6.62 3.72a.87.87 0 0 1 0 .56C13.585 9.89 11.04 12 8 12s5.585-2.11-6.62-3.72ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" /></svg>
+                                                                Dibaca {{ history_item.read_count }} kali
+                                                            </span>
+                                                            <span class="flex items-center gap-x-1">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75 1.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
+                                                                Terakhir dibaca {{ history_item.last_read_at.strftime('%d %b %Y') }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            {% endif %}
-                                        </a>
-                                    {% elif album %}
-                                        <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
-                                            {% if album.cover_image_id %}
-                                                <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
-                                                     alt="{{ album.title }}" 
-                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
-                                                     loading="lazy">
-                                            {% else %}
-                                                <div class="w-full h-full bg-muted flex items-center justify-center">
-                                                    <i class="fas fa-book text-4xl text-muted-foreground"></i>
-                                                </div>
-                                            {% endif %}
-                                        </a>
-                                    {% else %}
-                                        <div class="w-full h-full bg-muted flex items-center justify-center">
-                                            <i class="fas fa-file text-4xl text-muted-foreground"></i>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <!-- Text Content Container -->
-                                <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
-                                    <div>
-                                        <!-- Title and Badges -->
-                                        <div class="flex justify-between items-start mb-2 gap-x-2">
-                                            <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                                                {% if news %}
-                                                    <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}">{{ news.title }}</a>
-                                                {% elif album %}
-                                                    <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}">{{ album.title }}</a>
-                                                {% else %}
-                                                    <span class="text-muted-foreground">Content #{{ history_item.content_id }}</span>
-                                                {% endif %}
-                                            </h3>
-                                            <div class="flex gap-1 mt-0.5 flex-shrink-0">
-                                                {% if news %}
-                                                    <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
-                                                {% elif album %}
-                                                    <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Album</span>
-                                                {% else %}
-                                                    <span class="bg-muted text-foreground px-2 py-0.5 rounded text-xs font-semibold">{{ history_item.content_type|title }}</span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <!-- Content Excerpt -->
-                                        <p class="text-sm text-muted-foreground mb-4 line-clamp-3">
-                                            {% if news %}
-                                                {{ news.content[:140] }}...
-                                            {% elif album %}
-                                                {{ album.description[:140] }}...
-                                            {% else %}
-                                                Konten dari riwayat membaca
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                    <!-- Meta Footer: Read Count, Last Read -->
-                                    <div class="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
-                                        <span class="flex items-center gap-x-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.415 6.11 4.96 4 8 4s5.585 2.11 6.62 3.72a.87.87 0 0 1 0 .56C13.585 9.89 11.04 12 8 12s-5.585-2.11-6.62-3.72ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" /></svg>
-                                            Dibaca {{ history_item.read_count }} kali
-                                        </span>
-                                        <span class="flex items-center gap-x-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75 1.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
-                                            Terakhir dibaca {{ history_item.last_read_at.strftime('%d %b %Y') }}
-                                        </span>
-                                    </div>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
                                 </div>
                             </div>
-                        </article>
-                    {% endfor %}
+                        {% endif %}
+
+                        <!-- Albums Section -->
+                        {% if history_albums_count > 0 %}
+                            <div>
+                                <button onclick="toggleSection('history-albums-section')" 
+                                        class="w-full flex items-center justify-between text-left text-lg font-semibold text-foreground mb-4 border-b border-border pb-2 hover:text-primary hover:bg-gray-50 rounded-t-lg px-3 py-2 transition-all duration-200 cursor-pointer group">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-book mr-2 text-primary"></i>Album Dilihat ({{ history_albums_count }})
+                                    </span>
+                                    <i id="history-albums-toggle-icon" class="fas fa-chevron-down text-sm transition-all duration-200 text-muted-foreground group-hover:text-primary"></i>
+                                </button>
+                                <div id="history-albums-section" class="space-y-6">
+                                    {% for history_item, news, album in reading_history %}
+                                        {% if album %}
+                                            <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
+                                                <div class="flex flex-col sm:flex-row">
+                                                    <!-- Image Container -->
+                                                    <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
+                                                        <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
+                                                            {% if album.cover_image_id %}
+                                                                <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
+                                                                     alt="{{ album.title }}" 
+                                                                     class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                                     loading="lazy">
+                                                            {% else %}
+                                                                <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                                    <i class="fas fa-book text-4xl text-muted-foreground"></i>
+                                                                </div>
+                                                            {% endif %}
+                                                        </a>
+                                                    </div>
+                                                    <!-- Text Content Container -->
+                                                    <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
+                                                        <div>
+                                                            <!-- Title and Badges -->
+                                                            <div class="flex justify-between items-start mb-2 gap-x-2">
+                                                                <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                                    <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}">{{ album.title }}</a>
+                                                                </h3>
+                                                                <div class="flex gap-1 mt-0.5 flex-shrink-0">
+                                                                    <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Album</span>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Content Excerpt -->
+                                                            <p class="text-sm text-muted-foreground mb-4 line-clamp-3">
+                                                                {{ album.description[:140] }}...
+                                                            </p>
+                                                            
+                                                            <!-- Author/Owner Information for Albums -->
+                                                            <div class="text-xs text-muted-foreground mb-3">
+                                                                {% if album.author and album.owner %}
+                                                                    <span class="inline-block mr-3">
+                                                                        <i class="fas fa-user-edit mr-1"></i>
+                                                                        <strong>Author:</strong> {{ album.author }}
+                                                                    </span>
+                                                                    <span class="inline-block">
+                                                                        <i class="fas fa-user mr-1"></i>
+                                                                        <strong>Owner:</strong> {{ album.owner.username }}
+                                                                    </span>
+                                                                {% elif album.author %}
+                                                                    <span class="inline-block">
+                                                                        <i class="fas fa-user-edit mr-1"></i>
+                                                                        <strong>Author:</strong> {{ album.author }}
+                                                                    </span>
+                                                                {% elif album.owner %}
+                                                                    <span class="inline-block">
+                                                                        <i class="fas fa-user mr-1"></i>
+                                                                        <strong>Owner:</strong> {{ album.owner.username }}
+                                                                    </span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <!-- Meta Footer: Read Count, Last Read -->
+                                                        <div class="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                            <span class="flex items-center gap-x-1">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.415 6.11 4.96 4 8 4s5.585 2.11 6.62 3.72a.87.87 0 0 1 0 .56C13.585 9.89 11.04 12 8 12s5.585-2.11-6.62-3.72ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" /></svg>
+                                                                Dilihat {{ history_item.read_count }} kali
+                                                            </span>
+                                                            <span class="flex items-center gap-x-1">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75 1.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
+                                                                Terakhir dilihat {{ history_item.last_read_at.strftime('%d %b %Y') }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             {% else %}
                 <div class="text-center py-12">
@@ -332,12 +617,140 @@
         </div>
 
         <!-- Response Tab -->
-        <div id="response-content" class="space-y-6 {% if active_tab != 'response' %}hidden{% endif %}">
-            <div class="text-center py-12">
-                <i class="fas fa-comments text-4xl text-muted-foreground mb-4"></i>
-                <h3 class="text-lg font-medium text-foreground mb-2">Riwayat Komentar</h3>
-                <p class="text-muted-foreground mb-4">Manajemen riwayat komentar akan segera hadir</p>
-            </div>
+        <div id="response-content" class="space-y-6">
+            
+            {% if user_comments %}
+                <div class="mb-8">
+                    <button onclick="toggleSection('comments-section')" 
+                            class="w-full flex items-center justify-between text-left text-lg font-semibold text-foreground mb-4 border-b border-border pb-2 hover:text-primary hover:bg-gray-50 rounded-t-lg px-3 py-2 transition-all duration-200 cursor-pointer group">
+                        <span class="flex items-center">
+                            <i class="fas fa-comments mr-2 text-primary"></i>Komentar Saya ({{ comments_count }})
+                        </span>
+                        <i id="comments-toggle-icon" class="fas fa-chevron-down text-sm transition-all duration-200 text-muted-foreground group-hover:text-primary"></i>
+                    </button>
+                    <div id="comments-section" class="space-y-6">
+                        {% for comment, news, album in user_comments %}
+                            <article class="bg-card rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group">
+                                <div class="flex flex-col sm:flex-row">
+                                    <!-- Image Container -->
+                                    <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
+                                        {% if news %}
+                                            <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}" class="block h-full">
+                                                {% if news.image_id %}
+                                                    <img src="{{ url_for('static', filename='uploads/' + news.image.filename) }}" 
+                                                         alt="{{ news.title }}" 
+                                                         class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                         loading="lazy">
+                                                {% else %}
+                                                    <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                        <i class="fas fa-newspaper text-4xl text-muted-foreground"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </a>
+                                        {% elif album %}
+                                            <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full">
+                                                {% if album.cover_image_id %}
+                                                    <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
+                                                         alt="{{ album.title }}" 
+                                                         class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
+                                                         loading="lazy">
+                                                {% else %}
+                                                    <div class="w-full h-full bg-muted flex items-center justify-center">
+                                                        <i class="fas fa-book text-4xl text-muted-foreground"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    <!-- Text Content Container -->
+                                    <div class="p-5 sm:p-6 flex flex-col justify-between flex-grow">
+                                        <div>
+                                            <!-- Content Title and Badges -->
+                                            <div class="flex justify-between items-start mb-2 gap-x-2">
+                                                <h3 class="text-lg font-semibold text-card-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                    {% if news %}
+                                                        <a href="{{ url_for('main.news_detail', news_id=news.id, news_title='story') }}">{{ news.title }}</a>
+                                                    {% elif album %}
+                                                        <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}">{{ album.title }}</a>
+                                                    {% endif %}
+                                                </h3>
+                                                <div class="flex gap-1 mt-0.5 flex-shrink-0">
+                                                    {% if news %}
+                                                        <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
+                                                    {% elif album %}
+                                                        <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Album</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <!-- Comment Content -->
+                                            <div class="mb-4">
+                                                <p class="text-sm text-muted-foreground mb-2">Komentar Anda:</p>
+                                                <div id="comment-content-{{ comment.id }}" class="text-sm text-foreground bg-muted p-3 rounded-lg border-l-4 border-primary">
+                                                    {{ comment.content }}
+                                                </div>
+                                                <!-- Edit Form (Hidden by default) -->
+                                                <div id="comment-edit-form-{{ comment.id }}" class="hidden">
+                                                    <textarea id="comment-edit-textarea-{{ comment.id }}" 
+                                                              class="w-full p-3 border border-border rounded-lg text-sm bg-background text-foreground resize-none"
+                                                              rows="3">{{ comment.content }}</textarea>
+                                                    <div class="flex space-x-2 mt-2">
+                                                        <button onclick="saveCommentEdit({{ comment.id }})" 
+                                                                class="px-3 py-1 bg-primary text-primary-foreground text-xs rounded hover:bg-primary/90 transition-colors">
+                                                            <i class="fas fa-save mr-1"></i>Simpan
+                                                        </button>
+                                                        <button onclick="cancelCommentEdit({{ comment.id }})" 
+                                                                class="px-3 py-1 bg-secondary text-secondary-foreground text-xs rounded hover:bg-secondary/90 transition-colors">
+                                                            <i class="fas fa-times mr-1"></i>Batal
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Meta Footer: Comment Date, Content Date, Actions -->
+                                        <div class="mt-4 pt-3 border-t border-border">
+                                            <div class="flex items-center justify-between">
+                                                <div class="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                    <span class="flex items-center gap-x-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M4 1.75a.75.75 0 0 1 .75.75V3h6.5V2.5a.75.75 0 0 1 1.5 0V3h.5A1.75 1.75 0 0 1 15 4.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5A1.75.75 0 0 1 2.75 3H3.5V2.5a.75.75 0 0 1 4 1.75ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
+                                                        Komentar dibuat {{ comment.created_at.strftime('%d %b %Y') }}
+                                                    </span>
+                                                    <span class="flex items-center gap-x-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.56C2.415 6.11 4.96 4 8 4s5.585 2.11 6.62 3.72a.87.87 0 0 1 0 .56C13.585 9.89 11.04 12 8 12s5.585-2.11-6.62-3.72ZM8 10.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" clip-rule="evenodd" /></svg>
+                                                        {% if news %}
+                                                            {{ news.created_at.strftime('%d %b %Y') }}
+                                                        {% elif album %}
+                                                            {{ album.created_at.strftime('%d %b %Y') }}
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                                <!-- Action Buttons -->
+                                                <div class="flex space-x-2">
+                                                    <button onclick="editComment({{ comment.id }})" 
+                                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                                        <i class="fas fa-edit mr-1.5"></i>
+                                                        Edit
+                                                    </button>
+                                                    <button onclick="deleteComment({{ comment.id }})" 
+                                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                        <i class="fas fa-trash mr-1.5"></i>
+                                                        Hapus
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-comments text-4xl text-muted-foreground mb-4"></i>
+                    <h3 class="text-lg font-medium text-foreground mb-2">Belum ada komentar</h3>
+                    <p class="text-muted-foreground mb-4">Pengguna ini belum memberikan komentar apapun.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -354,26 +767,89 @@ document.addEventListener('DOMContentLoaded', function() {
     tabs.forEach(tabName => {
         tabElements[tabName] = document.getElementById(tabName + '-tab');
         contentElements[tabName] = document.getElementById(tabName + '-content');
+        console.log(`Tab: ${tabName}, Element:`, tabElements[tabName], 'Content:', contentElements[tabName]);
     });
+
+    // Set initial active tab based on backend data
+    const initialActiveTab = '{{ active_tab }}' || 'your-list';
+    console.log('Initial active tab:', initialActiveTab);
+    
+    // Initialize tabs with CSS isolation approach
+    Object.entries(contentElements).forEach(([name, el]) => {
+        if (!el) return;
+        console.log(`Initializing tab: ${name}, active: ${name === initialActiveTab}`);
+        if (name !== initialActiveTab) {
+            // Store the original content for recreation
+            el.dataset.originalContent = el.innerHTML;
+            console.log(`Stored content for ${name}, length: ${el.dataset.originalContent.length}`);
+            // Hide with CSS isolation - no content, just hidden
+            el.style.display = 'none';
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            el.style.visibility = 'hidden';
+            console.log(`Isolated tab: ${name}`);
+        } else {
+            // Keep the initial active tab visible with proper positioning
+            el.style.display = 'block';
+            el.style.position = 'relative';
+            el.style.left = 'auto';
+            el.style.visibility = 'visible';
+            console.log(`Showed initial content: ${initialActiveTab}`);
+        }
+    });
+    
+    // Set initial tab styling
+    Object.values(tabElements).forEach(tab => {
+        tab.classList.remove('border-primary', 'text-primary');
+        tab.classList.add('border-transparent', 'text-muted-foreground');
+    });
+    
+    if (tabElements[initialActiveTab]) {
+        tabElements[initialActiveTab].classList.add('border-primary', 'text-primary');
+        tabElements[initialActiveTab].classList.remove('border-transparent', 'text-muted-foreground');
+    }
 
     // Add click event listeners to all tabs
     tabs.forEach(tabName => {
         tabElements[tabName].addEventListener('click', function() {
-            // Hide all content
-            Object.values(contentElements).forEach(content => {
-                content.classList.add('hidden');
+            console.log(`=== Tab switch to: ${tabName} ===`);
+            // Isolate all inactive tabs with CSS positioning
+            Object.entries(contentElements).forEach(([name, el]) => {
+                if (!el) return;
+                if (name !== tabName) {
+                    // Store the original content for recreation
+                    if (!el.dataset.originalContent) {
+                        el.dataset.originalContent = el.innerHTML;
+                        console.log(`First time storing content for ${name}, length: ${el.dataset.originalContent.length}`);
+                    }
+                    // Hide with CSS isolation - no content, just hidden
+                    el.style.display = 'none';
+                    el.style.position = 'absolute';
+                    el.style.left = '-9999px';
+                    el.style.visibility = 'hidden';
+                    console.log(`Isolated tab: ${name}`);
+                }
             });
 
-            // Remove active state from all tabs
+            // Show and restore content for the selected tab
+            const activeEl = contentElements[tabName];
+            if (activeEl) {
+                // Restore original content if it was stored
+                if (activeEl.dataset.originalContent) {
+                    activeEl.innerHTML = activeEl.dataset.originalContent;
+                }
+                // Show with proper positioning
+                activeEl.style.display = 'block';
+                activeEl.style.position = 'relative';
+                activeEl.style.left = 'auto';
+                activeEl.style.visibility = 'visible';
+            }
+
+            // Update tab states
             Object.values(tabElements).forEach(tab => {
                 tab.classList.remove('border-primary', 'text-primary');
                 tab.classList.add('border-transparent', 'text-muted-foreground');
             });
-
-            // Show selected content
-            contentElements[tabName].classList.remove('hidden');
-
-            // Add active state to clicked tab
             tabElements[tabName].classList.add('border-primary', 'text-primary');
             tabElements[tabName].classList.remove('border-transparent', 'text-muted-foreground');
         });
@@ -433,6 +909,218 @@ function removeFromLibrary(contentType, contentId) {
     });
 }
 
+// Collapsible sections functionality
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    const icon = document.getElementById(sectionId.replace('-section', '-toggle-icon'));
+    
+    if (section.classList.contains('collapsed')) {
+        // Expand section
+        section.classList.remove('collapsed');
+        section.style.display = 'block';
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-down');
+        icon.style.transform = 'rotate(0deg)';
+    } else {
+        // Collapse section
+        section.classList.add('collapsed');
+        section.style.display = 'none';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-right');
+        icon.style.transform = 'rotate(-90deg)';
+    }
+    
+    // Save state to localStorage
+    localStorage.setItem(`section_${sectionId}`, section.classList.contains('collapsed'));
+}
+
+// Initialize section states from localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize stories section state
+    const storiesSection = document.getElementById('stories-section');
+    const storiesIcon = document.getElementById('stories-toggle-icon');
+    if (storiesSection && storiesIcon) {
+        const isCollapsed = localStorage.getItem('section_stories-section') === 'true';
+        if (isCollapsed) {
+            storiesSection.classList.add('collapsed');
+            storiesSection.style.display = 'none';
+            storiesIcon.classList.remove('fa-chevron-down');
+            storiesIcon.classList.add('fa-chevron-right');
+        }
+    }
+    
+    // Initialize albums section state
+    const albumsSection = document.getElementById('albums-section');
+    const albumsIcon = document.getElementById('albums-toggle-icon');
+    if (albumsSection && albumsIcon) {
+        const isCollapsed = localStorage.getItem('section_albums-section') === 'true';
+        if (isCollapsed) {
+            albumsSection.classList.add('collapsed');
+            albumsSection.style.display = 'none';
+            albumsIcon.classList.remove('fa-chevron-down');
+            albumsIcon.classList.add('fa-chevron-right');
+        }
+    }
+    
+    // Initialize saved stories section state
+    const savedStoriesSection = document.getElementById('saved-stories-section');
+    const savedStoriesIcon = document.getElementById('saved-stories-toggle-icon');
+    if (savedStoriesSection && savedStoriesIcon) {
+        const isCollapsed = localStorage.getItem('section_saved-stories-section') === 'true';
+        if (isCollapsed) {
+            savedStoriesSection.classList.add('collapsed');
+            savedStoriesSection.style.display = 'none';
+            savedStoriesIcon.classList.remove('fa-chevron-down');
+            savedStoriesIcon.classList.add('fa-chevron-right');
+        }
+    }
+    
+    // Initialize saved albums section state
+    const savedAlbumsSection = document.getElementById('saved-albums-section');
+    const savedAlbumsIcon = document.getElementById('saved-albums-toggle-icon');
+    if (savedAlbumsSection && savedAlbumsIcon) {
+        const isCollapsed = localStorage.getItem('section_saved-albums-section') === 'true';
+        if (isCollapsed) {
+            savedAlbumsSection.classList.add('collapsed');
+            savedAlbumsSection.style.display = 'none';
+            savedAlbumsIcon.classList.remove('fa-chevron-down');
+            savedAlbumsIcon.classList.add('fa-chevron-right');
+        }
+    }
+    
+    // Initialize history stories section state
+    const historyStoriesSection = document.getElementById('history-stories-section');
+    const historyStoriesIcon = document.getElementById('history-stories-toggle-icon');
+    if (historyStoriesSection && historyStoriesIcon) {
+        const isCollapsed = localStorage.getItem('section_history-stories-section') === 'true';
+        if (isCollapsed) {
+            historyStoriesSection.classList.add('collapsed');
+            historyStoriesSection.style.display = 'none';
+            historyStoriesIcon.classList.remove('fa-chevron-down');
+            historyStoriesIcon.classList.add('fa-chevron-right');
+        }
+    }
+    
+    // Initialize history albums section state
+    const historyAlbumsSection = document.getElementById('history-albums-section');
+    const historyAlbumsIcon = document.getElementById('history-albums-toggle-icon');
+    if (historyAlbumsSection && historyAlbumsIcon) {
+        const isCollapsed = localStorage.getItem('section_history-albums-section') === 'true';
+        if (isCollapsed) {
+            historyAlbumsSection.classList.add('collapsed');
+            historyAlbumsSection.style.display = 'none';
+            historyAlbumsIcon.classList.remove('fa-chevron-down');
+            historyAlbumsIcon.classList.add('fa-chevron-right');
+        }
+    }
+    
+    // Initialize comments section state
+    const commentsSection = document.getElementById('comments-section'); // Assuming 'comments-section' is the container for comments
+    const commentsIcon = document.getElementById('comments-toggle-icon'); // Assuming 'comments-toggle-icon' is the tab for comments
+    if (commentsSection && commentsIcon) {
+        const isCollapsed = localStorage.getItem('section_comments-section') === 'true'; // Assuming 'comments-section' is the ID for the comments section
+        if (isCollapsed) {
+            commentsSection.classList.add('collapsed');
+            commentsSection.style.display = 'none';
+            commentsIcon.classList.remove('fa-chevron-down');
+            commentsIcon.classList.add('fa-chevron-right');
+        }
+    }
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + 1: Toggle Stories
+        if ((e.ctrlKey || e.metaKey) && e.key === '1') {
+            e.preventDefault();
+            if (storiesSection) {
+                toggleSection('stories-section');
+            }
+        }
+        // Ctrl/Cmd + 2: Toggle Albums
+        if ((e.ctrlKey || e.metaKey) && e.key === '2') {
+            e.preventDefault();
+            if (albumsSection) {
+                toggleSection('albums-section');
+            }
+        }
+        // Ctrl/Cmd + 3: Toggle Saved Stories
+        if ((e.ctrlKey || e.metaKey) && e.key === '3') {
+            e.preventDefault();
+            if (savedStoriesSection) {
+                toggleSection('saved-stories-section');
+            }
+        }
+        // Ctrl/Cmd + 4: Toggle Saved Albums
+        if ((e.ctrlKey || e.metaKey) && e.key === '4') {
+            e.preventDefault();
+            if (savedAlbumsSection) {
+                toggleSection('saved-albums-section');
+            }
+        }
+        // Ctrl/Cmd + 5: Toggle History Stories
+        if ((e.ctrlKey || e.metaKey) && e.key === '5') {
+            e.preventDefault();
+            if (historyStoriesSection) {
+                toggleSection('history-stories-section');
+            }
+        }
+        // Ctrl/Cmd + 6: Toggle History Albums
+        if ((e.ctrlKey || e.metaKey) && e.key === '6') {
+            e.preventDefault();
+            if (historyAlbumsSection) {
+                toggleSection('history-albums-section');
+            }
+        }
+        // Ctrl/Cmd + 7: Toggle Comments
+        if ((e.ctrlKey || e.metaKey) && e.key === '7') {
+            e.preventDefault();
+            if (commentsSection) {
+                toggleSection('comments-section'); // Assuming 'comments-section' is the ID for the comments section
+            }
+        }
+        // Ctrl/Cmd + 0: Expand All
+        if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            expandAllSections();
+        }
+    });
+
+    // Add event listeners for remove library buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-library-btn')) {
+            const button = e.target.closest('.remove-library-btn');
+            const contentType = button.dataset.contentType;
+            const contentId = button.dataset.contentId;
+            removeFromLibrary(contentType, contentId);
+        }
+    });
+});
+
+// Function to expand all sections
+function expandAllSections() {
+    const sections = [
+        'stories-section', 
+        'albums-section', 
+        'saved-stories-section', 
+        'saved-albums-section',
+        'history-stories-section', 
+        'history-albums-section',
+        'comments-section'
+    ];
+    sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        const icon = document.getElementById(sectionId.replace('-section', '-toggle-icon'));
+        if (section && icon) {
+            section.classList.remove('collapsed');
+            section.style.display = 'block';
+            icon.classList.remove('fa-chevron-right');
+            icon.classList.add('fa-chevron-down');
+            icon.style.transform = 'rotate(0deg)';
+            localStorage.setItem(`section_${sectionId}`, 'false');
+        }
+    });
+}
+
 // Simple toast function if not already available
 function showToast(type, message) {
     const toast = document.createElement('div');
@@ -445,6 +1133,130 @@ function showToast(type, message) {
     setTimeout(() => {
         toast.remove();
     }, 3000);
+}
+
+// Comment management functions
+function editComment(commentId) {
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    const editForm = document.getElementById(`comment-edit-form-${commentId}`);
+    const textarea = document.getElementById(`comment-edit-textarea-${commentId}`);
+    
+    if (contentDiv && editForm && textarea) {
+        // Hide content, show edit form
+        contentDiv.classList.add('hidden');
+        editForm.classList.remove('hidden');
+        
+        // Focus and select text in textarea
+        textarea.focus();
+        textarea.select();
+    }
+}
+
+function cancelCommentEdit(commentId) {
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    const editForm = document.getElementById(`comment-edit-form-${commentId}`);
+    const textarea = document.getElementById(`comment-edit-textarea-${commentId}`);
+    
+    if (contentDiv && editForm && textarea) {
+        // Reset textarea to original content
+        textarea.value = contentDiv.textContent.trim();
+        
+        // Hide edit form, show content
+        editForm.classList.add('hidden');
+        contentDiv.classList.remove('hidden');
+    }
+}
+
+function saveCommentEdit(commentId) {
+    const textarea = document.getElementById(`comment-edit-textarea-${commentId}`);
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    const editForm = document.getElementById(`comment-edit-form-${commentId}`);
+    
+    if (!textarea || !contentDiv || !editForm) return;
+    
+    const newContent = textarea.value.trim();
+    if (!newContent) {
+        showToast('error', 'Komentar tidak boleh kosong');
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = editForm.querySelector('button[onclick*="saveCommentEdit"]');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...';
+    saveBtn.disabled = true;
+    
+    fetch(`/api/comments/${commentId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            content: newContent
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update content display
+            contentDiv.textContent = newContent;
+            
+            // Hide edit form, show content
+            editForm.classList.add('hidden');
+            contentDiv.classList.remove('hidden');
+            
+            showToast('success', 'Komentar berhasil diperbarui');
+        } else {
+            showToast('error', data.error || 'Gagal memperbarui komentar');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Gagal memperbarui komentar');
+    })
+    .finally(() => {
+        // Restore button state
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function deleteComment(commentId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus komentar ini?')) {
+        return;
+    }
+    
+    fetch(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the comment from DOM
+            const commentElement = document.querySelector(`article:has(#comment-content-${commentId})`);
+            if (commentElement) {
+                commentElement.remove();
+            }
+            
+            showToast('success', 'Komentar berhasil dihapus');
+            
+            // Update comment count if possible
+            const commentsCount = document.querySelector('[data-comments-count]');
+            if (commentsCount) {
+                const currentCount = parseInt(commentsCount.textContent) || 0;
+                commentsCount.textContent = Math.max(0, currentCount - 1);
+            }
+        } else {
+            showToast('error', data.error || 'Gagal menghapus komentar');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Gagal menghapus komentar');
+    });
 }
 </script>
 {% endblock %}

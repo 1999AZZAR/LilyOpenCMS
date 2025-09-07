@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
 
 {% block title %}Permintaan Akses Menulis{% endblock %}
 

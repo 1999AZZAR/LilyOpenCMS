@@ -29,6 +29,17 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
+  - url: "{scheme}://{host}"
+    description: Custom server (set scheme/host below to try any deployment)
+    variables:
+      scheme:
+        enum:
+          - http
+          - https
+        default: https
+      host:
+        default: localhost:5000
+        description: Hostname and optional port (e.g., api.example.com or localhost:5000)
   - url: http://localhost:5000
     description: Development server
   - url: https://api.lilyopencms.com
@@ -45,6 +56,8 @@ tags:
     description: Album and chapter management
   - name: Users
     description: User management and authentication
+  - name: Auth
+    description: External authentication endpoints for mobile and third-party apps
   - name: Comments
     description: Comment system and moderation
   - name: Ratings
@@ -57,6 +70,8 @@ tags:
     description: Image and video management
   - name: Analytics
     description: System analytics and performance monitoring
+  - name: Ads
+    description: Advertisement management and serving system
 
 paths:
   # NOTE: Removed duplicate simple endpoints to avoid path key collisions with authenticated endpoints.
@@ -267,49 +282,6 @@ paths:
           in: path
           required: true
           description: The unique identifier of the chapter
-          schema:
-            type: integer
-            minimum: 1
-      responses:
-        '200':
-          description: Successful response with chapter details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PublicChapterResponse'
-        '404':
-          description: Chapter or album not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/public/albums/{album_id}/chapters/{chapter_number}:
-    get:
-      tags:
-        - Public API
-      summary: Get single album chapter details by chapter number
-      description: |
-        Retrieve detailed information for a specific chapter within an album using chapter_number.
-        Includes navigation information for next/previous chapters.
-      parameters:
-        - name: album_id
-          in: path
-          required: true
-          description: The unique identifier of the parent album
-          schema:
-            type: integer
-            minimum: 1
-        - name: chapter_number
-          in: path
-          required: true
-          description: The sequential chapter number within the album
           schema:
             type: integer
             minimum: 1
@@ -669,6 +641,328 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
   # =============================================================================
+  # EXTERNAL AUTH ENDPOINTS (Token-based)
+  # =============================================================================
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user (external)
+      description: JSON registration that creates a pending account (is_active=false, verified=false)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: { type: string }
+                password: { type: string }
+                email: { type: string, nullable: true }
+                first_name: { type: string, nullable: true }
+                last_name: { type: string, nullable: true }
+              required: [username, password]
+            examples:
+              sample:
+                summary: Basic registration
+                value:
+                  username: demo_user
+                  password: demopass123
+                  email: demo@example.com
+                  first_name: Demo
+                  last_name: User
+      responses:
+        '201':
+          description: Registration successful; account pending approval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  user_id: { type: integer }
+                  status: { type: string, example: pending_approval }
+                example:
+                  message: Registration successful. Account pending approval.
+                  user_id: 123
+                  status: pending_approval
+        '400': { description: Validation error }
+        '409': { description: Username or email already exists }
+      x-codeSamples:
+        - lang: cURL
+          label: Register
+          source: |
+            curl -X POST "http://localhost:5000/api/auth/register" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "username": "demo_user",
+                "password": "demopass123",
+                "email": "demo@example.com"
+              }'
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (external)
+      description: Returns access and refresh tokens for bearer authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: { type: string }
+                password: { type: string }
+              required: [username, password]
+            examples:
+              sample:
+                summary: Login payload
+                value:
+                  username: demo_user
+                  password: demopass123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  refresh_token: { type: string }
+                  token_type: { type: string, example: bearer }
+                  expires_in: { type: integer, example: 3600 }
+                  user:
+                    type: object
+                example:
+                  access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  token_type: bearer
+                  expires_in: 3600
+                  user:
+                    id: 123
+                    username: demo_user
+                    role: GENERAL
+                    is_premium: false
+                    verified: true
+        '401': { description: Invalid credentials }
+        '403': { description: Account pending or suspended }
+      x-codeSamples:
+        - lang: cURL
+          label: Login
+          source: |
+            curl -X POST "http://localhost:5000/api/auth/login" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "username": "demo_user",
+                "password": "demopass123"
+              }'
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token: { type: string }
+              required: [refresh_token]
+            examples:
+              sample:
+                summary: Refresh payload
+                value:
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  refresh_token: { type: string }
+                  token_type: { type: string, example: bearer }
+                  expires_in: { type: integer, example: 3600 }
+                example:
+                  access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  token_type: bearer
+                  expires_in: 3600
+        '401': { description: Invalid or expired refresh token }
+      x-codeSamples:
+        - lang: cURL
+          label: Refresh tokens
+          source: |
+            curl -X POST "http://localhost:5000/api/auth/refresh" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "refresh_token": "<REFRESH_TOKEN>"
+              }'
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (stateless)
+      description: Clients should discard tokens; server returns success
+      responses:
+        '200': { description: Logged out }
+      x-codeSamples:
+        - lang: cURL
+          label: Logout
+          source: |
+            curl -X POST "http://localhost:5000/api/auth/logout"
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user (external bearer)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  username: { type: string }
+                  email: { type: string, nullable: true }
+                  role: { type: string, nullable: true }
+                  is_premium: { type: boolean }
+                  verified: { type: boolean }
+                  last_login: { type: string, format: date-time, nullable: true }
+                example:
+                  id: 123
+                  username: demo_user
+                  email: demo@example.com
+                  role: GENERAL
+                  is_premium: false
+                  verified: true
+                  last_login: 2025-09-05T14:41:00Z
+        '401': { description: Unauthorized }
+      x-codeSamples:
+        - lang: cURL
+          label: Get current user
+          source: |
+            curl "http://localhost:5000/api/auth/me" \
+              -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+  # =============================
+  # External Profile & Account API
+  # =============================
+
+  /api/auth/profile:
+    get:
+      tags: [Auth]
+      summary: Get current user's profile and user fields
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile returned
+    put:
+      tags: [Auth]
+      summary: Update user and profile fields
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name: { type: string, nullable: true }
+                last_name: { type: string, nullable: true }
+                email: { type: string, nullable: true }
+                birthdate: { type: string, format: date, nullable: true }
+                bio: { type: string, nullable: true }
+                pronouns: { type: string, nullable: true }
+                short_bio: { type: string, nullable: true }
+                location: { type: string, nullable: true }
+                website: { type: string, nullable: true }
+                social_links: { type: object, additionalProperties: { type: string } }
+      responses:
+        '200': { description: Profile updated }
+
+  /api/auth/profile/privacy:
+    patch:
+      tags: [Auth]
+      summary: Update privacy flags
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                show_email: { type: boolean }
+                show_birthdate: { type: boolean }
+      responses:
+        '200': { description: Privacy updated }
+
+  /api/auth/profile/username:
+    patch:
+      tags: [Auth]
+      summary: Change username
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: { type: string }
+                current_password: { type: string }
+              required: [username, current_password]
+      responses:
+        '200': { description: Username changed }
+        '400': { description: Validation error }
+        '409': { description: Username already taken }
+
+  /api/auth/account/change-password:
+    post:
+      tags: [Auth]
+      summary: Change password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password: { type: string }
+                new_password: { type: string }
+                confirm_password: { type: string }
+              required: [current_password, new_password, confirm_password]
+      responses:
+        '200': { description: Password changed }
+        '400': { description: Validation error }
+
+  /api/auth/account:
+    delete:
+      tags: [Auth]
+      summary: Delete account
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Account deleted }
+        '500': { description: Server error }
+
   # ADDITIONAL PUBLIC API ENDPOINTS (Newly Implemented)
   # =============================================================================
 
@@ -734,55 +1028,6 @@ paths:
           in: path
           required: true
           description: The unique identifier of the chapter
-          schema:
-            type: integer
-            minimum: 1
-      responses:
-        '200':
-          description: Successful response with chapter details and content
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  chapter:
-                    $ref: '#/components/schemas/ChapterDetailResponse'
-        '404':
-          description: Chapter or album not found or not visible
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /api/public/albums/{album_id}/chapters/{chapter_number}/detail:
-    get:
-      tags:
-        - Public API
-      summary: Get chapter detail with content by chapter number
-      description: |
-        Retrieve detailed information for a specific chapter including its news content using chapter_number.
-        Returns chapter metadata and associated news article content.
-      parameters:
-        - name: album_id
-          in: path
-          required: true
-          description: The unique identifier of the parent album
-          schema:
-            type: integer
-            minimum: 1
-        - name: chapter_number
-          in: path
-          required: true
-          description: The sequential chapter number within the album
           schema:
             type: integer
             minimum: 1
@@ -898,33 +1143,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/public/homepage:
-    get:
-      tags:
-        - Public API
-      summary: Get homepage data with comprehensive content
-      description: |
-        Retrieve comprehensive homepage data including featured news, albums, and categories.
-        Returns structured data for building homepage interfaces.
-      responses:
-        '200':
-          description: Successful response with homepage data
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  homepage:
-                    $ref: '#/components/schemas/HomepageResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
   # =============================================================================
   # AUTHENTICATED NEWS ENDPOINTS (CRUD, visibility, deletion workflow, share, upload)
@@ -2031,6 +2249,62 @@ paths:
       responses:
         '200': { description: Recent comments returned }
 
+  /api/account/library/comments:
+    get:
+      tags:
+        - Users
+      summary: Get user's library comments with edit/delete capabilities
+      description: |
+        Retrieve user's comments from their library with full management capabilities.
+        Used by the library.html tanggapan section for inline editing and deletion.
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: User's library comments with management data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/CommentInfo'
+                        - type: object
+                          properties:
+                            can_edit:
+                              type: boolean
+                              description: Whether user can edit this comment
+                            can_delete:
+                              type: boolean
+                              description: Whether user can delete this comment
+                            content_info:
+                              type: object
+                              properties:
+                                title:
+                                  type: string
+                                type:
+                                  type: string
+                                  enum: [news, album]
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/account/activity:
     get:
       tags:
@@ -2050,7 +2324,7 @@ paths:
     get:
       tags:
         - Media
-      summary: List images with pagination and filters
+      summary: List images with pagination, filters, and secure ownership-based access control
       security:
         - sessionAuth: []
         - bearerAuth: []
@@ -2067,7 +2341,7 @@ paths:
           schema: { type: string }
         - name: all_users
           in: query
-          description: When true, bypass ownership restrictions and return all visible images
+          description: When true, applies proper ownership filtering - regular users see own images + admin/suadmin visible images, editors see own + assigned writers' + admin/suadmin visible images, admins see all images
           schema: { type: boolean }
       responses:
         '200': { description: Images list returned }
@@ -2319,8 +2593,39 @@ paths:
                 content: { type: string }
               required: [content]
       responses:
-        '200': { description: Comment updated }
-        '404': { description: Not found }
+        '200': 
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Comment updated successfully"
+                  comment:
+                    $ref: '#/components/schemas/CommentInfo'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - not authorized to edit this comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404': 
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       tags:
         - Comments
@@ -2334,8 +2639,31 @@ paths:
           required: true
           schema: { type: integer }
       responses:
-        '204': { description: Deleted }
-        '404': { description: Not found }
+        '200':
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Comment deleted successfully"
+        '403':
+          description: Forbidden - not authorized to delete this comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404': 
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/comments/{comment_id}/like:
     post:
@@ -3835,146 +4163,6 @@ paths:
         '200': { description: Tags listed }
 
   # =============================================================================
-  # NAVIGATION LINKS
-  # =============================================================================
-
-  /api/navigation-links/bulk-status:
-    put:
-      tags:
-        - Categories
-      summary: Bulk update navigation links active status
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                link_ids:
-                  type: array
-                  items: { type: integer }
-                is_active: { type: boolean }
-              required: [link_ids, is_active]
-      responses:
-        '200': { description: Bulk status updated }
-
-  /api/navigation-links:
-    get:
-      tags:
-        - Categories
-      summary: List navigation links
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      responses:
-        '200': { description: Links listed }
-    post:
-      tags:
-        - Categories
-      summary: Create a new navigation link
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '201': { description: Link created }
-
-  /api/navigation-links/{link_id}:
-    put:
-      tags:
-        - Categories
-      summary: Update navigation link
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      parameters:
-        - name: link_id
-          in: path
-          required: true
-          schema: { type: integer }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200': { description: Link updated }
-    delete:
-      tags:
-        - Categories
-      summary: Delete navigation link
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      parameters:
-        - name: link_id
-          in: path
-          required: true
-          schema: { type: integer }
-      responses:
-        '204': { description: Deleted }
-
-  /api/navigation-links/bulk-update:
-    post:
-      tags:
-        - Categories
-      summary: Bulk update navigation links status
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200': { description: Bulk update completed }
-
-  /api/navigation-links/bulk-delete:
-    delete:
-      tags:
-        - Categories
-      summary: Bulk delete navigation links
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200': { description: Bulk delete completed }
-
-  /api/navigation-links/copy:
-    post:
-      tags:
-        - Categories
-      summary: Copy navigation links between locations
-      security:
-        - sessionAuth: []
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200': { description: Links copied }
-
-  # =============================================================================
   # EDITOR–WRITER MANAGEMENT
   # =============================================================================
 
@@ -4382,7 +4570,7 @@ paths:
     get:
       tags:
         - Xlate
-      summary: List images (translation layer)
+      summary: List images (translation layer) with secure ownership-based access control
       parameters:
         - name: page
           in: query
@@ -4395,6 +4583,7 @@ paths:
           schema: { type: string }
         - name: all_users
           in: query
+          description: When true, applies proper ownership filtering - regular users see own images + admin/suadmin visible images, editors see own + assigned writers' + admin/suadmin visible images, admins see all images
           schema: { type: boolean }
       responses:
         '200': { description: Images list returned }
@@ -4412,6 +4601,447 @@ paths:
       responses:
         '200': { description: Image detail returned }
         '404': { description: Not found }
+
+  # =============================================================================
+  # ADVERTISEMENT SYSTEM ENDPOINTS
+  # =============================================================================
+
+  /ads/api/serve:
+    post:
+      tags: [Ads]
+      summary: Serve ads for a specific page and context
+      description: |
+        Serves ads based on page type, section, and position. 
+        Respects internal/external ad types and user premium status.
+        Internal ads are only served to same origin (web interface).
+        External ads are only served via API with authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                page_type:
+                  type: string
+                  description: Type of page (e.g., 'home', 'news', 'album')
+                page_specific:
+                  type: string
+                  description: Specific page identifier
+                section:
+                  type: string
+                  description: Section of the page (e.g., 'header', 'sidebar', 'content')
+                position:
+                  type: string
+                  description: Position within section (e.g., 'top', 'middle', 'bottom')
+                position_value:
+                  type: integer
+                  description: Numeric value for position (e.g., for 'after_n_items')
+                user_id:
+                  type: integer
+                  description: User ID for personalized ads
+                device_type:
+                  type: string
+                  enum: [desktop, mobile, tablet]
+                  default: desktop
+                location:
+                  type: string
+                  description: User location for targeting
+                max_ads:
+                  type: integer
+                  default: 1
+                  description: Maximum number of ads to return
+                user_has_premium:
+                  type: boolean
+                  default: false
+                  description: Whether user has premium subscription
+                user_should_show_ads:
+                  type: boolean
+                  default: true
+                  description: Whether user should see ads
+                api_key:
+                  type: string
+                  description: API key for external ad access
+              required:
+                - page_type
+                - section
+                - position
+      responses:
+        '200':
+          description: Ads served successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  ads:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ad_id:
+                          type: integer
+                        html:
+                          type: string
+                        placement_id:
+                          type: integer
+                        position:
+                          type: string
+                        position_value:
+                          type: integer
+                        ad_type:
+                          type: string
+                          enum: [internal, external]
+                  reason:
+                    type: string
+                    description: Reason if no ads served
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ads/api/external/serve:
+    post:
+      tags: [Ads]
+      summary: Serve external ads for mobile apps and third-party integrations
+      description: |
+        Dedicated endpoint for external apps to access external ads only.
+        Requires API key authentication. Optimized for mobile app consumption.
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                page_type:
+                  type: string
+                  description: Type of page (e.g., 'home', 'news', 'album')
+                page_specific:
+                  type: string
+                  description: Specific page identifier
+                section:
+                  type: string
+                  description: Section of the page (e.g., 'header', 'sidebar', 'content')
+                position:
+                  type: string
+                  description: Position within section (e.g., 'top', 'middle', 'bottom')
+                position_value:
+                  type: integer
+                  description: Numeric value for position
+                max_ads:
+                  type: integer
+                  default: 1
+                  description: Maximum number of ads to return
+                device_type:
+                  type: string
+                  enum: [desktop, mobile, tablet]
+                  default: mobile
+                  description: Device type for targeting
+                api_key:
+                  type: string
+                  description: API key for authentication
+              required:
+                - page_type
+                - section
+                - position
+      responses:
+        '200':
+          description: External ads served successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  ads:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ad_id:
+                          type: integer
+                        html:
+                          type: string
+                        placement_id:
+                          type: integer
+                        position:
+                          type: string
+                        position_value:
+                          type: integer
+                        ad_type:
+                          type: string
+                          enum: [external]
+                        target_url:
+                          type: string
+                        image_url:
+                          type: string
+                  count:
+                    type: integer
+                  api_version:
+                    type: string
+        '401':
+          description: Unauthorized - API key required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ads/api/serve/batch:
+    post:
+      tags: [Ads]
+      summary: Batch serve ads for multiple placements
+      description: |
+        Serves ads for multiple placements in a single request.
+        Useful for loading multiple ad slots at once.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                placements:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      page_type:
+                        type: string
+                      page_specific:
+                        type: string
+                      section:
+                        type: string
+                      position:
+                        type: string
+                      position_value:
+                        type: integer
+                      max_ads:
+                        type: integer
+                        default: 1
+                      key:
+                        type: string
+                        description: Unique key for this placement
+                user_id:
+                  type: integer
+                device_type:
+                  type: string
+                  enum: [desktop, mobile, tablet]
+                  default: desktop
+                card_style:
+                  type: string
+                  description: CSS styling context
+                api_key:
+                  type: string
+                  description: API key for external ad access
+              required:
+                - placements
+      responses:
+        '200':
+          description: Batch ads served successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  adsByPlacement:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          ad_id:
+                            type: integer
+                          html:
+                            type: string
+                          placement_id:
+                            type: integer
+                          position:
+                            type: string
+                          position_value:
+                            type: integer
+                          ad_type:
+                            type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ads/click:
+    get:
+      tags: [Ads]
+      summary: Secure redirect endpoint for ad clicks
+      description: |
+        Handles ad click tracking and secure redirection with UTM parameters.
+        Includes URL signing for security.
+      parameters:
+        - name: ad_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: ID of the clicked ad
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Target URL to redirect to
+        - name: sig
+          in: query
+          schema:
+            type: string
+          description: URL signature for security
+        - name: event_id
+          in: query
+          schema:
+            type: string
+          description: Event tracking ID
+      responses:
+        '302':
+          description: Redirect to target URL with tracking
+        '400':
+          description: Bad request - invalid parameters
+        '404':
+          description: Ad not found
+
+  /ads/api/track-impression:
+    post:
+      tags: [Ads]
+      summary: Track ad impression
+      description: |
+        Records an ad impression for analytics and performance tracking.
+        Used by client-side JavaScript to track when ads are viewed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ad_id:
+                  type: integer
+                  description: ID of the ad that was viewed
+                placement_id:
+                  type: integer
+                  description: ID of the placement where ad was shown
+                page_type:
+                  type: string
+                  description: Type of page where ad was shown
+                section:
+                  type: string
+                  description: Section where ad was shown
+                position:
+                  type: string
+                  description: Position where ad was shown
+                user_id:
+                  type: integer
+                  description: ID of user who viewed the ad
+                device_type:
+                  type: string
+                  enum: [desktop, mobile, tablet]
+                location:
+                  type: string
+                  description: User location
+              required:
+                - ad_id
+                - placement_id
+      responses:
+        '200':
+          description: Impression tracked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ads/api/track-click:
+    post:
+      tags: [Ads]
+      summary: Track ad click
+      description: |
+        Records an ad click for analytics and performance tracking.
+        Used by client-side JavaScript to track when ads are clicked.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ad_id:
+                  type: integer
+                  description: ID of the ad that was clicked
+                placement_id:
+                  type: integer
+                  description: ID of the placement where ad was clicked
+                page_type:
+                  type: string
+                  description: Type of page where ad was clicked
+                section:
+                  type: string
+                  description: Section where ad was clicked
+                position:
+                  type: string
+                  description: Position where ad was clicked
+                user_id:
+                  type: integer
+                  description: ID of user who clicked the ad
+                device_type:
+                  type: string
+                  enum: [desktop, mobile, tablet]
+                location:
+                  type: string
+                  description: User location
+              required:
+                - ad_id
+                - placement_id
+      responses:
+        '200':
+          description: Click tracked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
@@ -4657,6 +5287,58 @@ components:
     ChapterDetailResponse:
       allOf:
         - $ref: '#/components/schemas/PublicChapterResponse'
+
+    # Album detail response schema
+    AlbumDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        album:
+          $ref: '#/components/schemas/PublicAlbumResponse'
+
+    # Albums list response schema
+    AlbumsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        albums:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicAlbumListItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        filters:
+          $ref: '#/components/schemas/AlbumFilters'
+
+    # News detail response schema
+    NewsDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        news:
+          $ref: '#/components/schemas/PublicNewsResponse'
+
+    # News list response schema
+    NewsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        news:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicNewsListItem'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        filters:
+          $ref: '#/components/schemas/NewsFilters'
 
     PublicUserProfileResponse:
       type: object
@@ -5094,6 +5776,12 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT token authentication
+    
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for external ad access and third-party integrations
 
 security:
   - sessionAuth: []

@@ -22,6 +22,7 @@ This will automatically:
 - Generate albums (~10) with chapters from existing news articles
 - Add YouTube videos (~150)
 - Initialize footer content
+- Add social media links for testing
 
 ## Individual Scripts
 
@@ -107,6 +108,19 @@ python helper/add_test_ads.py --demo
 ```bash
 python helper/init_footer_data.py
 ```
+
+### 11. Social Media Links
+```bash
+python helper/add_social_media.py
+```
+
+**Features:**
+- **Sample Links:** Pre-configured social media links for popular platforms
+- **Custom Links:** Interactive mode to add your own social media links
+- **Platform Detection:** Automatically detects platform names for proper icon display
+- **URL Validation:** Ensures proper URL formatting with https:// prefix
+- **User Attribution:** Links social media entries to admin users
+- **Management:** View existing links or clear all links
 
 ## Features
 

@@ -87,6 +87,7 @@ def get_users():
     role_filter = request.args.get('role', '')
     status_filter = request.args.get('status', '')
     verification_filter = request.args.get('verification', '')
+    write_access_filter = request.args.get('write_access', '')
     
     # Build query
     query = User.query
@@ -103,7 +104,24 @@ def get_users():
         )
     
     if role_filter:
-        query = query.filter(User.role == UserRole(role_filter))
+        # Support multiple roles separated by comma
+        if ',' in role_filter:
+            roles = [role.strip() for role in role_filter.split(',')]
+            role_conditions = []
+            for role in roles:
+                try:
+                    role_conditions.append(User.role == UserRole(role))
+                except ValueError:
+                    # Skip invalid role values
+                    continue
+            if role_conditions:
+                query = query.filter(or_(*role_conditions))
+        else:
+            try:
+                query = query.filter(User.role == UserRole(role_filter))
+            except ValueError:
+                # Skip invalid role values
+                pass
     
     if status_filter:
         if status_filter == 'active':
@@ -118,6 +136,12 @@ def get_users():
             query = query.filter(User.verified == True)
         elif verification_filter == 'unverified':
             query = query.filter(User.verified == False)
+    
+    if write_access_filter:
+        if write_access_filter.lower() in ['true', '1', 'yes']:
+            query = query.filter(User.write_access == True)
+        elif write_access_filter.lower() in ['false', '0', 'no']:
+            query = query.filter(User.write_access == False)
     
     # Pagination
     per_page = 20
@@ -147,6 +171,7 @@ def get_users():
                 "id": user.custom_role.id,
                 "name": user.custom_role.name
             } if user.custom_role else None,
+            "write_access": user.write_access,
             "has_premium_access": user.has_premium_access,
             "premium_expires_at": user.premium_expires_at.isoformat() if user.premium_expires_at else None
         } for user in users],

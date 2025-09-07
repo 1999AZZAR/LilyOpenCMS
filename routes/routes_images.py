@@ -52,28 +52,49 @@ def get_images():
     custom_name = (current_user.custom_role.name.lower() if getattr(current_user, 'custom_role', None) and current_user.custom_role.name else "")
     is_admin_tier = current_user.role in [UserRole.SUPERUSER, UserRole.ADMIN] or custom_name == "subadmin"
     
-    # If all_users is requested, bypass ownership restrictions for visible images
-    if all_users:
-        # Only show visible images when requesting all users
-        query = query.filter(Image.is_visible == True)
-    elif is_admin_tier:
+    # Apply ownership filtering based on role
+    if is_admin_tier:
+        # Admin/Superuser/Subadmin: can see all images
+        current_app.logger.info(f"Admin tier user {current_user.id} - no ownership restrictions applied")
         pass
     else:
         # Join uploader to allow including admin-tier uploads for everyone
         query = query.join(User, Image.user_id == User.id)
+        query = query.outerjoin(CustomRole, User.custom_role_id == CustomRole.id)
         admin_uploader = or_(
             User.role.in_([UserRole.SUPERUSER, UserRole.ADMIN]),
             and_(User.custom_role_id.isnot(None), CustomRole.name.ilike('%subadmin%'))
         )
+        
         if custom_name == "editor":
             try:
                 writer_ids = [w.id for w in getattr(current_user, 'assigned_writers', [])]
             except Exception:
                 writer_ids = []
             allowed_ids = set(writer_ids + [current_user.id])
-            query = query.filter(or_(Image.user_id.in_(allowed_ids), admin_uploader))
+            # Editor: own images + assigned writers' images + admin/suadmin visible images
+            if all_users:
+                # When all_users=true, only show visible admin/suadmin images + own/assigned images
+                current_app.logger.info(f"Editor user {current_user.id} with all_users=true - filtering to own/assigned + visible admin images")
+                query = query.filter(or_(
+                    Image.user_id.in_(allowed_ids),
+                    and_(admin_uploader, Image.is_visible == True)
+                ))
+            else:
+                current_app.logger.info(f"Editor user {current_user.id} with all_users=false - filtering to own/assigned + all admin images")
+                query = query.filter(or_(Image.user_id.in_(allowed_ids), admin_uploader))
         else:
-            query = query.filter(or_(Image.user_id == current_user.id, admin_uploader))
+            # Regular users: own images + admin/suadmin visible images
+            if all_users:
+                # When all_users=true, only show visible admin/suadmin images + own images
+                current_app.logger.info(f"Regular user {current_user.id} with all_users=true - filtering to own + visible admin images")
+                query = query.filter(or_(
+                    Image.user_id == current_user.id,
+                    and_(admin_uploader, Image.is_visible == True)
+                ))
+            else:
+                current_app.logger.info(f"Regular user {current_user.id} with all_users=false - filtering to own + all admin images")
+                query = query.filter(or_(Image.user_id == current_user.id, admin_uploader))
 
     # Apply visibility filter
     if visibility_filter == 'visible':
@@ -98,8 +119,12 @@ def get_images():
     
     # Debug logging
     current_app.logger.info(f"API Images: page={page}, per_page={per_page}, all_users={all_users}, "
-                          f"visibility_filter={visibility_filter}, total_found={images_pagination.total}, "
-                          f"items_returned={len(images_pagination.items)}")
+                          f"visibility_filter={visibility_filter}, user_id={current_user.id}, "
+                          f"user_role={current_user.role}, is_admin_tier={is_admin_tier}, "
+                          f"total_found={images_pagination.total}, items_returned={len(images_pagination.items)}")
+    
+    # Additional debug: log the actual query being executed
+    current_app.logger.info(f"Image query filter applied: ownership filtering for user {current_user.id}")
     
     return jsonify({
         'items': [image.to_dict() for image in images_pagination.items],

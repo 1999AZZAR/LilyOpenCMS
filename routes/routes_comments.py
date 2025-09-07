@@ -223,6 +223,7 @@ def update_comment(comment_id):
             current_app.logger.warning(f"Could not record user activity: {str(e)}")
         
         return jsonify({
+            'success': True,
             'message': 'Comment updated successfully',
             'comment': comment.to_dict()
         })
@@ -262,7 +263,10 @@ def delete_comment(comment_id):
         except Exception as e:
             current_app.logger.warning(f"Could not record user activity: {str(e)}")
         
-        return jsonify({'message': 'Comment deleted successfully'})
+        return jsonify({
+            'success': True,
+            'message': 'Comment deleted successfully'
+        })
         
     except Exception as e:
         db.session.rollback()

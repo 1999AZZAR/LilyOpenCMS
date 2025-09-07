@@ -100,12 +100,87 @@
                     </div>
                     
                     <div class="mt-6">
+                        <label for="album-author" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user-edit text-gray-400 mr-2"></i>Penulis
+                        </label>
+                        <input type="text" id="album-author" name="author" 
+                               value="{{ album.author if album and album.author else (album.owner.username if album and album.owner else '') }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Masukkan nama penulis album">
+                        <p class="text-xs text-gray-500 mt-1">Nama penulis atau creator dari album ini. Jika kosong, akan menggunakan nama pemilik album.</p>
+                    </div>
+                    </div>
+                    
+                    <div class="mt-6">
                         <label for="album-description" class="block text-sm font-medium text-gray-700 mb-2">
                             Sinopsis (optional)
                         </label>
                         <textarea id="album-description" name="description" rows="4"
                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   placeholder="Enter book/series description">{{ album.description if album else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- User Selection -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Pemilik Album</h3>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-user text-blue-600 text-lg"></i>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <h4 class="text-sm font-medium text-blue-900 mb-2">Pilih Pemilik Album</h4>
+                                <p class="text-blue-800 text-sm mb-3">
+                                    Admin/Super Admin dapat membuat album yang akan dimiliki oleh user tertentu. 
+                                    Jika tidak dipilih, album akan dimiliki oleh admin yang membuatnya.
+                                </p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="album-owner" class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-user text-gray-400 mr-2"></i>Pemilik Album
+                                        </label>
+                                        <div class="flex space-x-2">
+                                            <select id="album-owner" name="owner_id" 
+                                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="">Pilih pemilik album...</option>
+                                                {% if users %}
+                                                    {% for user in users %}
+                                                        <option value="{{ user.id }}" 
+                                                                {% if album and album.owner_id == user.id %}selected{% endif %}>
+                                                            {{ user.username }} ({{ user.email }})
+                                                        </option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                            <button type="button" onclick="openUserPicker()" 
+                                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-medium transition-colors">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan pemilik default</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-info-circle text-gray-400 mr-2"></i>Status Kepemilikan
+                                        </label>
+                                        <div class="text-sm text-gray-600" id="ownership-status">
+                                            {% if album and album.owner_id %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <i class="fas fa-user-check mr-1"></i>Dimiliki User: {{ album.owner.username if album.owner else 'Unknown' }}
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <i class="fas fa-user-shield mr-1"></i>Dimiliki Admin
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -261,6 +336,50 @@
         </div>
     </div>
 </div>
+
+<!-- User Picker Modal -->
+<div id="user-picker-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Pilih Pemilik Album</h3>
+                <button onclick="closeUserPicker()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="-mb-px flex space-x-8">
+                    <button id="admin-tab" onclick="switchTab('admin')" 
+                            class="tab-button py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                        <i class="fas fa-user-shield mr-2"></i>Admin Users
+                    </button>
+                    <button id="general-tab" onclick="switchTab('general')" 
+                            class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class="fas fa-users mr-2"></i>General Users
+                    </button>
+                </nav>
+            </div>
+            
+            <!-- Search Section -->
+            <div class="mb-4">
+                <input type="text" id="user-search" placeholder="Cari user berdasarkan username atau email..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- User List -->
+            <div id="user-list" class="space-y-2">
+                <!-- Users will be loaded here -->
+            </div>
+            
+            <!-- Pagination -->
+            <div id="user-pagination" class="mt-6 flex justify-center">
+                <!-- Pagination controls will be generated here -->
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -273,16 +392,18 @@ document.getElementById('album-form').addEventListener('submit', function(e) {
         title: document.getElementById('album-title').value,
         description: document.getElementById('album-description').value,
         category_id: document.getElementById('album-category').value || null,
+        author: document.getElementById('album-author').value || null,
         cover_image_id: document.getElementById('cover-image-id').value || null,
         age_rating: document.getElementById('age-rating').value || null,
         is_premium: document.getElementById('is-premium').checked,
         is_visible: document.getElementById('is-visible').checked,
         is_completed: document.getElementById('is-completed').checked,
-        is_hiatus: document.getElementById('is-hiatus').checked
+        is_hiatus: document.getElementById('is-hiatus').checked,
+        owner_id: document.getElementById('album-owner').value || null
     };
     
     const albumId = document.getElementById('album-id')?.value;
-            const url = albumId ? `/admin/albums/${albumId}/edit` : '/admin/albums/create';
+    const url = albumId ? `/admin/albums/${albumId}/edit` : '/admin/albums/create';
     
     fetch(url, {
         method: 'POST',
@@ -307,6 +428,303 @@ document.getElementById('album-form').addEventListener('submit', function(e) {
         console.error('Error:', error);
         alert('An error occurred while saving the album');
     });
+});
+
+// User picker functionality
+let currentUserPage = 1;
+let totalUserPages = 1;
+let currentUserTab = 'admin';
+
+function openUserPicker() {
+    document.getElementById('user-picker-modal').classList.remove('hidden');
+    switchTab('admin'); // Default to admin tab
+}
+
+function switchTab(tabType) {
+    currentUserTab = tabType;
+    currentUserPage = 1;
+    
+    console.log('Switching to tab:', tabType); // Debug log
+    
+    // Update tab button styles
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'text-blue-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    if (tabType === 'admin') {
+        document.getElementById('admin-tab').classList.remove('border-transparent', 'text-gray-500');
+        document.getElementById('admin-tab').classList.add('border-blue-500', 'text-blue-600');
+    } else {
+        document.getElementById('general-tab').classList.remove('border-transparent', 'text-gray-500');
+        document.getElementById('general-tab').classList.add('border-blue-500', 'text-blue-600');
+    }
+    
+    // Load users for the selected tab
+    loadUsers(1);
+}
+
+function closeUserPicker() {
+    document.getElementById('user-picker-modal').classList.add('hidden');
+}
+
+async function loadUsers(page = 1) {
+    const userList = document.getElementById('user-list');
+    const search = document.getElementById('user-search').value;
+    
+    userList.innerHTML = '<p class="text-center text-gray-500 py-4">Memuat user...</p>';
+    
+    try {
+        let url = `/api/users?page=${page}&per_page=10`;
+        
+        // Add user type filter based on selected tab
+        if (currentUserTab === 'admin') {
+            // Get admin users (superuser and admin roles)
+            url += '&role=admin,su';
+        } else {
+            // Get general users with write_access enabled
+            url += '&write_access=true';
+        }
+        
+        if (search) {
+            url += `&search=${encodeURIComponent(search)}`;
+        }
+        
+        console.log('Loading users from:', url); // Debug log
+        console.log('Current tab:', currentUserTab); // Debug log
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log('API response:', data); // Debug log
+        
+        if (data.users) {
+            let filteredUsers = data.users;
+            
+            // Debug: Log all users and their properties
+            console.log('All users from API:', data.users.map(u => ({ 
+                id: u.id, 
+                username: u.username, 
+                role: u.role, 
+                write_access: u.write_access,
+                email: u.email 
+            })));
+            
+            // Debug: Check what fields are actually available
+            if (data.users.length > 0) {
+                const firstUser = data.users[0];
+                console.log('Available fields in user object:', Object.keys(firstUser));
+                console.log('Sample user object:', firstUser);
+            }
+            
+            // API already filtered the users, so we can use them directly
+            filteredUsers = data.users;
+            
+            if (currentUserTab === 'admin') {
+                console.log('Admin tab - Users from API:', filteredUsers.length);
+                console.log('Admin users found:', filteredUsers.map(u => ({ username: u.username, role: u.role })));
+            } else {
+                console.log('General tab - Users from API:', filteredUsers.length);
+                console.log('General users found:', filteredUsers.map(u => ({ username: u.username, role: u.role, write_access: u.write_access })));
+            }
+            
+            displayUsers(filteredUsers);
+            updateUserPagination(data);
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+        userList.innerHTML = '<p class="text-center text-red-500 py-4">Error loading users.</p>';
+    }
+}
+
+function displayUsers(users) {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+    
+    if (users.length === 0) {
+        userList.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada user yang ditemukan.</p>';
+        return;
+    }
+    
+    users.forEach(user => {
+        const div = document.createElement('div');
+        div.className = 'p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
+        
+        div.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900">${user.username}</h4>
+                        <p class="text-sm text-gray-600">${user.email}</p>
+                        ${user.role ? `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">${user.role}</span>` : ''}
+                    </div>
+                </div>
+                <button class="select-user-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors" 
+                        data-id="${user.id}" data-username="${user.username}" data-email="${user.email}">
+                    Pilih
+                </button>
+            </div>
+        `;
+        
+        // Add click event to select user
+        const selectBtn = div.querySelector('.select-user-btn');
+        selectBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectUser(user);
+        });
+        
+        userList.appendChild(div);
+    });
+}
+
+function selectUser(user) {
+    const ownerSelect = document.getElementById('album-owner');
+    const ownershipStatus = document.getElementById('ownership-status');
+    const authorField = document.getElementById('album-author');
+    
+    // Clear existing options and add the selected user
+    ownerSelect.innerHTML = `
+        <option value="">Pilih pemilik album...</option>
+        <option value="${user.id}" selected>${user.username} (${user.email})</option>
+    `;
+    
+    // Update ownership status
+    ownershipStatus.innerHTML = `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <i class="fas fa-user-check mr-1"></i>Dimiliki User: ${user.username}
+        </span>
+    `;
+    
+    // Auto-fill author field with the selected owner's username if it's empty
+    if (!authorField.value.trim()) {
+        authorField.value = user.username;
+    }
+    
+    closeUserPicker();
+}
+
+function updateUserPagination(data) {
+    const pagination = document.getElementById('user-pagination');
+    currentUserPage = data.page || 1;
+    totalUserPages = data.total_pages || 1;
+    
+    if (totalUserPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHtml = '<div class="flex items-center space-x-2">';
+    
+    // Previous button
+    if (currentUserPage > 1) {
+        paginationHtml += `
+            <button onclick="loadUsers(${currentUserPage - 1})" 
+                    class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Previous
+            </button>
+        `;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= totalUserPages; i++) {
+        if (i === currentUserPage) {
+            paginationHtml += `
+                <span class="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-300 rounded-lg">
+                    ${i}
+                </span>
+            `;
+        } else {
+            paginationHtml += `
+                <button onclick="loadUsers(${i})" 
+                        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    ${i}
+                </button>
+            `;
+        }
+    }
+    
+    // Next button
+    if (currentUserPage < totalUserPages) {
+        paginationHtml += `
+            <button onclick="loadUsers(${currentUserPage + 1})" 
+                    class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                Next
+            </button>
+        `;
+    }
+    
+    paginationHtml += '</div>';
+    pagination.innerHTML = paginationHtml;
+}
+
+// Search functionality with debounce
+let userSearchTimeout;
+document.getElementById('user-search').addEventListener('input', function() {
+    clearTimeout(userSearchTimeout);
+    userSearchTimeout = setTimeout(() => {
+        currentUserPage = 1; // Reset to first page when searching
+        loadUsers(1);
+    }, 300);
+});
+
+// Ensure author field has a value on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const authorField = document.getElementById('album-author');
+    const ownerSelect = document.getElementById('album-owner');
+    
+    // If author field is empty and there's a selected owner, populate it
+    if (!authorField.value.trim() && ownerSelect.value) {
+        const selectedOption = ownerSelect.options[ownerSelect.selectedIndex];
+        if (selectedOption && selectedOption.text) {
+            const username = selectedOption.text.split(' (')[0];
+            authorField.value = username;
+        }
+    }
+    
+    // Also check if we need to populate from existing album data
+    if (!authorField.value.trim() && '{{ album.owner.username if album and album.owner else "" }}') {
+        authorField.value = '{{ album.owner.username if album and album.owner else "" }}';
+    }
+});
+
+// Handle owner selection change
+document.getElementById('album-owner').addEventListener('change', function() {
+    const ownershipStatus = document.getElementById('ownership-status');
+    const authorField = document.getElementById('album-author');
+    
+    if (this.value) {
+        const selectedOption = this.options[this.selectedIndex];
+        const username = selectedOption.text.split(' (')[0];
+        ownershipStatus.innerHTML = `
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <i class="fas fa-user-check mr-1"></i>Dimiliki User: ${username}
+            </span>
+        `;
+        
+        // Auto-fill author field with the selected owner's username if it's empty
+        if (!authorField.value.trim()) {
+            authorField.value = username;
+        }
+    } else {
+        ownershipStatus.innerHTML = `
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <i class="fas fa-user-shield mr-1"></i>Dimiliki Admin
+            </span>
+        `;
+        
+        // Clear author field if no owner is selected
+        if (!authorField.value.trim()) {
+            authorField.value = '';
+        }
+    }
 });
 
 // Image picker functionality
@@ -494,7 +912,7 @@ async function uploadImage() {
     if (name) {
         formData.append('name', name);
     }
-    formData.append('is_visible', 'true');
+    formData.append('is_visible', 'false');
     
     try {
         const response = await fetch('/api/images', {

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
-from sqlalchemy import desc
-from models import db, News, Album, AlbumChapter, Image, Category, User
+from sqlalchemy import desc, or_, and_
+from models import db, News, Album, AlbumChapter, Image, Category, User, UserRole, CustomRole
+from flask_login import current_user
 
 api_xlate = Blueprint('api_xlate', __name__, url_prefix='/api/xlate')
 
@@ -390,6 +391,46 @@ def xlate_images_list():
         all_users = request.args.get('all_users', 'false').lower() == 'true'
 
         query = Image.query
+        
+        # Apply ownership filtering based on role (same logic as main API)
+        custom_name = (current_user.custom_role.name.lower() if getattr(current_user, 'custom_role', None) and current_user.custom_role.name else "")
+        is_admin_tier = current_user.role in [UserRole.SUPERUSER, UserRole.ADMIN] or custom_name == "subadmin"
+        
+        if not is_admin_tier:
+            # Join uploader to allow including admin-tier uploads for everyone
+            query = query.join(User, Image.user_id == User.id)
+            query = query.outerjoin(CustomRole, User.custom_role_id == CustomRole.id)
+            admin_uploader = or_(
+                User.role.in_([UserRole.SUPERUSER, UserRole.ADMIN]),
+                and_(User.custom_role_id.isnot(None), CustomRole.name.ilike('%subadmin%'))
+            )
+            
+            if custom_name == "editor":
+                try:
+                    writer_ids = [w.id for w in getattr(current_user, 'assigned_writers', [])]
+                except Exception:
+                    writer_ids = []
+                allowed_ids = set(writer_ids + [current_user.id])
+                # Editor: own images + assigned writers' images + admin/suadmin visible images
+                if all_users:
+                    # When all_users=true, only show visible admin/suadmin images + own/assigned images
+                    query = query.filter(or_(
+                        Image.user_id.in_(allowed_ids),
+                        and_(admin_uploader, Image.is_visible == True)
+                    ))
+                else:
+                    query = query.filter(or_(Image.user_id.in_(allowed_ids), admin_uploader))
+            else:
+                # Regular users: own images + admin/suadmin visible images
+                if all_users:
+                    # When all_users=true, only show visible admin/suadmin images + own images
+                    query = query.filter(or_(
+                        Image.user_id == current_user.id,
+                        and_(admin_uploader, Image.is_visible == True)
+                    ))
+                else:
+                    query = query.filter(or_(Image.user_id == current_user.id, admin_uploader))
+        
         if visibility == 'visible':
             if hasattr(Image, 'is_visible'):
                 query = query.filter(Image.is_visible.is_(True))

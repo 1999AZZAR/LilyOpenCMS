@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+
+{% block title %}Manajemen Gambar - {{ user.username }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-foreground">
+                        <i class="fas fa-images mr-3 text-primary"></i>
+                        Manajemen Gambar
+                    </h1>
+                    <p class="mt-2 text-muted-foreground">
+                        Kelola gambar yang Anda unggah
+                    </p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('user_profile.user_profile', username=user.username) }}" 
+                       class="text-primary hover:text-foreground">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Profil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Upload Section -->
+        <div class="bg-card border border-border p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="upload-title">
+            <h2 id="upload-title" class="text-xl font-semibold mb-4 text-foreground flex items-center">
+                <i class="fas fa-upload mr-3 text-primary"></i>
+                Unggah Gambar Baru
+            </h2>
+            
+            <form id="upload-form" class="space-y-4" role="form" aria-label="Form unggah gambar">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2" for="image-name">
+                            Nama Gambar
+                        </label>
+                        <input type="text" id="image-name" name="name"
+                               class="w-full bg-card border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="Nama gambar (opsional)" aria-label="Nama gambar">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2" for="image-visibility">
+                            Visibilitas
+                        </label>
+                        <select id="image-visibility" name="is_visible"
+                                class="w-full bg-card border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="false">Tersembunyi (Default)</option>
+                            <option value="true">Terlihat</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-foreground mb-2" for="image-description">
+                        Deskripsi
+                    </label>
+                    <textarea id="image-description" name="description"
+                              class="w-full bg-card border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                              placeholder="Deskripsi gambar (opsional)" aria-label="Deskripsi gambar" rows="3"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2" for="image-file">
+                            <i class="fas fa-file-image mr-2"></i>Unggah File
+                        </label>
+                        <input type="file" id="image-file" name="file" accept="image/*"
+                               class="w-full bg-card border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                               aria-label="Pilih file gambar">
+                        <p class="text-xs text-muted-foreground mt-1">Format: JPG, PNG, WebP, GIF (Max 10MB)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-2" for="image-url">
+                            <i class="fas fa-link mr-2"></i>Atau URL Gambar
+                        </label>
+                        <input type="url" id="image-url" name="url"
+                               class="w-full bg-card border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="https://contoh.com/gambar.jpg" aria-label="URL gambar">
+                        <p class="text-xs text-muted-foreground mt-1">Masukkan URL gambar eksternal</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" id="upload-btn"
+                            class="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 flex items-center">
+                        <i class="fas fa-upload mr-2"></i>Unggah Gambar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Image Gallery -->
+        <div class="bg-card border border-border p-6 rounded-lg shadow-lg" role="region" aria-labelledby="gallery-title">
+            <h2 id="gallery-title" class="text-xl font-semibold mb-4 text-foreground flex items-center">
+                <i class="fas fa-images mr-3 text-primary"></i>
+                Galeri Gambar
+                <span class="ml-2 text-sm font-normal text-muted-foreground">
+                    ({{ images_pagination.total }} gambar)
+                </span>
+            </h2>
+            
+            {% if images_pagination.items %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
+                    {% for image in images_pagination.items %}
+                    <div class="relative group bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300" 
+                         data-image-id="{{ image.id }}">
+                        <!-- Image -->
+                        <div class="aspect-square bg-muted">
+                            {% if image.filepath %}
+                                <img src="{{ url_for('static', filename=image.filepath.split('static/')[-1] if 'static/' in image.filepath else image.filepath) }}" 
+                                     alt="{{ image.description or image.filename }}"
+                                     class="w-full h-full object-cover">
+                            {% elif image.url %}
+                                <img src="{{ image.url }}" 
+                                     alt="{{ image.description or image.filename }}"
+                                     class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-image text-muted-foreground text-2xl"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Overlay -->
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center">
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-2">
+                                <button onclick="editImage({{ image.id }})" 
+                                        class="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                                        title="Edit gambar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteImage({{ image.id }})" 
+                                        class="bg-destructive text-destructive-foreground px-3 py-2 rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors"
+                                        title="Hapus gambar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Badge -->
+                        <div class="absolute top-2 right-2">
+                            {% if image.is_visible %}
+                                <span class="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                    <i class="fas fa-eye mr-1"></i>Terlihat
+                                </span>
+                            {% else %}
+                                <span class="bg-gray-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                    <i class="fas fa-eye-slash mr-1"></i>Tersembunyi
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Image Info -->
+                        <div class="p-3">
+                            <h3 class="font-medium text-foreground text-sm truncate" title="{{ image.filename }}">
+                                {{ image.filename }}
+                            </h3>
+                            {% if image.description %}
+                                <p class="text-xs text-muted-foreground mt-1 line-clamp-2" title="{{ image.description }}">
+                                    {{ image.description }}
+                                </p>
+                            {% endif %}
+                            <p class="text-xs text-muted-foreground mt-2">
+                                <i class="fas fa-calendar mr-1"></i>
+                                {{ image.created_at.strftime('%d %b %Y') }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if images_pagination.pages > 1 %}
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-muted-foreground">
+                        Menampilkan {{ (images_pagination.page - 1) * images_pagination.per_page + 1 }} 
+                        sampai {{ images_pagination.page * images_pagination.per_page if images_pagination.page * images_pagination.per_page < images_pagination.total else images_pagination.total }} 
+                        dari {{ images_pagination.total }} gambar
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        {% if images_pagination.has_prev %}
+                            <a href="{{ url_for('user_profile.user_images', username=user.username, page=images_pagination.prev_num) }}"
+                               class="px-3 py-2 bg-card border border-border text-foreground rounded-lg hover:bg-muted transition-colors">
+                                <i class="fas fa-chevron-left mr-1"></i>Sebelumnya
+                            </a>
+                        {% endif %}
+                        
+                        {% for page_num in images_pagination.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != images_pagination.page %}
+                                    <a href="{{ url_for('user_profile.user_images', username=user.username, page=page_num) }}"
+                                       class="px-3 py-2 bg-card border border-border text-foreground rounded-lg hover:bg-muted transition-colors">
+                                        {{ page_num }}
+                                    </a>
+                                {% else %}
+                                    <span class="px-3 py-2 bg-primary text-primary-foreground rounded-lg">
+                                        {{ page_num }}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="px-3 py-2 text-muted-foreground">...</span>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if images_pagination.has_next %}
+                            <a href="{{ url_for('user_profile.user_images', username=user.username, page=images_pagination.next_num) }}"
+                               class="px-3 py-2 bg-card border border-border text-foreground rounded-lg hover:bg-muted transition-colors">
+                                Selanjutnya<i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-images text-muted-foreground text-6xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-foreground mb-2">Belum ada gambar</h3>
+                    <p class="text-muted-foreground mb-4">Mulai unggah gambar pertama Anda menggunakan form di atas</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Image Modal -->
+<div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="edit-modal-title" aria-modal="true">
+    <div class="bg-card border border-border p-6 rounded-lg shadow-xl w-full max-w-md">
+        <h3 id="edit-modal-title" class="text-xl font-semibold mb-4 text-foreground">Edit Gambar</h3>
+        <form id="edit-form" class="space-y-4">
+            <input type="hidden" id="edit-image-id">
+            
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-2" for="edit-description">
+                    Deskripsi
+                </label>
+                <textarea id="edit-description" name="description"
+                          class="w-full bg-card border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          rows="3" placeholder="Deskripsi gambar"></textarea>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-foreground mb-2" for="edit-visibility">
+                    Visibilitas
+                </label>
+                <select id="edit-visibility" name="is_visible"
+                        class="w-full bg-card border border-border text-foreground p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="false">Tersembunyi</option>
+                    <option value="true">Terlihat</option>
+                </select>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancel-edit" 
+                        class="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors">
+                    Batal
+                </button>
+                <button type="submit" id="save-edit"
+                        class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('upload-form');
+    const editModal = document.getElementById('edit-modal');
+    const editForm = document.getElementById('edit-form');
+    const cancelEdit = document.getElementById('cancel-edit');
+    
+    // Upload form handler
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        const fileInput = document.getElementById('image-file');
+        const urlInput = document.getElementById('image-url');
+        const nameInput = document.getElementById('image-name');
+        const descriptionInput = document.getElementById('image-description');
+        const visibilityInput = document.getElementById('image-visibility');
+        
+        // Check if file or URL is provided
+        if (!fileInput.files[0] && !urlInput.value.trim()) {
+            showToast('Pilih file atau masukkan URL gambar', 'error');
+            return;
+        }
+        
+        // Add form data
+        if (fileInput.files[0]) {
+            formData.append('file', fileInput.files[0]);
+        }
+        if (urlInput.value.trim()) {
+            formData.append('url', urlInput.value.trim());
+        }
+        if (nameInput.value.trim()) {
+            formData.append('name', nameInput.value.trim());
+        }
+        if (descriptionInput.value.trim()) {
+            formData.append('description', descriptionInput.value.trim());
+        }
+        formData.append('is_visible', visibilityInput.value);
+        
+        // Show loading state
+        const uploadBtn = document.getElementById('upload-btn');
+        const originalText = uploadBtn.innerHTML;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengunggah...';
+        uploadBtn.disabled = true;
+        
+        try {
+            const response = await fetch(`{{ url_for('user_profile.user_upload_image', username=user.username) }}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Gambar berhasil diunggah!', 'success');
+                uploadForm.reset();
+                // Reload page to show new image
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast('Error: ' + data.error, 'error');
+            }
+        } catch (error) {
+            showToast('Error mengunggah gambar: ' + error.message, 'error');
+        } finally {
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
+        }
+    });
+    
+    // Edit image function
+    window.editImage = function(imageId) {
+        // Find the image data (you might want to store this in data attributes)
+        const imageElement = document.querySelector(`[data-image-id="${imageId}"]`);
+        if (!imageElement) return;
+        
+        // Get current values (you might want to store these in data attributes)
+        document.getElementById('edit-image-id').value = imageId;
+        
+        // Show modal
+        editModal.classList.remove('hidden');
+    };
+    
+    // Cancel edit
+    cancelEdit.addEventListener('click', function() {
+        editModal.classList.add('hidden');
+    });
+    
+    // Edit form handler
+    editForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const imageId = document.getElementById('edit-image-id').value;
+        const description = document.getElementById('edit-description').value;
+        const isVisible = document.getElementById('edit-visibility').value === 'true';
+        
+        try {
+            const response = await fetch(`{{ url_for('user_profile.user_update_image', username=user.username, image_id=0) }}`.replace('0', imageId), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    description: description,
+                    is_visible: isVisible
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast('Gambar berhasil diperbarui!', 'success');
+                editModal.classList.add('hidden');
+                // Reload page to show changes
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast('Error: ' + data.error, 'error');
+            }
+        } catch (error) {
+            showToast('Error memperbarui gambar: ' + error.message, 'error');
+        }
+    });
+    
+    // Delete image function
+    window.deleteImage = function(imageId) {
+        if (!confirm('Apakah Anda yakin ingin menghapus gambar ini? Tindakan ini tidak dapat dibatalkan.')) {
+            return;
+        }
+        
+        fetch(`{{ url_for('user_profile.user_delete_image', username=user.username, image_id=0) }}`.replace('0', imageId), {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Gambar berhasil dihapus!', 'success');
+                // Remove image element from DOM
+                const imageElement = document.querySelector(`[data-image-id="${imageId}"]`);
+                if (imageElement) {
+                    imageElement.remove();
+                }
+            } else {
+                showToast('Error: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Error menghapus gambar: ' + error.message, 'error');
+        });
+    };
+    
+    // Close modal on outside click
+    editModal.addEventListener('click', function(e) {
+        if (e.target === editModal) {
+            editModal.classList.add('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -18,7 +18,7 @@ app = main.app
 db = main.db
 
 from models import ContactDetail
-from datetime import datetime
+from datetime import datetime, timezone
 
 def add_contact_details():
     """Add sample contact details."""
@@ -47,7 +47,7 @@ def add_contact_details():
             "title": "Alamat",
             "content": "Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta 12345",
             "section_order": 3,
-            "icon_class": "map-marker",
+            "icon_class": "map-marker-alt",
             "link": None,
         },
         {
@@ -56,6 +56,27 @@ def add_contact_details():
             "section_order": 4,
             "icon_class": "globe",
             "link": "https://lilycms.com",
+        },
+        {
+            "title": "Facebook",
+            "content": "facebook.com/lilycms",
+            "section_order": 5,
+            "icon_class": "facebook",
+            "link": "https://facebook.com/lilycms",
+        },
+        {
+            "title": "Instagram",
+            "content": "@lilycms",
+            "section_order": 6,
+            "icon_class": "instagram",
+            "link": "https://instagram.com/lilycms",
+        },
+        {
+            "title": "GitHub",
+            "content": "github.com/lilycms",
+            "section_order": 7,
+            "icon_class": "github",
+            "link": "https://github.com/lilycms",
         },
     ]
     
@@ -67,8 +88,8 @@ def add_contact_details():
             icon_class=detail["icon_class"],
             link=detail["link"],
             is_active=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         db.session.add(record)
         print(f"✅ Added: {detail['title']}")

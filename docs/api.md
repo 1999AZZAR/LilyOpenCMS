@@ -22,10 +22,8 @@ These endpoints provide JSON equivalents for resources previously only available
 | GET    | `/api/public/albums/<int:album_id>`      | No   | Get single album details with chapters and metadata |
 | GET    | `/api/public/albums`                     | No   | Get paginated list of albums with filtering and sorting |
 | GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_id>` | No | Get single chapter details with navigation |
-| GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_number>` | No | Get single chapter details by chapter number with navigation |
 | GET    | `/api/public/albums/<int:album_id>/detail` | No | Get album detail with chapters (new endpoint) |
 | GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_id>/detail` | No | Get chapter detail with content (new endpoint) |
-| GET    | `/api/public/albums/<int:album_id>/chapters/<int:chapter_number>/detail` | No | Get chapter detail with content (by chapter number) |
 | GET    | `/api/public/albums/list` | No | Get albums list using existing search logic (new endpoint) |
 
 ### **User Profile Public API**
@@ -155,8 +153,8 @@ These endpoints provide JSON equivalents for resources previously only available
 |--------|------------------------------------------|------|---------------------------------------------|
 | GET    | `/api/comments/<content_type>/<content_id>` | No  | Get comments for content (news/album) - **FIXED: Enhanced error handling and robust user serialization** |
 | POST   | `/api/comments`                          | Yes  | Create a new comment                        |
-| PUT    | `/api/comments/<comment_id>`             | Yes  | Update comment                              |
-| DELETE | `/api/comments/<comment_id>`             | Yes  | Delete comment                              |
+| PUT    | `/api/comments/<comment_id>`             | Yes  | Update comment - **UPDATED: Returns success field for frontend compatibility** |
+| DELETE | `/api/comments/<comment_id>`             | Yes  | Delete comment (soft delete) - **UPDATED: Returns success field for frontend compatibility** |
 | POST   | `/api/comments/<comment_id>/like`        | Yes  | Like/dislike comment                        |
 | POST   | `/api/comments/<comment_id>/report`      | Yes  | Report comment                              |
 | GET    | `/api/comments/reports`                  | Yes  | Get comment reports (admin)                 |
@@ -237,6 +235,12 @@ These endpoints provide JSON equivalents for resources previously only available
 | DELETE | `/api/library`                           | Yes  | Remove item from user's library             |
 | GET    | `/api/reading-history`                   | Yes  | Get user's reading history                  |
 
+## User Comment Management
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| PUT    | `/api/comments/<comment_id>`             | Yes  | Update user's own comment (inline editing in library.html) |
+| DELETE | `/api/comments/<comment_id>`             | Yes  | Delete user's own comment (with confirmation) |
+
 ## Achievement System & Coin Management
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
@@ -279,10 +283,18 @@ These endpoints provide JSON equivalents for resources previously only available
 | POST   | `/api/images/bulk-visibility`            | Yes  | Bulk update image visibility                |
 | GET    | `/api/images/<image_id>/usage`           | Yes  | Get image usage statistics                  |
 
-> Image visibility & scoping rules:
-> - Default upload visibility: Uploads by custom roles Writer/Editor default to hidden; uploads by others default to visible (can be overridden via is_visible form value).
-> - Picker scoping: Superuser/Admin/Subadmin see all images; Editor sees own and assigned writers' images; others see only their own images.
-> - **NEW: `all_users=true` parameter**: When specified, bypasses ownership restrictions and returns all visible images from all users (useful for image pickers in story creation).
+> **Image Security & Ownership Filtering**:
+> - **Default upload visibility**: Uploads by custom roles Writer/Editor default to hidden; uploads by others default to visible (can be overridden via is_visible form value).
+> - **Ownership-based access control**:
+>   - **Admin/Superuser/Subadmin**: Can see all images (no restrictions)
+>   - **Editor**: Own images + assigned writers' images + admin/suadmin visible images
+>   - **Regular users**: Own images + admin/suadmin visible images
+> - **`all_users=true` parameter**: When specified, applies proper ownership filtering:
+>   - Regular users see: own images + admin/suadmin images marked as visible
+>   - Editors see: own images + assigned writers' images + admin/suadmin images marked as visible
+>   - Admins see: all images (no filtering)
+> - **Security**: No cross-contamination - users cannot see images from other regular users
+> - **Story creation**: Image picker uses `all_users=true` with proper ownership filtering for secure image selection
 
 ## Videos (YouTube)
 | Method | Endpoint                                 | Auth | Description                                 |
@@ -564,6 +576,17 @@ These endpoints provide JSON equivalents for resources previously only available
 | GET    | `/health`                                | No   | Health check endpoint                       |
 
 ## Ads System
+
+### **Enhanced Advertisement Management**
+The ads system now supports both **Internal** (web-only) and **External** (API-only) ad types with comprehensive image management and secure API access.
+
+#### **Ad Types & Access Control**
+- **Internal Ads**: Only served to same origin (web interface)
+- **External Ads**: Only served via API with authentication (mobile apps, third-party integrations)
+- **Image Management**: Support for both file uploads and external URLs
+- **API Authentication**: API key required for external ad access
+
+#### **Admin Management Endpoints**
 | Method | Endpoint                                 | Auth | Description                                 |
 |--------|------------------------------------------|------|---------------------------------------------|
 | GET    | `/ads/dashboard`                         | Yes  | Ads management dashboard                     |
@@ -574,13 +597,13 @@ These endpoints provide JSON equivalents for resources previously only available
 | GET    | `/ads/campaigns/<campaign_id>/edit`      | Yes  | Edit campaign page                          |
 | POST   | `/ads/campaigns/<campaign_id>/edit`      | Yes  | Update campaign                             |
 | POST   | `/ads/campaigns/<campaign_id>/delete`    | Yes  | Delete campaign                             |
-| GET    | `/ads/ads`                               | Yes  | List ads                                    |
-| GET    | `/ads/ads/create`                        | Yes  | Create new ad page                          |
-| POST   | `/ads/ads/create`                        | Yes  | Create new ad                               |
+| GET    | `/ads/ads`                               | Yes  | List ads with image thumbnails              |
+| GET    | `/ads/ads/create`                        | Yes  | Create new ad page with image upload        |
+| POST   | `/ads/ads/create`                        | Yes  | Create new ad (supports file upload)        |
 | GET    | `/ads/ads/<ad_id>`                       | Yes  | Ad detail page                              |
-| GET    | `/ads/ads/<ad_id>/edit`                  | Yes  | Edit ad page                                |
-| POST   | `/ads/ads/<ad_id>/edit`                  | Yes  | Update ad                                   |
-| POST   | `/ads/ads/<ad_id>/delete`                | Yes  | Delete ad                                   |
+| GET    | `/ads/ads/<ad_id>/edit`                  | Yes  | Edit ad page with image management          |
+| POST   | `/ads/ads/<ad_id>/edit`                  | Yes  | Update ad (supports file upload)            |
+| POST   | `/ads/ads/<ad_id>/delete`                | Yes  | Delete ad and associated image files        |
 | GET    | `/ads/placements`                        | Yes  | List ad placements                          |
 | GET    | `/ads/placements/create`                 | Yes  | Create new placement page                   |
 | POST   | `/ads/placements/create`                 | Yes  | Create new placement                        |
@@ -588,13 +611,85 @@ These endpoints provide JSON equivalents for resources previously only available
 | POST   | `/ads/placements/<placement_id>/edit`    | Yes  | Update placement                            |
 | POST   | `/ads/placements/<placement_id>/delete`  | Yes  | Delete placement                            |
 | GET    | `/ads/analytics`                         | Yes  | Ads analytics dashboard                     |
-| POST   | `/ads/api/serve`                         | No   | Serve ads (JSON body: page_type, section, position, position_value?, device_type?, max_ads?, user_has_premium?, user_should_show_ads?, card_style?) |
-| POST   | `/ads/api/track-impression`              | No   | Track ad impression (JSON body: ad_id, event_id?) |
-| POST   | `/ads/api/track-click`                   | No   | Track ad click (JSON body: ad_id, event_id?) |
 | GET    | `/ads/api/analytics/stats`               | Yes  | Get ads analytics statistics                |
-| POST   | `/ads/api/serve/batch`                   | No   | Batch-serve ads for multiple placements (respects premium context; disabled when enable_ads or enable_campaigns are false) |
-| POST   | `/ads/api/layout/recommend`              | No   | Recommend in-stream positions based on client-probed counts (disabled when enable_ads or enable_campaigns are false) |
-| GET    | `/ads/click`                              | No   | Secure redirect for external ad clicks with UTM tagging |
+
+#### **Ad Serving API Endpoints**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| POST   | `/ads/api/serve`                         | No   | **Main ad serving endpoint** - Serves ads based on page context. Respects internal/external ad types and user premium status. Internal ads only served to same origin, external ads only served via API with authentication. |
+| POST   | `/ads/api/external/serve`                | API Key | **External ads only** - Dedicated endpoint for mobile apps and third-party integrations. Requires API key authentication. Optimized for external app consumption. |
+| POST   | `/ads/api/serve/batch`                   | No   | **Batch ad serving** - Serves ads for multiple placements in one request. Respects ad type access controls. |
+| GET    | `/ads/click`                              | No   | **Secure click tracking** - Handles ad click tracking and secure redirection with UTM parameters and URL signing. |
+
+#### **Analytics & Tracking Endpoints**
+| Method | Endpoint                                 | Auth | Description                                 |
+|--------|------------------------------------------|------|---------------------------------------------|
+| POST   | `/ads/api/track-impression`              | No   | **Track ad impressions** - Records when ads are viewed for analytics and performance tracking. |
+| POST   | `/ads/api/track-click`                   | No   | **Track ad clicks** - Records when ads are clicked for analytics and performance tracking. |
+| POST   | `/ads/api/layout/recommend`              | No   | **Layout recommendations** - Recommends in-stream positions based on client-probed counts. |
+
+#### **API Request Examples**
+
+**Web Interface (Internal Ads)**
+```javascript
+// Standard web request - gets internal ads only
+fetch('/ads/api/serve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        page_type: 'home',
+        section: 'sidebar',
+        position: 'top',
+        max_ads: 1
+    })
+})
+```
+
+**External Apps (External Ads)**
+```javascript
+// External app request - gets external ads only
+fetch('/ads/api/external/serve', {
+    method: 'POST',
+    headers: { 
+        'Content-Type': 'application/json',
+        'X-API-Key': 'your-api-key'
+    },
+    body: JSON.stringify({
+        page_type: 'home',
+        section: 'banner',
+        position: 'top',
+        device_type: 'mobile',
+        max_ads: 1
+    })
+})
+```
+
+**Batch Ad Serving**
+```javascript
+// Batch request for multiple placements
+fetch('/ads/api/serve/batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        placements: [
+            {
+                page_type: 'home',
+                section: 'sidebar',
+                position: 'top',
+                key: 'sidebar_top'
+            },
+            {
+                page_type: 'home',
+                section: 'content',
+                position: 'after_n_items',
+                position_value: 3,
+                key: 'content_after_3'
+            }
+        ],
+        device_type: 'desktop'
+    })
+})
+```
 
 > Note: Ads serving endpoints (`/ads/api/serve`, `/ads/api/serve/batch`, `/ads/api/layout/recommend`) are globally disabled when Brand Identity toggles `enable_ads` or `enable_campaigns` are set to false.
 
@@ -623,6 +718,25 @@ These endpoints provide JSON equivalents for resources previously only available
 | POST   | `/api/registrations/<user_id>/reject`    | Yes  | Reject user registration (fixed: proper role checks) |
 | POST   | `/api/registrations/bulk/approve`        | Yes  | Bulk approve registrations (fixed: proper role checks) |
 | POST   | `/api/registrations/bulk/reject`         | Yes  | Bulk reject registrations (fixed: proper role checks) |
+
+### External Auth API (for mobile/3rd-party apps)
+| Method | Endpoint               | Auth | Description |
+|--------|------------------------|------|-------------|
+| POST   | `/api/auth/register`   | No   | JSON registration; creates pending account (requires approval) |
+| POST   | `/api/auth/login`      | No   | Login; returns `access_token`, `refresh_token`, `expires_in`, `user` |
+| POST   | `/api/auth/refresh`    | No   | Exchange `refresh_token` for new access/refresh tokens |
+| POST   | `/api/auth/logout`     | No   | Stateless logout; clients discard tokens |
+| GET    | `/api/auth/me`         | Bearer | Get current user; requires `Authorization: Bearer <access_token>` |
+
+#### External Profile & Account API (Bearer)
+| Method | Endpoint                              | Auth   | Description |
+|--------|---------------------------------------|--------|-------------|
+| GET    | `/api/auth/profile`                   | Bearer | Get current user's profile + user fields |
+| PUT    | `/api/auth/profile`                   | Bearer | Update user (first_name, last_name, email, birthdate, bio) and profile (pronouns, short_bio, location, website, social_links) |
+| PATCH  | `/api/auth/profile/privacy`           | Bearer | Update privacy flags (`show_email`, `show_birthdate`) |
+| PATCH  | `/api/auth/profile/username`          | Bearer | Change username (requires `current_password`) |
+| POST   | `/api/auth/account/change-password`   | Bearer | Change password (current_password, new_password, confirm_password) |
+| DELETE | `/api/auth/account`                   | Bearer | Delete account and owned content (best-effort) |
 
 Hybrid verification/approval flow:
 - Registration creates users as pending (`is_active=false`, `verified=false`).
@@ -739,11 +853,17 @@ Hybrid verification/approval flow:
 
 ### **Recent Backend Updates**
 
-#### **Image API Enhancement for Story Creation**
-- **`all_users=true` Parameter Support**: Added support for `all_users=true` parameter in `/api/images` endpoint to bypass ownership restrictions
-- **Story Creation Image Picker**: Users can now select from all visible images (including admin/suadmin uploads) when creating stories
-- **Backend Logic Update**: Modified `routes/routes_images.py` to handle `all_users` parameter and return all visible images regardless of uploader
-- **Frontend Integration**: Enhanced `create_story.html` with robust image loading, pagination, and fallback rendering for SimpleMDE editor
+#### **Image API Security Enhancement & Story Creation**
+- **Secure Ownership Filtering**: Implemented proper ownership-based access control for image API endpoints
+- **Role-Based Image Access**: 
+  - Admin/Superuser/Subadmin: Can see all images (no restrictions)
+  - Editor: Own images + assigned writers' images + admin/suadmin visible images
+  - Regular users: Own images + admin/suadmin visible images
+- **`all_users=true` Parameter Security**: Fixed parameter to apply proper ownership filtering instead of bypassing restrictions
+- **Cross-Contamination Prevention**: Users cannot see images from other regular users, ensuring data privacy
+- **Backend Logic Update**: Modified `routes/routes_images.py` and `routes/routes_api_xlate.py` with secure filtering logic
+- **Frontend Integration**: Enhanced `create_story.html` with secure image loading and proper API parameter usage
+- **Story Creation Image Picker**: Users can now securely select from their own images plus admin-uploaded visible images
 - **Error Handling**: Added comprehensive error handling and fallback mechanisms for image rendering and SimpleMDE integration
 
 #### **Profile List Card Design Unification**

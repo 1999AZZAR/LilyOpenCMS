@@ -16,6 +16,9 @@ main = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(main)
 app = main.app
 
+# Configuration: Set the number of regular users to generate
+REGULAR_USERS_COUNT = 200  # Change this number to generate more or fewer regular users
+
 # List of users to create with comprehensive roles
 users = [
     # Super Admin - Full system access
@@ -84,14 +87,16 @@ users = [
     {"username": "guest1", "role": UserRole.ADMIN, "is_premium": False, "custom_role": "Guest"},
     {"username": "guest2", "role": UserRole.ADMIN, "is_premium": False, "custom_role": "Guest"},
     {"username": "guest3", "role": UserRole.ADMIN, "is_premium": False, "custom_role": "Guest"},
-    
-    # General users - No custom role
-    {"username": "general1", "role": UserRole.GENERAL, "is_premium": False},
-    {"username": "general2", "role": UserRole.GENERAL, "is_premium": False},
-    {"username": "general3", "role": UserRole.GENERAL, "is_premium": False},
-    {"username": "general4", "role": UserRole.GENERAL, "is_premium": False},
-    {"username": "general5", "role": UserRole.GENERAL, "is_premium": False},
 ]
+
+# Generate regular users dynamically based on REGULAR_USERS_COUNT
+for i in range(1, REGULAR_USERS_COUNT + 1):
+    users.append({
+        "username": f"regular{i}",
+        "role": UserRole.GENERAL,
+        "is_premium": False,
+        "write_access": True  # Regular users get write access
+    })
 
 import random
 
@@ -115,6 +120,8 @@ def make_birthdate(min_age: int, max_age: int) -> date:
 # Insert users into the database
 with app.app_context():
     print("👥 LilyOpenCMS Comprehensive User Generator")
+    print("=" * 60)
+    print(f"📊 Configuration: Generating {REGULAR_USERS_COUNT} regular users")
     print("=" * 60)
     
     # Create tables if they don't exist (ensures the 'user' table is present)
@@ -152,6 +159,7 @@ with app.app_context():
                 has_premium_access=has_premium_access,
                 premium_expires_at=premium_expires_at,
                 birthdate=user_birthdate,
+                write_access=user_data.get("write_access", None),  # Set write_access from user_data
             )
             db.session.add(new_user)
             db.session.flush()  # Flush to get the user ID
@@ -163,14 +171,17 @@ with app.app_context():
                 if custom_role:
                     new_user.custom_role = custom_role
                     premium_tag = " (Premium)" if is_premium else ""
-                    print(f"  ✅ Created user: {user_data['username']} ({user_data['role'].value}){premium_tag} - Assigned to {custom_role_name}")
+                    write_access_tag = " (Write Access)" if user_data.get("write_access") else ""
+                    print(f"  ✅ Created user: {user_data['username']} ({user_data['role'].value}){premium_tag}{write_access_tag} - Assigned to {custom_role_name}")
                 else:
                     print(f"  ⚠️ Warning: Custom role '{custom_role_name}' not found for {user_data['username']}")
                     premium_tag = " (Premium)" if is_premium else ""
-                    print(f"  ✅ Created user: {user_data['username']} ({user_data['role'].value}){premium_tag}")
+                    write_access_tag = " (Write Access)" if user_data.get("write_access") else ""
+                    print(f"  ✅ Created user: {user_data['username']} ({user_data['role'].value}){premium_tag}{write_access_tag}")
             else:
                 premium_status = " (Premium)" if is_premium else ""
-                print(f"  ✅ Created user: {user_data['username']} ({user_data['role'].value}){premium_status}")
+                write_access_tag = " (Write Access)" if user_data.get("write_access") else ""
+                print(f"  ✅ Created user: {user_data['username']} ({user_data['role'].value}){premium_status}{write_access_tag}")
             
             added_count += 1
         else:
@@ -227,7 +238,11 @@ with app.app_context():
     print("💎 Premium Status:")
     print("   All admin users: Premium (1 year)")
     print("   Guest users: Standard")
-    print("   General users: Standard")
+    print("   Regular users: Standard")
+    print("")
+    print("✍️ Write Access:")
+    print(f"   Regular users: {REGULAR_USERS_COUNT} users with write access enabled")
+    print("   Admin users: Full access (admin tier)")
     print("")
     print("👑 Role Distribution:")
     print("   Super Admin: 1 user (suadmin)")
@@ -244,10 +259,11 @@ with app.app_context():
     print("   Writer: 5 users")
     print("   Reader: 5 users")
     print("   Guest: 3 users")
-    print("   General: 5 users")
+    print(f"   Regular: {REGULAR_USERS_COUNT} users (with write access)")
     print("")
     print("🎯 Testing Coverage:")
     print("   All permission levels covered")
     print("   All custom roles represented")
     print("   Premium and standard users included")
+    print(f"   {REGULAR_USERS_COUNT} regular users with write access for content creation testing")
     print("   Ready for comprehensive permission testing")

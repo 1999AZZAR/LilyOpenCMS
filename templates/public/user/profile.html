@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
 
 {% block title %}{{ user.get_full_name() or user.username }} - Profil{% endblock %}
 
@@ -6,15 +9,15 @@
 <div class="min-h-screen bg-background">
     <!-- Profile Header -->
     <div class="bg-card border-b border-border">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="flex items-start space-x-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-start space-x-8">
                 <!-- Profile Picture -->
                 <div class="flex-shrink-0">
-                    <div class="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+                    <div class="w-32 h-32 rounded-full bg-muted flex items-center justify-center">
                         {% if user.profile_picture %}
-                            <img src="{{ user.profile_picture }}" alt="{{ user.username }}" class="w-24 h-24 rounded-full object-cover">
+                            <img src="{{ user.profile_picture }}" alt="{{ user.username }}" class="w-32 h-32 rounded-full object-cover">
                         {% else %}
-                            <i class="fas fa-user text-3xl text-muted-foreground"></i>
+                            <i class="fas fa-user text-4xl text-muted-foreground"></i>
                         {% endif %}
                     </div>
                 </div>
@@ -57,11 +60,23 @@
                     {% endif %}
                     
                     <!-- Stats -->
-                    <div class="flex items-center space-x-6 mt-4 text-sm text-muted-foreground">
-                        <span><strong>{{ stats.total_stories }}</strong> cerita</span>
-                        <span><strong>{{ stats.total_albums }}</strong> album</span>
-                        <span><strong data-follower-count>{{ stats.total_followers }}</strong> pengikut</span>
-                        <span><strong>{{ stats.total_following }}</strong> mengikuti</span>
+                    <div class="flex items-center space-x-8 mt-6 text-sm text-muted-foreground">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-file-alt text-primary"></i>
+                            <span><strong>{{ stats.total_stories }}</strong> cerita</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-list text-primary"></i>
+                            <span><strong>{{ stats.total_albums }}</strong> album</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-users text-primary"></i>
+                            <span><strong data-follower-count>{{ stats.total_followers }}</strong> pengikut</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-user-plus text-primary"></i>
+                            <span><strong>{{ stats.total_following }}</strong> mengikuti</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -70,42 +85,108 @@
     
     <!-- Navigation Tabs -->
     <div class="bg-card border-b border-border">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <nav class="flex flex-wrap gap-6">
                 <a href="{{ url_for('user_profile.user_profile', username=user.username, tab='home') }}" 
-                   class="py-4 px-1 border-b-2 font-medium text-sm {% if active_tab == 'home' %}border-primary text-primary{% else %}border-transparent text-muted-foreground hover:text-foreground hover:border-border{% endif %}">Beranda</a>
-                <a href="{{ url_for('user_profile.user_library', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">Perpustakaan</a>
+                   class="py-4 px-1 border-b-2 font-medium text-sm {% if active_tab == 'home' %}border-primary text-primary{% else %}border-transparent text-muted-foreground hover:text-foreground hover:border-border{% endif %}">
+                    <i class="fas fa-home mr-2"></i>Beranda
+                </a>
+                <a href="{{ url_for('user_profile.user_library', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                    <i class="fas fa-book mr-2"></i>Perpustakaan
+                </a>
                 
                 <!-- Show Stories tab only if user has write access or is admin -->
                 {% if has_write_access(user) %}
-                    <a href="{{ url_for('user_profile.user_stories', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">Cerita</a>
+                    <a href="{{ url_for('user_profile.user_stories', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                        <i class="fas fa-file-alt mr-2"></i>Cerita
+                    </a>
                 {% endif %}
                 
                 <!-- Show List tab only if user has write access or is admin -->
                 {% if has_write_access(user) %}
                     <a href="{{ url_for('user_profile.user_profile', username=user.username, tab='list') }}" 
-                       class="py-4 px-1 border-b-2 font-medium text-sm {% if active_tab == 'list' %}border-primary text-primary{% else %}border-transparent text-muted-foreground hover:text-foreground hover:border-border{% endif %}">Album</a>
+                       class="py-4 px-1 border-b-2 font-medium text-sm {% if active_tab == 'list' %}border-primary text-primary{% else %}border-transparent text-muted-foreground hover:text-foreground hover:border-border{% endif %}">
+                        <i class="fas fa-list mr-2"></i>Album
+                    </a>
                 {% endif %}
                 
-                <a href="{{ url_for('user_profile.user_stats', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">Statistik</a>
-                <a href="{{ url_for('user_profile.user_following', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">Mengikuti</a>
+                <!-- Show Images tab only if user has write access or is admin -->
+                {% if has_write_access(user) %}
+                    <a href="{{ url_for('user_profile.user_images', username=user.username) }}" 
+                       class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                        <i class="fas fa-images mr-2"></i>Gambar
+                    </a>
+                {% endif %}
+                
+                <a href="{{ url_for('user_profile.user_stats', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                    <i class="fas fa-chart-bar mr-2"></i>Statistik
+                </a>
+                <a href="{{ url_for('user_profile.user_following', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                    <i class="fas fa-users mr-2"></i>Mengikuti
+                </a>
                 {% if current_user.is_authenticated and current_user.id == user.id %}
-                    <a href="{{ url_for('user_profile.user_settings', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">Pengaturan</a>
+                    <a href="{{ url_for('user_profile.user_settings', username=user.username) }}" class="py-4 px-1 border-b-2 font-medium text-sm border-transparent text-muted-foreground hover:text-foreground hover:border-border">
+                        <i class="fas fa-cog mr-2"></i>Pengaturan
+                    </a>
                 {% endif %}
             </nav>
         </div>
     </div>
     
     <!-- Tab Content -->
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% if active_tab == 'list' %}
             {% include 'public/user/profile_list.html' %}
         {% else %}
             <!-- Default content for home tab -->
             <div class="space-y-8">
-                <div class="text-center py-12">
-                    <i class="fas fa-home text-4xl text-muted-foreground mb-4"></i>
-                    <p class="text-muted-foreground">Selamat datang di profil {{ user.get_full_name() or user.username }}</p>
+                <!-- Welcome Section -->
+                <div class="bg-card border border-border rounded-lg p-8 text-center">
+                    <div class="max-w-2xl mx-auto">
+                        <i class="fas fa-home text-6xl text-primary mb-6"></i>
+                        <h2 class="text-2xl font-bold text-foreground mb-4">Selamat datang di profil {{ user.get_full_name() or user.username }}</h2>
+                        <p class="text-muted-foreground text-lg mb-6">Jelajahi cerita, album, dan konten menarik lainnya</p>
+                        
+                        <!-- Quick Actions -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                            <a href="{{ url_for('user_profile.user_library', username=user.username) }}" 
+                               class="bg-primary/10 hover:bg-primary/20 text-primary p-4 rounded-lg transition-colors">
+                                <i class="fas fa-book text-2xl mb-2"></i>
+                                <div class="font-medium">Perpustakaan</div>
+                                <div class="text-sm text-muted-foreground">Lihat koleksi</div>
+                            </a>
+                            
+                            {% if has_write_access(user) %}
+                            <a href="{{ url_for('user_profile.user_stories', username=user.username) }}" 
+                               class="bg-primary/10 hover:bg-primary/20 text-primary p-4 rounded-lg transition-colors">
+                                <i class="fas fa-file-alt text-2xl mb-2"></i>
+                                <div class="font-medium">Cerita</div>
+                                <div class="text-sm text-muted-foreground">Kelola cerita</div>
+                            </a>
+                            
+                            <a href="{{ url_for('user_profile.user_images', username=user.username) }}" 
+                               class="bg-primary/10 hover:bg-primary/20 text-primary p-4 rounded-lg transition-colors">
+                                <i class="fas fa-images text-2xl mb-2"></i>
+                                <div class="font-medium">Gambar</div>
+                                <div class="text-sm text-muted-foreground">Kelola gambar</div>
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('user_profile.user_stats', username=user.username) }}" 
+                               class="bg-primary/10 hover:bg-primary/20 text-primary p-4 rounded-lg transition-colors">
+                                <i class="fas fa-chart-bar text-2xl mb-2"></i>
+                                <div class="font-medium">Statistik</div>
+                                <div class="text-sm text-muted-foreground">Lihat statistik</div>
+                            </a>
+                            
+                            <a href="{{ url_for('user_profile.user_following', username=user.username) }}" 
+                               class="bg-primary/10 hover:bg-primary/20 text-primary p-4 rounded-lg transition-colors">
+                                <i class="fas fa-users text-2xl mb-2"></i>
+                                <div class="font-medium">Mengikuti</div>
+                                <div class="text-sm text-muted-foreground">Lihat koneksi</div>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endif %}

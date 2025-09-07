@@ -22,6 +22,8 @@ from .routes_user_dashboard import *
 from .routes_library import *
 from .routes_public_api import *
 from .routes_api_xlate import *
+from .routes_external_auth import *
+from .routes_swagger import *
 
 __all__ = [
     "main_blueprint",
@@ -46,4 +48,6 @@ __all__ = [
     "routes_library",
     "routes_public_api",
     "routes_api_xlate",
+    "routes_external_auth",
+    "routes_swagger",
 ]

@@ -1,6 +1,6 @@
-# OpenAPI Local Preview & Validation Guide
+# OpenAPI Local Preview & Validation Guide (Consolidated in API_CENTRAL.md)
 
-This guide shows several ways to preview and validate the API specification at `docs/openapi.yml`, and how to smoke‑test the running backend.
+This guide is now consolidated into `docs/API_CENTRAL.md`. The content below remains as a quick reference.
 
 ## Prerequisites
 - Python virtualenv set up (optional but recommended)

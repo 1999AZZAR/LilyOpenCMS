@@ -81,9 +81,17 @@
                     {% for ad in ads %}
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div>
-                                <div class="text-sm font-medium text-gray-900">{{ ad.title }}</div>
-                                <div class="text-sm text-gray-500">{{ ad.description[:50] }}{% if ad.description|length > 50 %}...{% endif %}</div>
+                            <div class="flex items-center space-x-3">
+                                {% if ad.content_type == 'image' and (ad.image_upload_path or ad.image_url) %}
+                                <div class="flex-shrink-0">
+                                    <img src="{{ ad.image_upload_path or ad.image_url }}" alt="{{ ad.image_alt or ad.title }}" 
+                                         class="w-12 h-8 object-cover rounded border">
+                                </div>
+                                {% endif %}
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium text-gray-900">{{ ad.title }}</div>
+                                    <div class="text-sm text-gray-500">{{ ad.description[:50] }}{% if ad.description|length > 50 %}...{% endif %}</div>
+                                </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

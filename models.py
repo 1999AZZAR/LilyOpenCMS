@@ -1277,6 +1277,8 @@ class Album(db.Model):
     average_rating = db.Column(db.Float, default=0.0, nullable=False)
     # Indonesian content age rating (e.g., SU, 13+, 17+, 21+)
     age_rating = db.Column(db.String(10), nullable=True, index=True)
+    # Author name (can be different from the creator/owner)
+    author = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
     updated_at = db.Column(
         db.DateTime,
@@ -1319,6 +1321,12 @@ class Album(db.Model):
         db.ForeignKey("user.id", name="fk_album_user_id", ondelete="CASCADE"),
         nullable=False,
     )
+    # Owner ID (can be different from creator - for admin-created albums)
+    owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", name="fk_album_owner_id", ondelete="SET NULL"),
+        nullable=True,
+    )
     category_id = db.Column(
         db.Integer,
         db.ForeignKey("category.id", name="fk_album_category_id"),
@@ -1326,7 +1334,8 @@ class Album(db.Model):
     )
 
     # Relationships
-    author = db.relationship("User", backref="albums", foreign_keys=[user_id])
+    creator = db.relationship("User", backref="created_albums", foreign_keys=[user_id])  # User who created the album
+    owner = db.relationship("User", backref="owned_albums", foreign_keys=[owner_id])    # User who owns the album
     # Relationship for the user who requested deletion
     deletion_requester = db.relationship("User", foreign_keys=[deletion_requested_by])
     category = db.relationship("Category", backref="albums")
@@ -1508,8 +1517,10 @@ class Album(db.Model):
             "total_views": self.total_views,
             "average_rating": self.average_rating,
             "age_rating": self.age_rating,
+            "author": self.author,
             "category": self.category.to_dict() if self.category else None,
-            "author": self.author.to_dict() if self.author else None,
+            "creator": self.creator.to_dict() if self.creator else None,
+            "owner": self.owner.to_dict() if self.owner else None,
             "chapters": [chapter.to_dict() for chapter in self.chapters],
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -2836,8 +2847,13 @@ class Ad(db.Model):
     content_type = db.Column(db.String(50), nullable=False)  # 'image', 'text', 'html', 'google_ads'
     
     # Content fields
-    image_url = db.Column(db.String(500), nullable=True)  # For image ads
+    image_url = db.Column(db.String(500), nullable=True)  # For external image URLs
+    image_filename = db.Column(db.String(255), nullable=True)  # For uploaded image files
+    image_upload_path = db.Column(db.String(500), nullable=True)  # Relative path to uploaded image
     image_alt = db.Column(db.String(200), nullable=True)
+    image_width = db.Column(db.Integer, nullable=True)  # Original image width
+    image_height = db.Column(db.Integer, nullable=True)  # Original image height
+    image_file_size = db.Column(db.Integer, nullable=True)  # File size in bytes
     text_content = db.Column(db.Text, nullable=True)  # For text ads
     html_content = db.Column(db.Text, nullable=True)  # For HTML ads
     target_url = db.Column(db.String(500), nullable=True)  # Click destination
@@ -2894,6 +2910,21 @@ class Ad(db.Model):
         
         if self.content_type not in ['image', 'text', 'html', 'google_ads']:
             raise ValueError("Content type must be 'image', 'text', 'html', or 'google_ads'")
+        
+        # Validate image fields for image content type
+        if self.content_type == 'image':
+            if not self.image_url and not self.image_filename:
+                raise ValueError("Image ads must have either image_url or image_filename")
+            
+            # Validate image dimensions if provided
+            if self.image_width and self.image_width <= 0:
+                raise ValueError("Image width must be positive")
+            if self.image_height and self.image_height <= 0:
+                raise ValueError("Image height must be positive")
+            
+            # Validate file size if provided
+            if self.image_file_size and self.image_file_size <= 0:
+                raise ValueError("Image file size must be positive")
     
     def is_active_now(self):
         """Check if ad is currently active."""
@@ -2927,6 +2958,8 @@ class Ad(db.Model):
         """Get the rendered HTML for this ad based on its type and content."""
         if self.ad_type == 'external' and self.content_type == 'google_ads':
             return self.get_google_ads_html()
+        elif self.ad_type == 'external':
+            return self.get_external_ad_html(page_context)
         elif self.ad_type == 'internal':
             return self.get_internal_ad_html(page_context)
         else:
@@ -2956,12 +2989,22 @@ class Ad(db.Model):
         
         content = ""
         if self.content_type == 'image':
-            content = f"""
-            <div class="ad-image-container">
-                <img src="{self.image_url}" alt="{self.image_alt or self.title}" 
-                     class="ad-image" style="max-width: 100%; height: auto;">
-            </div>
-            """
+            image_url = self.get_image_url()
+            if image_url:
+                content = f"""
+                <div class="ad-image-container">
+                    <img src="{image_url}" alt="{self.image_alt or self.title}" 
+                         class="ad-image" style="max-width: 100%; height: auto;">
+                </div>
+                """
+            else:
+                content = f"""
+                <div class="ad-image-container ad-placeholder">
+                    <div class="ad-placeholder-content">
+                        <p class="text-gray-400">No image available</p>
+                    </div>
+                </div>
+                """
         elif self.content_type == 'text':
             content = f"""
             <div class="ad-text-content">
@@ -3008,6 +3051,92 @@ class Ad(db.Model):
         </div>
         """
     
+    def get_external_ad_html(self, page_context=None):
+        """Generate external ad HTML for API consumption."""
+        css_classes = self.css_classes or "ad-container external-ad"
+        inline_styles = self.inline_styles or ""
+        
+        content = ""
+        if self.content_type == 'image':
+            image_url = self.get_image_url()
+            if image_url:
+                content = f"""
+                <div class="ad-image-container">
+                    <img src="{image_url}" alt="{self.image_alt or self.title}" 
+                         class="ad-image" style="max-width: 100%; height: auto;">
+                </div>
+                """
+            else:
+                content = f"""
+                <div class="ad-image-container ad-placeholder">
+                    <div class="ad-placeholder-content">
+                        <p class="text-gray-400">No image available</p>
+                    </div>
+                </div>
+                """
+        elif self.content_type == 'text':
+            content = f"""
+            <div class="ad-text-content">
+                <h3 class="ad-title">{self.title}</h3>
+                <p class="ad-description">{self.text_content}</p>
+            </div>
+            """
+        elif self.content_type == 'html':
+            content = f"""
+            <div class="ad-html-content">
+                {self.html_content}
+            </div>
+            """
+        
+        # Add click tracking for external ads
+        click_url = ""
+        if self.target_url:
+            from itsdangerous import URLSafeSerializer
+            from flask import current_app
+            s = URLSafeSerializer(current_app.secret_key, salt='ads-click')
+            sig = s.dumps({'ad_id': self.id, 'url': self.target_url})
+            click_url = f"/ads/click?ad_id={self.id}&url={self.target_url}&sig={sig}"
+        
+        return f"""
+        <div class="{css_classes}" data-ad-id="{self.id}" style="{inline_styles}">
+            <div class="ad-content">
+                {content}
+                <div class="ad-label">Advertisement</div>
+            </div>
+        </div>
+        """
+    
+    def get_image_url(self):
+        """Get the appropriate image URL for the ad."""
+        if self.image_upload_path:
+            # Return the uploaded image path
+            return self.image_upload_path
+        elif self.image_url:
+            # Return the external image URL
+            return self.image_url
+        return None
+    
+    def delete_image_file(self):
+        """Delete the uploaded image file if it exists."""
+        if self.image_upload_path:
+            import os
+            from flask import current_app
+            
+            try:
+                # Construct the full file path
+                full_path = os.path.join(current_app.static_folder, self.image_upload_path.lstrip('/'))
+                if os.path.exists(full_path):
+                    os.remove(full_path)
+                    # Clear the image fields
+                    self.image_filename = None
+                    self.image_upload_path = None
+                    self.image_width = None
+                    self.image_height = None
+                    self.image_file_size = None
+            except Exception as e:
+                # Log the error but don't raise it
+                print(f"Error deleting image file: {e}")
+    
     def to_dict(self):
         """Convert the model to a dictionary."""
         return {
@@ -3017,7 +3146,12 @@ class Ad(db.Model):
             "ad_type": self.ad_type,
             "content_type": self.content_type,
             "image_url": self.image_url,
+            "image_filename": self.image_filename,
+            "image_upload_path": self.image_upload_path,
             "image_alt": self.image_alt,
+            "image_width": self.image_width,
+            "image_height": self.image_height,
+            "image_file_size": self.image_file_size,
             "text_content": self.text_content,
             "html_content": self.html_content,
             "target_url": self.target_url,

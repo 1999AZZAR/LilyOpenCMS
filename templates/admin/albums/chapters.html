@@ -211,25 +211,52 @@
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Artikel Tersedia</h2>
         <p class="text-gray-600 mb-4">Pilih artikel untuk ditambahkan sebagai bab ke album ini. Menampilkan semua artikel yang Anda miliki (diterbitkan dan draft).</p>
         
-        <div class="mb-4 flex flex-col sm:flex-row gap-4">
-            <div class="flex-1">
-                <input type="text" id="article-search" placeholder="Search articles..." 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="mb-4 space-y-4">
+            <!-- Search and Filters Row -->
+            <div class="flex flex-col lg:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="article-search" placeholder="Search articles..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex items-center space-x-2">
+                        <label for="user-filter" class="text-sm font-medium text-gray-700 whitespace-nowrap">User:</label>
+                        <select id="user-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]">
+                            <option value="">All Users</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="category-filter" class="text-sm font-medium text-gray-700 whitespace-nowrap">Category:</label>
+                        <select id="category-filter" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="per-page" class="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</label>
+                        <select id="per-page" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="6" {% if request.args.get('per_page', '12') == '6' %}selected{% endif %}>6 per page</option>
+                            <option value="12" {% if request.args.get('per_page', '12') == '12' %}selected{% endif %}>12 per page</option>
+                            <option value="24" {% if request.args.get('per_page', '12') == '24' %}selected{% endif %}>24 per page</option>
+                            <option value="48" {% if request.args.get('per_page', '12') == '48' %}selected{% endif %}>48 per page</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center space-x-2">
-                <label for="per-page" class="text-sm font-medium text-gray-700">Show:</label>
-                <select id="per-page" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="6" {% if request.args.get('per_page', '12') == '6' %}selected{% endif %}>6 per page</option>
-                    <option value="12" {% if request.args.get('per_page', '12') == '12' %}selected{% endif %}>12 per page</option>
-                    <option value="24" {% if request.args.get('per_page', '12') == '24' %}selected{% endif %}>24 per page</option>
-                    <option value="48" {% if request.args.get('per_page', '12') == '48' %}selected{% endif %}>48 per page</option>
-                </select>
+            
+            <!-- Filter Results Info -->
+            <div id="filter-results-info" class="text-sm text-gray-600 hidden">
+                <span id="filtered-count">0</span> articles shown (filtered from <span id="total-count">{{ available_news|length }}</span> total)
+                <button id="clear-filters" class="ml-2 text-blue-600 hover:text-blue-800 underline">Clear all filters</button>
             </div>
         </div>
         
         <div id="available-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for article in available_news %}
-            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+            <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors article-card" 
+                 data-user="{{ article.user.username if article.user else 'Unknown' }}"
+                 data-category="{{ article.category.name if article.category else 'Uncategorized' }}"
+                 data-title="{{ article.title|lower }}"
+                 data-description="{{ (article.description or '')|lower }}">
                 <div class="flex justify-between items-start mb-2">
                     <div class="flex-1 min-w-0">
                         <h3 class="text-sm font-medium text-gray-900 line-clamp-2">{{ article.title }}</h3>
@@ -273,7 +300,7 @@
             <div class="flex items-center space-x-2">
                 <!-- Previous Page -->
                 {% if pagination.has_prev %}
-                <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=pagination.prev_num, search=request.args.get('search', '')) }}" 
+                <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=pagination.prev_num, search=request.args.get('search', ''), user=request.args.get('user', ''), category=request.args.get('category', '')) }}" 
                    class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
                     <i class="fas fa-chevron-left mr-1"></i>
                     Previous
@@ -290,7 +317,7 @@
                     {% for page_num in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
                         {% if page_num %}
                             {% if page_num != pagination.page %}
-                            <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=page_num, search=request.args.get('search', '')) }}" 
+                            <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=page_num, search=request.args.get('search', ''), user=request.args.get('user', ''), category=request.args.get('category', '')) }}" 
                                class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
                                 {{ page_num }}
                             </a>
@@ -309,7 +336,7 @@
                 
                 <!-- Next Page -->
                 {% if pagination.has_next %}
-                <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=pagination.next_num, search=request.args.get('search', '')) }}" 
+                <a href="{{ url_for('albums.manage_chapters', album_id=album.id, page=pagination.next_num, search=request.args.get('search', ''), user=request.args.get('user', ''), category=request.args.get('category', '')) }}" 
                    class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors">
                     Next
                     <i class="fas fa-chevron-right ml-1"></i>
@@ -660,32 +687,120 @@ function reorderChapters() {
     alert('Fitur pengurutan bab akan segera hadir!');
 }
 
-// Search functionality
-document.getElementById('article-search').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const articles = document.querySelectorAll('#available-articles .border');
+// Filter functionality
+function populateFilters() {
+    // Populate user filter from backend data
+    const userFilter = document.getElementById('user-filter');
+    {% for user in available_users %}
+    const userOption{{ user.id }} = document.createElement('option');
+    userOption{{ user.id }}.value = '{{ user.username }}';
+    userOption{{ user.id }}.textContent = '{{ user.username }} ({{ user.news_count }})';
+    userFilter.appendChild(userOption{{ user.id }});
+    {% endfor %}
     
-    articles.forEach(article => {
-        const title = article.querySelector('h3').textContent.toLowerCase();
-        const description = article.querySelector('p').textContent.toLowerCase();
-        
-        if (title.includes(searchTerm) || description.includes(searchTerm)) {
-            article.style.display = 'block';
-        } else {
-            article.style.display = 'none';
-        }
-    });
-});
+    // Populate category filter from backend data
+    const categoryFilter = document.getElementById('category-filter');
+    {% for category in available_categories %}
+    const categoryOption{{ category.id }} = document.createElement('option');
+    categoryOption{{ category.id }}.value = '{{ category.name }}';
+    categoryOption{{ category.id }}.textContent = '{{ category.name }} ({{ category.news_count }})';
+    categoryFilter.appendChild(categoryOption{{ category.id }});
+    {% endfor %}
+    
+    // Set current filter values from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSearch = urlParams.get('search') || '';
+    const currentUser = urlParams.get('user') || '';
+    const currentCategory = urlParams.get('category') || '';
+    
+    document.getElementById('article-search').value = currentSearch;
+    document.getElementById('user-filter').value = currentUser;
+    document.getElementById('category-filter').value = currentCategory;
+    
+    // Update filter results info
+    updateFilterResultsInfo();
+}
+
+function updateFilterResultsInfo() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasFilters = urlParams.get('search') || urlParams.get('user') || urlParams.get('category');
+    const filterInfo = document.getElementById('filter-results-info');
+    const filteredCount = document.getElementById('filtered-count');
+    const totalCount = document.getElementById('total-count');
+    
+    if (hasFilters) {
+        const visibleArticles = document.querySelectorAll('.article-card');
+        filteredCount.textContent = visibleArticles.length;
+        filterInfo.classList.remove('hidden');
+    } else {
+        filterInfo.classList.add('hidden');
+    }
+}
+
+function filterArticles() {
+    const searchTerm = document.getElementById('article-search').value;
+    const selectedUser = document.getElementById('user-filter').value;
+    const selectedCategory = document.getElementById('category-filter').value;
+    
+    // Build URL with current parameters
+    const currentUrl = new URL(window.location);
+    const params = new URLSearchParams();
+    
+    // Add album_id
+    params.set('album_id', currentUrl.searchParams.get('album_id') || '{{ album.id }}');
+    
+    // Add filters if they have values
+    if (searchTerm) params.set('search', searchTerm);
+    if (selectedUser) params.set('user', selectedUser);
+    if (selectedCategory) params.set('category', selectedCategory);
+    
+    // Reset to page 1 when filtering
+    params.set('page', '1');
+    
+    // Redirect to the filtered URL
+    const newUrl = `{{ url_for('albums.manage_chapters', album_id=album.id) }}?${params.toString()}`;
+    window.location.href = newUrl;
+}
+
+function clearAllFilters() {
+    // Redirect to the page without any filters
+    const newUrl = `{{ url_for('albums.manage_chapters', album_id=album.id) }}`;
+    window.location.href = newUrl;
+}
+
+// Event listeners
+document.getElementById('article-search').addEventListener('input', debounce(filterArticles, 300));
+document.getElementById('user-filter').addEventListener('change', filterArticles);
+document.getElementById('category-filter').addEventListener('change', filterArticles);
+document.getElementById('clear-filters').addEventListener('click', clearAllFilters);
+
+// Debounce function to limit search input frequency
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
 // Add search parameter to pagination links
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize filters
+    populateFilters();
+    
     const searchInput = document.getElementById('article-search');
     const perPageSelect = document.getElementById('per-page');
     const paginationLinks = document.querySelectorAll('.pagination-link');
     
-    // Update pagination links to include search term and per_page
+    // Update pagination links to include all filter parameters
     function updatePaginationLinks() {
         const searchTerm = searchInput.value;
+        const userFilter = document.getElementById('user-filter').value;
+        const categoryFilter = document.getElementById('category-filter').value;
         const perPage = perPageSelect.value;
         
         paginationLinks.forEach(link => {
@@ -695,13 +810,20 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 url.searchParams.delete('search');
             }
+            if (userFilter) {
+                url.searchParams.set('user', userFilter);
+            } else {
+                url.searchParams.delete('user');
+            }
+            if (categoryFilter) {
+                url.searchParams.set('category', categoryFilter);
+            } else {
+                url.searchParams.delete('category');
+            }
             url.searchParams.set('per_page', perPage);
             link.href = url.toString();
         });
     }
-    
-    // Update links when search term changes
-    searchInput.addEventListener('input', updatePaginationLinks);
     
     // Update links when per-page changes
     perPageSelect.addEventListener('change', function() {

@@ -182,10 +182,10 @@
           <h2 class="text-xl font-semibold text-foreground mb-4">Tentang Penulis</h2>
           <div class="flex items-center">
             <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold mr-4">
-              {{ album.author.username[0].upper() if album.author.username else 'A' }}
+              {{ album.author[0].upper() if album.author else (album.owner.username[0].upper() if album.owner and album.owner.username else 'A') }}
             </div>
             <div>
-              <h3 class="font-semibold text-foreground">{{ album.author.username if album.author.username else 'Penulis' }}</h3>
+                              <h3 class="font-semibold text-foreground">{{ album.author if album.author else (album.owner.username if album.owner else 'Penulis') }}</h3>
               <p class="text-sm text-muted-foreground">
                 {{ album.total_chapters }} cerita dalam album ini
               </p>
@@ -194,9 +194,19 @@
         </div>
         
         <!-- Author's Other Albums -->
-        {% if author_albums %}
+        {% if author_albums and author_albums|length > 0 %}
         <div class="bg-card rounded-lg border border-border p-6 mb-8">
-          <h2 class="text-xl font-semibold text-foreground mb-4">Album Lainnya oleh {{ album.author.username if album.author.username else 'Penulis Ini' }}</h2>
+          <h2 class="text-xl font-semibold text-foreground mb-4">
+            {% if album.author and album.owner %}
+              Album Lainnya oleh {{ album.author }} ({{ album.owner.username }})
+            {% elif album.author %}
+              Album Lainnya oleh {{ album.author }}
+            {% elif album.owner %}
+              Album Lainnya oleh {{ album.owner.username }}
+            {% else %}
+              Album Lainnya oleh Penulis Ini
+            {% endif %}
+          </h2>
           <div class="flex overflow-x-auto gap-6 px-4 py-4 scroll-smooth">
             {% for author_album in author_albums %}
             <article class="album-card bg-card rounded-lg border border-border overflow-hidden transition-all duration-300 hover:border-primary/30 hover:shadow-lg group flex-shrink-0 w-64 sm:w-72 lg:w-80">
@@ -271,6 +281,37 @@
               </a>
             </article>
             {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <!-- No Other Albums by Author -->
+        <div class="bg-card rounded-lg border border-border p-6 mb-8">
+          <h2 class="text-xl font-semibold text-foreground mb-4">
+            {% if album.author and album.owner %}
+              Album Lainnya oleh {{ album.author }} ({{ album.owner.username }})
+            {% elif album.author %}
+              Album Lainnya oleh {{ album.author }}
+            {% elif album.owner %}
+              Album Lainnya oleh {{ album.owner.username }}
+            {% else %}
+              Album Lainnya oleh Penulis Ini
+            {% endif %}
+          </h2>
+          <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-muted-foreground mx-auto mb-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+            <p class="text-muted-foreground">
+              {% if album.author and album.owner %}
+                Belum ada album lain oleh {{ album.author }} atau {{ album.owner.username }}
+              {% elif album.author %}
+                Belum ada album lain oleh {{ album.author }}
+              {% elif album.owner %}
+                Belum ada album lain oleh {{ album.owner.username }}
+              {% else %}
+                Belum ada album lain oleh penulis ini
+              {% endif %}
+            </p>
           </div>
         </div>
         {% endif %}
