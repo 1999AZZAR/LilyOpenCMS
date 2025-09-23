@@ -15,6 +15,7 @@
                 Tambah Bagian Baru
             </h2>
             <form action="{{ url_for('main.settings_pedomanhak') }}" method="POST" class="space-y-4" role="form" aria-label="Form tambah bagian baru">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <!-- CSRF protection disabled for this application -->
                 <input type="hidden" name="action" value="create">
                 
@@ -75,6 +76,7 @@
                     </div>
 
                     <form action="{{ url_for('main.settings_pedomanhak') }}" method="POST" class="space-y-4" role="form" aria-label="Form edit bagian {{ pedomanhak.title }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <!-- CSRF protection disabled for this application -->
                         <input type="hidden" name="action" value="update">
                         <input type="hidden" name="pedomanhak_id" value="{{ pedomanhak.id }}">

@@ -10,7 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='pic/favicon.png') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
-    <!-- CSRF protection disabled for this application -->
+    <!-- CSRF Protection -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="{{ url_for('static', filename='js/csrf-utils.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_base_css.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/force-scaling.css') }}">
@@ -244,7 +246,8 @@
                                 'visible': True,
                                 'links': [
                                     {'url': url_for('main.settings_users'), 'icon': 'fas fa-users-cog', 'label': 'Manajemen Pengguna', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN},
-                                    {'url': url_for('main.content_deletion_requests'), 'icon': 'fas fa-trash-alt', 'label': 'Permintaan Penghapusan Konten', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
+                                    {'url': url_for('main.content_deletion_requests'), 'icon': 'fas fa-trash-alt', 'label': 'Permintaan Penghapusan Konten', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN},
+                                    {'url': '/settings/content-edit-requests', 'icon': 'fas fa-edit', 'label': 'Permintaan Izin Edit', 'visible': current_user.role == UserRole.SUPERUSER or current_user.role == UserRole.ADMIN}
                                 ]
                             },
 

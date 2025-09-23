@@ -1,22 +1,50 @@
 from routes import main_blueprint
 from .common_imports import *
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from routes.utils.email_service import email_service
 
 
 def _get_serializer():
     secret_key = current_app.config.get("SECRET_KEY", "change-me")
     return URLSafeTimedSerializer(secret_key, salt="email-verify")
 
+def _find_user_by_username_or_email(identifier):
+    """Find user by username or email"""
+    if '@' in identifier:
+        # Input is email
+        return User.query.filter_by(email=identifier).first()
+    else:
+        # Input is username
+        return User.query.filter_by(username=identifier).first()
+
 def _send_verification_email(user):
     try:
+        current_app.logger.info(f"🔍 Starting verification email process for user: {user.username} (email: {user.email})")
+
         s = _get_serializer()
         token = s.dumps({"user_id": user.id, "email": user.email or ""})
-        verify_url = url_for("main.verify_email", token=token, _external=True)
-        current_app.logger.info(f"Verification link for {user.username}: {verify_url}")
+        current_app.logger.info(f"🔍 Generated verification token for user {user.username}")
+
+        # Send actual email using email service
+        if user.email:
+            current_app.logger.info(f"🔍 Attempting to send verification email to {user.email}")
+            success = email_service.send_verification_email(user, token)
+            if success:
+                current_app.logger.info(f"✅ Verification email sent successfully to {user.email}")
+            else:
+                current_app.logger.warning(f"⚠️ Failed to send verification email to {user.email}")
+        else:
+            # Fallback to logging if no email
+            verify_url = url_for("main.verify_email", token=token, _external=True)
+            current_app.logger.info(f"📧 Verification link for {user.username} (no email): {verify_url}")
+
         user.last_verification_sent_at = datetime.now(timezone.utc)
         db.session.commit()
+        current_app.logger.info(f"✅ Verification email process completed for {user.username}")
     except Exception as e:
-        current_app.logger.warning(f"Failed to send verification email: {e}")
+        current_app.logger.error(f"❌ Failed to send verification email: {e}")
+        import traceback
+        current_app.logger.error(f"❌ Stack trace: {traceback.format_exc()}")
 
 @main_blueprint.route("/register", methods=["GET", "POST"])
 def register():
@@ -285,16 +313,36 @@ def login():
         return redirect(url_for("main.home"))
 
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
+        # Maintenance mode check (block general users when enabled)
+        try:
+            import os, json
+            settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+            maintenance_enabled = False
+            maintenance_message = 'Situs dalam mode perawatan. Silakan coba lagi nanti.'
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    m = data.get('maintenance', {}) if isinstance(data, dict) else {}
+                    maintenance_enabled = bool(m.get('enabled', False))
+                    maintenance_message = m.get('message') or maintenance_message
+        except Exception:
+            maintenance_enabled = False
+
+        username_or_email = request.form.get("username", "").strip()
         password = request.form.get("password", "")
 
-        if not username or not password:
-            flash("Username and password are required", "error")
+        if not username_or_email or not password:
+            flash("Username/email and password are required", "error")
             return render_template("public/login.html")
 
-        user = User.query.filter_by(username=username).first()
+        # Find user by username or email
+        user = _find_user_by_username_or_email(username_or_email)
 
         if user and user.check_password(password):
+            # If maintenance is enabled, allow only SUPERUSER
+            if maintenance_enabled and user.role != UserRole.SUPERUSER:
+                flash(maintenance_message, "error")
+                return render_template("public/login.html")
             if not user.is_active:
                 flash("Your account is pending approval. Please wait for administrator approval.", "error")
                 return render_template("public/login.html")
@@ -317,7 +365,7 @@ def login():
                 return redirect(url_for("main.settings_dashboard"))
             return redirect(url_for("user_profile.user_profile", username=user.username))
 
-        flash("Invalid credentials", "error")
+        flash("Invalid username/email or password", "error")
         return render_template("public/login.html")
 
     return render_template("public/login.html")
@@ -571,6 +619,30 @@ def account_profile():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@main_blueprint.route("/api/account/profile/<username>", methods=["GET"])
+def get_user_profile_by_username(username):
+    """Get a specific user's profile data by username."""
+    try:
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        return jsonify({
+            'username': user.username,
+            'email': user.email,
+            'full_name': user.get_full_name(),
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'birthdate': user.birthdate.isoformat() if user.birthdate else None,
+            'age': user.get_age() if user.birthdate else None,
+            'role': user.role.value if user.role else None,
+            'custom_role_name': user.custom_role.name if user.custom_role else None,
+            'created_at': user.created_at.isoformat() if user.created_at else None,
+            'last_login': user.last_login.isoformat() if user.last_login else None
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @main_blueprint.route("/api/account/profile", methods=["PUT"])
 @login_required

@@ -48,7 +48,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Total Render</p>
-            <p class="text-2xl font-bold text-gray-900">{{ ssr_stats.total_renders|default(0) }}</p>
+            <p id="ssr-total-renders" class="text-2xl font-bold text-gray-900">{{ ssr_stats.total_renders|default(0) }}</p>
           </div>
         </div>
         <div class="mt-4">
@@ -66,7 +66,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Render Cache</p>
-            <p class="text-2xl font-bold text-gray-900">{{ ssr_stats.cached_renders|default(0) }}</p>
+            <p id="ssr-cached-renders" class="text-2xl font-bold text-gray-900">{{ ssr_stats.cached_renders|default(0) }}</p>
           </div>
         </div>
         <div class="mt-4">
@@ -84,12 +84,12 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Hit Rate</p>
-            <p class="text-2xl font-bold text-gray-900">{{ ssr_stats.cache_hit_rate|default(0) }}%</p>
+            <p id="ssr-hit-rate-text" class="text-2xl font-bold text-gray-900">{{ ssr_stats.cache_hit_rate|default(0) }}%</p>
           </div>
         </div>
         <div class="mt-4">
           <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-purple-600 h-2 rounded-full" style="width: {{ ssr_stats.cache_hit_rate|default(0) }}%"></div>
+            <div id="ssr-hit-rate-bar" class="bg-purple-600 h-2 rounded-full" style="width: {{ ssr_stats.cache_hit_rate|default(0) }}%"></div>
           </div>
         </div>
       </div>
@@ -102,7 +102,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Rata-rata Waktu</p>
-            <p class="text-2xl font-bold text-gray-900">{{ "%.2f"|format(ssr_stats.avg_render_time|default(0)) }}s</p>
+            <p id="ssr-avg-time" class="text-2xl font-bold text-gray-900">{{ "%.2f"|format(ssr_stats.avg_render_time|default(0)) }}s</p>
           </div>
         </div>
         <div class="mt-4">
@@ -130,15 +130,15 @@
           <div class="space-y-2">
             <div class="flex justify-between items-center py-1">
               <span class="text-sm text-gray-600">Rata-rata:</span>
-              <span class="text-sm font-semibold text-gray-800">{{ "%.3f"|format(ssr_stats.avg_render_time|default(0)) }}s</span>
+              <span id="ssr-avg-time-detail" class="text-sm font-semibold text-gray-800">{{ "%.3f"|format(ssr_stats.avg_render_time|default(0)) }}s</span>
             </div>
             <div class="flex justify-between items-center py-1">
               <span class="text-sm text-gray-600">Maksimum:</span>
-              <span class="text-sm font-semibold text-gray-800">{{ "%.3f"|format(ssr_stats.max_render_time|default(0)) }}s</span>
+              <span id="ssr-max-time" class="text-sm font-semibold text-gray-800">{{ "%.3f"|format(ssr_stats.max_render_time|default(0)) }}s</span>
             </div>
             <div class="flex justify-between items-center py-1">
               <span class="text-sm text-gray-600">Minimum:</span>
-              <span class="text-sm font-semibold text-gray-800">{{ "%.3f"|format(ssr_stats.min_render_time|default(0)) }}s</span>
+              <span id="ssr-min-time" class="text-sm font-semibold text-gray-800">{{ "%.3f"|format(ssr_stats.min_render_time|default(0)) }}s</span>
             </div>
           </div>
         </div>
@@ -152,15 +152,15 @@
           <div class="space-y-2">
             <div class="flex justify-between items-center py-1">
               <span class="text-sm text-gray-600">Ukuran Cache:</span>
-              <span class="text-sm font-semibold text-gray-800">{{ ssr_stats.template_cache_size|default(0) }}</span>
+              <span id="ssr-cache-size" class="text-sm font-semibold text-gray-800">{{ ssr_stats.template_cache_size|default(0) }}</span>
             </div>
             <div class="flex justify-between items-center py-1">
               <span class="text-sm text-gray-600">Hit Rate:</span>
-              <span class="text-sm font-semibold text-gray-800">{{ ssr_stats.cache_hit_rate|default(0) }}%</span>
+              <span id="ssr-hit-rate-detail" class="text-sm font-semibold text-gray-800">{{ ssr_stats.cache_hit_rate|default(0) }}%</span>
             </div>
             <div class="flex justify-between items-center py-1">
               <span class="text-sm text-gray-600">Total Render:</span>
-              <span class="text-sm font-semibold text-gray-800">{{ ssr_stats.total_renders|default(0) }}</span>
+              <span id="ssr-total-renders-detail" class="text-sm font-semibold text-gray-800">{{ ssr_stats.total_renders|default(0) }}</span>
             </div>
           </div>
         </div>
@@ -173,16 +173,16 @@
           <h4 class="text-md font-medium text-gray-700">Cache Hit Rate</h4>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
-          <div class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300 flex items-center justify-center" 
+          <div id="ssr-hit-rate-bar-lg" class="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300 flex items-center justify-center" 
                style="width: {{ ssr_stats.cache_hit_rate|default(0) }}%"
                role="progressbar" 
                aria-valuenow="{{ ssr_stats.cache_hit_rate|default(0) }}" 
                aria-valuemin="0" 
                aria-valuemax="100">
-            <span class="text-xs font-semibold text-white">{{ ssr_stats.cache_hit_rate|default(0) }}%</span>
+            <span id="ssr-hit-rate-bar-lg-text" class="text-xs font-semibold text-white">{{ ssr_stats.cache_hit_rate|default(0) }}%</span>
           </div>
         </div>
-        <div class="text-xs text-gray-500 text-center">Cache Hit Rate: {{ ssr_stats.cache_hit_rate|default(0) }}%</div>
+        <div id="ssr-hit-rate-footer" class="text-xs text-gray-500 text-center">Cache Hit Rate: {{ ssr_stats.cache_hit_rate|default(0) }}%</div>
         
         {% if ssr_stats.avg_render_time|default(0) > 0.5 %}
         <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">

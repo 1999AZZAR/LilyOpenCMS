@@ -1,10 +1,12 @@
+// Global variables
+let currentOwnedPage = 1; // Track current page for owned news
+let ownedNewsList, ownedPaginationControls;
+
 document.addEventListener('DOMContentLoaded', () => {
     const passwordForm = document.getElementById('change-password-form');
     const passwordStatus = document.getElementById('password-status');
-    const ownedNewsList = document.getElementById('owned-news-list');
-    const ownedPaginationControls = document.getElementById('owned-pagination-controls');
-
-    let currentOwnedPage = 1; // Track current page for owned news
+    ownedNewsList = document.getElementById('owned-news-list');
+    ownedPaginationControls = document.getElementById('owned-pagination-controls');
 
     // --- Password Change Logic ---
     if (passwordForm) {
@@ -13,25 +15,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentPassword = document.getElementById('current-password').value;
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
             if (newPassword !== confirmPassword) {
                 passwordStatus.innerHTML = '<p class="text-red-500">Kata sandi baru tidak cocok.</p>';
-                return;
-            }
-            if (!csrfToken) {
-                passwordStatus.innerHTML = '<p class="text-red-500">Token CSRF tidak ditemukan.</p>';
                 return;
             }
 
             passwordStatus.innerHTML = '<p class="text-gray-400">Mengubah kata sandi...</p>';
 
             try {
-                const response = await fetch('/api/account/change-password', {
+                const response = await fetchWithCSRF('/api/account/change-password', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken,
                     },
                     body: JSON.stringify({
                         current_password: currentPassword,
@@ -120,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Owned News Fetching and Rendering ---
-    async function fetchOwnedNews(page = 1) {
+    window.fetchOwnedNews = async function(page = 1) {
         if (!ownedNewsList) return;
 
         currentOwnedPage = page;
@@ -143,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 search: search
             });
 
-            const response = await fetch(`/api/news/owned?${params}`);
+            const response = await fetchWithCSRF(`/api/news/owned?${params}`);
             if (!response.ok) throw new Error('Failed to fetch owned news');
             
             const data = await response.json();
@@ -194,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const visibilityClass = news.is_visible ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
             const visibilityText = news.is_visible ? 'Terlihat' : 'Draf';
             const premiumClass = news.is_news ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800';
-            const premiumText = news.is_news ? 'Artikel' : 'Berita';
+            const premiumText = news.is_news ? 'Berita' : 'Cerita';
 
             // Use the card structure similar to news-management.js
             return `
@@ -243,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Toggle Visibility Function (Re-added) ---
     window.toggleVisibility = async function(newsId, isVisible) { // Make globally accessible
         try {
-            const response = await fetch(`/api/news/${newsId}/visibility`, {
+            const response = await fetchWithCSRF(`/api/news/${newsId}/visibility`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_visible: isVisible }),
@@ -304,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmDeleteAccountBtn) {
         confirmDeleteAccountBtn.addEventListener('click', async () => {
             try {
-                const response = await fetch('/api/account/delete', {
+                const response = await fetchWithCSRF('/api/account/delete', {
                     method: 'DELETE',
                 });
 
@@ -327,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Update Account Stats ---
     async function updateAccountStats() {
         try {
-            const response = await fetch('/api/news/owned?page=1&per_page=1000'); // Get all articles for stats
+            const response = await fetchWithCSRF('/api/news/owned?page=1&per_page=1000'); // Get all articles for stats
             if (response.ok) {
                 const data = await response.json();
                 const articles = data.items || [];
@@ -354,77 +350,56 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchOwnedNews(1);
     updateAccountStats();
 
-}); // End DOMContentLoaded
-
-// Change password form submission
-document.getElementById('change-password-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = {
-        current_password: document.getElementById('current-password').value.trim(),
-        new_password: document.getElementById('new-password').value.trim(),
-        confirm_password: document.getElementById('confirm-password').value.trim(),
-    };
-
-    try {
-        const response = await fetch('/api/account/change-password', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to change password');
+    // --- Delete Account Modal Functions ---
+    window.openDeleteRequestModal = function() {
+        const modal = document.getElementById('delete-request-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
-
-        showToast('success', 'Password berhasil diubah!');
-        document.getElementById('change-password-form').reset();
-    } catch (error) {
-        console.error(error);
-        showToast('error', `Gagal mengubah kata sandi: ${error.message}`);
     }
-});
 
-// Open delete request modal
-function openDeleteRequestModal() {
-    document.getElementById('delete-request-modal').classList.remove('hidden');
-}
+    window.closeDeleteRequestModal = function() {
+        const modal = document.getElementById('delete-request-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
 
-// Close delete request modal
-function closeDeleteRequestModal() {
-    document.getElementById('delete-request-modal').classList.add('hidden');
-}
+    // Request account deletion
+    const confirmDeleteRequestBtn = document.getElementById('confirm-delete-request-btn');
+    if (confirmDeleteRequestBtn) {
+        confirmDeleteRequestBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetchWithCSRF('/api/user/request-account-deletion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-// Request account deletion
-document.getElementById('confirm-delete-request-btn').addEventListener('click', async () => {
-    try {
-        const response = await fetch('/api/user/request-account-deletion', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to request account deletion');
+                }
+
+                if (typeof showToast === 'function') {
+                    showToast('success', 'Permintaan penghapusan akun berhasil dikirim. Akun Anda telah dinonaktifkan sementara.');
+                }
+                closeDeleteRequestModal();
+                
+                // Redirect to logout after a short delay
+                setTimeout(() => {
+                    window.location.href = '/logout';
+                }, 2000);
+            } catch (error) {
+                console.error(error);
+                if (typeof showToast === 'function') {
+                    showToast('error', `Gagal mengirim permintaan penghapusan: ${error.message}`);
+                }
             }
         });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to request account deletion');
-        }
-
-        showToast('success', 'Permintaan penghapusan akun berhasil dikirim. Akun Anda telah dinonaktifkan sementara.');
-        closeDeleteRequestModal();
-        
-        // Redirect to logout after a short delay
-        setTimeout(() => {
-            window.location.href = '/logout';
-        }, 2000);
-    } catch (error) {
-        console.error(error);
-        showToast('error', `Gagal mengirim permintaan penghapusan: ${error.message}`);
     }
-});
 
-// Initial fetch
-fetchOwnedNews();
+}); // End DOMContentLoaded

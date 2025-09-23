@@ -41,6 +41,7 @@
             </h3>
           </div>
           <form id="form-brand-name" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="relative">
               <input type="text" name="brand_name" id="brand-name-input" 
                      value="{{ brand_info.brand_name|default('LilyOpenCMS') }}"
@@ -67,6 +68,7 @@
             </h3>
           </div>
           <form id="form-tagline" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="relative">
               <input type="text" name="tagline" id="tagline-input" 
                      value="{{ brand_info.tagline|default('Modern content management for the digital age') }}"
@@ -96,6 +98,7 @@
             </h3>
           </div>
           <form id="form-brand-description" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="relative">
               <textarea name="brand_description" id="brand-description-input" 
                         rows="6"

@@ -11,6 +11,7 @@
 
     <div class="bg-white rounded-lg shadow p-6">
         <form id="adForm" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <!-- Basic Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -228,15 +229,152 @@
                 </div>
             </div>
 
+            <!-- Targeting Section -->
+            <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Targeting Options</h3>
+                <p class="text-sm text-gray-600 mb-6">Configure where and when this ad will be displayed</p>
+
+                <!-- Geographic Targeting -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Geographic Targeting</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="target_countries" class="block text-xs text-gray-600 mb-1">Countries (comma-separated)</label>
+                            <input type="text" id="target_countries" name="target_countries" value="{{ ad.targeting.countries if ad and ad.targeting else '' }}"
+                                   placeholder="US,CA,GB" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_cities" class="block text-xs text-gray-600 mb-1">Cities (comma-separated)</label>
+                            <input type="text" id="target_cities" name="target_cities" value="{{ ad.targeting.cities if ad and ad.targeting else '' }}"
+                                   placeholder="New York,London" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_regions" class="block text-xs text-gray-600 mb-1">Regions/States (comma-separated)</label>
+                            <input type="text" id="target_regions" name="target_regions" value="{{ ad.targeting.regions if ad and ad.targeting else '' }}"
+                                   placeholder="California,Texas" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Targeting -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Device Targeting</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="target_device_types" class="block text-xs text-gray-600 mb-1">Device Types (comma-separated)</label>
+                            <input type="text" id="target_device_types" name="target_device_types" value="{{ ad.targeting.device_types if ad and ad.targeting else '' }}"
+                                   placeholder="desktop,mobile,tablet" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_os" class="block text-xs text-gray-600 mb-1">Operating Systems (comma-separated)</label>
+                            <input type="text" id="target_os" name="target_os" value="{{ ad.targeting.operating_systems if ad and ad.targeting else '' }}"
+                                   placeholder="windows,macos,android,ios" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_browsers" class="block text-xs text-gray-600 mb-1">Browsers (comma-separated)</label>
+                            <input type="text" id="target_browsers" name="target_browsers" value="{{ ad.targeting.browsers if ad and ad.targeting else '' }}"
+                                   placeholder="chrome,firefox,safari" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Targeting -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User Targeting</label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="target_user_types" class="block text-xs text-gray-600 mb-1">User Types (comma-separated)</label>
+                            <input type="text" id="target_user_types" name="target_user_types" value="{{ ad.targeting.user_types if ad and ad.targeting else '' }}"
+                                   placeholder="new,returning,premium,guest" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_age_groups" class="block text-xs text-gray-600 mb-1">Age Groups (comma-separated)</label>
+                            <input type="text" id="target_age_groups" name="target_age_groups" value="{{ ad.targeting.age_groups if ad and ad.targeting else '' }}"
+                                   placeholder="18-24,25-34,35-44" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_interests" class="block text-xs text-gray-600 mb-1">Interests (comma-separated)</label>
+                            <input type="text" id="target_interests" name="target_interests" value="{{ ad.targeting.interests if ad and ad.targeting else '' }}"
+                                   placeholder="technology,sports,news" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content & Time Targeting -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Content & Time Targeting</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="target_categories" class="block text-xs text-gray-600 mb-1">Content Categories (comma-separated)</label>
+                            <input type="text" id="target_categories" name="target_categories" value="{{ ad.targeting.categories if ad and ad.targeting else '' }}"
+                                   placeholder="news,albums,technology" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_tags" class="block text-xs text-gray-600 mb-1">Content Tags (comma-separated)</label>
+                            <input type="text" id="target_tags" name="target_tags" value="{{ ad.targeting.tags if ad and ad.targeting else '' }}"
+                                   placeholder="featured,popular,trending" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_time_zones" class="block text-xs text-gray-600 mb-1">Time Zones (comma-separated)</label>
+                            <input type="text" id="target_time_zones" name="target_time_zones" value="{{ ad.targeting.time_zones if ad and ad.targeting else '' }}"
+                                   placeholder="America/New_York,Europe/London" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label for="target_hours" class="block text-xs text-gray-600 mb-1">Hours of Day (comma-separated, 0-23)</label>
+                            <input type="text" id="target_hours" name="target_hours" value="{{ ad.targeting.hours_of_day if ad and ad.targeting else '' }}"
+                                   placeholder="9,10,11,14,15,16" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frequency Capping -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Frequency Capping</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="max_impressions_per_user" class="block text-xs text-gray-600 mb-1">Max Impressions per User per Day</label>
+                            <input type="number" id="max_impressions_per_user" name="max_impressions_per_user"
+                                   value="{{ ad.targeting.max_impressions_per_user if ad and ad.targeting else '' }}"
+                                   min="1" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                   placeholder="10">
+                        </div>
+                        <div>
+                            <label for="max_impressions_per_session" class="block text-xs text-gray-600 mb-1">Max Impressions per Session</label>
+                            <input type="number" id="max_impressions_per_session" name="max_impressions_per_session"
+                                   value="{{ ad.targeting.max_impressions_per_session if ad and ad.targeting else '' }}"
+                                   min="1" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                   placeholder="5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Status -->
             <div>
                 <label class="flex items-center">
-                    <input type="checkbox" id="is_active" name="is_active" 
-                           {{ 'checked' if not ad or ad.is_active else '' }} 
+                    <input type="checkbox" id="is_active" name="is_active"
+                           {{ 'checked' if not ad or ad.is_active else '' }}
                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     <span class="ml-2 text-sm text-gray-700">Active</span>
                 </label>
             </div>
+
+            <!-- Approval Status (for existing ads) -->
+            {% if ad %}
+            <div class="bg-blue-50 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-blue-900 mb-2">Approval Status</h3>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-blue-700">
+                        Current Status: <span class="font-medium">{{ ad.approval.status if ad.approval else 'No approval record' }}</span>
+                    </span>
+                    {% if ad.approval and ad.approval.notes %}
+                    <div class="text-xs text-blue-600">
+                        Notes: {{ ad.approval.notes[:100] }}{% if ad.approval.notes|length > 100 %}...{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Submit Buttons -->
             <div class="flex justify-end space-x-4">
@@ -349,7 +487,7 @@ document.getElementById('adForm').addEventListener('submit', function(e) {
         // Submit as FormData for file upload
         const url = '{{ url_for("ads.edit_ad", ad_id=ad.id) if ad else url_for("ads.create_ad") }}';
         
-        fetch(url, {
+        fetchWithCSRF(url, {
             method: 'POST',
             body: formData
         })
@@ -387,7 +525,7 @@ document.getElementById('adForm').addEventListener('submit', function(e) {
         
         const url = '{{ url_for("ads.edit_ad", ad_id=ad.id) if ad else url_for("ads.create_ad") }}';
         
-        fetch(url, {
+        fetchWithCSRF(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

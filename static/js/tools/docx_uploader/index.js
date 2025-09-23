@@ -222,7 +222,7 @@ if (!setupFormHandling()) {
             
             // Ensure visibility is set to hidden (draft)
             formData.set('is_visible', 'false');
-            const response = await fetch('/api/news/upload-docx', {
+            const response = await fetchWithCSRF('/api/news/upload-docx', {
                 method: 'POST',
                 body: formData
             });

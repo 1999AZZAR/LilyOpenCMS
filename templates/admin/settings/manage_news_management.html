@@ -98,6 +98,13 @@
                             <option value="by_user">Oleh Pengguna</option>
                         </select>
                     </div>
+                    <div class="flex flex-col flex-1">
+                        <label for="owner-filter-select" class="text-sm font-medium text-gray-700 mb-1">Pemilik</label>
+                        <select id="owner-filter-select" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter berdasarkan pemilik">
+                            <option value="">Semua Pemilik</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Pilih pemilik untuk memfilter cerita</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,6 +135,9 @@
                         <select id="bulk-category-select" class="bg-white border border-gray-300 text-gray-800 p-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Pilih kategori untuk aksi massal">
                             <option value="">Ubah Kategori...</option>
                         </select>
+                        <button id="bulk-owner-handover" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all duration-300 shadow-md" aria-label="Serahkan kepemilikan ke pengguna lain">
+                            <i class="fas fa-user-exchange mr-1"></i> Serahkan Kepemilikan
+                        </button>
                         <button id="bulk-toggle-visibility" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-300 shadow-md" aria-label="Toggle visibilitas yang dipilih">
                             <i class="fas fa-eye-slash mr-1"></i> Toggle Visibilitas
                         </button>
@@ -180,6 +190,7 @@
                     </button>
                 </div>
                 <form id="edit-news-form" class="flex flex-col lg:flex-row gap-6" enctype="multipart/form-data" role="form" aria-label="Form edit cerita">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <input type="hidden" id="edit-news-id">
                     <!-- Content Section (3/4) -->
                     <div class="flex-1 lg:w-3/4">
@@ -400,6 +411,38 @@
                 </div>
             </div>
         </div>
+
+        <!-- Owner Handover Modal -->
+        <div id="owner-handover-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="owner-handover-title" aria-modal="true">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <h3 id="owner-handover-title" class="text-lg font-semibold text-gray-900">Serahkan Kepemilikan Cerita</h3>
+                    <button type="button" id="close-owner-handover" class="text-gray-600 hover:text-gray-800"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-4">Pilih pengguna tujuan. Hanya Admin/Superuser yang dapat melakukan aksi ini.</p>
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-8">
+                            <button id="owner-tab-all" class="py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600"><i class="fas fa-list mr-2"></i>Semua</button>
+                            <button id="owner-tab-admin" class="py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"><i class="fas fa-user-shield mr-2"></i>Admin</button>
+                            <button id="owner-tab-general" class="py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"><i class="fas fa-users mr-2"></i>Pengguna</button>
+                        </nav>
+                    </div>
+                    <div class="mb-4">
+                        <input type="text" id="owner-search" placeholder="Cari user (username atau email)..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div id="owner-user-list" class="space-y-2" role="list" aria-label="Daftar pengguna">
+                        <!-- Users will be injected here -->
+                    </div>
+                    <div id="owner-user-pagination" class="mt-6 flex justify-center">
+                        <!-- Pagination controls will be injected here -->
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-200 flex justify-end">
+                    <button type="button" id="cancel-owner-handover" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">Tutup</button>
+                </div>
+            </div>
+        </div>
     </main>
 {% endblock %}
 
@@ -410,9 +453,9 @@
 
 <script>
 // Pass user role information to JavaScript
-window.currentUserRole = {{ current_user.role.value if current_user.is_authenticated else 'null' | tojson }};
+window.currentUserRole = {{ (current_user.role.value if current_user.is_authenticated else None) | tojson }};
 window.currentUserIsAdminTier = {{ current_user.is_admin_tier() | tojson }};
-window.currentUserId = {{ current_user.id if current_user.is_authenticated else 'null' | tojson }};
+window.currentUserId = {{ (current_user.id if current_user.is_authenticated else None) | tojson }};
 
 // Global modal management
 document.addEventListener('DOMContentLoaded', function() {
@@ -434,4 +477,228 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {# Load the main script for this page #}
 <script src="{{ url_for('static', filename='js/news-management.js') }}"></script>
+<script>
+// Owner handover JS (inline to keep page self-contained)
+document.addEventListener('DOMContentLoaded', () => {
+    const isAdminTier = Boolean(window.currentUserIsAdminTier);
+    const isSuperuser = (window.currentUserRole === 'superuser');
+    const canHandover = isAdminTier || isSuperuser; // allow SU as well
+    const handoverBtn = document.getElementById('bulk-owner-handover');
+    const modal = document.getElementById('owner-handover-modal');
+    const closeBtn = document.getElementById('close-owner-handover');
+    const cancelBtn = document.getElementById('cancel-owner-handover');
+    const userListEl = document.getElementById('owner-user-list');
+    const userSearchEl = document.getElementById('owner-search');
+    const tabAll = document.getElementById('owner-tab-all');
+    const tabAdmin = document.getElementById('owner-tab-admin');
+    const tabGeneral = document.getElementById('owner-tab-general');
+    const paginationEl = document.getElementById('owner-user-pagination');
+
+    if (!handoverBtn) return;
+
+    if (!canHandover) {
+        handoverBtn.disabled = true;
+        handoverBtn.title = 'Hanya Admin/Superuser';
+        handoverBtn.classList.add('opacity-60','cursor-not-allowed');
+    }
+
+    let currentTab = 'all';
+    let currentPage = 1;
+
+    function openModal() { modal.classList.remove('hidden'); loadUsers(1); }
+    function closeModal() { modal.classList.add('hidden'); }
+
+    // Support individual handover trigger from news cards
+    let tempHandoverIds = null;
+    window.openOwnerHandoverFor = function(id) {
+        tempHandoverIds = [parseInt(id)];
+        openModal();
+    };
+
+    handoverBtn.addEventListener('click', () => {
+        if (!canHandover) return;
+        const selectedIds = getSelectedNewsIds();
+        if (selectedIds.length === 0) {
+            window.toast && window.toast.warn('Pilih minimal 1 cerita');
+            return;
+        }
+        openModal();
+    });
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    tabAll.addEventListener('click', () => { currentTab = 'all'; setActiveTab(); loadUsers(1); });
+    tabAdmin.addEventListener('click', () => { currentTab = 'admin'; setActiveTab(); loadUsers(1); });
+    tabGeneral.addEventListener('click', () => { currentTab = 'general'; setActiveTab(); loadUsers(1); });
+    userSearchEl.addEventListener('input', debounce(() => loadUsers(1), 300));
+
+    function setActiveTab() {
+        tabAll.classList.remove('border-blue-500','text-blue-600');
+        tabAdmin.classList.remove('border-blue-500','text-blue-600');
+        tabGeneral.classList.remove('border-blue-500','text-blue-600');
+        if (currentTab === 'all') tabAll.classList.add('border-blue-500','text-blue-600');
+        if (currentTab === 'admin') tabAdmin.classList.add('border-blue-500','text-blue-600');
+        if (currentTab === 'general') tabGeneral.classList.add('border-blue-500','text-blue-600');
+    }
+
+    async function loadUsers(page=1) {
+        currentPage = page;
+        userListEl.innerHTML = '<p class="text-center text-gray-500 py-4">Memuat pengguna...</p>';
+        try {
+            let url = `/api/users?page=${page}&per_page=10`;
+            if (currentTab === 'admin') {
+                url += '&role=admin,su';
+            } else if (currentTab === 'general') {
+                url += '&write_access=true';
+            } // currentTab === 'all' -> no extra filter
+            const q = userSearchEl.value.trim();
+            if (q) url += `&search=${encodeURIComponent(q)}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            renderUsers(data.users || []);
+            renderPagination(data.pagination || { page: 1, pages: 1 });
+        } catch (e) {
+            console.error(e);
+            userListEl.innerHTML = '<p class="text-center text-red-500 py-4">Gagal memuat pengguna.</p>';
+        }
+    }
+
+    function renderUsers(users) {
+        userListEl.innerHTML = '';
+        if (!users.length) {
+            userListEl.innerHTML = '<p class="text-center text-gray-500 py-4">Tidak ada pengguna.</p>';
+            return;
+        }
+        users.forEach(u => {
+            const item = document.createElement('div');
+            item.className = 'p-3 border border-gray-200 rounded-lg hover:bg-gray-50 flex items-center justify-between';
+            item.innerHTML = `
+                <div>
+                    <div class="font-medium text-gray-900">${u.username}</div>
+                    <div class="text-sm text-gray-600">${u.email || ''}</div>
+                </div>
+                <button class="select-owner bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-lg text-sm">Pilih</button>
+            `;
+            item.querySelector('.select-owner').addEventListener('click', () => confirmHandover(u));
+            userListEl.appendChild(item);
+        });
+    }
+
+    function renderPagination(p) {
+        paginationEl.innerHTML = '';
+        const total = p.pages || 1;
+        if (total <= 1) return;
+        const prev = document.createElement('button');
+        prev.className = 'px-3 py-1 border rounded-l';
+        prev.textContent = 'Prev';
+        prev.disabled = p.page <= 1;
+        prev.addEventListener('click', () => loadUsers(Math.max(1, (p.page||1)-1)));
+        const next = document.createElement('button');
+        next.className = 'px-3 py-1 border rounded-r';
+        next.textContent = 'Next';
+        next.disabled = p.page >= total;
+        next.addEventListener('click', () => loadUsers(Math.min(total, (p.page||1)+1)));
+        paginationEl.appendChild(prev);
+        const info = document.createElement('span');
+        info.className = 'px-3 py-1 border-t border-b';
+        info.textContent = `Hal ${p.page} / ${total}`;
+        paginationEl.appendChild(info);
+        paginationEl.appendChild(next);
+    }
+
+    function getSelectedNewsIds() {
+        // Use .news-item-checkbox checkboxes rendered in cards
+        const checkboxes = document.querySelectorAll('.news-item-checkbox:checked');
+        return Array.from(checkboxes).map(cb => parseInt(cb.value)).filter(Number.isInteger);
+    }
+
+    async function confirmHandover(user) {
+        const ids = (tempHandoverIds && tempHandoverIds.length) ? tempHandoverIds : getSelectedNewsIds();
+        if (!ids.length) {
+            window.toast && window.toast.warn('Tidak ada cerita dipilih');
+            return;
+        }
+        if (!confirm(`Serahkan ${ids.length} cerita ke '${user.username}'?`)) return;
+        try {
+            const res = await fetch('/api/news/bulk-owner', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: ids, new_owner_id: user.id })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Gagal menyerahkan kepemilikan');
+            window.toast && window.toast.success(data.message || 'Berhasil menyerahkan kepemilikan');
+            closeModal();
+            tempHandoverIds = null;
+            // Reload list to reflect new owners; reuse existing loader if available
+            if (window.loadNewsList) window.loadNewsList();
+        } catch (e) {
+            console.error(e);
+            window.toast && window.toast.error(e.message || 'Gagal menyerahkan kepemilikan');
+        }
+    }
+
+    function debounce(fn, wait) {
+        let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this,args), wait); };
+    }
+});
+</script>
+<script>
+// Owner filter wiring: populate dropdown with actual users and filter by owner_id
+document.addEventListener('DOMContentLoaded', () => {
+    const ownerSelect = document.getElementById('owner-filter-select');
+    if (!ownerSelect) return;
+
+    async function loadOwners() {
+        try {
+            // Load a combined list: first page admins, first page general writers
+            const [adminRes, generalRes] = await Promise.all([
+                fetch('/api/users?page=1&per_page=100&role=admin,su'),
+                fetch('/api/users?page=1&per_page=100&write_access=true')
+            ]);
+            const adminData = adminRes.ok ? await adminRes.json() : { users: [] };
+            const generalData = generalRes.ok ? await generalRes.json() : { users: [] };
+            const users = dedupeUsers([...(adminData.users||[]), ...(generalData.users||[])]);
+            populateOwnerSelect(users);
+        } catch (e) {
+            console.error('Failed to load owners', e);
+        }
+    }
+
+    function dedupeUsers(users) {
+        const map = new Map();
+        users.forEach(u => { if (!map.has(u.id)) map.set(u.id, u); });
+        return Array.from(map.values());
+    }
+
+    function populateOwnerSelect(users) {
+        // Keep first option (all owners)
+        while (ownerSelect.options.length > 1) ownerSelect.remove(1);
+        users.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = String(u.id);
+            opt.textContent = `${u.username}${u.email ? ' ('+u.email+')' : ''}`;
+            ownerSelect.appendChild(opt);
+        });
+        // Preselect from URL if present
+        const url = new URL(window.location.href);
+        const ownerId = url.searchParams.get('owner_id');
+        if (ownerId) ownerSelect.value = ownerId;
+    }
+
+    ownerSelect.addEventListener('change', () => {
+        const ownerId = ownerSelect.value;
+        if (typeof window.loadNewsList === 'function') {
+            window.loadNewsList({ owner_id: ownerId || null });
+        } else {
+            const url = new URL(window.location.href);
+            if (ownerId) url.searchParams.set('owner_id', ownerId); else url.searchParams.delete('owner_id');
+            window.location.href = url.toString();
+        }
+    });
+
+    loadOwners();
+});
+</script>
 {% endblock %}

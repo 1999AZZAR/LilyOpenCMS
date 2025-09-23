@@ -397,7 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (newsItem.is_news) {
       badges += '<span class="status-badge badge-news">Berita</span>';
     } else {
-      badges += '<span class="status-badge badge-article">Artikel</span>';
+      badges += '<span class="status-badge badge-article">Cerita</span>';
     }
     
     // Premium badge (bottom right position)

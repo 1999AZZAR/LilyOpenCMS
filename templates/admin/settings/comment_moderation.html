@@ -16,6 +16,7 @@
   <!-- Filters -->
   <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg shadow-lg p-6 mb-8">
     <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div>
         <label for="status" class="block text-sm font-medium text-gray-800 mb-2">Status</label>
         <select name="status" id="status" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -56,10 +57,14 @@
         <div class="flex items-start justify-between mb-4">
           <div class="flex items-center space-x-3">
             <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+              {% if comment.user and comment.user.username %}
               <span class="text-white font-semibold text-lg">{{ comment.user.username[0]|upper }}</span>
+              {% else %}
+              <span class="text-white font-semibold text-lg">?</span>
+              {% endif %}
             </div>
             <div>
-              <div class="font-medium text-gray-900">{{ comment.user.username }}</div>
+              <div class="font-medium text-gray-900">{{ (comment.user and comment.user.username) or 'Unknown User' }}</div>
               <div class="text-sm text-gray-600">
                 <i class="fas fa-clock mr-1"></i>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
                 {% if comment.content_type == 'news' %}
@@ -172,7 +177,7 @@
 <script>
 async function approveComment(commentId) {
   try {
-    const response = await fetch(`/admin/comments/${commentId}/approve`, {
+    const response = await fetchWithCSRF(`/admin/comments/${commentId}/approve`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -192,7 +197,7 @@ async function approveComment(commentId) {
 
 async function rejectComment(commentId) {
   try {
-    const response = await fetch(`/admin/comments/${commentId}/reject`, {
+    const response = await fetchWithCSRF(`/admin/comments/${commentId}/reject`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -212,7 +217,7 @@ async function rejectComment(commentId) {
 
 async function markSpamComment(commentId) {
   try {
-    const response = await fetch(`/admin/comments/${commentId}/mark-spam`, {
+    const response = await fetchWithCSRF(`/admin/comments/${commentId}/mark-spam`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -236,7 +241,7 @@ async function deleteComment(commentId) {
   }
   
   try {
-    const response = await fetch(`/admin/comments/${commentId}/delete`, {
+    const response = await fetchWithCSRF(`/admin/comments/${commentId}/delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

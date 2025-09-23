@@ -371,6 +371,7 @@
             </div>
             
             <form id="add-chapter-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div>
                     <label for="chapter-number" class="block text-sm font-medium text-gray-700 mb-2">
                         Nomor Bab *
@@ -427,6 +428,7 @@
             </div>
             
             <form id="edit-chapter-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" id="edit-chapter-id">
                 
                 <div>

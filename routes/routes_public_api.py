@@ -147,7 +147,7 @@ def api_album_detail(album_id):
                 "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
                 "description": getattr(album.cover_image, "description", None),
                 "filepath": getattr(album.cover_image, "filepath", None)
-            } if album.cover_image else None,
+            } if album.cover_image and album.cover_image.id else None,
             "chapters": [{
                 "id": ch.id,
                 "chapter_number": ch.chapter_number,
@@ -205,7 +205,7 @@ def api_chapter_detail(album_id, chapter_id):
                 "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
                 "description": getattr(album.cover_image, "description", None),
                 "filepath": getattr(album.cover_image, "filepath", None)
-            } if album.cover_image else None,
+            } if album.cover_image and album.cover_image.id else None,
             "news_content": {
                 "id": news.id,
                 "title": news.title,
@@ -627,7 +627,7 @@ def get_album_simple(album_id):
         }
 
         # Add cover image if available
-        if album.cover_image:
+        if album.cover_image and album.cover_image.id:
             album_data["cover_image"] = {
                 "id": album.cover_image.id,
                 "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
@@ -843,7 +843,7 @@ def get_tags_simple():
         current_app.logger.error(f"Error in simple tags API: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
 
-@main_blueprint.route("/api/comments/<string:content_type>/<int:content_id>", methods=["GET"])
+@main_blueprint.route("/api/public/comments/<string:content_type>/<int:content_id>", methods=["GET"])
 def get_comments_simple(content_type, content_id):
     """
     Simple public API endpoint to retrieve comments for content in JSON format.
@@ -863,7 +863,20 @@ def get_comments_simple(content_type, content_id):
             # Check if news exists and is visible
             news = News.query.filter_by(id=content_id, is_visible=True).first()
             if not news:
-                return jsonify({"error": "News not found or not visible"}), 404
+                # Return empty comments response instead of 404
+                return jsonify({
+                    "comments": [],
+                    "pagination": {
+                        "page": page,
+                        "per_page": per_page,
+                        "total": 0,
+                        "pages": 0,
+                        "has_next": False,
+                        "has_prev": False
+                    },
+                    "content_type": content_type,
+                    "content_id": content_id
+                })
             
             comments_query = Comment.query.filter_by(
                 content_type='news',
@@ -878,7 +891,20 @@ def get_comments_simple(content_type, content_id):
             # Check if album exists and is visible
             album = Album.query.filter_by(id=content_id, is_visible=True, is_archived=False).first()
             if not album:
-                return jsonify({"error": "Album not found or not visible"}), 404
+                # Return empty comments response instead of 404
+                return jsonify({
+                    "comments": [],
+                    "pagination": {
+                        "page": page,
+                        "per_page": per_page,
+                        "total": 0,
+                        "pages": 0,
+                        "has_next": False,
+                        "has_prev": False
+                    },
+                    "content_type": content_type,
+                    "content_id": content_id
+                })
             
             comments_query = Comment.query.filter_by(
                 content_type='album',
@@ -893,7 +919,20 @@ def get_comments_simple(content_type, content_id):
             # Check if chapter exists and is visible
             chapter = AlbumChapter.query.filter_by(id=content_id, is_visible=True).first()
             if not chapter:
-                return jsonify({"error": "Chapter not found or not visible"}), 404
+                # Return empty comments response instead of 404
+                return jsonify({
+                    "comments": [],
+                    "pagination": {
+                        "page": page,
+                        "per_page": per_page,
+                        "total": 0,
+                        "pages": 0,
+                        "has_next": False,
+                        "has_prev": False
+                    },
+                    "content_type": content_type,
+                    "content_id": content_id
+                })
             
             # Map chapter comments to underlying news content
             comments_query = Comment.query.filter_by(
@@ -924,14 +963,68 @@ def get_comments_simple(content_type, content_id):
                     "display_name": getattr(comment.user, 'get_full_name', lambda: comment.user.username)()
                 }
             
-            # Count replies
-            replies_count = Comment.query.filter_by(
+            # Get replies
+            replies_query = Comment.query.filter_by(
                 parent_id=comment.id
             ).filter(
                 Comment.is_approved == True,
                 Comment.is_spam == False,
                 Comment.is_deleted == False
-            ).count()
+            ).order_by(Comment.created_at.asc())
+            
+            replies_count = replies_query.count()
+            replies_data = []
+            
+            for reply in replies_query:
+                # Get user info for reply
+                reply_user_data = None
+                if reply.user:
+                    reply_user_data = {
+                        "id": reply.user.id,
+                        "username": reply.user.username,
+                        "display_name": getattr(reply.user, 'get_full_name', lambda: reply.user.username)()
+                    }
+                
+                # Get user interaction data for reply
+                reply_user_liked = False
+                reply_user_disliked = False
+                if current_user.is_authenticated:
+                    from models import CommentLike
+                    reply_user_like = CommentLike.query.filter_by(
+                        comment_id=reply.id,
+                        user_id=current_user.id
+                    ).first()
+                    if reply_user_like:
+                        reply_user_liked = reply_user_like.is_like
+                        reply_user_disliked = not reply_user_like.is_like
+                
+                reply_data = {
+                    "id": reply.id,
+                    "content": reply.content,
+                    "created_at": reply.created_at.isoformat() if reply.created_at else None,
+                    "updated_at": reply.updated_at.isoformat() if reply.updated_at else None,
+                    "user": reply_user_data,
+                    "user_id": reply.user_id,
+                    "parent_id": reply.parent_id,
+                    "likes_count": reply.get_likes_count(),
+                    "dislikes_count": reply.get_dislikes_count(),
+                    "user_liked": reply_user_liked,
+                    "user_disliked": reply_user_disliked
+                }
+                replies_data.append(reply_data)
+            
+            # Get user interaction data for current user
+            user_liked = False
+            user_disliked = False
+            if current_user.is_authenticated:
+                from models import CommentLike
+                user_like = CommentLike.query.filter_by(
+                    comment_id=comment.id,
+                    user_id=current_user.id
+                ).first()
+                if user_like:
+                    user_liked = user_like.is_like
+                    user_disliked = not user_like.is_like
             
             comment_data = {
                 "id": comment.id,
@@ -939,9 +1032,13 @@ def get_comments_simple(content_type, content_id):
                 "created_at": comment.created_at.isoformat() if comment.created_at else None,
                 "updated_at": comment.updated_at.isoformat() if comment.updated_at else None,
                 "user": user_data,
+                "user_id": comment.user_id,
                 "replies_count": replies_count,
-                "likes": comment.get_likes_count(),
-                "dislikes": comment.get_dislikes_count()
+                "replies": replies_data,
+                "likes_count": comment.get_likes_count(),
+                "dislikes_count": comment.get_dislikes_count(),
+                "user_liked": user_liked,
+                "user_disliked": user_disliked
             }
             
             comments_data.append(comment_data)
@@ -1065,7 +1162,7 @@ def get_public_album_api(album_id):
                 "is_premium": rel.is_premium,
                 "total_chapters": rel.total_chapters,
                 "total_reads": rel.total_reads,
-                "cover_image_url": (rel.cover_image.to_dict().get("file_url") if rel.cover_image and hasattr(rel.cover_image, "to_dict") else (rel.cover_image.url if rel.cover_image else None)),
+                "cover_image_url": (rel.cover_image.to_dict().get("file_url") if rel.cover_image and hasattr(rel.cover_image, "to_dict") else (rel.cover_image.url if rel.cover_image else None)) or url_for('static', filename='pic/placeholder.png'),
                 "url": url_for("main.album_detail", 
                               album_id=rel.id, 
                               album_title=rel.title.replace(" ", "-").lower())
@@ -1077,7 +1174,7 @@ def get_public_album_api(album_id):
                 "is_premium": auth_album.is_premium,
                 "total_chapters": auth_album.total_chapters,
                 "total_reads": auth_album.total_reads,
-                "cover_image_url": (auth_album.cover_image.to_dict().get("file_url") if auth_album.cover_image and hasattr(auth_album.cover_image, "to_dict") else (auth_album.cover_image.url if auth_album.cover_image else None)),
+                "cover_image_url": (auth_album.cover_image.to_dict().get("file_url") if auth_album.cover_image and hasattr(auth_album.cover_image, "to_dict") else (auth_album.cover_image.url if auth_album.cover_image else None)) or url_for('static', filename='pic/placeholder.png'),
                 "url": url_for("main.album_detail", 
                               album_id=auth_album.id, 
                               album_title=auth_album.title.replace(" ", "-").lower())
@@ -1085,7 +1182,7 @@ def get_public_album_api(album_id):
         }
         
         # Add cover image if available
-        if album.cover_image:
+        if album.cover_image and album.cover_image.id:
             album_data["cover_image"] = {
                 "id": album.cover_image.id,
                 "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
@@ -1281,7 +1378,7 @@ def get_public_albums_list_api():
             }
             
             # Add cover image if available
-            if album.cover_image:
+            if album.cover_image and album.cover_image.id:
                 album_data["cover_image"] = {
                     "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
                     "description": getattr(album.cover_image, "description", None)
@@ -1389,7 +1486,7 @@ def public_search_api():
                     "created_at": album.created_at.isoformat() if album.created_at else None,
                     "total_views": album.total_views,
                     "is_completed": album.is_completed,
-                    "cover_image_url": (album.cover_image.to_dict().get("file_url") if album.cover_image and hasattr(album.cover_image, "to_dict") else (album.cover_image.url if album.cover_image else None))
+                    "cover_image_url": (album.cover_image.to_dict().get("file_url") if album.cover_image and hasattr(album.cover_image, "to_dict") else (album.cover_image.url if album.cover_image else None)) or url_for('static', filename='pic/placeholder.png')
                 } for album in album_results
             ]
             results["total_results"] += len(album_results)
@@ -1424,4 +1521,140 @@ def public_search_api():
         
     except Exception as e:
         current_app.logger.error(f"Error in public search API: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
+
+@main_blueprint.route("/api/public/user/<username>/library", methods=["GET"])
+def get_public_user_library(username):
+    """
+    Public API endpoint to retrieve a user's library (saved content).
+    Returns the user's public library without requiring authentication.
+    """
+    try:
+        # Get the user
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 20, type=int), 100)
+        content_type = request.args.get('type', 'all')  # all, news, album
+        
+        # Build query for user's library
+        query = UserLibrary.query.filter_by(user_id=user.id)
+        
+        if content_type == 'news':
+            query = query.filter_by(content_type='news')
+        elif content_type == 'album':
+            query = query.filter_by(content_type='album')
+        
+        # Paginate
+        pagination = query.order_by(desc(UserLibrary.added_at)).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        library_items = []
+        for item in pagination.items:
+            content_data = None
+            
+            if item.content_type == 'news':
+                news = News.query.filter_by(id=item.content_id, is_visible=True).first()
+                if news:
+                    content_data = {
+                        "id": news.id,
+                        "title": news.title,
+                        "excerpt": (news.content[:200] + "..." if news.content and len(news.content) > 200 else news.content),
+                        "is_premium": news.is_premium,
+                        "is_news": news.is_news,
+                        "read_count": news.read_count,
+                        "created_at": news.created_at.isoformat() if news.created_at else None,
+                        "updated_at": news.updated_at.isoformat() if news.updated_at else None,
+                        "category": {
+                            "id": news.category.id if news.category else None,
+                            "name": news.category.name if news.category else None
+                        } if news.category else None,
+                        "author": {
+                            "id": news.author.id if news.author else None,
+                            "username": news.author.username if news.author else None,
+                            "display_name": news.author.get_full_name() if news.author else None
+                        } if news.author else None
+                    }
+                    
+                    # Add image if available
+                    if news.image:
+                        content_data["header_image"] = {
+                            "url": (news.image.to_dict().get("file_url") if hasattr(news.image, "to_dict") else None) or news.image.url,
+                            "description": getattr(news.image, "description", None)
+                        }
+                        
+            elif item.content_type == 'album':
+                album = Album.query.filter_by(id=item.content_id, is_visible=True, is_archived=False).first()
+                if album:
+                    content_data = {
+                        "id": album.id,
+                        "title": album.title,
+                        "description": album.description,
+                        "is_premium": album.is_premium,
+                        "is_completed": album.is_completed,
+                        "is_hiatus": album.is_hiatus,
+                        "total_chapters": album.total_chapters,
+                        "total_reads": album.total_reads,
+                        "total_views": album.total_views,
+                        "created_at": album.created_at.isoformat() if album.created_at else None,
+                        "updated_at": album.updated_at.isoformat() if album.updated_at else None,
+                        "category": {
+                            "id": album.category.id if album.category else None,
+                            "name": album.category.name if album.category else None
+                        } if album.category else None,
+                        "author": album.author,  # This is a string field
+                        "owner": {
+                            "id": album.owner.id if album.owner else None,
+                            "username": album.owner.username if album.owner else None,
+                            "display_name": album.owner.get_full_name() if album.owner else None
+                        } if album.owner else None
+                    }
+                    
+                    # Add cover image if available
+                    if album.cover_image and album.cover_image.id:
+                        content_data["cover_image"] = {
+                            "url": (album.cover_image.to_dict().get("file_url") if hasattr(album.cover_image, "to_dict") else None) or album.cover_image.url,
+                            "description": getattr(album.cover_image, "description", None)
+                        }
+            
+            if content_data:
+                library_items.append({
+                    'id': item.id,
+                    'content_type': item.content_type,
+                    'content_id': item.content_id,
+                    'content': content_data,
+                    'added_at': item.added_at.isoformat() if item.added_at else None,
+                })
+        
+        # Prepare response data
+        response_data = {
+            "success": True,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "display_name": user.get_full_name() if hasattr(user, 'get_full_name') else user.username,
+                "avatar_url": user.avatar_url if hasattr(user, 'avatar_url') else None
+            },
+            "library_items": library_items,
+            "pagination": {
+                "page": pagination.page,
+                "per_page": pagination.per_page,
+                "total": pagination.total,
+                "pages": pagination.pages,
+                "has_next": pagination.has_next,
+                "has_prev": pagination.has_prev
+            },
+            "filters": {
+                "content_type": content_type
+            }
+        }
+        
+        return jsonify(response_data)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in public user library API: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500

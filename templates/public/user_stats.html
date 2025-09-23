@@ -1,0 +1,631 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} - Statistics{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+<style>
+.stats-header {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    color: hsl(var(--primary-foreground));
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="stats-grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23stats-grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: hsl(var(--card));
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid hsl(var(--border));
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)));
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: hsl(var(--primary) / 0.3);
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: hsl(var(--primary));
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.chart-container {
+    background: hsl(var(--card));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.chart-title {
+    color: hsl(var(--primary));
+    margin-bottom: 1rem;
+    border-bottom: 2px solid hsl(var(--primary));
+    padding-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.top-content {
+    background: hsl(var(--card));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    transition: all 0.3s ease;
+}
+
+.top-content:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.content-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.content-item:hover {
+    background-color: hsl(var(--muted));
+    transform: translateX(4px);
+}
+
+.content-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.content-thumbnail {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-right: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.content-item:hover .content-thumbnail {
+    transform: scale(1.05);
+}
+
+.content-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: hsl(var(--foreground));
+    font-weight: 600;
+}
+
+.content-info h4 a {
+    color: hsl(var(--foreground));
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.content-info h4 a:hover {
+    color: hsl(var(--primary));
+}
+
+.content-info p {
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+}
+
+.activity-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: hsl(var(--muted) / 0.3);
+    border-radius: 8px;
+}
+
+.activity-day {
+    width: 100%;
+    height: 20px;
+    background: hsl(var(--muted));
+    border-radius: 3px;
+    position: relative;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.activity-day.has-activity {
+    background: hsl(var(--primary));
+}
+
+.activity-day.has-activity:hover {
+    background: hsl(var(--secondary));
+    transform: scale(1.1);
+}
+
+.activity-day.has-activity:hover::after {
+    content: attr(data-count) ' activities';
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.monthly-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.month-stat {
+    background: hsl(var(--muted) / 0.5);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid hsl(var(--border));
+}
+
+.month-stat:hover {
+    background: hsl(var(--muted) / 0.7);
+    transform: translateY(-2px);
+}
+
+.month-stat h4 {
+    margin: 0 0 0.5rem 0;
+    color: hsl(var(--primary));
+    font-weight: 600;
+}
+
+.month-stat .stat {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.nav-tabs {
+    border-bottom: 2px solid hsl(var(--border));
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 0;
+    background: hsl(var(--card));
+    border-radius: 12px 12px 0 0;
+    padding: 0.5rem;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: hsl(var(--muted-foreground));
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    position: relative;
+}
+
+.nav-tabs .nav-link:hover {
+    color: hsl(var(--primary));
+    background-color: hsl(var(--muted) / 0.5);
+}
+
+.nav-tabs .nav-link.active {
+    color: hsl(var(--primary));
+    background-color: hsl(var(--primary) / 0.1);
+}
+
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+    .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .activity-calendar {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+    
+    .monthly-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .nav-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12">
+    <!-- Stats Header -->
+    <div class="stats-header">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2">
+                    <i class="fas fa-chart-bar mr-2"></i>{{ user.username }}'s Statistics
+                </h1>
+                <p class="text-lg opacity-90">Detailed analytics and performance metrics</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{{ url_for('main.public_user_profile', username=user.username) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                    <i class="fas fa-user mr-2"></i> View Profile
+                </a>
+                <a href="{{ url_for('main.public_user_content', username=user.username, tab='stories') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                    <i class="fas fa-book mr-2"></i> Content
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <a class="nav-link" href="{{ url_for('main.public_user_profile', username=user.username) }}">
+            <i class="fas fa-user mr-2"></i> Overview
+        </a>
+        <a class="nav-link active" href="{{ url_for('main.public_user_stats', username=user.username) }}">
+            <i class="fas fa-chart-bar mr-2"></i> Statistics
+        </a>
+        <a class="nav-link" href="{{ url_for('main.public_user_content', username=user.username, tab='stories') }}">
+            <i class="fas fa-book mr-2"></i> Content
+        </a>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_stories or 0 }}</div>
+            <div class="stat-label">Stories Published</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_albums or 0 }}</div>
+            <div class="stat-label">Albums Created</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_views or 0 }}</div>
+            <div class="stat-label">Total Views</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_reads or 0 }}</div>
+            <div class="stat-label">Total Reads</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_likes or 0 }}</div>
+            <div class="stat-label">Total Likes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_comments or 0 }}</div>
+            <div class="stat-label">Comments Made</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_followers or 0 }}</div>
+            <div class="stat-label">Followers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_following or 0 }}</div>
+            <div class="stat-label">Following</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_saved or 0 }}</div>
+            <div class="stat-label">Items Saved</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Activity Calendar -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h3 class="chart-title"><i class="fas fa-calendar"></i> Activity Calendar</h3>
+                <p>Daily activity over the past year</p>
+                <div class="activity-calendar" id="activityCalendar">
+                    <!-- Activity calendar will be populated by JavaScript -->
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: hsl(var(--muted));"></div>
+                        <span>No activity</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: hsl(var(--primary));"></div>
+                        <span>Activity</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Stats -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h3 class="chart-title"><i class="fas fa-chart-line"></i> Monthly Activity</h3>
+                <p>Content creation and engagement by month</p>
+                {% if monthly_activity %}
+                    <div class="monthly-stats">
+                        {% for month, data in monthly_activity.items() %}
+                            <div class="month-stat">
+                                <h4>{{ month }}</h4>
+                                <div class="stat">{{ data.get('stories', 0) }}</div>
+                                <small>Stories</small>
+                                <div class="stat">{{ data.get('views', 0) }}</div>
+                                <small>Views</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No monthly activity data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top Stories -->
+        <div class="col-md-6">
+            <div class="top-content">
+                <h3 class="chart-title"><i class="fas fa-trophy"></i> Top Stories by Views</h3>
+                {% if top_stories %}
+                    {% for story in top_stories %}
+                        <div class="content-item">
+                            <div class="content-info">
+                                <h4><a href="{{ url_for('main.news_detail', news_id=story.id, news_title=story.title.replace(' ', '-').lower()) }}">{{ story.title }}</a></h4>
+                                <p>{{ story.read_count or 0 }} views • {{ story.created_at.strftime('%B %Y') }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No stories published yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Top Albums -->
+        <div class="col-md-6">
+            <div class="top-content">
+                <h3 class="chart-title"><i class="fas fa-trophy"></i> Top Albums by Reads</h3>
+                {% if top_albums %}
+                    {% for album in top_albums %}
+                        <div class="content-item">
+                            <div class="content-info">
+                                <h4><a href="{{ url_for('main.album_detail', album_id=album.id, album_title=album.title.replace(' ', '-').lower()) }}">{{ album.title }}</a></h4>
+                                <p>{{ album.total_reads or 0 }} reads • {{ album.created_at.strftime('%B %Y') }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No albums published yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Reading History -->
+    {% if reading_history %}
+        <div class="chart-container">
+            <h3 class="chart-title"><i class="fas fa-history"></i> Recent Reading Activity</h3>
+            <p>Last 50 items read by {{ user.username }}</p>
+            <div class="row">
+                {% for history in reading_history[:10] %}
+                    <div class="col-md-6">
+                        <div class="content-item">
+                            <div class="content-info">
+                                <h4>
+                                    {% if history.content_type == 'news' %}
+                                        <a href="{{ url_for('main.news_detail', news_id=history.content_id, news_title='story') }}">
+                                            Story #{{ history.content_id }}
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('main.album_detail', album_id=history.content_id, album_title='album') }}">
+                                            Album #{{ history.content_id }}
+                                        </a>
+                                    {% endif %}
+                                </h4>
+                                <p>{{ history.read_count }} reads • {{ history.last_read_at.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate activity calendar
+    const activityCalendar = document.getElementById('activityCalendar');
+    const activityData = {{ activity_calendar | tojson }};
+    
+    // Generate calendar for the past year
+    const today = new Date();
+    const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    
+    // Create calendar grid
+    let calendarHTML = '';
+    const currentDate = new Date(oneYearAgo);
+    
+    // Add empty cells for days before the start of the year
+    const startDay = oneYearAgo.getDay();
+    for (let i = 0; i < startDay; i++) {
+        calendarHTML += '<div class="activity-day"></div>';
+    }
+    
+    // Add days for the past year
+    while (currentDate <= today) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const hasActivity = activityData[dateStr] && activityData[dateStr] > 0;
+        
+        calendarHTML += `<div class="activity-day ${hasActivity ? 'has-activity' : ''}" 
+                            ${hasActivity ? `data-count="${activityData[dateStr]}"` : ''}
+                            title="${currentDate.toLocaleDateString()}${hasActivity ? ` - ${activityData[dateStr]} activities` : ''}"></div>`;
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    activityCalendar.innerHTML = calendarHTML;
+    
+    // Add click handlers for activity days
+    const activityDays = activityCalendar.querySelectorAll('.activity-day.has-activity');
+    activityDays.forEach(day => {
+        day.addEventListener('click', function() {
+            const count = this.dataset.count;
+            const date = this.title.split(' - ')[0];
+            showActivityDetails(date, count);
+        });
+    });
+    
+    // Show activity details modal/tooltip
+    function showActivityDetails(date, count) {
+        // Create a simple modal or tooltip
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-card p-6 rounded-lg border border-border max-w-md mx-4">
+                <h3 class="text-lg font-semibold mb-2">Activity Details</h3>
+                <p class="text-muted-foreground mb-4">Date: ${date}</p>
+                <p class="text-foreground">Total activities: <span class="font-semibold text-primary">${count}</span></p>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        class="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                    Close
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Close on outside click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+    
+    // Add animation to stat cards
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Add hover effects to monthly stats
+    const monthStats = document.querySelectorAll('.month-stat');
+    monthStats.forEach(stat => {
+        stat.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px) scale(1.02)';
+        });
+        
+        stat.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

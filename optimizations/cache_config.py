@@ -226,13 +226,28 @@ def cache_query_result(timeout=300):
     return decorator
 
 def invalidate_cache_pattern(pattern):
-    """Invalidate all cache keys matching a pattern"""
+    """Invalidate cache keys matching a pattern.
+    - Redis backend: delete by pattern
+    - SimpleCache or unknown backend: fallback to clear all cache to avoid 503s
+    """
     try:
-        # Get all keys matching the pattern
-        keys = cache.cache._client.keys(f"lilycms_{pattern}*")
-        if keys:
-            cache.cache._client.delete(*keys)
+        # Detect underlying client (for Redis backend)
+        underlying_cache = getattr(cache, 'cache', None)
+        redis_client = getattr(underlying_cache, '_client', None)
+
+        if redis_client is not None:
+            # Use the provided pattern directly (caller includes any prefixes/wildcards)
+            keys = redis_client.keys(pattern)
+            if keys:
+                redis_client.delete(*keys)
             return True
+
+        # Fallback: SimpleCache or other backends do not support pattern deletion
+        current_app.logger.warning(
+            f"Cache backend does not support pattern invalidation for '{pattern}'. Falling back to clear()."
+        )
+        cache.clear()
+        return True
     except Exception as e:
         current_app.logger.error(f"Error invalidating cache pattern {pattern}: {e}")
         return False

@@ -4,6 +4,7 @@ from flask import (
     request,
     render_template,
     current_app,
+    url_for,
 )
 import time
 from flask_login import LoginManager
@@ -39,6 +40,9 @@ from optimizations import (
     monitor_ssr_render
 )
 
+# Import email service
+from routes.utils.email_service import email_service
+
 load_dotenv()
 
 # ----------------------
@@ -46,18 +50,67 @@ load_dotenv()
 # ----------------------
 app = Flask(__name__)
 
-# ✅ Apply CORS ONLY for /api/* routes
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# ✅ Apply CORS for all routes needed by the Android app
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    },
+    r"/static/*": {
+        "origins": "*",
+        "methods": ["GET", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-Requested-With", "Accept", "Range"],
+        "expose_headers": ["Content-Length", "Content-Range", "Accept-Ranges"]
+    },
+    r"/login*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    },
+    r"/logout*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    },
+    r"/register*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    },
+    r"/account/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+    }
+})
 
 # ----------------------
 # 🔧 Configuration
 # ----------------------
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "your_secret_key")
+# Validate SECRET_KEY in production
+secret_key = os.getenv("SECRET_KEY")
+if not secret_key:
+    if os.getenv("FLASK_ENV") == "production":
+        raise ValueError("SECRET_KEY environment variable must be set in production")
+    secret_key = "your_secret_key"  # Development fallback
+    app.logger.warning("⚠️ Using default SECRET_KEY in development mode")
+
+app.config["SECRET_KEY"] = secret_key
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
     "DATABASE_URI", f"sqlite:///{os.path.join(os.path.dirname(__file__), 'instance', 'LilyOpenCms.db')}"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["DEBUG"] = os.getenv("FLASK_ENV") != "production"
+
+# Enhanced session configuration for better security and UX
+app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"  # HTTPS only in production
+app.config["SESSION_COOKIE_HTTPONLY"] = True  # Prevent XSS access to session cookies
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # CSRF protection
+app.config["PERMANENT_SESSION_LIFETIME"] = 3600 * 4  # 4 hours session timeout (increased for better UX)
+app.config["SESSION_REFRESH_EACH_REQUEST"] = True  # Refresh session on each request
+app.config["SESSION_COOKIE_NAME"] = "lily_session"  # Custom session cookie name
+app.config["SESSION_USE_SIGNER"] = True  # Sign session cookies for security
 
 # Performance optimization configuration
 app.config["COMPRESS_MIMETYPES"] = [
@@ -79,6 +132,9 @@ frontend_optimizer = create_frontend_optimizer(app)
 performance_monitor = create_performance_monitor(app)
 asset_optimizer = get_asset_optimizer()
 ssr_optimizer = get_ssr_optimizer()
+
+# Initialize email service
+email_service.init_app(app)
 
 # ----------------------
 # 🔍 Database Health Check
@@ -145,8 +201,21 @@ def end_ssr_monitoring(response):
             pass
     return response
 
-# Disable CSRF protection for this application since we use proper authentication
-# csrf = CSRFProtect(app)
+# ----------------------
+# 🛡️ CSRF Protection
+# ----------------------
+csrf = CSRFProtect(app)
+
+# Configure CSRF to exempt API endpoints - override the protect method
+original_protect = csrf.protect
+
+def custom_csrf_protect():
+    # Skip CSRF protection for API endpoints
+    if request.path.startswith('/api/'):
+        return
+    return original_protect()
+
+csrf.protect = custom_csrf_protect
 
 # ----------------------
 # 🔑 Login Management
@@ -157,13 +226,73 @@ login_manager.login_view = "main.login"
 login_manager.login_message = "Please log in to access this page."
 login_manager.login_message_category = "info"
 
+# Custom unauthorized handler for API requests
+@login_manager.unauthorized_handler
+def handle_unauthorized():
+    """Handle unauthorized access with detailed error responses."""
+    if request.path.startswith('/api/') or request.accept_mimetypes.accept_json:
+        # Check if it's a token-related API request
+        if request.path.startswith('/api/auth/') or request.headers.get("Authorization"):
+            return jsonify({
+                "error": "Authentication required",
+                "message": "Please provide valid authentication credentials",
+                "code": "SESSION_UNAUTHORIZED",
+                "login_url": url_for('main.login', _external=True),
+                "status": 401
+            }), 401
+        else:
+            return jsonify({
+                "error": "Session expired or invalid",
+                "message": "Your session has expired. Please log in again.",
+                "code": "SESSION_EXPIRED",
+                "login_url": url_for('main.login', _external=True),
+                "status": 401
+            }), 401
+
+    # For web requests, redirect to login with error message
+    from flask import redirect, flash
+    flash('Your session has expired. Please log in again.', 'error')
+    return redirect(url_for('main.login'))
+
 @login_manager.user_loader
 def load_user(user_id):
+    """Load user with enhanced error handling and logging."""
     try:
-        return db.session.get(User, int(user_id))
-    except (ValueError, TypeError):
-        app.logger.warning(f"Invalid user_id format received: {user_id}")
+        if not user_id or user_id == 'None':
+            app.logger.debug("Empty or None user_id received")
+            return None
+
+        user_id_int = int(user_id)
+        user = db.session.get(User, user_id_int)
+
+        if user:
+            # Update last seen time for active users
+            if hasattr(user, 'update_login_info') and user.is_active and not user.is_suspended:
+                try:
+                    user.update_login_info(request.remote_addr, request.headers.get("User-Agent"))
+                except Exception:
+                    # Fallback if helper not available
+                    pass
+        else:
+            app.logger.warning(f"User not found for ID: {user_id}")
+
+        return user
+
+    except (ValueError, TypeError) as e:
+        app.logger.warning(f"Invalid user_id format received: {user_id}, error: {e}")
         return None
+    except Exception as e:
+        app.logger.error(f"Error loading user {user_id}: {e}")
+        return None
+
+# ----------------------
+# Favicon Route Handler
+# ----------------------
+@app.route('/favicon.ico')
+def favicon():
+    """Serve favicon.ico to prevent 404 errors."""
+    from flask import send_from_directory
+    return send_from_directory('static/pic', 'favicon.ico', mimetype='image/x-icon')
 
 # ----------------------
 # 🌐 Context Processors with Caching
@@ -608,6 +737,35 @@ except ImportError as e:
 except Exception as e:
     app.logger.error(f"❌ Unexpected error during user profile blueprint registration: {e}", exc_info=True)
 
+try:
+    from routes.routes_user_albums import user_albums_bp
+    app.register_blueprint(user_albums_bp)
+    app.logger.info("✅ Blueprint 'user_albums_bp' registered successfully.")
+except ImportError as e:
+    app.logger.error(f"❌ Failed to import or register blueprint 'user_albums_bp': {e}")
+except Exception as e:
+    app.logger.error(f"❌ Unexpected error during user albums blueprint registration: {e}", exc_info=True)
+
+# Register User API Blueprint
+try:
+    from routes.routes_user_api import user_api_bp
+    app.register_blueprint(user_api_bp)
+    app.logger.info("✅ Blueprint 'user_api_bp' registered successfully.")
+except ImportError as e:
+    app.logger.error(f"❌ Failed to import or register blueprint 'user_api_bp': {e}")
+except Exception as e:
+    app.logger.error(f"❌ Unexpected error during user API blueprint registration: {e}", exc_info=True)
+
+# Register User Translation Blueprint
+try:
+    from routes.routes_user_xlate import user_xlate_bp
+    app.register_blueprint(user_xlate_bp)
+    app.logger.info("✅ Blueprint 'user_xlate_bp' registered successfully.")
+except ImportError as e:
+    app.logger.error(f"❌ Failed to import or register blueprint 'user_xlate_bp': {e}")
+except Exception as e:
+    app.logger.error(f"❌ Unexpected error during user translation blueprint registration: {e}", exc_info=True)
+
 # ----------------------
 # 🔧 Database Initialization
 # ----------------------
@@ -799,8 +957,14 @@ def forbidden_error(error):
 @app.errorhandler(401)
 def unauthorized_error(error):
     app.logger.warning(f"🔒 401 Unauthorized: {request.path}")
-    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
-        return jsonify(error="Unauthorized"), 401
+    # Enhanced JSON response for API endpoints
+    if request.path.startswith('/api/') or (request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html):
+        return jsonify({
+            "error": "Unauthorized",
+            "message": "Authentication required",
+            "status": 401,
+            "path": request.path
+        }), 401
     return render_template("error.html", code=401, message="Otentikasi Diperlukan"), 401
 
 # ----------------------

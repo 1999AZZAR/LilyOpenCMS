@@ -113,6 +113,45 @@
             </div>
           </header>
 
+          <!-- Author Information -->
+          {% if album.creator and album.creator.username %}
+          <div class="bg-card rounded-lg border border-border p-4 mb-8">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold mr-4">
+                {{ album.creator.username[0].upper() }}
+              </div>
+              <div>
+                <h3 class="font-semibold text-foreground">
+                  <a href="{{ url_for('main.public_user_profile', username=album.creator.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                    {{ album.author if album.author else album.creator.username }}
+                  </a>
+                </h3>
+                <p class="text-sm text-muted-foreground">
+                  Penulis dari album "{{ album.title }}"
+                </p>
+              </div>
+            </div>
+          </div>
+          {% elif album.owner and album.owner.username %}
+          <div class="bg-card rounded-lg border border-border p-4 mb-8">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold mr-4">
+                {{ album.owner.username[0].upper() }}
+              </div>
+              <div>
+                <h3 class="font-semibold text-foreground">
+                  <a href="{{ url_for('main.public_user_profile', username=album.owner.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                    {{ album.author if album.author else album.owner.username }}
+                  </a>
+                </h3>
+                <p class="text-sm text-muted-foreground">
+                  Penulis dari album "{{ album.title }}"
+                </p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
           <!-- Featured Image -->
           {%- set has_chapter_image = news.image -%}
           {%- set has_album_image = album.image -%}
@@ -386,6 +425,7 @@
             <!-- Inline Comment Form (Hidden by default) -->
             <div id="inline-comment-form" class="hidden mb-4 p-4 bg-muted/30 rounded-lg border border-border">
               <form class="comment-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group">
                   <textarea class="form-control comment-content w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" rows="4" placeholder="Tulis komentar Anda di sini..." required></textarea>
                   </div>
@@ -543,6 +583,23 @@
     </div>
   </div>
 </div>
+
+<!-- Confirmation Modal for Comment Deletion -->
+<div id="confirmation-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[9999] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirmation-title">
+  <div class="bg-card rounded-lg border border-border p-6 max-w-md w-full mx-4">
+    <h3 id="confirmation-title" class="text-lg font-semibold text-foreground mb-2">Konfirmasi</h3>
+    <p id="confirmation-message" class="text-muted-foreground mb-6"></p>
+    <div class="flex gap-3 justify-end">
+      <button id="cancel-confirmation" class="px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
+        Batal
+      </button>
+      <button id="confirm-action" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+        Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}

@@ -91,3 +91,12 @@ def content_deletion_requests():
     if not (current_user.is_admin_tier() or current_user.is_owner()):
         abort(403)
     return render_template('admin/settings/content_deletion_requests.html')
+
+
+@main_blueprint.route("/settings/content-edit-requests")
+@login_required
+def content_edit_requests():
+    """Content edit requests management page."""
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    return render_template('admin/settings/content_edit_requests.html')

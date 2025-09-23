@@ -177,10 +177,22 @@ class CommentSystem {
         if (this.isLoading) return;
         
         this.isLoading = true;
-        this.showLoading();
+        
+        // Only show main loading for first page
+        if (page === 1) {
+            this.showLoading();
+        }
         
         try {
-            const response = await fetch(`/api/comments/${this.contentType}/${this.contentId}?page=${page}&per_page=${this.options.perPage}`);
+            // Use special endpoint for albums to include chapter comments
+            let url;
+            if (this.contentType === 'album') {
+                url = `/api/comments/album-with-chapters/${this.contentId}?page=${page}&per_page=${this.options.perPage}`;
+            } else {
+                url = `/api/comments/${this.contentType}/${this.contentId}?page=${page}&per_page=${this.options.perPage}`;
+            }
+            
+            const response = await fetchWithCSRF(url);
             const data = await response.json();
             
             if (response.ok) {
@@ -199,16 +211,21 @@ class CommentSystem {
                 this.currentPage = page;
                 this.renderComments();
                 
+                // Hide load more loading indicator
+                this.hideLoadMoreLoading();
+                
                 // Setup auto-load observer for new comments
                 if (this.options.autoLoadMore) {
                     this.observeLastComment();
                 }
             } else {
                 this.showError(data.error || 'Failed to load comments');
+                this.hideLoadMoreLoading();
             }
         } catch (error) {
             console.error('Error loading comments:', error);
             this.showError('Failed to load comments');
+            this.hideLoadMoreLoading();
         } finally {
             this.hideLoading();
             this.isLoading = false;
@@ -242,7 +259,7 @@ class CommentSystem {
         submitBtn.textContent = 'Posting...';
         
         try {
-            const response = await fetch('/api/comments', {
+            const response = await fetchWithCSRF('/api/comments', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -262,8 +279,14 @@ class CommentSystem {
                 this.showSuccess(data.message);
                 form.reset();
                 
+                // Clear current comments and reload from page 1
+                this.comments = [];
+                this.allComments = [];
+                this.currentPage = 1;
+                this.hasMoreComments = true;
+                
                 // Reload comments to show the new comment
-                this.loadComments(1);
+                await this.loadComments(1);
                 
                 // If it's a reply, hide the reply form
                 if (parentId) {
@@ -321,7 +344,7 @@ class CommentSystem {
         }
         
         try {
-            const response = await fetch(`/api/comments/${commentId}`, {
+            const response = await fetchWithCSRF(`/api/comments/${commentId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -362,7 +385,7 @@ class CommentSystem {
         if (!confirmed) return;
         
         try {
-            const response = await fetch(`/api/comments/${commentId}`, {
+            const response = await fetchWithCSRF(`/api/comments/${commentId}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRFToken': this.getCSRFToken()
@@ -409,7 +432,7 @@ class CommentSystem {
     
     async likeComment(commentId, isLike) {
         try {
-            const response = await fetch(`/api/comments/${commentId}/like`, {
+            const response = await fetchWithCSRF(`/api/comments/${commentId}/like`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -540,7 +563,7 @@ class CommentSystem {
     
     async submitReport(commentId, reason, description) {
         try {
-            const response = await fetch(`/api/comments/${commentId}/report`, {
+            const response = await fetchWithCSRF(`/api/comments/${commentId}/report`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -569,6 +592,9 @@ class CommentSystem {
         const container = document.querySelector('.comments-container');
         if (!container) return;
         
+        // Remove loading state
+        this.hideLoading();
+        
         if (this.comments.length === 0) {
             container.innerHTML = `
                 <div class="no-comments">
@@ -589,8 +615,7 @@ class CommentSystem {
             loadingIndicator = `
                 <div class="auto-load-indicator" style="display: none;">
                     <div class="comments-loading-more">
-                        <div class="spinner"></div>
-                        <span>Memuat komentar...</span>
+                        <div class="spinner-border text-primary"></div>
                     </div>
                 </div>
             `;
@@ -620,6 +645,12 @@ class CommentSystem {
                         <div class="comment-header">
                             <strong class="comment-author">${comment.user ? (comment.user.first_name || comment.user.username) : 'Anonymous'}</strong>
                             <small class="text-muted comment-date">${this.formatDate(comment.created_at)}</small>
+                            ${this.contentType === 'album' && comment.source ? 
+                                (comment.source.type === 'album' ? 
+                                    '<span class="comment-source badge bg-primary ms-2">Album</span>' : 
+                                    `<span class="comment-source badge bg-secondary ms-2">Bab ${comment.source.chapter_number}</span>`
+                                ) : ''
+                            }
                         </div>
                         <div class="comment-content-display">${this.escapeHtml(comment.content)}</div>
                         <div class="comment-actions mt-2">
@@ -689,7 +720,6 @@ class CommentSystem {
     loadMoreComments() {
         if (this.isLoading || !this.hasMoreComments) return;
         
-        this.isLoading = true;
         this.showLoadMoreLoading();
         
         // Load more comments from server
@@ -699,19 +729,29 @@ class CommentSystem {
     showLoading() {
         const container = document.querySelector('.comments-container');
         if (container) {
-            container.innerHTML = `
-                <div class="comments-loading">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Memuat komentar...</p>
+            // Don't replace content, just add loading indicator
+            const existingLoading = container.querySelector('.comments-loading');
+            if (existingLoading) return; // Already showing loading
+            
+            const loadingElement = document.createElement('div');
+            loadingElement.className = 'comments-loading';
+            loadingElement.innerHTML = `
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
             `;
+            container.appendChild(loadingElement);
         }
     }
     
     hideLoading() {
-        // Loading is hidden when comments are rendered
+        const container = document.querySelector('.comments-container');
+        if (container) {
+            const loadingElement = container.querySelector('.comments-loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
     }
     
     showLoadMoreLoading() {

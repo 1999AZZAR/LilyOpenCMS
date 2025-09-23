@@ -19,6 +19,7 @@
         </div>
 
         <form id="campaignForm" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Campaign Name -->
                 <div>
@@ -145,7 +146,7 @@ document.getElementById('campaignForm').addEventListener('submit', async functio
         const url = '{{ url_for("ads.edit_campaign", campaign_id=campaign.id) if campaign else url_for("ads.create_campaign") }}';
         const method = '{{ "POST" if campaign else "POST" }}';
         
-        const response = await fetch(url, {
+        const response = await fetchWithCSRF(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',

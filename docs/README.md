@@ -1,17 +1,18 @@
-# 📚 Documentation Index
+# Documentation Index
 
 Welcome to the LilyOpenCMS documentation! This directory contains comprehensive guides and documentation for all aspects of the system.
 
-## 🚀 Quick Start
+## Quick Start
 
 - **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Complete deployment guide for DirectAdmin hosting and other environments
 - **[Contact Details Guide](CONTACT_DETAILS_GUIDE.md)** - How to manage contact information in the footer
 - **[Development Roadmap](TODO.md)** - Current development status and progress tracking
 - **[API Central Guide](API_CENTRAL.md)** - Unified API overview, OpenAPI preview, examples, and troubleshooting
 
-## 📖 Core Documentation
+## Core Documentation
 
 ### System Documentation
+
 - **[API Documentation](api.md)** - Complete API reference with endpoints and examples (see also: **[API Central Guide](API_CENTRAL.md)**)
   - Swagger UI: open `/api/docs` on a running server (spec at `/api/openapi.yml`)
 - **[Admin UI Guide](admin_ui.md)** - Comprehensive admin interface documentation
@@ -19,14 +20,17 @@ Welcome to the LilyOpenCMS documentation! This directory contains comprehensive 
 - **[Card Design System](CARD_DESIGN_SYSTEM.md)** - Complete card design system with 4 distinct designs
 - **[Card Design Troubleshooting](CARD_DESIGN_TROUBLESHOOTING.md)** - Troubleshooting guide for card design issues
 - **[Ads Injection System – Comprehensive](ADS_INJECTION_COMPREHENSIVE.md)** - Ads injection architecture and roadmap
-- **[Comment & Rating System – Comprehensive](COMMENT_RATING_COMPREHENSIVE.md)** - Complete comment and rating system documentation
+- **[Comment &amp; Rating System – Comprehensive](COMMENT_RATING_COMPREHENSIVE.md)** - Complete comment and rating system documentation
 
 ### Performance & Optimization
-- **[Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Complete guide, quick start, advanced topics, and dashboards
+
+- **[Performance &amp; Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Complete guide, quick start, advanced topics, and dashboards
+- **[Additional Optimization Strategies](TODO.md#additional-optimization-strategies-future-implementation)** - Comprehensive roadmap with 102 optimization strategies
 
 ### System Implementation
-- **[Performance & Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Unified performance implementation and results
-- **[Premium Content & Subscription – Comprehensive](PREMIUM_SYSTEM_COMPREHENSIVE.md)** - Premium content and subscription system
+
+- **[Performance &amp; Optimizations – Comprehensive](PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Unified performance implementation and results
+- **[Premium Content &amp; Subscription – Comprehensive](PREMIUM_SYSTEM_COMPREHENSIVE.md)** - Premium content and subscription system
 - **[Subscription System Status](SUBSCRIPTION_SYSTEM_STATUS.md)** - Subscription feature status
 - **[Weighted Rating System](WEIGHTED_RATING_SYSTEM.md)** - Advanced rating system with weighted calculations
 - **[Album View Count Implementation](ALBUM_VIEW_COUNT_IMPLEMENTATION.md)** - View count tracking for albums
@@ -36,15 +40,18 @@ Welcome to the LilyOpenCMS documentation! This directory contains comprehensive 
 - **[Current System Status](CURRENT_SYSTEM_STATUS.md)** - Current implementation status overview
 
 ### Testing & Quality Assurance
+
 - **[Comprehensive Endpoint Testing](../test/test_comprehensive_endpoints.py)** - Full endpoint testing with 95% success rate
 - **[Test Summary](../test/test_summary.md)** - Detailed testing results and system status
 
 ### Development
+
 - **[Development Roadmap](TODO.md)** - Current development status and future plans
 
-## 🔧 Configuration Guides
+## Configuration Guides
 
 ### Redis Configuration
+
 The system uses a text-based configuration for Redis settings:
 
 - **Configuration File**: `../config/redis_config.txt`
@@ -53,6 +60,7 @@ The system uses a text-based configuration for Redis settings:
 - **Config Reader**: `../routes/utils/config_reader.py`
 
 ### Database Management
+
 - **Database Health Checker**: `../config/database_health_checker.py`
 - **Database Health Checker README**: `../config/DATABASE_HEALTH_CHECKER_README.md`
 - **Database Changes Guide**: `../migrations/DATABASE_CHANGES_GUIDE.md`
@@ -60,13 +68,15 @@ The system uses a text-based configuration for Redis settings:
 - **Database Manager**: `../migrations/database_manager.py`
 
 ### Environment Setup
+
 - **Environment Variables**: See root README.md for complete `.env` configuration
 - **Database Setup**: Safe migration system and seeding scripts
 - **Performance Setup**: Redis installation and optimization
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
+
 1. **Redis Connection Errors**: Check `DEPLOYMENT_GUIDE.md` for Redis setup
 2. **Database Issues**: Run `flask db upgrade` to apply migrations
 3. **Performance Issues**: Review `PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md`
@@ -80,12 +90,13 @@ The system uses a text-based configuration for Redis settings:
 11. **Permission System Issues**: Review permission management system implementation
 
 ### Getting Help
+
 - Check the relevant documentation above
 - Review the main [README.md](../README.md) in the root directory
 - Check application logs for specific error messages
 - Use the test scripts to diagnose issues
 
-## 📝 Contributing to Documentation
+## Contributing to Documentation
 
 When adding new documentation:
 
@@ -95,7 +106,7 @@ When adding new documentation:
 4. **Include cross-references** to related documentation
 5. **Keep documentation up to date** with code changes
 
-## 📋 Documentation Standards
+## Documentation Standards
 
 - Use clear, descriptive titles
 - Include code examples where helpful
@@ -104,9 +115,10 @@ When adding new documentation:
 - Keep documentation concise but comprehensive
 - Use consistent formatting and structure
 
-## 🎯 System Features Overview
+## System Features Overview
 
 ### Core Features
+
 - **User Management**: Role-based access control (SUPERUSER, ADMIN, GENERAL) with enhanced user management system
 - **Content Management**: News, albums, chapters, images, videos
 - **Card Design System**: 4 distinct card designs (classic, modern, minimal, featured)
@@ -120,6 +132,7 @@ When adding new documentation:
 - **Admin Sidebar**: Enhanced navigation with sub-groups and quick toggles
 
 ### Admin Features
+
 - **Dashboard**: Performance monitoring, analytics, and system health
 - **Content Management**: News, albums, images, videos, categories
 - **User Management**: User roles, permissions, activity tracking, and enhanced user creation
@@ -129,20 +142,27 @@ When adding new documentation:
 - **Quick Toggles**: Real-time feature toggles for comments, ratings, ads, and campaigns
 
 ### Performance Features
+
+- **Aggressive Query Caching**: Advanced caching system with background refresh, smart preloading, and extended cache times
 - **Caching**: Redis-based intelligent caching with invalidation
 - **Database Optimization**: Connection pooling, query optimization, indexing
 - **Asset Optimization**: CSS/JS minification, gzip compression, versioning
 - **SSR Optimization**: Template caching and rendering optimization
 - **Monitoring**: Real-time performance metrics and alerts
+- **Cache Statistics**: Comprehensive performance tracking with preloads, background refreshes, and prediction accuracy
 
 ### Recent Enhancements
+
+- **Aggressive Query Caching System**: Advanced caching with background refresh, smart preloading, and extended cache times
+- **SSR Optimization Dashboard**: Live refresh functionality with dynamic DOM updates
 - **Enhanced User Management**: Advanced user listing with pagination, search, and filtering
 - **User Creation System**: Admin user creation with role assignment and premium status
 - **User Statistics**: Real-time user statistics and role distribution
 - **Backup API Endpoints**: Resolved 404 errors for roles and permissions
 - **Permission System**: Centralized permission management with 80+ granular permissions
 - **Admin Sidebar Enhancement**: Sub-group navigation with permission-based visibility
+- **Additional Optimization Strategies**: Comprehensive roadmap with 102 optimization strategies for future implementation
 
 ---
 
-**Need help?** Start with the [Deployment Guide](DEPLOYMENT_GUIDE.md) for setup instructions, or check the [API Documentation](api.md) for technical details. 
+**Need help?** Start with the [Deployment Guide](DEPLOYMENT_GUIDE.md) for setup instructions, or check the [API Documentation](api.md) for technical details.

@@ -19,6 +19,7 @@
         </div>
 
         <form id="placementForm" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Placement Name -->
                 <div>
@@ -231,7 +232,7 @@ document.getElementById('placementForm').addEventListener('submit', async functi
         const url = '{{ url_for("ads.edit_placement", placement_id=placement.id) if placement else url_for("ads.create_placement") }}';
         const method = 'POST';
         
-        const response = await fetch(url, {
+        const response = await fetchWithCSRF(url, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',

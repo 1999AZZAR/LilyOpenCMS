@@ -119,7 +119,7 @@ function trackShare(platform, contentData, logger) {
     
     if (logger) logger.log(`Tracking share for ${platform} at: ${trackUrl}`);
     
-    return fetch(trackUrl, {
+    return fetchWithCSRF(trackUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ platform })

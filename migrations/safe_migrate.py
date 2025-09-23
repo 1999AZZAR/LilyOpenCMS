@@ -1406,6 +1406,129 @@ def safe_migrate():
                 except Exception as e:
                     print(f"⚠️ Could not create user_subscriptions table: {e}")
 
+            # ===== ENHANCED ADVERTISING SYSTEM TABLES =====
+            print("\n" + "="*50)
+            print("📢 ENHANCED ADVERTISING SYSTEM TABLES")
+            print("="*50)
+
+            # Check if api_key table exists
+            if 'api_key' not in existing_tables:
+                print("\n🔧 Creating api_key table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE api_key (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR(200) NOT NULL,
+                            key_value VARCHAR(255) NOT NULL UNIQUE,
+                            description TEXT,
+                            permissions TEXT,  -- JSON stored as TEXT
+                            rate_limit_per_hour INTEGER DEFAULT 1000 NOT NULL,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            last_used_at DATETIME,
+                            usage_count INTEGER DEFAULT 0 NOT NULL,
+                            app_name VARCHAR(200),
+                            app_version VARCHAR(50),
+                            contact_email VARCHAR(255),
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            expires_at DATETIME,
+                            created_by INTEGER,
+                            FOREIGN KEY (created_by) REFERENCES user (id)
+                        )
+                    """))
+                    print("✅ Created api_key table")
+                except Exception as e:
+                    print(f"⚠️ Could not create api_key table: {e}")
+
+            # Check if ad_image table exists
+            if 'ad_image' not in existing_tables:
+                print("\n🔧 Creating ad_image table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE ad_image (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            filename VARCHAR(255) NOT NULL,
+                            filepath VARCHAR(500) NOT NULL UNIQUE,
+                            file_size INTEGER,
+                            mime_type VARCHAR(100),
+                            width INTEGER,
+                            height INTEGER,
+                            ad_type VARCHAR(50),
+                            alt_text VARCHAR(255),
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            ad_id INTEGER,
+                            uploaded_by INTEGER,
+                            FOREIGN KEY (ad_id) REFERENCES ad (id) ON DELETE CASCADE,
+                            FOREIGN KEY (uploaded_by) REFERENCES user (id)
+                        )
+                    """))
+                    print("✅ Created ad_image table")
+                except Exception as e:
+                    print(f"⚠️ Could not create ad_image table: {e}")
+
+            # Check if ad_targeting table exists
+            if 'ad_targeting' not in existing_tables:
+                print("\n🔧 Creating ad_targeting table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE ad_targeting (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            countries TEXT,  -- JSON stored as TEXT
+                            cities TEXT,     -- JSON stored as TEXT
+                            regions TEXT,    -- JSON stored as TEXT
+                            device_types TEXT,   -- JSON stored as TEXT
+                            operating_systems TEXT,  -- JSON stored as TEXT
+                            browsers TEXT,       -- JSON stored as TEXT
+                            user_types TEXT,     -- JSON stored as TEXT
+                            age_groups TEXT,     -- JSON stored as TEXT
+                            interests TEXT,      -- JSON stored as TEXT
+                            categories TEXT,     -- JSON stored as TEXT
+                            tags TEXT,           -- JSON stored as TEXT
+                            time_zones TEXT,     -- JSON stored as TEXT
+                            hours_of_day TEXT,   -- JSON stored as TEXT
+                            days_of_week TEXT,   -- JSON stored as TEXT
+                            max_impressions_per_user INTEGER,
+                            max_impressions_per_session INTEGER,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            ad_id INTEGER NOT NULL,
+                            created_by INTEGER,
+                            FOREIGN KEY (ad_id) REFERENCES ad (id) ON DELETE CASCADE,
+                            FOREIGN KEY (created_by) REFERENCES user (id)
+                        )
+                    """))
+                    print("✅ Created ad_targeting table")
+                except Exception as e:
+                    print(f"⚠️ Could not create ad_targeting table: {e}")
+
+            # Check if ad_approval table exists
+            if 'ad_approval' not in existing_tables:
+                print("\n🔧 Creating ad_approval table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE ad_approval (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            status VARCHAR(50) NOT NULL,
+                            notes TEXT,
+                            reviewed_at DATETIME,
+                            reviewed_by INTEGER,
+                            revision_count INTEGER DEFAULT 0 NOT NULL,
+                            last_revision_at DATETIME,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            ad_id INTEGER NOT NULL,
+                            submitted_by INTEGER,
+                            FOREIGN KEY (ad_id) REFERENCES ad (id) ON DELETE CASCADE,
+                            FOREIGN KEY (reviewed_by) REFERENCES user (id),
+                            FOREIGN KEY (submitted_by) REFERENCES user (id)
+                        )
+                    """))
+                    print("✅ Created ad_approval table")
+                except Exception as e:
+                    print(f"⚠️ Could not create ad_approval table: {e}")
+
             # ===== ADVERTISING SYSTEM TABLES =====
             print("\n" + "="*50)
             print("📢 ADVERTISING SYSTEM TABLES")
@@ -1504,6 +1627,87 @@ def safe_migrate():
                     print("✅ Created ad_stats table")
                 except Exception as e:
                     print(f"⚠️ Could not create ad_stats table: {e}")
+
+            # Reconcile ad table columns with current Ad model expectations
+            try:
+                print("\n🔍 Verifying ad table columns against model...")
+                result = db.session.execute(text("PRAGMA table_info(ad)"))
+                ad_columns = [row[1] for row in result.fetchall()]
+
+                # Columns required by models.Ad
+                required_ad_columns = [
+                    ("description", "TEXT"),
+                    ("content_type", "VARCHAR(50) DEFAULT 'text'"),
+                    ("image_url", "VARCHAR(500)"),
+                    ("image_filename", "VARCHAR(255)"),
+                    ("image_upload_path", "VARCHAR(500)"),
+                    ("image_alt", "VARCHAR(200)"),
+                    ("image_width", "INTEGER"),
+                    ("image_height", "INTEGER"),
+                    ("image_file_size", "INTEGER"),
+                    ("text_content", "TEXT"),
+                    ("html_content", "TEXT"),
+                    ("target_url", "VARCHAR(500)"),
+                    ("external_ad_code", "TEXT"),
+                    ("external_ad_client", "VARCHAR(100)"),
+                    ("external_ad_slot", "VARCHAR(100)"),
+                    ("width", "INTEGER"),
+                    ("height", "INTEGER"),
+                    ("css_classes", "VARCHAR(500)"),
+                    ("inline_styles", "TEXT"),
+                    ("priority", "INTEGER DEFAULT 0 NOT NULL"),
+                    ("impressions", "INTEGER DEFAULT 0 NOT NULL"),
+                    ("clicks", "INTEGER DEFAULT 0 NOT NULL"),
+                    ("ctr", "FLOAT DEFAULT 0.0 NOT NULL"),
+                    ("created_by", "INTEGER REFERENCES user(id)"),
+                    ("updated_by", "INTEGER REFERENCES user(id)")
+                ]
+
+                added_any = False
+                for col_name, col_def in required_ad_columns:
+                    if col_name not in ad_columns:
+                        try:
+                            db.session.execute(text(f"ALTER TABLE ad ADD COLUMN {col_name} {col_def}"))
+                            print(f"✅ Added ad.{col_name}")
+                            added_any = True
+                        except Exception as e:
+                            print(f"⚠️ Could not add ad.{col_name}: {e}")
+
+                if added_any:
+                    try:
+                        db.session.commit()
+                    except Exception as e:
+                        print(f"⚠️ Could not commit ad column additions: {e}")
+                        db.session.rollback()
+
+                # Create helpful indexes
+                try:
+                    index_statements = [
+                        "CREATE INDEX IF NOT EXISTS idx_ad_is_active ON ad(is_active)",
+                        "CREATE INDEX IF NOT EXISTS idx_ad_type_content_type ON ad(ad_type, content_type)",
+                        "CREATE INDEX IF NOT EXISTS idx_ad_created_by ON ad(created_by)",
+                        "CREATE INDEX IF NOT EXISTS idx_ad_updated_by ON ad(updated_by)"
+                    ]
+                    for stmt in index_statements:
+                        try:
+                            db.session.execute(text(stmt))
+                        except Exception as e:
+                            print(f"⚠️ Could not create index for ad: {e}")
+                    db.session.commit()
+                except Exception as e:
+                    print(f"⚠️ Could not finalize ad indexes: {e}")
+
+                # Re-verify presence of critical columns to avoid ORM errors
+                result = db.session.execute(text("PRAGMA table_info(ad)"))
+                verified_cols = {row[1] for row in result.fetchall()}
+                critical = {"image_filename", "content_type", "impressions", "clicks", "ctr"}
+                missing_critical = critical - verified_cols
+                if missing_critical:
+                    print(f"❌ Still missing critical ad columns: {sorted(list(missing_critical))}")
+                else:
+                    print("✅ ad table now has all critical columns required by the model")
+            except Exception as e:
+                print(f"⚠️ Could not reconcile ad table columns: {e}")
 
             # ===== LEGAL & POLICY TABLES =====
             print("\n" + "="*50)
@@ -1703,6 +1907,31 @@ def safe_migrate():
                 print(f"⭐ User points records: {user_points_count}")
             except Exception as e:
                 print(f"⚠️ Could not count user points records: {e}")
+
+            # New Ad System record counts
+            try:
+                api_key_count = db.session.execute(text("SELECT COUNT(*) FROM api_key")).scalar()
+                print(f"🔑 API key records: {api_key_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count API key records: {e}")
+
+            try:
+                ad_image_count = db.session.execute(text("SELECT COUNT(*) FROM ad_image")).scalar()
+                print(f"🖼️ Ad image records: {ad_image_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count ad image records: {e}")
+
+            try:
+                ad_targeting_count = db.session.execute(text("SELECT COUNT(*) FROM ad_targeting")).scalar()
+                print(f"🎯 Ad targeting records: {ad_targeting_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count ad targeting records: {e}")
+
+            try:
+                ad_approval_count = db.session.execute(text("SELECT COUNT(*) FROM ad_approval")).scalar()
+                print(f"✅ Ad approval records: {ad_approval_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count ad approval records: {e}")
 
             # ===== CATEGORY GROUP MIGRATIONS =====
             print("\n" + "="*50)
@@ -2000,7 +2229,7 @@ def migrate_write_access_requests(db_session):
                 request_reason TEXT,
                 portfolio_links TEXT,
                 experience_description TEXT,
-                status VARCHAR(20) DEFAULT 'pending',
+                status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
                 admin_notes TEXT,
                 reviewed_by_id INTEGER,
                 requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,

@@ -87,6 +87,7 @@
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-image-title">
       <h2 id="add-image-title" class="text-xl font-semibold mb-4 text-gray-800">Unggah Gambar Baru</h2>
       <form id="add-image-form" class="space-y-4" role="form" aria-label="Form unggah gambar baru">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div>
           <label class="block text-gray-700 font-medium mb-2" for="image-name">Nama Gambar</label>
           <input type="text" id="image-name"
@@ -205,6 +206,7 @@
       <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl w-full max-w-md">
         <h2 id="edit-modal-title" class="text-xl font-semibold mb-4 text-gray-900">Edit Gambar</h2>
         <form id="edit-image-form" class="space-y-4" role="form" aria-label="Form edit gambar">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" id="edit-id">
           <div>
             <label class="block text-gray-700 font-medium mb-2" for="edit-image-name">Nama Gambar</label>

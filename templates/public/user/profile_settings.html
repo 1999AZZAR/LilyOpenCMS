@@ -34,6 +34,7 @@
                         <i class="fas fa-user mr-2"></i>Akun
                     </h3>
                     <form id="profile-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
                         
 
@@ -111,6 +112,7 @@
                         <i class="fas fa-share-alt mr-2"></i>Media Sosial
                     </h3>
                     <form id="social-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="twitter" class="block text-sm font-medium text-foreground">Twitter</label>
@@ -156,6 +158,7 @@
                         <i class="fas fa-key mr-2"></i>Ubah Kata Sandi
                     </h3>
                     <form id="password-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div>
                             <label for="current-password" class="block text-sm font-medium text-foreground">Kata Sandi Saat Ini</label>
                             <input type="password" id="current-password" name="current_password" required
@@ -405,6 +408,44 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Custom toast function (same as create_story.html)
+    function showToast(message, type = 'info') {
+        console.log('Toast:', message, type);
+        
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 transform transition-all duration-300 translate-x-full`;
+        
+        switch (type) {
+            case 'error':
+                toast.classList.add('bg-red-500');
+                break;
+            case 'success':
+                toast.classList.add('bg-green-500');
+                break;
+            case 'warning':
+                toast.classList.add('bg-yellow-500');
+                break;
+            default:
+                toast.classList.add('bg-blue-500');
+        }
+        
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+        }, 100);
+        
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 300);
+        }, 3000);
+    }
+    
     // Username availability checking
     const usernameInput = document.getElementById('username');
     const usernameStatus = document.getElementById('username-status');
@@ -447,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Check availability after 500ms delay
             usernameCheckTimeout = setTimeout(() => {
-                fetch('/api/username/check', {
+                fetchWithCSRF('/api/username/check', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -493,31 +534,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 bio: document.getElementById('bio').value
             };
             
-            fetch('/api/profile/update', {
+            console.log('Sending profile data:', formData);
+            
+            fetchWithCSRF('/api/profile/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Profile update failed:', response.status, response.statusText);
+                    return response.json().then(errorData => {
+                        console.error('Error details:', errorData);
+                        throw new Error(`HTTP error! status: ${response.status} - ${errorData.error || response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    alert('Profil berhasil diperbarui!');
-                    
-                    // If username was changed, redirect to new profile URL
-                    if (isUsernameChanged && data.new_username) {
-                        setTimeout(() => {
-                            window.location.href = '/user/' + data.new_username + '/settings';
-                        }, 1000);
-                    }
+                    showToast('success', 'Profil berhasil diperbarui!');
                 } else {
-                    alert('Error memperbarui profil: ' + data.error);
+                    showToast('error', 'Error memperbarui profil: ' + (data.error || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error memperbarui profil');
+                showToast('error', 'Error memperbarui profil');
             });
         });
     }
@@ -537,24 +582,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             };
             
-            fetch('/api/profile/update', {
+            fetchWithCSRF('/api/profile/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    alert('Tautan sosial berhasil diperbarui!');
+                    showToast('success', 'Tautan sosial berhasil diperbarui!');
                 } else {
-                    alert('Error memperbarui tautan sosial: ' + data.error);
+                    showToast('error', 'Error memperbarui tautan sosial: ' + (data.error || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error memperbarui tautan sosial');
+                showToast('error', 'Error memperbarui tautan sosial');
             });
         });
     }
@@ -570,11 +620,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const confirmPassword = formData.get('confirm_password');
             
             if (newPassword !== confirmPassword) {
-                alert('Kata sandi baru tidak cocok');
+                showToast('error', 'Kata sandi baru tidak cocok');
                 return;
             }
             
-            fetch('/api/user/change-password', {
+            fetchWithCSRF('/api/user/change-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -584,21 +634,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     new_password: newPassword
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.message) {
-                    alert(data.message);
-                    if (data.message.includes('successfully')) {
+                    if (data.message.includes('berhasil') || data.message.includes('successfully')) {
+                        showToast('success', data.message);
                         passwordForm.reset();
+                    } else {
+                        showToast('error', data.message);
                     }
                 } else {
-                    alert('Kata sandi berhasil diubah!');
+                    showToast('success', 'Kata sandi berhasil diubah!');
                     passwordForm.reset();
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error mengubah kata sandi');
+                showToast('error', 'Error mengubah kata sandi');
             });
         });
     }
@@ -612,14 +669,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Check if username is being changed
             if (username === originalUsername) {
-                alert('Silakan masukkan nama pengguna yang berbeda');
+                showToast('warning', 'Silakan masukkan nama pengguna yang berbeda');
                 return;
             }
             
             // Validate username format
             const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
             if (!usernameRegex.test(username)) {
-                alert('Nama pengguna harus 3-20 karakter dan hanya boleh berisi huruf, angka, garis bawah, dan tanda hubung');
+                showToast('error', 'Nama pengguna harus 3-20 karakter dan hanya boleh berisi huruf, angka, garis bawah, dan tanda hubung');
                 return;
             }
             
@@ -654,7 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const password = document.getElementById('modal-current-password').value;
             
             if (!password) {
-                alert('Silakan masukkan kata sandi saat ini');
+                showToast('warning', 'Silakan masukkan kata sandi saat ini');
                 document.getElementById('modal-current-password').focus();
                 return;
             }
@@ -672,10 +729,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     current_password: password
                 })
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
-                        alert('Profil berhasil diperbarui!');
+                        showToast('success', 'Profil berhasil diperbarui!');
                         
                         // If username was changed, redirect to new profile URL
                         if (data.new_username) {
@@ -684,12 +746,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             }, 1000);
                         }
                     } else {
-                        alert('Error memperbarui profil: ' + data.error);
+                        showToast('error', 'Error memperbarui profil: ' + (data.error || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error memperbarui profil');
+                    showToast('error', 'Error memperbarui profil');
                 })
                 .finally(() => {
                     modal.classList.add('hidden');

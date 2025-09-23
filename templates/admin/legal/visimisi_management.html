@@ -15,6 +15,7 @@
                 Tambah Bagian Baru
             </h2>
             <form action="{{ url_for('main.settings_visi_misi') }}" method="POST" class="space-y-4" role="form" aria-label="Form tambah bagian visi misi">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <!-- CSRF protection disabled for this application -->
                 <input type="hidden" name="action" value="create">
                 
@@ -84,6 +85,7 @@
                     </div>
 
                     <form action="{{ url_for('main.settings_visi_misi') }}" method="POST" class="space-y-4" role="form" aria-labelledby="section-title-{{ visi_misi.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <!-- CSRF protection disabled for this application -->
                         <input type="hidden" name="action" value="update">
                         <input type="hidden" name="visi_misi_id" value="{{ visi_misi.id }}">

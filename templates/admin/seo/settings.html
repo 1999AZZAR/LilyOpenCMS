@@ -76,6 +76,7 @@
     <!-- Global Settings Form -->
     <div class="bg-white rounded-lg shadow-md p-6">
       <form id="global-seo-settings-form" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <!-- Basic SEO Settings -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
@@ -262,6 +263,7 @@
         </div>
 
         <form id="root-seo-settings-form" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <!-- Brand Information Section -->
           <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h4 class="font-medium text-gray-800 mb-3">Informasi Brand (dari Brand Identity)</h4>

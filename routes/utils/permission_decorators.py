@@ -42,7 +42,7 @@ def require_permission(permission_func, redirect_url=None, error_message=None):
                     if current_user.is_admin_tier():
                         return redirect(url_for('main.settings_dashboard'))
                     else:
-                        return redirect('/dashboard')
+                        return redirect(url_for('user_profile.user_profile', username=current_user.username, tab='list'))
             
             return f(*args, **kwargs)
         return decorated_function
@@ -135,7 +135,7 @@ def require_album_create(f):
         
         if not can_create_albums(current_user):
             flash('Permission denied. You need create album permission.', 'error')
-            return redirect(url_for('main.settings_dashboard'))
+            return redirect(url_for('user_profile.user_profile', username=current_user.username, tab='list'))
         
         return f(*args, **kwargs)
     return decorated_function
@@ -150,7 +150,7 @@ def require_album_edit(f):
         
         if not can_edit_albums(current_user):
             flash('Permission denied. You need edit album permission.', 'error')
-            return redirect(url_for('main.settings_dashboard'))
+            return redirect(url_for('user_profile.user_profile', username=current_user.username, tab='list'))
         
         return f(*args, **kwargs)
     return decorated_function
@@ -165,7 +165,7 @@ def require_album_delete(f):
         
         if not can_delete_albums(current_user):
             flash('Permission denied. You need delete album permission.', 'error')
-            return redirect(url_for('main.settings_dashboard'))
+            return redirect(url_for('user_profile.user_profile', username=current_user.username, tab='list'))
         
         return f(*args, **kwargs)
     return decorated_function
@@ -180,7 +180,7 @@ def require_album_publish(f):
         
         if not can_publish_albums(current_user):
             flash('Permission denied. You need publish album permission.', 'error')
-            return redirect(url_for('main.settings_dashboard'))
+            return redirect(url_for('user_profile.user_profile', username=current_user.username, tab='list'))
         
         return f(*args, **kwargs)
     return decorated_function
@@ -195,7 +195,7 @@ def require_album_manage(f):
         
         if not can_manage_albums(current_user):
             flash('Permission denied. You need album management permission.', 'error')
-            return redirect(url_for('main.settings_dashboard'))
+            return redirect(url_for('user_profile.user_profile', username=current_user.username, tab='list'))
         
         return f(*args, **kwargs)
     return decorated_function

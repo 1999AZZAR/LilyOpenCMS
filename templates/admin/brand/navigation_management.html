@@ -129,6 +129,7 @@
         </h3>
         
         <form id="link-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" id="link-id" name="id">
           
           <div>

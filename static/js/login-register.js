@@ -72,7 +72,7 @@ function showPolicyModal(type) {
     // Show loading state
     document.getElementById('policyContent').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 
-    fetch(type === 'privacy' ? '/api/privacy-policy' : '/api/media-guidelines')
+    fetchWithCSRF(type === 'privacy' ? '/api/privacy-policy' : '/api/media-guidelines')
     .then(res => res.json())
     .then(data => {
         document.getElementById('policyContent').innerHTML = data.map(section => `

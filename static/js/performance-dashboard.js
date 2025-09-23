@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         routesContainer.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Loading routes data...</td></tr>';
 
-        fetch('/api/performance/summary')
+        fetchWithCSRF('/api/performance/summary')
             .then(response => response.json())
             .then(data => {
                 if (data.routes && Object.keys(data.routes).length > 0) {
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const databaseContainer = document.querySelector('#database-tab');
         if (!databaseContainer) return;
 
-        fetch('/api/database/status')
+        fetchWithCSRF('/api/database/status')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const cacheContainer = document.querySelector('#cache-tab');
         if (!cacheContainer) return;
 
-        fetch('/api/cache/status')
+        fetchWithCSRF('/api/cache/status')
             .then(async response => {
                 if (!response.ok) {
                     let msg = 'Cache server unavailable';
@@ -266,11 +266,64 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('info', 'Routes data refreshed');
     });
 
+    // Maintenance mode controls
+    const maintenanceBtn = document.getElementById('toggle-maintenance');
+    const maintenanceLabel = document.getElementById('maintenance-label');
+
+    async function refreshMaintenanceState() {
+        try {
+            const resp = await fetchWithCSRF('/api/settings/maintenance');
+            const data = await resp.json();
+            if (data && data.success && data.maintenance) {
+                const isOn = !!data.maintenance.enabled;
+                updateMaintenanceButton(isOn);
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    function updateMaintenanceButton(isOn) {
+        if (!maintenanceBtn || !maintenanceLabel) return;
+        if (isOn) {
+            maintenanceBtn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+            maintenanceBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            maintenanceLabel.textContent = 'Matikan Mode Perawatan';
+        } else {
+            maintenanceBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            maintenanceBtn.classList.add('bg-amber-600', 'hover:bg-amber-700');
+            maintenanceLabel.textContent = 'Aktifkan Mode Perawatan';
+        }
+    }
+
+    maintenanceBtn?.addEventListener('click', async function() {
+        try {
+            // Read current state first
+            const cur = await fetchWithCSRF('/api/settings/maintenance').then(r => r.json());
+            const currentOn = !!(cur && cur.success && cur.maintenance && cur.maintenance.enabled);
+            const nextOn = !currentOn;
+            const resp = await fetchWithCSRF('/api/settings/maintenance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: nextOn })
+            });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                updateMaintenanceButton(nextOn);
+                showToast('success', nextOn ? 'Mode perawatan diaktifkan' : 'Mode perawatan dimatikan');
+            } else {
+                showToast('error', data.message || 'Gagal menyimpan pengaturan');
+            }
+        } catch (e) {
+            showToast('error', 'Terjadi kesalahan');
+        }
+    });
+
     // Database Management Functions
     document.getElementById('optimize-database')?.addEventListener('click', function() {
         showConfirmDialog('Apakah Anda yakin ingin mengoptimalkan database?', () => {
             showToast('info', 'Optimizing database...');
-            fetch('/api/database/optimize', {
+            fetchWithCSRF('/api/database/optimize', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -312,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('cleanup-database')?.addEventListener('click', function() {
         showConfirmDialog('Apakah Anda yakin ingin membersihkan database? Data lama akan dihapus.', () => {
             showToast('info', 'Cleaning up database...');
-            fetch('/api/database/cleanup', {
+            fetchWithCSRF('/api/database/cleanup', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -353,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('backup-database')?.addEventListener('click', function() {
         showConfirmDialog('Apakah Anda yakin ingin membuat backup database?', () => {
             showToast('info', 'Creating database backup...');
-            fetch('/api/database/backup', {
+            fetchWithCSRF('/api/database/backup', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -394,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('list-backups')?.addEventListener('click', function() {
         showToast('info', 'Loading backups...');
-        fetch('/api/database/backups')
+        fetchWithCSRF('/api/database/backups')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -408,9 +461,42 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
+    // Restore database flow
+    document.getElementById('restore-database')?.addEventListener('click', function() {
+        showToast('info', 'Loading backups...');
+        fetchWithCSRF('/api/database/backups')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showRestoreDialog(data.backups);
+                } else {
+                    showToast('error', data.message || 'Failed to load backups');
+                }
+            })
+            .catch(error => {
+                showToast('error', 'Error: ' + error.message);
+            });
+    });
+
     document.getElementById('refresh-database')?.addEventListener('click', function() {
         loadDatabaseData();
         showToast('info', 'Database data refreshed');
+    });
+
+    // Download current database (or selected backup via query)
+    document.getElementById('download-database')?.addEventListener('click', async function() {
+        try {
+            // Simple direct download for current DB
+            const link = document.createElement('a');
+            link.href = '/api/database/download';
+            link.rel = 'noopener';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('info', 'Downloading database...');
+        } catch (e) {
+            showToast('error', e.message || 'Failed to download');
+        }
     });
 
     // Cache Management Functions
@@ -446,7 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showConfirmDialog('Apakah Anda yakin ingin membersihkan semua cache?', () => {
             showToast('info', 'Clearing cache...');
             
-            fetch('/api/cache/clear', {
+            fetchWithCSRF('/api/cache/clear', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -484,27 +570,39 @@ document.addEventListener('DOMContentLoaded', function() {
     function showBackupsList(backups) {
         const dialog = document.createElement('div');
         dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        
-        const backupsList = backups.map(backup => `
-            <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                <div>
-                    <div class="font-medium">${backup.filename}</div>
-                    <div class="text-sm text-gray-500">Created: ${backup.created_at}</div>
+
+        function renderList(list) {
+            const rows = list.map(backup => `
+                <div class="flex items-center justify-between py-3 border-b border-gray-200">
+                    <div class="min-w-0 mr-4">
+                        <div class="font-medium truncate">${backup.filename}</div>
+                        <div class="text-xs text-gray-500">Created: ${backup.created_at}</div>
+                        <div class="text-xs text-gray-400">Size: ${backup.size}</div>
+                    </div>
+                    <div class="flex items-center space-x-2 flex-shrink-0">
+                        <button class="download-backup bg-gray-700 hover:bg-gray-800 text-white text-xs px-3 py-1 rounded" data-filename="${backup.filename}">
+                            <i class="fas fa-download mr-1"></i>Download
+                        </button>
+                        <button class="delete-backup bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded" data-filename="${backup.filename}">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    </div>
                 </div>
-                <div class="text-sm text-gray-600">${backup.size}</div>
-            </div>
-        `).join('');
+            `).join('');
+
+            return list.length > 0 ? rows : '<p class="text-gray-500 text-center py-8">No backups found</p>';
+        }
 
         dialog.innerHTML = `
-            <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl mx-4 max-h-[75vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-medium text-gray-900">Database Backups</h3>
                     <button class="close-btn text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="space-y-2">
-                    ${backups.length > 0 ? backupsList : '<p class="text-gray-500 text-center py-4">No backups found</p>'}
+                <div id="backups-container" class="divide-y divide-gray-100">
+                    ${renderList(backups)}
                 </div>
             </div>
         `;
@@ -513,14 +611,120 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Close dialog functionality
         dialog.querySelector('.close-btn').onclick = () => document.body.removeChild(dialog);
-        dialog.onclick = (e) => {
-            if (e.target === dialog) document.body.removeChild(dialog);
+        dialog.onclick = (e) => { if (e.target === dialog) document.body.removeChild(dialog); };
+
+        const container = dialog.querySelector('#backups-container');
+
+        container.addEventListener('click', async (e) => {
+            const downloadBtn = e.target.closest('.download-backup');
+            const deleteBtn = e.target.closest('.delete-backup');
+            if (downloadBtn) {
+                const filename = downloadBtn.getAttribute('data-filename');
+                try {
+                    const a = document.createElement('a');
+                    a.href = `/api/database/download?filename=${encodeURIComponent(filename)}`;
+                    a.rel = 'noopener';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showToast('info', `Downloading ${filename}...`);
+                } catch (err) {
+                    showToast('error', err.message || 'Download failed');
+                }
+            }
+            if (deleteBtn) {
+                const filename = deleteBtn.getAttribute('data-filename');
+                showConfirmDialog(`Hapus backup \"${filename}\"? Tindakan ini tidak bisa dibatalkan.`, async () => {
+                    try {
+                        const resp = await fetchWithCSRF('/api/database/backup/delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                            body: JSON.stringify({ filename })
+                        });
+                        const data = await resp.json();
+                        if (!resp.ok || !data.success) {
+                            showToast('error', data.message || `Delete failed (HTTP ${resp.status})`);
+                            return;
+                        }
+                        showToast('success', data.message || 'Backup deleted');
+                        // Refresh list
+                        const latest = await fetchWithCSRF('/api/database/backups').then(r => r.json());
+                        if (latest.success) {
+                            container.innerHTML = renderList(latest.backups);
+                        }
+                    } catch (err) {
+                        showToast('error', err.message || 'Delete error');
+                    }
+                });
+            }
+        });
+    }
+
+    function showRestoreDialog(backups) {
+        const dialog = document.createElement('div');
+        dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+
+        const options = backups.map(b => `
+            <option value="${b.filename}">${b.filename} (${b.created_at})</option>
+        `).join('');
+
+        dialog.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+                <div class="mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Restore Database Backup</h3>
+                    <p class="text-sm text-gray-600 mt-1">Choose a backup to restore. Current database will be backed up automatically before restore.</p>
+                </div>
+                <label class="block text-sm text-gray-700 mb-2">Select backup</label>
+                <select class="w-full border border-gray-300 rounded-lg p-2 mb-4" id="backup-select">
+                    ${options}
+                </select>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="cancel-btn px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button type="button" class="confirm-btn px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700">Restore</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+
+        const close = () => document.body.removeChild(dialog);
+        dialog.querySelector('.cancel-btn').onclick = close;
+        dialog.addEventListener('click', (e) => { if (e.target === dialog) close(); });
+
+        dialog.querySelector('.confirm-btn').onclick = async () => {
+            const select = dialog.querySelector('#backup-select');
+            const filename = select?.value;
+            if (!filename) { showToast('error', 'No backup selected'); return; }
+
+            close();
+            showConfirmDialog(`Yakin restore backup \"${filename}\"? Proses ini akan mengganti database saat ini.`, async () => {
+                try {
+                    showToast('info', 'Restoring database...');
+                    const resp = await fetchWithCSRF('/api/database/restore', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ filename })
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) {
+                        showToast('error', data.message || `Restore failed (HTTP ${resp.status})`);
+                        return;
+                    }
+                    showToast('success', data.message || 'Database restored');
+                    setTimeout(() => loadDatabaseData(), 1500);
+                } catch (e) {
+                    showToast('error', e.message || 'Restore error');
+                }
+            });
         };
     }
 
     function invalidateCachePattern(pattern) {
         showToast('info', `Invalidating ${pattern} cache...`);
-        fetch(`/api/cache/invalidate/${pattern}`, {
+        fetchWithCSRF(`/api/cache/invalidate/${pattern}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -553,7 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function clearAllCache() {
         showToast('info', 'Clearing all cache...');
-        fetch('/api/cache/clear', {
+        fetchWithCSRF('/api/cache/clear', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -185,7 +185,19 @@
               {{ album.author[0].upper() if album.author else (album.owner.username[0].upper() if album.owner and album.owner.username else 'A') }}
             </div>
             <div>
-                              <h3 class="font-semibold text-foreground">{{ album.author if album.author else (album.owner.username if album.owner else 'Penulis') }}</h3>
+              <h3 class="font-semibold text-foreground">
+                {% if album.creator and album.creator.username %}
+                  <a href="{{ url_for('main.public_user_profile', username=album.creator.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                    {{ album.author if album.author else album.creator.username }}
+                  </a>
+                {% elif album.owner and album.owner.username %}
+                  <a href="{{ url_for('main.public_user_profile', username=album.owner.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                    {{ album.author if album.author else album.owner.username }}
+                  </a>
+                {% else %}
+                  {{ album.author if album.author else 'Penulis' }}
+                {% endif %}
+              </h3>
               <p class="text-sm text-muted-foreground">
                 {{ album.total_chapters }} cerita dalam album ini
               </p>
@@ -197,12 +209,18 @@
         {% if author_albums and author_albums|length > 0 %}
         <div class="bg-card rounded-lg border border-border p-6 mb-8">
           <h2 class="text-xl font-semibold text-foreground mb-4">
-            {% if album.author and album.owner %}
-              Album Lainnya oleh {{ album.author }} ({{ album.owner.username }})
+            {% if album.creator and album.creator.username %}
+              Album Lainnya oleh 
+              <a href="{{ url_for('main.public_user_profile', username=album.creator.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                {{ album.author if album.author else album.creator.username }}
+              </a>
+            {% elif album.owner and album.owner.username %}
+              Album Lainnya oleh 
+              <a href="{{ url_for('main.public_user_profile', username=album.owner.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                {{ album.author if album.author else album.owner.username }}
+              </a>
             {% elif album.author %}
               Album Lainnya oleh {{ album.author }}
-            {% elif album.owner %}
-              Album Lainnya oleh {{ album.owner.username }}
             {% else %}
               Album Lainnya oleh Penulis Ini
             {% endif %}
@@ -287,12 +305,18 @@
         <!-- No Other Albums by Author -->
         <div class="bg-card rounded-lg border border-border p-6 mb-8">
           <h2 class="text-xl font-semibold text-foreground mb-4">
-            {% if album.author and album.owner %}
-              Album Lainnya oleh {{ album.author }} ({{ album.owner.username }})
+            {% if album.creator and album.creator.username %}
+              Album Lainnya oleh 
+              <a href="{{ url_for('main.public_user_profile', username=album.creator.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                {{ album.author if album.author else album.creator.username }}
+              </a>
+            {% elif album.owner and album.owner.username %}
+              Album Lainnya oleh 
+              <a href="{{ url_for('main.public_user_profile', username=album.owner.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                {{ album.author if album.author else album.owner.username }}
+              </a>
             {% elif album.author %}
               Album Lainnya oleh {{ album.author }}
-            {% elif album.owner %}
-              Album Lainnya oleh {{ album.owner.username }}
             {% else %}
               Album Lainnya oleh Penulis Ini
             {% endif %}
@@ -471,6 +495,7 @@
             <!-- Inline Comment Form (Hidden by default) -->
             <div id="inline-comment-form" class="hidden mb-4 p-4 bg-muted/30 rounded-lg border border-border">
               <form class="comment-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group">
                   <textarea class="form-control comment-content w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" rows="4" placeholder="Tulis komentar Anda di sini..." required></textarea>
                   </div>
@@ -579,7 +604,21 @@
   </div>
 </div>
 
-
+<!-- Confirmation Modal for Comment Deletion -->
+<div id="confirmation-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[9999] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirmation-title">
+  <div class="bg-card rounded-lg border border-border p-6 max-w-md w-full mx-4">
+    <h3 id="confirmation-title" class="text-lg font-semibold text-foreground mb-2">Konfirmasi</h3>
+    <p id="confirmation-message" class="text-muted-foreground mb-6"></p>
+    <div class="flex gap-3 justify-end">
+      <button id="cancel-confirmation" class="px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
+        Batal
+      </button>
+      <button id="confirm-action" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+        Hapus
+      </button>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 

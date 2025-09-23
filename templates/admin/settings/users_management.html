@@ -505,6 +505,7 @@
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 id="edit-user-title" class="text-xl font-semibold mb-6 text-gray-800">Edit Pengguna</h2>
         <form id="edit-user-form" class="space-y-6" role="form" aria-label="Form edit pengguna">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" id="edit-user-id">
             
             <!-- Basic Information -->
@@ -515,7 +516,7 @@
                 </div>
                 <div>
                     <label for="edit-email" class="block text-gray-700 font-medium mb-2">Email (Opsional)</label>
-                    <input type="email" id="edit-email" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Masukkan alamat email yang valid atau biarkan kosong">
+                    <input type="email" id="edit-email" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$" title="Masukkan alamat email yang valid atau biarkan kosong">
                 </div>
                 <div>
                     <label for="edit-first-name" class="block text-gray-700 font-medium mb-2">Nama Depan</label>
@@ -616,10 +617,10 @@
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-semibold text-gray-800">Permintaan Akses Tulis</h2>
       <div class="flex space-x-2">
-        <button id="bulk-approve-write-access-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="bulk-approve-write-access-btn" onclick="bulkApproveWriteAccess()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-check mr-2"></i>Setujui Semua
         </button>
-        <button id="bulk-reject-write-access-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
+        <button id="bulk-reject-write-access-btn" onclick="bulkRejectWriteAccess()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-times mr-2"></i>Tolak Semua
         </button>
       </div>
@@ -712,6 +713,7 @@
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 id="create-role-title" class="text-xl font-semibold mb-6 text-gray-800">Buat Peran Baru</h2>
         <form id="create-role-form" class="space-y-6" role="form" aria-label="Form buat peran">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="role-name" class="block text-gray-700 font-medium mb-2">Nama Peran</label>
@@ -743,6 +745,7 @@
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 id="edit-role-title" class="text-xl font-semibold mb-6 text-gray-800">Edit Peran</h2>
         <form id="edit-role-form" class="space-y-6" role="form" aria-label="Form edit peran">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="edit-role-name" class="block text-gray-700 font-medium mb-2">Nama Peran</label>
@@ -809,15 +812,18 @@
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 id="create-user-title" class="text-xl font-semibold mb-6 text-gray-800">Buat Pengguna Baru</h2>
         <form id="create-user-form" class="space-y-6" role="form" aria-label="Form buat pengguna">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <!-- Basic Information -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="new-username" class="block text-gray-700 font-medium mb-2">Nama Pengguna <span class="text-red-500">*</span></label>
                     <input type="text" id="new-username" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" minlength="3" maxlength="50">
+                    <div id="username-status" class="mt-1 text-sm hidden"></div>
                 </div>
                 <div>
                     <label for="new-email" class="block text-gray-700 font-medium mb-2">Email <span class="text-red-500">*</span></label>
-                    <input type="email" id="new-email" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                    <input type="email" id="new-email" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true" pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$">
+                    <div id="email-status" class="mt-1 text-sm hidden"></div>
                 </div>
                 <div>
                     <label for="new-password" class="block text-gray-700 font-medium mb-2">Password <span class="text-red-500">*</span></label>
@@ -940,6 +946,7 @@
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-md w-full">
         <h2 id="password-reset-title" class="text-xl font-semibold mb-6 text-gray-800">Reset Password</h2>
         <form id="password-reset-form" class="space-y-4" role="form" aria-label="Form reset password">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" id="reset-user-id">
             <div>
                 <label for="new-password-reset" class="block text-gray-700 font-medium mb-2">Password Baru <span class="text-red-500">*</span></label>
@@ -961,11 +968,31 @@
     </div>
 </div>
 
+<!-- Default Password Reset Modal -->
+<div id="default-password-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="default-password-title" aria-modal="true">
+    <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
+        <h3 id="default-password-title" class="text-xl font-semibold text-orange-600 mb-4">Reset ke Password Default</h3>
+        <p class="mb-4 text-gray-700">Apakah Anda yakin ingin mengubah password pengguna ini ke password default?</p>
+        <div class="bg-gradient-to-r from-orange-100 to-red-100 border border-orange-200 rounded-lg p-3 mb-4">
+            <p class="text-sm text-orange-600"><i class="fas fa-exclamation-triangle mr-1"></i> Password akan diubah ke: <strong>password123</strong></p>
+        </div>
+        <div class="mb-4">
+            <label for="confirm-username" class="block text-gray-700 font-medium mb-2">Konfirmasi dengan mengetik username pengguna:</label>
+            <input type="text" id="confirm-username" class="w-full bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Ketik username untuk konfirmasi">
+        </div>
+        <div class="flex justify-end space-x-4" role="group" aria-label="Tombol konfirmasi reset password default">
+            <button id="cancel-default-password-btn" onclick="closeDefaultPasswordModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300 shadow-md" aria-label="Batal reset password default">Batal</button>
+            <button id="confirm-default-password-btn" onclick="confirmDefaultPasswordReset()" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all duration-300 shadow-md" aria-label="Konfirmasi reset password default">Reset ke Default</button>
+        </div>
+    </div>
+</div>
+
 <!-- Write Access Review Modal -->
 <div id="write-access-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="write-access-title" aria-modal="true">
     <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 id="write-access-title" class="text-xl font-semibold mb-6 text-gray-800">Review Permintaan Akses Tulis</h2>
         <form id="write-access-form" class="space-y-6" role="form" aria-label="Form review permintaan akses tulis">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" id="review-request-id">
             
             <!-- User Information -->
@@ -1043,12 +1070,14 @@ window.currentUserData = {
     role: JSON.parse('{{ current_user.role.value | tojson | safe }}')
 };
 
+console.log('Template Debug - window.currentUserData set to:', window.currentUserData);
+
 // Additional JavaScript functions for enhanced features
 document.addEventListener('DOMContentLoaded', function() {
     // Load and bind Global Ads Settings
     (async function initAdsSettings(){
         try {
-            const resp = await fetch('/api/settings/ads');
+            const resp = await fetchWithCSRF('/api/settings/ads');
             const data = await resp.json();
             if (data && data.ads) {
                 const chk = document.getElementById('admin-show-ads');
@@ -1060,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', function() {
             saveBtn.addEventListener('click', async function(){
                 try {
                     const showAds = document.getElementById('admin-show-ads').checked;
-                    const resp = await fetch('/api/settings/ads', {
+                    const resp = await fetchWithCSRF('/api/settings/ads', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ show_ads: showAds })
@@ -1097,15 +1126,147 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (newPassword && confirmPassword) {
         function validatePassword() {
-            if (newPassword.value !== confirmPassword.value) {
+            if (confirmPassword.value && newPassword.value !== confirmPassword.value) {
                 confirmPassword.setCustomValidity('Password tidak cocok');
             } else {
                 confirmPassword.setCustomValidity('');
             }
         }
         
+        newPassword.addEventListener('input', validatePassword);
         newPassword.addEventListener('change', validatePassword);
+        confirmPassword.addEventListener('input', validatePassword);
         confirmPassword.addEventListener('keyup', validatePassword);
+    }
+    
+    // Username availability validation
+    const newUsername = document.getElementById('new-username');
+    if (newUsername) {
+        let usernameTimeout;
+        
+        function checkUsernameAvailability() {
+            const username = newUsername.value.trim();
+            if (username.length < 3) {
+                newUsername.setCustomValidity('Username harus minimal 3 karakter');
+                return;
+            }
+            
+            // Clear previous timeout
+            clearTimeout(usernameTimeout);
+            
+            // Debounce the API call
+            usernameTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetchWithCSRF(`/api/users/check-username?username=${encodeURIComponent(username)}`);
+                    const data = await response.json();
+                    const statusDiv = document.getElementById('username-status');
+                    
+                    if (response.ok && data.available) {
+                        newUsername.setCustomValidity('');
+                        // Remove any existing error styling
+                        newUsername.classList.remove('border-red-500');
+                        newUsername.classList.add('border-gray-300');
+                        // Show success status
+                        if (statusDiv) {
+                            statusDiv.className = 'mt-1 text-sm text-green-600';
+                            statusDiv.textContent = '✓ Username tersedia';
+                            statusDiv.classList.remove('hidden');
+                        }
+                    } else {
+                        newUsername.setCustomValidity('Username sudah digunakan');
+                        // Add error styling
+                        newUsername.classList.remove('border-gray-300');
+                        newUsername.classList.add('border-red-500');
+                        // Show error status with suggestion
+                        if (statusDiv) {
+                            statusDiv.className = 'mt-1 text-sm text-red-600';
+                            statusDiv.textContent = '✗ Username sudah digunakan. Coba username lain seperti: ' + username + '2, ' + username + '_new, atau ' + username + '2024';
+                            statusDiv.classList.remove('hidden');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking username:', error);
+                    // Don't block form submission if check fails
+                    const statusDiv = document.getElementById('username-status');
+                    if (statusDiv) {
+                        statusDiv.classList.add('hidden');
+                    }
+                }
+            }, 500);
+        }
+        
+        newUsername.addEventListener('input', checkUsernameAvailability);
+        newUsername.addEventListener('blur', checkUsernameAvailability);
+    }
+    
+    // Email availability validation
+    const newEmail = document.getElementById('new-email');
+    if (newEmail) {
+        let emailTimeout;
+        
+        function checkEmailAvailability() {
+            const email = newEmail.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!email) {
+                newEmail.setCustomValidity('');
+                return;
+            }
+            
+            if (!emailRegex.test(email)) {
+                newEmail.setCustomValidity('Format email tidak valid');
+                return;
+            }
+            
+            // Clear previous timeout
+            clearTimeout(emailTimeout);
+            
+            // Debounce the API call
+            emailTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetchWithCSRF(`/api/users/check-email?email=${encodeURIComponent(email)}`);
+                    const data = await response.json();
+                    const statusDiv = document.getElementById('email-status');
+                    
+                    if (response.ok && data.available) {
+                        newEmail.setCustomValidity('');
+                        // Remove any existing error styling
+                        newEmail.classList.remove('border-red-500');
+                        newEmail.classList.add('border-gray-300');
+                        // Show success status
+                        if (statusDiv) {
+                            statusDiv.className = 'mt-1 text-sm text-green-600';
+                            statusDiv.textContent = '✓ Email tersedia';
+                            statusDiv.classList.remove('hidden');
+                        }
+                    } else {
+                        newEmail.setCustomValidity('Email sudah digunakan');
+                        // Add error styling
+                        newEmail.classList.remove('border-gray-300');
+                        newEmail.classList.add('border-red-500');
+                        // Show error status with suggestion
+                        if (statusDiv) {
+                            const emailParts = email.split('@');
+                            const localPart = emailParts[0];
+                            const domain = emailParts[1];
+                            statusDiv.className = 'mt-1 text-sm text-red-600';
+                            statusDiv.textContent = '✗ Email sudah digunakan. Coba email lain seperti: ' + localPart + '2@' + domain + ', ' + localPart + '_new@' + domain + ', atau ' + localPart + '2024@' + domain;
+                            statusDiv.classList.remove('hidden');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking email:', error);
+                    // Don't block form submission if check fails
+                    const statusDiv = document.getElementById('email-status');
+                    if (statusDiv) {
+                        statusDiv.classList.add('hidden');
+                    }
+                }
+            }, 500);
+        }
+        
+        newEmail.addEventListener('input', checkEmailAvailability);
+        newEmail.addEventListener('blur', checkEmailAvailability);
     }
     
     // Password reset confirmation validation
@@ -1114,14 +1275,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (resetPassword && confirmResetPassword) {
         function validateResetPassword() {
-            if (resetPassword.value !== confirmResetPassword.value) {
+            if (confirmResetPassword.value && resetPassword.value !== confirmResetPassword.value) {
                 confirmResetPassword.setCustomValidity('Password tidak cocok');
             } else {
                 confirmResetPassword.setCustomValidity('');
             }
         }
         
+        resetPassword.addEventListener('input', validateResetPassword);
         resetPassword.addEventListener('change', validateResetPassword);
+        confirmResetPassword.addEventListener('input', validateResetPassword);
         confirmResetPassword.addEventListener('keyup', validateResetPassword);
     }
     
@@ -1300,189 +1463,10 @@ function generateUserDetailsHTML(user) {
     `;
 }
 
-// Form submission handlers
-document.addEventListener('DOMContentLoaded', function() {
-    // Create user form
-    const createUserForm = document.getElementById('create-user-form');
-    if (createUserForm) {
-        createUserForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const userData = {
-                username: document.getElementById('new-username').value,
-                email: document.getElementById('new-email').value,
-                password: document.getElementById('new-password').value,
-                first_name: document.getElementById('new-first-name').value,
-                last_name: document.getElementById('new-last-name').value,
-                bio: document.getElementById('new-bio').value,
-                role: document.getElementById('new-role').value,
-                custom_role: document.getElementById('new-custom-role').value,
-                is_active: document.getElementById('new-is-active').checked,
-                verified: document.getElementById('new-verified').checked,
-                is_premium: document.getElementById('new-is-premium').checked,
-                send_welcome_email: document.getElementById('new-send-welcome-email').checked,
-                premium_duration: document.getElementById('new-premium-duration')?.value,
-                premium_features: {
-                    ads_free: document.getElementById('new-premium-ads-free')?.checked,
-                    priority_support: document.getElementById('new-premium-priority')?.checked,
-                    advanced_features: document.getElementById('new-premium-advanced')?.checked
-                }
-            };
-            
-            // Send API request to create user
-            fetch('/api/users/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('success', 'Pengguna berhasil dibuat');
-                    closeCreateUserModal();
-                    // Refresh user list
-                    loadUsers();
-                } else {
-                    showToast('error', data.message || 'Gagal membuat pengguna');
-                }
-            })
-            .catch(error => {
-                console.error('Error creating user:', error);
-                showToast('error', 'Gagal membuat pengguna');
-            });
-        });
-    }
-    
-    // Password reset form
-    const passwordResetForm = document.getElementById('password-reset-form');
-    if (passwordResetForm) {
-        passwordResetForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const userId = document.getElementById('reset-user-id').value;
-            const newPassword = document.getElementById('new-password-reset').value;
-            const sendEmail = document.getElementById('send-email-reset').checked;
-            
-            fetch(`/api/users/${userId}/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    new_password: newPassword,
-                    send_email: sendEmail
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('success', 'Password berhasil direset');
-                    closePasswordResetModal();
-                } else {
-                    showToast('error', data.message || 'Gagal reset password');
-                }
-            })
-            .catch(error => {
-                console.error('Error resetting password:', error);
-                showToast('error', 'Gagal reset password');
-            });
-        });
-    }
-});
+// Form submission handlers are now handled by users-management.js
+// This prevents double submission issues
 
-// Load write access requests function
-async function loadWriteAccessRequests(page = 1) {
-    try {
-        const statusFilter = document.getElementById('write-access-status-filter')?.value || '';
-        const searchTerm = document.getElementById('write-access-search')?.value || '';
-        const dateFilter = document.getElementById('write-access-date-filter')?.value || '';
-        
-        const params = new URLSearchParams({
-            page: page,
-            status: statusFilter,
-            search: searchTerm,
-            date_filter: dateFilter
-        });
-        
-        const response = await fetch(`/api/write-access-requests?${params}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayWriteAccessRequests(data.requests);
-            updateWriteAccessStats(data.stats);
-        } else {
-            console.error('Failed to load write access requests:', data.error);
-        }
-    } catch (error) {
-        console.error('Error loading write access requests:', error);
-    }
-}
-
-function displayWriteAccessRequests(requests) {
-    const container = document.getElementById('write-access-requests');
-    
-    if (requests.length === 0) {
-        container.innerHTML = '<div class="text-gray-600">Tidak ada permintaan akses tulis ditemukan</div>';
-        return;
-    }
-    
-    container.innerHTML = requests.map(request => `
-        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-2">
-                        <h4 class="font-semibold text-gray-800">${request.user.username}</h4>
-                        <span class="px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(request.status)}">
-                            ${getStatusText(request.status)}
-                        </span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-1">
-                        <strong>Email:</strong> ${request.user.email || 'Tidak ada'}
-                    </p>
-                    <p class="text-sm text-gray-600 mb-2">
-                        <strong>Tanggal:</strong> ${new Date(request.requested_at).toLocaleDateString('id-ID')}
-                    </p>
-                    <p class="text-sm text-gray-700">
-                        <strong>Alasan:</strong> ${request.request_reason || 'Tidak ada alasan'}
-                    </p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="openWriteAccessModal(${request.id})" 
-                            class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded">
-                        Review
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function updateWriteAccessStats(stats) {
-    document.getElementById('total-write-access-pending').textContent = stats.total_pending || 0;
-    document.getElementById('approved-write-access-today').textContent = stats.approved_today || 0;
-    document.getElementById('rejected-write-access-today').textContent = stats.rejected_today || 0;
-}
-
-function getStatusBadgeClass(status) {
-    switch(status) {
-        case 'pending': return 'bg-yellow-100 text-yellow-800';
-        case 'approved': return 'bg-green-100 text-green-800';
-        case 'rejected': return 'bg-red-100 text-red-800';
-        default: return 'bg-gray-100 text-gray-800';
-    }
-}
-
-function getStatusText(status) {
-    switch(status) {
-        case 'pending': return 'Menunggu';
-        case 'approved': return 'Disetujui';
-        case 'rejected': return 'Ditolak';
-        default: return status;
-    }
-}
+// Write access functions are now handled by users-management.js
 </script>
 <script src="{{ url_for('static', filename='js/users-management.js') }}"></script>
 {% endblock %}

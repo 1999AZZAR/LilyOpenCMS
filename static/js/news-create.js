@@ -236,7 +236,7 @@ async function fetchAndDisplayContentImagesCreate(page = 1) {
     librarySection.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">Loading images...</p>';
     paginationContainer.innerHTML = '';
     try {
-        const response = await fetch(`/api/images?page=${page}&per_page=12`); // Use pagination
+        const response = await fetchWithCSRF(`/api/images?page=${page}&per_page=12`); // Use pagination
         if (!response.ok) throw new Error('Failed to load content images');
         const data = await response.json();
         renderImageLibraryCreate(data.items);
@@ -250,7 +250,7 @@ async function fetchAndDisplayContentImagesCreate(page = 1) {
 // Ambil dan isi kategori
 async function fetchCategories() {
     try {
-        const response = await fetch('/api/categories?grouped=true');
+        const response = await fetchWithCSRF('/api/categories?grouped=true');
         if (!response.ok) throw new Error('Gagal mengambil kategori');
 
         const groupedData = await response.json();
@@ -384,7 +384,7 @@ async function loadHeaderLibraryCreate(page = 1) {
     paginationContainer.innerHTML = ''; // Clear old pagination
 
     try {
-        const response = await fetch(`/api/images?page=${page}&per_page=12`); // Fetch paginated images
+        const response = await fetchWithCSRF(`/api/images?page=${page}&per_page=12`); // Fetch paginated images
         if (!response.ok) throw new Error('Failed to load header images');
         const data = await response.json();
         const imgs = data.items || [];
@@ -468,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isEditMode) {
         (async () => {
             try {
-                const res = await fetch(`/api/news/${newsId}`);
+                const res = await fetchWithCSRF(`/api/news/${newsId}`);
                 if (!res.ok) throw new Error('Failed to fetch article');
                 const a = await res.json();
                 const dateEl = document.getElementById('news-date');
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fd.append('is_visible', 'false'); // Make uploaded header images hidden by default
 
             try {
-                const resp = await fetch('/api/images', { method: 'POST', body: fd });
+                const resp = await fetchWithCSRF('/api/images', { method: 'POST', body: fd });
                 const data = await resp.json();
                 if (!resp.ok) throw new Error(data.error || 'Upload failed');
 
@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Basic validation
             const title = document.getElementById('news-title').value.trim();
-            const content = addSimplemde.value().trim();
+            const content = (addSimplemde && addSimplemde.codemirror) ? addSimplemde.codemirror.getValue().trim() : '';
             const category = document.getElementById('news-category').value;
             const date = document.getElementById('news-date').value;
             const ageRating = document.getElementById('news-age-rating').value;
@@ -580,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isPublishButton = e.submitter && e.submitter.name === 'publish';
             const formData = new FormData(); // Use FormData to handle potential file uploads if needed later
             formData.append('title', document.getElementById('news-title').value.trim());
-            formData.append('content', addSimplemde.value().trim());
+            formData.append('content', (addSimplemde && addSimplemde.codemirror) ? addSimplemde.codemirror.getValue().trim() : '');
             formData.append('tagar', document.getElementById('news-tagar').value.trim());
             formData.append('date', document.getElementById('news-date').value);
             formData.append('category', document.getElementById('news-category').value);
@@ -608,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Edit mode: Use PUT method
                     const jsonData = {
                         title: document.getElementById('news-title').value.trim(),
-                        content: addSimplemde.value().trim(),
+                        content: (addSimplemde && addSimplemde.codemirror) ? addSimplemde.codemirror.getValue().trim() : '',
                         tagar: document.getElementById('news-tagar').value.trim(),
                         date: document.getElementById('news-date').value,
                         category: document.getElementById('news-category').value,
@@ -625,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Set visibility based on which button was clicked
                     jsonData.is_visible = !!isPublishButton;
                     
-                    response = await fetch(`/api/news/${newsId}`, {
+                    response = await fetchWithCSRF(`/api/news/${newsId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -638,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (albumId) {
                         formData.append('album_id', albumId);
                     }
-                    response = await fetch((window.NEWS_CREATE_ENDPOINT || '/api/news'), {
+                    response = await fetchWithCSRF((window.NEWS_CREATE_ENDPOINT || '/api/news'), {
                         method: 'POST',
                         body: formData,
                     });
@@ -680,7 +680,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Only reset form if not in edit mode
                 if (!isEditMode) {
                     addNewsForm.reset(); // Reset the form fields
-                    addSimplemde.value(''); // Clear the editor
+                    if (addSimplemde && addSimplemde.codemirror) {
+                        addSimplemde.codemirror.setValue(''); // Clear the editor
+                    } else if (addSimplemde && typeof addSimplemde.value === 'function') {
+                        addSimplemde.value(''); // Fallback to value method
+                    }
                     document.getElementById('featured-preview-create').classList.add('hidden'); // Hide preview
                     document.getElementById('news-image-id').value = ''; // Clear hidden image ID
                     addSimplemde.clearAutosavedValue(); // Clear autosave

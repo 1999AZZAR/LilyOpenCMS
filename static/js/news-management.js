@@ -15,6 +15,7 @@ const userFilter = document.getElementById('user-filter');
 const filterFeaturedImage = document.getElementById('filter-featured-image'); // New
 const filterExternalLink = document.getElementById('filter-external-link'); // New
 const archivedFilter = document.getElementById('archived-filter');
+const ownerFilterSelect = document.getElementById('owner-filter-select');
 
 // --- Pagination Helpers (Adapted from image-crud.js) ---
 
@@ -135,6 +136,15 @@ function getCurrentFilters() {
             // Do not set filters.archived
         }
     }
+    // Owner filter
+    if (ownerFilterSelect && ownerFilterSelect.value) {
+        filters.owner_id = ownerFilterSelect.value;
+    } else {
+        // also support owner_id from URL param for deep links
+        const url = new URL(window.location.href);
+        const ownerIdFromUrl = url.searchParams.get('owner_id');
+        if (ownerIdFromUrl) filters.owner_id = ownerIdFromUrl;
+    }
     return filters;
 }
 
@@ -163,7 +173,7 @@ async function fetchAndDisplayNews(page = 1, filters = null) {
         }
 
         console.debug('Fetching news with URL:', url.toString());
-        const response = await fetch(url);
+        const response = await fetchWithCSRF(url);
         
         // Check if response is JSON
         const contentType = response.headers.get('content-type');
@@ -286,6 +296,7 @@ function displayNews(news) {
                     <button onclick="toggleVisibility(${article.id}, ${!article.is_visible})" class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300" aria-label="${article.is_visible ? 'Sembunyikan artikel' : 'Tampilkan artikel'}" title="${article.is_visible ? 'Sembunyikan' : 'Tampilkan'}"><i class="fas fa-${article.is_visible ? 'eye-slash' : 'eye'}"></i></button>
                     <button onclick="duplicateNews(${article.id})" class="p-2 bg-green-100 hover:bg-green-200 text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-green-300" aria-label="Duplikat artikel" title="Duplikat"><i class="fas fa-copy"></i></button>
                     <button onclick="toggleArchive(${article.id}, ${article.is_archived})" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="${article.is_archived ? 'Unarchive' : 'Archive'} artikel" title="${article.is_archived ? 'Unarchive' : 'Archive'}"><i class="fas fa-archive"></i></button>
+                    <button onclick="window.openOwnerHandoverFor && window.openOwnerHandoverFor(${article.id})" class="p-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-300" aria-label="Serahkan kepemilikan" title="Serahkan Kepemilikan"><i class="fas fa-user-exchange"></i></button>
                     <button onclick="requestNewsDeletion(${article.id})" class="p-2 bg-orange-100 hover:bg-orange-200 text-orange-600 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-300" aria-label="Minta penghapusan artikel" title="Minta Penghapusan"><i class="fas fa-user-clock"></i></button>
                 </div>
                 ${article.is_archived ? '<span class="ml-2 text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">Arsip</span>' : ''}
@@ -303,7 +314,7 @@ async function openUsageInfo(newsId) {
     content.innerHTML = '<p class="text-gray-500">Memuat penggunaan...</p>';
     modal.classList.remove('hidden');
     try {
-        const resp = await fetch(`/api/news/${newsId}/usage`);
+        const resp = await fetchWithCSRF(`/api/news/${newsId}/usage`);
         if (!resp.ok) {
             let msg = `Gagal memuat penggunaan (Status: ${resp.status})`;
             try { const j = await resp.json(); if (j.error) msg = j.error; } catch(e){}
@@ -361,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fetch and populate categories
 async function fetchCategories() {
     try {
-        const response = await fetch('/api/categories?grouped=true');
+        const response = await fetchWithCSRF('/api/categories?grouped=true');
         if (!response.ok) {
             throw new Error(`Failed to fetch categories (Status: ${response.status})`);
         }
@@ -484,7 +495,7 @@ async function requestNewsDeletion(newsId) {
     }
 
     try {
-        const response = await fetch(`/api/news/${newsId}/request-deletion`, {
+        const response = await fetchWithCSRF(`/api/news/${newsId}/request-deletion`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -548,7 +559,7 @@ function closeDeleteModal() {
 // Delete News Function
 async function deleteNews(newsId) {
     try {
-        const response = await fetch(`/api/news/${newsId}`, {
+        const response = await fetchWithCSRF(`/api/news/${newsId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
@@ -668,7 +679,7 @@ if (editForm) {
 
         try {
             console.debug('Sending PUT request with data:', data);
-            const response = await fetch(`/api/news/${currentNewsId}`, {
+            const response = await fetchWithCSRF(`/api/news/${currentNewsId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -691,7 +702,7 @@ if (editForm) {
 // Toggle News Visibility
 async function toggleVisibility(newsId, isVisible) {
     try {
-        const response = await fetch(`/api/news/${newsId}/visibility`, {
+        const response = await fetchWithCSRF(`/api/news/${newsId}/visibility`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_visible: isVisible }),
@@ -710,7 +721,7 @@ async function toggleVisibility(newsId, isVisible) {
 
 async function duplicateNews(newsId) {
     try {
-        const response = await fetch(`/api/news/${newsId}/duplicate`, {
+        const response = await fetchWithCSRF(`/api/news/${newsId}/duplicate`, {
             method: 'POST',
         });
         const data = await response.json();
@@ -724,7 +735,7 @@ async function duplicateNews(newsId) {
 async function toggleArchive(newsId, isArchived) {
     try {
         const url = isArchived ? `/api/news/${newsId}/unarchive` : `/api/news/${newsId}/archive`;
-        const response = await fetch(url, {
+        const response = await fetchWithCSRF(url, {
             method: 'PATCH',
         });
         const data = await response.json();
@@ -797,7 +808,7 @@ async function fetchAndDisplayContentImages(page = 1) {
     paginationContainer.innerHTML = ''; // Clear old pagination
 
     try {
-        const response = await fetch(`/api/images?page=${page}`); // Uses default per_page from API
+        const response = await fetchWithCSRF(`/api/images?page=${page}`); // Uses default per_page from API
         if (!response.ok) throw new Error('Failed to load content images');
         const data = await response.json();
 
@@ -877,7 +888,7 @@ async function fetchAndDisplayGalleryImages(page = 1) {
     paginationContainer.innerHTML = ''; // Clear old pagination
 
     try {
-        const response = await fetch(`/api/images?page=${page}`); // Uses default per_page from API
+        const response = await fetchWithCSRF(`/api/images?page=${page}`); // Uses default per_page from API
         if (!response.ok) throw new Error('Failed to load gallery images');
         const data = await response.json();
 
@@ -962,7 +973,7 @@ if (bulkUnarchiveBtn) {
 async function bulkArchiveUnarchive(archive = true) {
     try {
         const url = archive ? '/api/news/bulk-archive' : '/api/news/bulk-unarchive';
-        const response = await fetch(url, {
+        const response = await fetchWithCSRF(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ids: Array.from(selectedNewsIds) })
@@ -984,7 +995,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const newsListContainer = document.getElementById('news-list');
     if (newsListContainer) {
         // Add event listeners to filters
-        [searchInput, categoryFilter, statusFilter, premiumFilter, popularityFilter, shareCountFilter, userFilter, filterFeaturedImage, filterExternalLink, archivedFilter].forEach(el => { // Added new filters
+        [searchInput, categoryFilter, statusFilter, premiumFilter, popularityFilter, shareCountFilter, userFilter, filterFeaturedImage, filterExternalLink, archivedFilter, ownerFilterSelect].forEach(el => { // Added new filters
             if (el) {
                 el.addEventListener(el.id === 'search' ? 'input' : 'change', debounceFetchNews);
             }
@@ -1174,7 +1185,7 @@ function closeBulkDeleteModal() {
 async function confirmBulkDelete() {
     if (selectedNewsIds.size === 0) return;
     try {
-        const response = await fetch('/api/news/bulk-delete', {
+        const response = await fetchWithCSRF('/api/news/bulk-delete', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1227,7 +1238,7 @@ async function handleBulkToggleVisibility() {
 async function bulkSetVisibility(isVisible) {
     const modal = document.getElementById('bulk-visibility-modal');
     try {
-        const response = await fetch('/api/news/bulk-visibility', {
+        const response = await fetchWithCSRF('/api/news/bulk-visibility', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1287,7 +1298,7 @@ async function handleBulkCategoryChange() {
 
 async function bulkSetCategory(categoryId, modal, bulkCategorySelect) {
     try {
-        const response = await fetch('/api/news/bulk-category', {
+        const response = await fetchWithCSRF('/api/news/bulk-category', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -6,7 +6,10 @@ project_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_dir)
 
 # Set environment to prevent Flask from starting development server
-os.environ['FLASK_ENV'] = 'production'
+os.environ['FLASK_ENV'] = 'production'  # Commented out to use fallback SECRET_KEY
+
+# Set SECRET_KEY for production (generate a secure random key)
+os.environ['SECRET_KEY'] = '3KYWqjqNCu_mk-3oUJuRDnBob4AsvIUWjUkD1tKOHaU'
 
 # Import the Flask app object from main.py
 from main import app

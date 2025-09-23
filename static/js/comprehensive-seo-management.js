@@ -111,7 +111,7 @@ function initializeEventListeners() {
 
 function loadCategoryFilters() {
     // Load categories for articles filter
-    fetch('/api/categories?grouped=true')
+    fetchWithCSRF('/api/categories?grouped=true')
         .then(response => response.json())
         .then(data => {
             if (data && data.length > 0) {
@@ -186,7 +186,7 @@ function loadArticlesData(page = 1) {
     if (seoStatusValue) params.append('seo_status', seoStatusValue);
     if (categoryValue) params.append('category', categoryValue);
     
-    fetch(`/api/seo/articles?${params.toString()}`)
+    fetchWithCSRF(`/api/seo/articles?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
             if (data.articles) {
@@ -287,7 +287,7 @@ function loadAlbumsData(page = 1) {
     if (seoStatusValue) params.append('seo_status', seoStatusValue);
     if (categoryValue) params.append('category', categoryValue);
     
-    fetch(`/api/seo/albums?${params.toString()}`)
+    fetchWithCSRF(`/api/seo/albums?${params.toString()}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -412,7 +412,7 @@ function loadChaptersData(page = 1) {
     if (seoStatusValue) params.append('seo_status', seoStatusValue);
     if (categoryValue) params.append('category', categoryValue);
     
-    fetch(`/api/seo/chapters?${params.toString()}`)
+    fetchWithCSRF(`/api/seo/chapters?${params.toString()}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -537,7 +537,7 @@ function loadRootData(page = 1) {
     
     const url = `/api/seo/root?${params.toString()}`;
     
-    fetch(url)
+    fetchWithCSRF(url)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -693,7 +693,7 @@ function closeEditModal() {
 }
 
 function loadArticleData(articleId) {
-    fetch(`/api/seo/articles/${articleId}`)
+    fetchWithCSRF(`/api/seo/articles/${articleId}`)
         .then(response => response.json())
         .then(data => {
             populateEditForm(data, 'article');
@@ -705,7 +705,7 @@ function loadArticleData(articleId) {
 }
 
 function loadAlbumData(albumId) {
-    fetch(`/api/seo/albums/${albumId}`)
+    fetchWithCSRF(`/api/seo/albums/${albumId}`)
         .then(response => response.json())
         .then(data => {
             populateEditForm(data, 'album');
@@ -717,7 +717,7 @@ function loadAlbumData(albumId) {
 }
 
 function loadChapterData(chapterId) {
-    fetch(`/api/seo/chapters/${chapterId}`)
+    fetchWithCSRF(`/api/seo/chapters/${chapterId}`)
         .then(response => response.json())
         .then(data => {
             populateEditForm(data, 'chapter');
@@ -737,7 +737,7 @@ function loadRootPageData(rootId) {
     }
     
     // Load root SEO data from API
-    fetch(`/api/seo/root/${rootId}`)
+    fetchWithCSRF(`/api/seo/root/${rootId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -809,7 +809,7 @@ function handleEditSubmit(event) {
 }
 
 function updateArticleSEO(articleId, data) {
-    fetch(`/api/seo/articles/${articleId}`, {
+    fetchWithCSRF(`/api/seo/articles/${articleId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -833,7 +833,7 @@ function updateArticleSEO(articleId, data) {
 }
 
 function updateAlbumSEO(albumId, data) {
-    fetch(`/api/seo/albums/${albumId}`, {
+    fetchWithCSRF(`/api/seo/albums/${albumId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -857,7 +857,7 @@ function updateAlbumSEO(albumId, data) {
 }
 
 function updateChapterSEO(chapterId, data) {
-    fetch(`/api/seo/chapters/${chapterId}`, {
+    fetchWithCSRF(`/api/seo/chapters/${chapterId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -881,7 +881,7 @@ function updateChapterSEO(chapterId, data) {
 }
 
 function updateRootSEO(rootId, data) {
-    fetch(`/api/seo/root/${rootId}`, {
+    fetchWithCSRF(`/api/seo/root/${rootId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -1011,7 +1011,7 @@ function createRootSEO() {
         const data = Object.fromEntries(formData.entries());
         
         // Create new root SEO
-        fetch('/api/seo/root', {
+        fetchWithCSRF('/api/seo/root', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1139,7 +1139,7 @@ function runSEOInjection(type) {
     showToast(`🚀 Memulai SEO Injection untuk ${typeLabels[type]}...`, 'info');
     
     // Make API call to run SEO injection
-    fetch('/api/seo/inject', {
+    fetchWithCSRF('/api/seo/inject', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1251,11 +1251,10 @@ function injectSingle(type, id) {
     const url = urlMap[type];
     if (!url) return;
     showToast(`Memproses injeksi SEO untuk ${labelMap[type]}...`, 'info');
-    fetch(url, {
+    fetchWithCSRF(url, {
         method: 'POST',
         headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCSRFToken()
+            'Content-Type': 'application/json'
         }
     })
     .then(r => r.json().then(j => ({ ok: r.ok, body: j })))
@@ -1289,7 +1288,7 @@ function injectSingle(type, id) {
 }
 
 function getSEOInjectionStatus() {
-    fetch('/api/seo/inject/status', {
+    fetchWithCSRF('/api/seo/inject/status', {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
@@ -1418,7 +1417,7 @@ function closeRootSEOSettings() {
 
 function loadBrandInformation() {
     // Fetch root SEO settings from the server
-    fetch('/admin/api/root-seo-settings')
+    fetchWithCSRF('/admin/api/root-seo-settings')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -1540,7 +1539,7 @@ function saveRootSEOSettings(settings) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
     submitBtn.disabled = true;
     
-    fetch('/admin/api/root-seo-settings', {
+    fetchWithCSRF('/admin/api/root-seo-settings', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

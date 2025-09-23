@@ -37,6 +37,9 @@
         <button id="clear-cache" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-trash mr-2"></i>Bersihkan Cache
         </button>
+        <button id="toggle-maintenance" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium">
+          <i class="fas fa-tools mr-2"></i><span id="maintenance-label">Aktifkan Mode Perawatan</span>
+        </button>
       </div>
     </div>
 
@@ -296,8 +299,14 @@
         <button id="backup-database" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-download mr-2"></i>Create Backup
         </button>
+        <button id="restore-database" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium">
+          <i class="fas fa-undo mr-2"></i>Restore Backup
+        </button>
         <button id="list-backups" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-list mr-2"></i>List Backups
+        </button>
+        <button id="download-database" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium">
+          <i class="fas fa-file-download mr-2"></i>Download DB
         </button>
         <button id="refresh-database" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium">
           <i class="fas fa-sync-alt mr-2"></i>Refresh

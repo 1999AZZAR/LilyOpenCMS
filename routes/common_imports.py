@@ -17,13 +17,12 @@ from flask_login import login_user, logout_user, login_required, current_user
 main_blueprint = Blueprint("main", __name__)
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import markdown
 import os
 import requests
-from datetime import datetime, timezone
 import xml.etree.ElementTree as ET
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy import func, and_, or_ 
 import re
 from urllib.parse import urlparse
@@ -84,3 +83,37 @@ from routes.utils.permission_manager import (
     has_custom_role,
     PermissionManager
 )
+
+# Enforce maintenance mode globally: logout non-superusers
+@main_blueprint.before_app_request
+def enforce_maintenance_mode_logout():
+    try:
+        import os, json
+        settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+        if not os.path.exists(settings_path):
+            return
+        with open(settings_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        maintenance = data.get('maintenance', {}) if isinstance(data, dict) else {}
+        enabled = bool(maintenance.get('enabled', False))
+        message = maintenance.get('message') or 'Situs dalam mode perawatan.'
+        if not enabled:
+            return
+
+        path = request.path or ''
+        if path.startswith('/static'):
+            return
+        if path in ['/login', '/logout']:
+            return
+        if current_user.is_authenticated and getattr(current_user, 'role', None) != UserRole.SUPERUSER:
+            try:
+                logout_user()
+            except Exception:
+                pass
+            try:
+                flash(message, 'error')
+            except Exception:
+                pass
+            return redirect(url_for('main.login'))
+    except Exception:
+        return

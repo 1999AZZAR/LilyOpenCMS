@@ -328,7 +328,7 @@ async function fetchAndDisplayImages(page = 1, visibility = 'all', description =
         apiUrl.searchParams.append('description', description);
         apiUrl.searchParams.append('usage', usage);
 
-        const response = await fetch(apiUrl.toString());
+        const response = await fetchWithCSRF(apiUrl.toString());
         if (!response.ok) {
             throw new Error('Failed to fetch images');
         }
@@ -352,7 +352,7 @@ document.getElementById('add-image-form').addEventListener('submit', async (e) =
     formData.append('url', document.getElementById('image-url').value || '');
 
     try {
-        const response = await fetch('/api/images', {
+        const response = await fetchWithCSRF('/api/images', {
             method: 'POST',
             body: formData,
         });
@@ -372,7 +372,7 @@ document.getElementById('add-image-form').addEventListener('submit', async (e) =
 async function openEditModal(id) {
     currentImageId = id;
     try {
-        const response = await fetch(`/api/images/${id}`);
+        const response = await fetchWithCSRF(`/api/images/${id}`);
         if (!response.ok) {
             throw new Error('Failed to fetch image details for editing');
         }
@@ -416,7 +416,7 @@ document.getElementById('edit-image-form').addEventListener('submit', async (e) 
     formData.append('description', document.getElementById('edit-image-description').value || '');
 
     try {
-        const response = await fetch(`/api/images/${currentImageId}`, {
+        const response = await fetchWithCSRF(`/api/images/${currentImageId}`, {
             method: 'PUT',
             body: formData,
         });
@@ -446,7 +446,7 @@ function closeDeleteModal() {
 // Confirm Delete
 async function confirmDelete() {
     try {
-        const response = await fetch(`/api/images/${currentImageId}`, {
+        const response = await fetchWithCSRF(`/api/images/${currentImageId}`, {
             method: 'DELETE',
         });
 
@@ -464,8 +464,11 @@ async function confirmDelete() {
 // Toggle Visibility
 async function toggleVisibility(id, isVisible) {
     try {
-        const response = await fetch(`/api/images/${id}/visibility`, {
+        const response = await fetchWithCSRF(`/api/images/${id}/visibility`, {
             method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify({ is_visible: isVisible }),
         });
 
@@ -568,7 +571,7 @@ async function handleBulkDeleteImages() {
 if (confirmBulkDeleteBtnImg) {
     confirmBulkDeleteBtnImg.onclick = async function() {
         try {
-            const response = await fetch('/api/images/bulk-delete', {
+            const response = await fetchWithCSRF('/api/images/bulk-delete', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -629,7 +632,7 @@ if (cancelBulkVisibilityBtnImg) {
 
 async function bulkSetVisibilityImages(isVisible) {
     try {
-        const response = await fetch('/api/images/bulk-visibility', {
+        const response = await fetchWithCSRF('/api/images/bulk-visibility', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -703,7 +706,7 @@ function openUsageModal(imageId, filename) {
     usageModalFilename.textContent = `Gambar: ${filename}`;
     usageModalList.innerHTML = '<div class="text-gray-500">Memuat data penggunaan...</div>';
     usageModal.classList.remove('hidden');
-    fetch(`/api/images/${imageId}/usage`)
+    fetchWithCSRF(`/api/images/${imageId}/usage`)
         .then(res => res.json())
         .then(data => {
             if (data.news && data.news.length > 0) {

@@ -1,25 +1,25 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
-from models import db, Comment, CommentLike, CommentReport, News, Album, User, UserRole
+from models import db, Comment, CommentLike, CommentReport, News, Album, AlbumChapter, User, UserRole
 from datetime import datetime, timezone, timedelta
 import re
 
 comments_bp = Blueprint('comments', __name__)
 
 
-@comments_bp.route('/api/comments/<content_type>/<int:content_id>', methods=['GET'])
-def get_comments(content_type, content_id):
+@comments_bp.route('/api/comments/<type>/<int:id>', methods=['GET'])
+def get_comments(type, id):
     """Get comments for a specific content (news or album)."""
     try:
         # Validate content type
-        if content_type not in ['news', 'album']:
+        if type not in ['news', 'album']:
             return jsonify({'error': 'Invalid content type'}), 400
         
         # Check if content exists
-        if content_type == 'news':
-            content = News.query.get(content_id)
+        if type == 'news':
+            content = News.query.get(id)
         else:
-            content = Album.query.get(content_id)
+            content = Album.query.get(id)
         
         if not content:
             return jsonify({'error': 'Content not found'}), 404
@@ -85,10 +85,160 @@ def get_comments(content_type, content_id):
         return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
 
 
+@comments_bp.route('/api/comments/album-with-chapters/<int:album_id>', methods=['GET'])
+def get_album_with_chapters_comments(album_id):
+    """Get comments for an album and all its chapters combined."""
+    try:
+        # Check if album exists
+        album = Album.query.get(album_id)
+        if not album:
+            return jsonify({'error': 'Album not found'}), 404
+        
+        # Get all chapters for this album
+        chapters = AlbumChapter.query.filter_by(album_id=album_id, is_visible=True).all()
+        chapter_ids = [chapter.news_id for chapter in chapters if chapter.news_id]
+        
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # Build query to get comments from album and all chapters
+        from sqlalchemy import or_, and_
+        
+        # Create conditions for album and chapter comments
+        conditions = [
+            # Album comments
+            and_(
+                Comment.content_type == 'album',
+                Comment.content_id == album_id
+            )
+        ]
+        
+        # Add chapter comments if there are any
+        if chapter_ids:
+            conditions.append(
+                and_(
+                    Comment.content_type == 'news',
+                    Comment.content_id.in_(chapter_ids)
+                )
+            )
+        
+        # Get approved, non-deleted comments from album and chapters
+        comments_query = Comment.query.filter(
+            or_(*conditions),
+            Comment.is_approved == True,
+            Comment.is_deleted == False,
+            Comment.parent_id == None  # Only top-level comments
+        ).order_by(Comment.created_at.desc())
+        
+        comments_pagination = comments_query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        comments_data = []
+        for comment in comments_pagination.items:
+            comment_dict = comment.to_dict()
+            
+            # Add source information (album or chapter)
+            if comment.content_type == 'album':
+                comment_dict['source'] = {
+                    'type': 'album',
+                    'title': album.title,
+                    'id': album.id
+                }
+            else:  # news (chapter)
+                # Find which chapter this comment belongs to
+                chapter = next((ch for ch in chapters if ch.news_id == comment.content_id), None)
+                if chapter:
+                    comment_dict['source'] = {
+                        'type': 'chapter',
+                        'title': chapter.chapter_title,
+                        'chapter_number': chapter.chapter_number,
+                        'id': chapter.id
+                    }
+                else:
+                    comment_dict['source'] = {
+                        'type': 'chapter',
+                        'title': 'Chapter',
+                        'id': comment.content_id
+                    }
+            
+            # Add user's like/dislike status if user is logged in
+            if current_user.is_authenticated:
+                comment_dict['user_liked'] = comment.is_liked_by_user(current_user.id)
+                comment_dict['user_disliked'] = comment.is_disliked_by_user(current_user.id)
+            
+            # Get replies for this comment
+            replies = Comment.query.filter_by(
+                parent_id=comment.id,
+                is_approved=True,
+                is_deleted=False
+            ).order_by(Comment.created_at.asc()).all()
+            
+            replies_data = []
+            for reply in replies:
+                reply_dict = reply.to_dict()
+                if current_user.is_authenticated:
+                    reply_dict['user_liked'] = reply.is_liked_by_user(current_user.id)
+                    reply_dict['user_disliked'] = reply.is_disliked_by_user(current_user.id)
+                replies_data.append(reply_dict)
+            
+            comment_dict['replies'] = replies_data
+            comments_data.append(comment_dict)
+        
+        return jsonify({
+            'comments': comments_data,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': comments_pagination.total,
+                'pages': comments_pagination.pages,
+                'has_next': comments_pagination.has_next,
+                'has_prev': comments_pagination.has_prev
+            },
+            'album_info': {
+                'id': album.id,
+                'title': album.title,
+                'total_chapters': len(chapters)
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.exception("Error getting album with chapters comments")
+        return jsonify({'error': 'Internal server error', 'detail': str(e)}), 500
+
+
 @comments_bp.route('/api/comments', methods=['POST'])
-@login_required
 def create_comment():
-    """Create a new comment."""
+    """Create a new comment with combined authentication (JWT or session)."""
+    # Combined authentication logic (both JWT and session)
+    auth_header = request.headers.get("Authorization", "")
+    user = None
+
+    if auth_header.startswith("Bearer "):
+        # Try JWT authentication
+        token = auth_header.split(" ", 1)[1].strip()
+        if token:
+            try:
+                from routes.routes_external_auth import _get_serializer, ACCESS_TOKEN_SALT, ACCESS_TOKEN_TTL_SECONDS
+                data = _get_serializer(ACCESS_TOKEN_SALT).loads(token, max_age=ACCESS_TOKEN_TTL_SECONDS)
+                user = User.query.get(data.get("user_id"))
+                if user and not user.is_active:
+                    return jsonify({"error": "Account inactive"}), 403
+                if user and user.is_suspended:
+                    return jsonify({"error": "Account suspended"}), 403
+            except Exception:
+                pass
+
+    # Fall back to session authentication
+    if not user:
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            user = current_user
+
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+
     try:
         data = request.get_json()
         
@@ -120,11 +270,11 @@ def create_comment():
             return jsonify({'error': 'Content not found'}), 404
         
         # Check if user is suspended
-        if current_user.is_suspended:
+        if user.is_suspended:
             return jsonify({'error': 'Your account is suspended'}), 403
         
         # Check for spam (simple implementation)
-        if is_spam_comment(content, current_user.id):
+        if is_spam_comment(content, user.id):
             return jsonify({'error': 'Comment detected as spam'}), 400
         
         # Create comment
@@ -132,7 +282,7 @@ def create_comment():
             content=content,
             content_type=content_type,
             content_id=content_id,
-            user_id=current_user.id,
+            user_id=user.id,
             parent_id=parent_id,
             ip_address=request.remote_addr,
             user_agent=request.headers.get('User-Agent')
@@ -141,19 +291,17 @@ def create_comment():
         # Validate comment
         comment.validate()
         
-        # Auto-approve for trusted users, otherwise require moderation
-        if current_user.role.value in ['admin', 'su'] or current_user.verified:
-            comment.is_approved = True
-        else:
-            comment.is_approved = False  # Requires moderation
+        # Auto-approve comments for all authenticated users
+        # This provides immediate feedback and better user experience
+        comment.is_approved = True
         
         db.session.add(comment)
         db.session.commit()
         
         # Record user activity (with safety check)
         try:
-            if hasattr(current_user, 'record_activity'):
-                current_user.record_activity(
+            if hasattr(user, 'record_activity'):
+                user.record_activity(
                     'create_comment',
                     f'Created comment on {content_type} {content_id}',
                     request.remote_addr,
@@ -176,15 +324,42 @@ def create_comment():
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@comments_bp.route('/api/comments/<int:comment_id>', methods=['PUT'])
-@login_required
-def update_comment(comment_id):
-    """Update a comment."""
+@comments_bp.route('/api/comments/<int:id>', methods=['PUT'])
+def update_comment(id):
+    """Update a comment with combined authentication."""
+    # Combined authentication logic (both JWT and session)
+    auth_header = request.headers.get("Authorization", "")
+    user = None
+
+    if auth_header.startswith("Bearer "):
+        # Try JWT authentication
+        token = auth_header.split(" ", 1)[1].strip()
+        if token:
+            try:
+                from routes.routes_external_auth import _get_serializer, ACCESS_TOKEN_SALT, ACCESS_TOKEN_TTL_SECONDS
+                data = _get_serializer(ACCESS_TOKEN_SALT).loads(token, max_age=ACCESS_TOKEN_TTL_SECONDS)
+                user = User.query.get(data.get("user_id"))
+                if user and not user.is_active:
+                    return jsonify({"error": "Account inactive"}), 403
+                if user and user.is_suspended:
+                    return jsonify({"error": "Account suspended"}), 403
+            except Exception:
+                pass
+
+    # Fall back to session authentication
+    if not user:
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            user = current_user
+
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+
     try:
-        comment = Comment.query.get_or_404(comment_id)
+        comment = Comment.query.get_or_404(id)
         
         # Check if user can edit this comment
-        if comment.user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        if comment.user_id != user.id and user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
             return jsonify({'error': 'Permission denied'}), 403
         
         data = request.get_json()
@@ -205,15 +380,15 @@ def update_comment(comment_id):
         comment.updated_at = datetime.now(timezone.utc)
         
         # Re-validate for moderation if needed
-        if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        if user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
             comment.is_approved = False  # Requires re-approval
         
         db.session.commit()
         
         # Record user activity (with safety check)
         try:
-            if hasattr(current_user, 'record_activity'):
-                current_user.record_activity(
+            if hasattr(user, 'record_activity'):
+                user.record_activity(
                     'update_comment',
                     f'Updated comment {comment_id}',
                     request.remote_addr,
@@ -234,15 +409,42 @@ def update_comment(comment_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@comments_bp.route('/api/comments/<int:comment_id>', methods=['DELETE'])
-@login_required
-def delete_comment(comment_id):
+@comments_bp.route('/api/comments/<int:id>', methods=['DELETE'])
+def delete_comment(id):
     """Delete a comment (soft delete)."""
+    # Combined authentication logic (both JWT and session)
+    auth_header = request.headers.get("Authorization", "")
+    user = None
+
+    if auth_header.startswith("Bearer "):
+        # Try JWT authentication
+        token = auth_header.split(" ", 1)[1].strip()
+        if token:
+            try:
+                from routes.routes_external_auth import _get_serializer, ACCESS_TOKEN_SALT, ACCESS_TOKEN_TTL_SECONDS
+                data = _get_serializer(ACCESS_TOKEN_SALT).loads(token, max_age=ACCESS_TOKEN_TTL_SECONDS)
+                user = User.query.get(data.get("user_id"))
+                if user and not user.is_active:
+                    return jsonify({"error": "Account inactive"}), 403
+                if user and user.is_suspended:
+                    return jsonify({"error": "Account suspended"}), 403
+            except Exception:
+                pass
+
+    # Fall back to session authentication
+    if not user:
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            user = current_user
+
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+
     try:
-        comment = Comment.query.get_or_404(comment_id)
+        comment = Comment.query.get_or_404(id)
         
         # Check if user can delete this comment
-        if comment.user_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        if comment.user_id != user.id and user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
             return jsonify({'error': 'Permission denied'}), 403
         
         # Soft delete
@@ -253,8 +455,8 @@ def delete_comment(comment_id):
         
         # Record user activity (with safety check)
         try:
-            if hasattr(current_user, 'record_activity'):
-                current_user.record_activity(
+            if hasattr(user, 'record_activity'):
+                user.record_activity(
                     'delete_comment',
                     f'Deleted comment {comment_id}',
                     request.remote_addr,
@@ -274,12 +476,39 @@ def delete_comment(comment_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@comments_bp.route('/api/comments/<int:comment_id>/like', methods=['POST'])
-@login_required
-def like_comment(comment_id):
-    """Like or unlike a comment."""
+@comments_bp.route('/api/comments/<int:id>/like', methods=['POST'])
+def like_comment(id):
+    """Like or unlike a comment with combined authentication."""
+    # Combined authentication logic (both JWT and session)
+    auth_header = request.headers.get("Authorization", "")
+    user = None
+
+    if auth_header.startswith("Bearer "):
+        # Try JWT authentication
+        token = auth_header.split(" ", 1)[1].strip()
+        if token:
+            try:
+                from routes.routes_external_auth import _get_serializer, ACCESS_TOKEN_SALT, ACCESS_TOKEN_TTL_SECONDS
+                data = _get_serializer(ACCESS_TOKEN_SALT).loads(token, max_age=ACCESS_TOKEN_TTL_SECONDS)
+                user = User.query.get(data.get("user_id"))
+                if user and not user.is_active:
+                    return jsonify({"error": "Account inactive"}), 403
+                if user and user.is_suspended:
+                    return jsonify({"error": "Account suspended"}), 403
+            except Exception:
+                pass
+
+    # Fall back to session authentication
+    if not user:
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            user = current_user
+
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+
     try:
-        comment = Comment.query.get_or_404(comment_id)
+        comment = Comment.query.get_or_404(id)
         
         if comment.is_deleted:
             return jsonify({'error': 'Comment not found'}), 404
@@ -289,8 +518,8 @@ def like_comment(comment_id):
         
         # Check if user already liked/disliked this comment
         existing_like = CommentLike.query.filter_by(
-            comment_id=comment_id,
-            user_id=current_user.id
+            comment_id=id,
+            user_id=user.id
         ).first()
         
         if existing_like:
@@ -305,12 +534,12 @@ def like_comment(comment_id):
                 action = 'changed'
         else:
             # Create new like/dislike
-            existing_like = CommentLike(
-                comment_id=comment_id,
-                user_id=current_user.id,
+            new_like = CommentLike(
+                comment_id=id,
+                user_id=user.id,
                 is_like=is_like
             )
-            db.session.add(existing_like)
+            db.session.add(new_like)
             action = 'added'
         
         db.session.commit()
@@ -319,8 +548,8 @@ def like_comment(comment_id):
             'message': f'{action.title()} {"like" if is_like else "dislike"} successfully',
             'likes_count': comment.get_likes_count(),
             'dislikes_count': comment.get_dislikes_count(),
-            'user_liked': comment.is_liked_by_user(current_user.id),
-            'user_disliked': comment.is_disliked_by_user(current_user.id)
+            'user_liked': comment.is_liked_by_user(user.id),
+            'user_disliked': comment.is_disliked_by_user(user.id)
         })
         
     except Exception as e:
@@ -329,17 +558,44 @@ def like_comment(comment_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@comments_bp.route('/api/comments/<int:comment_id>/report', methods=['POST'])
-@login_required
-def report_comment(comment_id):
-    """Report a comment."""
+@comments_bp.route('/api/comments/<int:id>/report', methods=['POST'])
+def report_comment(id):
+    """Report a comment with combined authentication."""
+    # Combined authentication logic (both JWT and session)
+    auth_header = request.headers.get("Authorization", "")
+    user = None
+
+    if auth_header.startswith("Bearer "):
+        # Try JWT authentication
+        token = auth_header.split(" ", 1)[1].strip()
+        if token:
+            try:
+                from routes.routes_external_auth import _get_serializer, ACCESS_TOKEN_SALT, ACCESS_TOKEN_TTL_SECONDS
+                data = _get_serializer(ACCESS_TOKEN_SALT).loads(token, max_age=ACCESS_TOKEN_TTL_SECONDS)
+                user = User.query.get(data.get("user_id"))
+                if user and not user.is_active:
+                    return jsonify({"error": "Account inactive"}), 403
+                if user and user.is_suspended:
+                    return jsonify({"error": "Account suspended"}), 403
+            except Exception:
+                pass
+
+    # Fall back to session authentication
+    if not user:
+        from flask_login import current_user
+        if current_user.is_authenticated:
+            user = current_user
+
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+
     try:
-        comment = Comment.query.get_or_404(comment_id)
+        comment = Comment.query.get_or_404(id)
         
         if comment.is_deleted:
             return jsonify({'error': 'Comment not found'}), 404
         
-        if comment.user_id == current_user.id:
+        if comment.user_id == user.id:
             return jsonify({'error': 'Cannot report your own comment'}), 400
         
         data = request.get_json()
@@ -353,8 +609,8 @@ def report_comment(comment_id):
         
         # Check if user already reported this comment
         existing_report = CommentReport.query.filter_by(
-            comment_id=comment_id,
-            user_id=current_user.id,
+            comment_id=id,
+            user_id=user.id,
             is_resolved=False
         ).first()
         
@@ -364,7 +620,7 @@ def report_comment(comment_id):
         # Create report
         report = CommentReport(
             comment_id=comment_id,
-            user_id=current_user.id,
+            user_id=user.id,
             reason=reason,
             description=description
         )

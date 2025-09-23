@@ -18,7 +18,7 @@ async function requestAlbumDeletion(albumId) {
 async function submitAlbumDeletionRequest(albumId) {
     try {
         console.log('Making API call to request deletion for album:', albumId);
-        const response = await fetch(`/admin/albums/${albumId}/request-deletion`, {
+        const response = await fetchWithCSRF(`/admin/albums/${albumId}/request-deletion`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -64,7 +64,7 @@ async function submitAlbumDeletionRequest(albumId) {
 // Toggle album visibility
 async function toggleAlbumVisibility(albumId) {
     try {
-        const response = await fetch(`/admin/albums/${albumId}/toggle-visibility`, {
+        const response = await fetchWithCSRF(`/admin/albums/${albumId}/toggle-visibility`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ async function toggleAlbumVisibility(albumId) {
 // Toggle album type (premium/regular)
 async function toggleAlbumType(albumId) {
     try {
-        const response = await fetch(`/admin/albums/${albumId}/toggle-type`, {
+        const response = await fetchWithCSRF(`/admin/albums/${albumId}/toggle-type`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ function bulkToggleVisibility() {
     const selectedIds = getSelectedAlbumIds();
     if (selectedIds.length === 0) return;
     
-    fetch('/admin/albums/bulk/toggle-visibility', {
+    fetchWithCSRF('/admin/albums/bulk/toggle-visibility', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ function bulkToggleType() {
     const selectedIds = getSelectedAlbumIds();
     if (selectedIds.length === 0) return;
     
-    fetch('/admin/albums/bulk/toggle-type', {
+    fetchWithCSRF('/admin/albums/bulk/toggle-type', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ function bulkArchive() {
         return;
     }
     
-    fetch('/admin/albums/bulk/archive', {
+    fetchWithCSRF('/admin/albums/bulk/archive', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -1,7 +1,8 @@
 from .common_imports import *
-from models import Album, AlbumChapter, News, Category, CategoryGroup, Image, User, UserRole, Rating, default_utcnow, ShareLog
+from models import Album, AlbumChapter, News, Category, CategoryGroup, Image, User, UserRole, Rating, default_utcnow, ShareLog, UserProfile, UserStats, Comment, ReadingHistory, UserLibrary
 from optimizations import cache_with_args, cache_query_result, CACHE_TIMEOUTS
 from optimizations import optimize_news_query, optimize_image_query, monitor_ssr_render
+from optimizations import cache_frontend_critical, cache_public_content, cache_navigation_data
 from optimizations.cache_config import safe_cache_get, safe_cache_set
 import time
 import markdown
@@ -19,6 +20,7 @@ def safe_title(title):
     return safe.strip('-')
 
 # Context processor to make navigation links and brand info available to all templates
+@cache_navigation_data(timeout=1800)  # 30 minutes - navigation rarely changes
 @main_blueprint.context_processor
 def inject_navigation_links():
     """Inject navigation links and brand info into all templates."""
@@ -60,6 +62,7 @@ def force_scaling_test():
     """Test page for force scaling functionality."""
     return render_template('public/force-scaling-test.html')
 
+@cache_frontend_critical(timeout=600)  # 10 minutes - homepage is critical
 @main_blueprint.route("/")
 @main_blueprint.route("/beranda")
 @main_blueprint.route("/home")
@@ -325,6 +328,7 @@ def videos():
     return render_template("public/videos.html", videos=videos_paginated, query=query)
 
 
+@cache_frontend_critical(timeout=300)  # 5 minutes - news list changes frequently
 @main_blueprint.route("/news")
 @main_blueprint.route("/stories")
 @cache_with_args(timeout=CACHE_TIMEOUTS['news_list'], key_prefix='news_list')
@@ -375,6 +379,7 @@ def utama():
     return redirect(url_for('main.news', type='utama'))
 
 
+@cache_public_content(timeout=600)  # 10 minutes - gallery content
 @main_blueprint.route("/gallery")
 @monitor_ssr_render("gallery")
 def gallery():
@@ -408,6 +413,7 @@ def gallery():
 # ----------------------
 
 
+@cache_public_content(timeout=1800)  # 30 minutes - about page rarely changes
 @main_blueprint.route("/about")
 def about():
     # Fetch active team members by group
@@ -481,6 +487,7 @@ def search():
 # ----------------------
 
 
+@cache_frontend_critical(timeout=900)  # 15 minutes - news detail pages
 @main_blueprint.route("/news/<int:news_id>/<path:news_title>")
 @main_blueprint.route("/stories/<int:news_id>/<path:news_title>")
 @monitor_ssr_render("news_detail")
@@ -641,6 +648,7 @@ def news_detail(news_id, news_title):
         related_news=related_news,
     )
 
+@cache_frontend_critical(timeout=900)  # 15 minutes - legacy news detail pages
 @main_blueprint.route("/news/<int:news_id>")
 @main_blueprint.route("/stories/<int:news_id>")
 def news_detail_legacy(news_id):
@@ -1221,6 +1229,7 @@ def copy_navigation_links():
 
 
 # Album Public Routes
+@cache_public_content(timeout=600)  # 10 minutes - albums list
 @main_blueprint.route("/albums")
 @main_blueprint.route("/novel")
 @monitor_ssr_render("albums_list")
@@ -1231,6 +1240,7 @@ def albums_list():
     )
 
 
+@cache_frontend_critical(timeout=300)  # 5 minutes - album search
 @main_blueprint.route("/api/search/albums", methods=["GET"])
 def search_albums():
     """API endpoint for server-side album search."""
@@ -1430,10 +1440,7 @@ def search_albums():
                     'id': album.category.id,
                     'name': album.category.name
                 } if album.category else None,
-                'author': {
-                    'id': album.author.id,
-                    'username': album.author.username
-                } if album.author else None,
+                'author': album.author if album.author else None,
                 'status': 'completed' if album.is_completed else 'hiatus' if album.is_hiatus else 'ongoing',
                 'is_premium': album.is_premium,
                 'age_rating': album.age_rating,
@@ -1448,7 +1455,7 @@ def search_albums():
                 },
                 'cover_image': {
                     'url': url_for('static', filename=album.cover_image.filepath.split('static/')[-1])
-                } if album.cover_image else None,
+                } if album.cover_image and album.cover_image.filepath else None,
                 'url': url_for('main.album_detail', 
                               album_id=album.id, 
                               album_title=album.title.replace(' ', '-').lower())
@@ -1489,6 +1496,7 @@ def search_albums():
         }), 500
 
 
+@cache_frontend_critical(timeout=900)  # 15 minutes - album detail pages
 @main_blueprint.route("/album/<int:album_id>/<path:album_title>")
 @main_blueprint.route("/novel/<int:album_id>/<path:album_title>")
 @monitor_ssr_render("album_detail")
@@ -1512,6 +1520,10 @@ def album_detail(album_id, album_title):
         .order_by(AlbumChapter.chapter_number)
         .all()
     )
+    
+    # Update album's chapter count to ensure it reflects visible chapters only
+    album.update_chapter_count()
+    db.session.commit()
     
     # Get related albums using refined similarity algorithm
     related_albums = get_similar_albums(album, limit=4)
@@ -1664,7 +1676,34 @@ def albums_management():
     if not current_user.verified:
         return redirect(url_for('main.login'))
     
-    return render_template('admin/settings/albums_management.html')
+    # Get user's albums (both as creator and as owner)
+    from sqlalchemy import or_
+    from models import Album, Category
+    
+    published_albums = Album.query.filter(
+        or_(
+            Album.user_id == current_user.id,  # Albums created by user
+            Album.owner_id == current_user.id   # Albums owned by user
+        ),
+        Album.is_visible == True
+    ).all()
+    
+    draft_albums = Album.query.filter(
+        or_(
+            Album.user_id == current_user.id,  # Albums created by user
+            Album.owner_id == current_user.id   # Albums owned by user
+        ),
+        Album.is_visible == False
+    ).all()
+    
+    # Get categories for filtering
+    categories = Category.query.all()
+    
+    return render_template('public/user/profile_list.html', 
+                         user=current_user, 
+                         published_albums=published_albums,
+                         draft_albums=draft_albums,
+                         categories=categories)
 
 @main_blueprint.route("/api/search/news", methods=["GET"])
 def search_news_api():
@@ -1877,3 +1916,453 @@ def update_ads_preferences():
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ----------------------
+# 👤 Public User Profile Routes
+# ----------------------
+
+@cache_public_content(timeout=300)  # 5 minutes - user profiles change frequently
+@main_blueprint.route("/profile/<username>")
+@monitor_ssr_render("public_user_profile")
+def public_user_profile(username):
+    """Public user profile page - anyone can view."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Check if user profile is public
+    profile = UserProfile.query.filter_by(user_id=user.id).first()
+    if profile and not profile.is_public:
+        flash('This user profile is private', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get or create user stats
+    stats = UserStats.query.filter_by(user_id=user.id).first()
+    if not stats:
+        stats = UserStats(user_id=user.id)
+        db.session.add(stats)
+        db.session.commit()
+    
+    # Update stats
+    stats.update_stats()
+    db.session.commit()
+    
+    # Get user's public content
+    # Get published stories
+    published_stories = News.query.filter_by(
+        user_id=user.id, 
+        is_visible=True
+    ).order_by(News.created_at.desc()).limit(6).all()
+    
+    # Get published albums
+    from sqlalchemy import or_
+    published_albums = Album.query.filter(
+        or_(
+            Album.user_id == user.id,
+            Album.owner_id == user.id
+        ),
+        Album.is_visible == True
+    ).order_by(Album.created_at.desc()).limit(6).all()
+    
+    # Get recent comments (public ones)
+    recent_comments = Comment.query.filter_by(
+        user_id=user.id,
+        is_deleted=False,
+        is_spam=False
+    ).order_by(Comment.created_at.desc()).limit(5).all()
+    
+    # Check if current user is following this user
+    is_following = False
+    if current_user.is_authenticated:
+        is_following = current_user.following.filter_by(id=user.id).first() is not None
+    
+    return render_template('public/user_profile.html', 
+                         user=user, 
+                         profile=profile, 
+                         stats=stats,
+                         published_stories=published_stories,
+                         published_albums=published_albums,
+                         recent_comments=recent_comments,
+                         is_following=is_following)
+
+
+@cache_public_content(timeout=300)  # 5 minutes - user stats change frequently
+@main_blueprint.route("/profile/<username>/stats")
+@monitor_ssr_render("public_user_stats")
+def public_user_stats(username):
+    """Public user statistics page - anyone can view."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Check if user profile is public
+    profile = UserProfile.query.filter_by(user_id=user.id).first()
+    if profile and not profile.is_public:
+        flash('This user profile is private', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get or create user stats
+    stats = UserStats.query.filter_by(user_id=user.id).first()
+    if not stats:
+        stats = UserStats(user_id=user.id)
+        db.session.add(stats)
+        db.session.commit()
+    
+    # Update stats
+    stats.update_stats()
+    db.session.commit()
+    
+    # Get detailed statistics
+    # Get reading history for charts
+    reading_history = ReadingHistory.query.filter_by(user_id=user.id)\
+        .order_by(ReadingHistory.last_read_at.desc()).limit(50).all()
+    
+    # Get library items for charts
+    library_items = UserLibrary.query.filter_by(user_id=user.id)\
+        .order_by(UserLibrary.added_at.desc()).limit(50).all()
+    
+    # Get monthly activity data
+    monthly_activity = {}
+    if stats.monthly_stats:
+        monthly_activity = stats.monthly_stats
+    
+    # Get activity calendar data
+    activity_calendar = {}
+    if stats.activity_calendar:
+        activity_calendar = stats.activity_calendar
+    
+    # Get top content by views
+    top_stories = News.query.filter_by(user_id=user.id, is_visible=True)\
+        .order_by(News.read_count.desc()).limit(5).all()
+    
+    top_albums = Album.query.filter(
+        or_(
+            Album.user_id == user.id,
+            Album.owner_id == user.id
+        ),
+        Album.is_visible == True
+    ).order_by(Album.total_reads.desc()).limit(5).all()
+    
+    return render_template('public/user_stats.html', 
+                         user=user, 
+                         profile=profile, 
+                         stats=stats,
+                         reading_history=reading_history,
+                         library_items=library_items,
+                         monthly_activity=monthly_activity,
+                         activity_calendar=activity_calendar,
+                         top_stories=top_stories,
+                         top_albums=top_albums)
+
+
+@cache_public_content(timeout=300)  # 5 minutes - user content changes frequently
+@main_blueprint.route("/profile/<username>/content")
+@monitor_ssr_render("public_user_content")
+def public_user_content(username):
+    """Public user content page - shows all public content by user."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Check if user profile is public
+    profile = UserProfile.query.filter_by(user_id=user.id).first()
+    if profile and not profile.is_public:
+        flash('This user profile is private', 'error')
+        return redirect(url_for('main.home'))
+    
+    # Get active tab
+    active_tab = request.args.get('tab', 'stories')
+    page = request.args.get('page', 1, type=int)
+    per_page = 12
+    
+    if active_tab == 'stories':
+        # Get published stories with pagination
+        stories_query = News.query.filter_by(user_id=user.id, is_visible=True)\
+            .order_by(News.created_at.desc())
+        stories_pagination = stories_query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        return render_template('public/user_content.html', 
+                             user=user, 
+                             profile=profile,
+                             active_tab=active_tab,
+                             stories_pagination=stories_pagination,
+                             albums_pagination=None)
+    
+    elif active_tab == 'albums':
+        # Get published albums with pagination
+        from sqlalchemy import or_
+        albums_query = Album.query.filter(
+            or_(
+                Album.user_id == user.id,
+                Album.owner_id == user.id
+            ),
+            Album.is_visible == True
+        ).order_by(Album.created_at.desc())
+        albums_pagination = albums_query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        return render_template('public/user_content.html', 
+                             user=user, 
+                             profile=profile,
+                             active_tab=active_tab,
+                             stories_pagination=None,
+                             albums_pagination=albums_pagination)
+    
+    else:
+        # Default to stories
+        return redirect(url_for('main.public_user_content', username=username, tab='stories'))
+
+
+@main_blueprint.route("/api/profile/<username>/follow", methods=['POST'])
+@login_required
+def public_follow_user(username):
+    """Follow or unfollow a user from public profile page."""
+    user_to_follow = User.query.filter_by(username=username).first()
+    if not user_to_follow:
+        return jsonify({'error': 'User not found'}), 404
+    
+    if current_user.id == user_to_follow.id:
+        return jsonify({'error': 'You cannot follow yourself'}), 400
+    
+    # Check if already following
+    is_following = current_user.following.filter_by(id=user_to_follow.id).first() is not None
+    
+    if is_following:
+        # Unfollow
+        current_user.following.remove(user_to_follow)
+        action = 'unfollowed'
+    else:
+        # Follow
+        current_user.following.append(user_to_follow)
+        action = 'followed'
+    
+    db.session.commit()
+    
+    # Update stats
+    stats = UserStats.query.filter_by(user_id=user_to_follow.id).first()
+    if stats:
+        stats.update_stats()
+        db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'action': action,
+        'follower_count': user_to_follow.followers.count()
+    })
+
+
+@main_blueprint.route("/api/profile/<username>/stats", methods=['GET'])
+def get_public_user_stats(username):
+    """API endpoint to get user stats for public viewing."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Check if user profile is public
+    profile = UserProfile.query.filter_by(user_id=user.id).first()
+    if profile and not profile.is_public:
+        return jsonify({'error': 'User profile is private'}), 403
+    
+    # Get or create user stats
+    stats = UserStats.query.filter_by(user_id=user.id).first()
+    if not stats:
+        stats = UserStats(user_id=user.id)
+        db.session.add(stats)
+        db.session.commit()
+    
+    # Update stats
+    stats.update_stats()
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'bio': user.bio,
+            'profile_picture': user.profile_picture,
+            'created_at': user.created_at.isoformat() if user.created_at else None
+        },
+        'profile': profile.to_dict() if profile else None,
+        'stats': stats.to_dict() if stats else None
+    })
+
+
+@main_blueprint.route("/api/profile/<username>/content", methods=['GET'])
+def get_public_user_content(username):
+    """API endpoint to get user content (stories/albums) for public viewing."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Check if user profile is public
+    profile = UserProfile.query.filter_by(user_id=user.id).first()
+    if profile and not profile.is_public:
+        return jsonify({'error': 'User profile is private'}), 403
+    
+    # Get query parameters
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '', type=str)
+    category_id = request.args.get('category', '', type=str)
+    sort = request.args.get('sort', 'newest', type=str)
+    status = request.args.get('status', '', type=str)
+    tab = request.args.get('tab', 'stories', type=str)
+    
+    per_page = 9
+    
+    try:
+        if tab == 'stories':
+            # Query stories
+            query = News.query.filter_by(user_id=user.id, is_visible=True)
+            
+            # Apply search filter
+            if search:
+                query = query.filter(
+                    db.or_(
+                        News.title.ilike(f'%{search}%'),
+                        News.content.ilike(f'%{search}%'),
+                        News.writer.ilike(f'%{search}%')
+                    )
+                )
+            
+            # Apply category filter
+            if category_id:
+                query = query.filter_by(category_id=category_id)
+            
+            # Apply sorting
+            if sort == 'oldest':
+                query = query.order_by(News.created_at.asc())
+            elif sort == 'popular':
+                query = query.order_by(News.read_count.desc())
+            elif sort == 'least-popular':
+                query = query.order_by(News.read_count.asc())
+            else:  # newest
+                query = query.order_by(News.created_at.desc())
+            
+            # Paginate
+            pagination = query.paginate(
+                page=page, per_page=per_page, error_out=False
+            )
+            
+            # Format stories for JSON response
+            stories = []
+            for story in pagination.items:
+                story_data = {
+                    'id': story.id,
+                    'title': story.title,
+                    'content': story.content,
+                    'created_at': story.created_at.strftime('%B %d, %Y'),
+                    'read_count': story.read_count or 0,
+                    'is_premium': story.is_premium,
+                    'category': story.category.name if story.category else None,
+                    'url': url_for('main.news_detail', news_id=story.id, news_title=safe_title(story.title)),
+                    'image_url': url_for('static', filename=story.image.filepath.split('static/')[-1]) if story.image else None
+                }
+                stories.append(story_data)
+            
+            return jsonify({
+                'success': True,
+                'content': stories,
+                'pagination': {
+                    'page': pagination.page,
+                    'pages': pagination.pages,
+                    'per_page': pagination.per_page,
+                    'total': pagination.total,
+                    'has_prev': pagination.has_prev,
+                    'has_next': pagination.has_next,
+                    'prev_num': pagination.prev_num,
+                    'next_num': pagination.next_num
+                }
+            })
+            
+        else:  # albums
+            # Query albums
+            query = Album.query.filter_by(user_id=user.id, is_visible=True)
+            
+            # Apply search filter
+            if search:
+                query = query.filter(
+                    db.or_(
+                        Album.title.ilike(f'%{search}%'),
+                        Album.description.ilike(f'%{search}%'),
+                        Album.author.ilike(f'%{search}%')
+                    )
+                )
+            
+            # Apply category filter
+            if category_id:
+                query = query.filter_by(category_id=category_id)
+            
+            # Apply status filter
+            if status == 'ongoing':
+                query = query.filter_by(is_completed=False, is_hiatus=False)
+            elif status == 'completed':
+                query = query.filter_by(is_completed=True)
+            elif status == 'hiatus':
+                query = query.filter_by(is_hiatus=True)
+            
+            # Apply sorting
+            if sort == 'oldest':
+                query = query.order_by(Album.created_at.asc())
+            elif sort == 'popular':
+                query = query.order_by(Album.total_reads.desc())
+            elif sort == 'least-popular':
+                query = query.order_by(Album.total_reads.asc())
+            elif sort == 'most-viewed':
+                query = query.order_by(Album.total_views.desc())
+            elif sort == 'least-viewed':
+                query = query.order_by(Album.total_views.asc())
+            elif sort == 'highest-rated':
+                query = query.order_by(Album.average_rating.desc())
+            else:  # newest
+                query = query.order_by(Album.created_at.desc())
+            
+            # Paginate
+            pagination = query.paginate(
+                page=page, per_page=per_page, error_out=False
+            )
+            
+            # Format albums for JSON response
+            albums = []
+            for album in pagination.items:
+                album_data = {
+                    'id': album.id,
+                    'title': album.title,
+                    'description': album.description,
+                    'created_at': album.created_at.strftime('%B %d, %Y'),
+                    'total_reads': album.total_reads or 0,
+                    'total_chapters': album.total_chapters or 0,
+                    'is_completed': album.is_completed,
+                    'is_hiatus': album.is_hiatus,
+                    'category': album.category.name if album.category else None,
+                    'url': url_for('main.album_detail', album_id=album.id, album_title=safe_title(album.title)),
+                    'cover_image_url': url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) if album.cover_image else None
+                }
+                albums.append(album_data)
+            
+            return jsonify({
+                'success': True,
+                'content': albums,
+                'pagination': {
+                    'page': pagination.page,
+                    'pages': pagination.pages,
+                    'per_page': pagination.per_page,
+                    'total': pagination.total,
+                    'has_prev': pagination.has_prev,
+                    'has_next': pagination.has_next,
+                    'prev_num': pagination.prev_num,
+                    'next_num': pagination.next_num
+                }
+            })
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

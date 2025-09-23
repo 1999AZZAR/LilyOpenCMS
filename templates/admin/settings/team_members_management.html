@@ -9,6 +9,7 @@
     <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-member-title">
         <h2 id="add-member-title" class="text-xl font-semibold text-amber-800 mb-4">Tambah Anggota Tim Baru</h2>
         <form action="{{ url_for('main.settings_team_members') }}" method="POST" class="space-y-4" role="form" aria-label="Form tambah anggota tim baru">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <!-- CSRF protection disabled for this application -->
             <input type="hidden" name="action" value="create">
             <div>
@@ -44,6 +45,7 @@
             {% for member in team_members %}
             <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-lg shadow-md space-y-4" role="listitem">
                 <form action="{{ url_for('main.settings_team_members') }}" method="POST" class="space-y-4" role="form" aria-label="Form edit anggota tim {{ member.name }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <!-- CSRF protection disabled for this application -->
                     <input type="hidden" name="member_id" value="{{ member.id }}">
                     <div>

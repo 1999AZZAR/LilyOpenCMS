@@ -1343,16 +1343,22 @@ def admin_dashboard():
             Ad.image_url.isnot(None)
         )
     ).count()
-    
+
+    # Get API keys count (placeholder for future implementation)
+    total_api_keys = 0  # TODO: Implement API key counting when ApiKey model is added
+
+    # Get active targeting count (placeholder for future implementation)
+    active_targeting = 0  # TODO: Implement targeting counting when AdTargeting model is added
+
     # Get recent activity
     recent_ads = Ad.query.order_by(desc(Ad.created_at)).limit(5).all()
     recent_campaigns = AdCampaign.query.order_by(desc(AdCampaign.created_at)).limit(5).all()
-    
+
     # Get performance stats
     total_impressions = db.session.query(func.sum(Ad.impressions)).scalar() or 0
     total_clicks = db.session.query(func.sum(Ad.clicks)).scalar() or 0
     overall_ctr = (total_clicks / total_impressions * 100) if total_impressions > 0 else 0
-    
+
     return render_template('admin/ads/dashboard.html',
                          total_ads=total_ads,
                          active_ads=active_ads,
@@ -1365,7 +1371,9 @@ def admin_dashboard():
                          total_impressions=total_impressions,
                          total_clicks=total_clicks,
                          overall_ctr=overall_ctr,
-                         total_images=total_images)
+                         total_images=total_images,
+                         total_api_keys=total_api_keys,
+                         active_targeting=active_targeting)
 
 
 # =============================================================================

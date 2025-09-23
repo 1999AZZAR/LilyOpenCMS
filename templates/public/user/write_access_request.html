@@ -7,21 +7,32 @@
 
 {% block content %}
 <div class="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-        <div class="bg-card rounded-lg shadow-sm border border-border p-8">
+    <div class="max-w-3xl w-full space-y-8">
+        <div class="bg-card rounded-lg shadow-sm border border-border p-8 md:p-10">
             <div class="text-center">
                 <i class="fas fa-pen-fancy text-4xl text-primary mb-4"></i>
-                <h2 class="text-2xl font-bold text-foreground mb-2">Permintaan Akses Menulis</h2>
+                <h2 class="text-3xl font-bold text-foreground mb-2">Permintaan Akses Menulis</h2>
                 <p class="text-muted-foreground mb-6">
                     Untuk membuat album dan cerita, Anda perlu meminta akses menulis dari administrator.
                 </p>
             </div>
             
-            <div class="space-y-6">
+            <div class="space-y-6 md:grid md:grid-cols-2 md:gap-8 md:space-y-0">
                 <!-- Current Status -->
-                <div class="bg-muted rounded-lg p-4">
+                <div class="bg-muted rounded-lg p-4 h-full">
                     <h3 class="text-sm font-medium text-foreground mb-2">Status Saat Ini</h3>
-                    {% if current_user.write_access is none %}
+                    {% if pending_request %}
+                        <div class="flex items-start gap-3 p-3 rounded-md bg-yellow-50 border border-yellow-200">
+                            <i class="fa-solid fa-hourglass-half text-yellow-600 mt-0.5"></i>
+                            <div class="text-sm text-yellow-800">
+                                <div class="font-medium">Permintaan sedang ditinjau</div>
+                                <div class="mt-0.5">Diajukan pada {{ pending_request.requested_at.strftime('%d %b %Y %H:%M') }}.</div>
+                                {% if pending_request.request_reason %}
+                                <div class="mt-2 text-yellow-900"><span class="font-medium">Alasan:</span> {{ pending_request.request_reason }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% elif current_user.write_access is none %}
                         <div class="flex items-center">
                             <i class="fas fa-clock text-yellow-500 mr-2"></i>
                             <span class="text-sm text-muted-foreground">Belum ada permintaan diajukan</span>
@@ -34,80 +45,86 @@
                     {% elif current_user.write_access == false %}
                         <div class="flex items-center">
                             <i class="fas fa-times-circle text-red-500 mr-2"></i>
-                            <span class="text-sm text-gray-600">Akses ditolak</span>
+                            <span class="text-sm text-gray-600">Akses ditolak / dicabut</span>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Information -->
+                    <div class="mt-6 pt-6 border-t border-border">
+                        <h3 class="text-sm font-medium text-foreground mb-3">Yang dapat Anda lakukan dengan akses menulis:</h3>
+                        <ul class="text-sm text-muted-foreground space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                Membuat dan menerbitkan album
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                Menulis dan menerbitkan cerita
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                Mengelola konten Anda
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
+                                Melihat analitik detail
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Request Form / Actions -->
+                <div>
+                    {% if (current_user.write_access is none or current_user.write_access == false) and not pending_request %}
+                        <form id="write-access-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="reason" class="block text-sm font-medium text-foreground mb-2">
+                                        Mengapa Anda ingin akses menulis?
+                                    </label>
+                                    <textarea id="reason" name="reason" rows="8" 
+                                              class="w-full border border-border rounded-md shadow-sm focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground placeholder:text-muted-foreground transition-colors"
+                                              placeholder="Ceritakan tujuan menulis Anda, topik favorit, serta jenis konten (album/cerita) yang ingin Anda buat..."></textarea>
+                                    <p class="mt-2 text-xs text-muted-foreground">Berikan gambaran singkat (disarankan ≥ 20 karakter) agar admin dapat menilai permintaan Anda lebih cepat.</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch mt-2">
+                                    <button type="submit" 
+                                            class="w-full button button-primary inline-flex items-center justify-center h-11 gap-2 shadow-sm hover:shadow focus-visible:ring-2 focus-visible:ring-primary">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                        Kirim Permintaan
+                                    </button>
+                                    <a href="{{ url_for('user_profile.user_profile', username=current_user.username) }}" 
+                                       class="w-full button button-outline inline-flex items-center justify-center h-11 text-center gap-2 hover:bg-accent hover:text-accent-foreground border-border">
+                                        <i class="fa-regular fa-circle-xmark"></i>
+                                        Batal
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    {% elif current_user.write_access == true %}
+                        <div class="text-center md:text-left">
+                            <p class="text-sm text-muted-foreground mb-4">
+                                Selamat! Anda telah diberikan akses menulis. Anda sekarang dapat membuat album dan cerita.
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <a href="{{ url_for('albums.create_album') }}" 
+                                   class="w-full button button-primary text-center">
+                                    Buat Album
+                                </a>
+                                <a href="{{ url_for('user_profile.create_user_story', username=current_user.username) }}" 
+                                   class="w-full button button-primary text-center">
+                                    Tulis Cerita
+                                </a>
+                            </div>
+                        </div>
+                    {% elif pending_request %}
+                        <div class="text-sm text-muted-foreground">
+                            Permintaan Anda sedang ditinjau. Anda akan menerima pemberitahuan setelah admin mengambil keputusan.
                         </div>
                     {% endif %}
                 </div>
-                
-                <!-- Request Form -->
-                {% if current_user.write_access is none %}
-                    <form id="write-access-form">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Mengapa Anda ingin akses menulis?
-                                </label>
-                                <textarea id="reason" name="reason" rows="4" 
-                                          class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                          placeholder="Ceritakan tentang tujuan menulis Anda dan apa yang Anda rencanakan untuk dibuat..."></textarea>
-                            </div>
-                            
-                            <button type="submit" 
-                                    class="w-full button button-primary">
-                                Ajukan Permintaan
-                            </button>
-                        </div>
-                    </form>
-                {% elif current_user.write_access == true %}
-                    <div class="text-center">
-                        <p class="text-sm text-muted-foreground mb-4">
-                            Selamat! Anda telah diberikan akses menulis. Anda sekarang dapat membuat album dan cerita.
-                        </p>
-                        <div class="space-y-3">
-                            <a href="{{ url_for('albums.create_album') }}" 
-                               class="block w-full button button-primary">
-                                Buat Album
-                            </a>
-                            <a href="{{ url_for('main.create_news_management') }}" 
-                               class="block w-full button button-primary">
-                                Tulis Cerita
-                            </a>
-                        </div>
-                    </div>
-                {% elif current_user.write_access == false %}
-                    <div class="text-center">
-                        <p class="text-sm text-gray-600 mb-4">
-                            Permintaan Anda untuk akses menulis telah ditolak. Anda dapat menghubungi administrator untuk informasi lebih lanjut.
-                        </p>
-                        <a href="{{ url_for('main.index') }}" 
-                           class="block w-full button button-outline">
-                            Kembali ke Beranda
-                        </a>
-                    </div>
-                {% endif %}
-            </div>
-            
-            <!-- Information -->
-            <div class="mt-8 pt-6 border-t border-gray-200">
-                <h3 class="text-sm font-medium text-gray-900 mb-3">Yang dapat Anda lakukan dengan akses menulis:</h3>
-                <ul class="text-sm text-gray-600 space-y-2">
-                    <li class="flex items-start">
-                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                        Membuat dan menerbitkan album
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                        Menulis dan menerbitkan cerita
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                        Mengelola konten Anda
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check text-green-500 mr-2 mt-0.5"></i>
-                        Melihat analitik detail
-                    </li>
-                </ul>
             </div>
         </div>
     </div>
@@ -120,9 +137,13 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const reason = document.getElementById('reason').value;
+            const reason = document.getElementById('reason').value.trim();
+            if (!reason || reason.length < 5) {
+                alert('Alasan tidak boleh kosong (minimal 5 karakter).');
+                return;
+            }
             
-            fetch('/api/write-access/request', {
+            fetchWithCSRF('/api/write-access/request', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

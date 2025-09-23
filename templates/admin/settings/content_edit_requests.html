@@ -1,0 +1,85 @@
+{% extends 'admin_base.html' %}
+{% block title %}Permintaan Izin Edit Konten - Admin{% endblock %}
+{% block hero_title %}Permintaan Izin Edit Konten{% endblock %}
+{% block hero_desc %}Kelola permintaan izin edit untuk artikel dan album{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-6 py-12" role="main">
+    <!-- Header -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="content-edit-requests-title">
+        <h1 id="content-edit-requests-title" class="text-2xl font-bold text-gray-800 mb-4">Permintaan Izin Edit Konten</h1>
+        <p class="text-gray-600">Tinjau dan kelola permintaan izin edit dari penulis untuk konten yang sudah dipublikasikan.</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="tabs-title">
+        <h2 id="tabs-title" class="text-lg font-semibold text-gray-800 mb-4">Jenis Konten</h2>
+        <div class="flex space-x-4 border-b border-gray-200" role="tablist">
+            <button class="tab-button bg-blue-500 text-white px-4 py-2 rounded-md font-medium" data-tab="news-requests">
+                <i class="fas fa-newspaper mr-2"></i>Artikel
+            </button>
+            <button class="tab-button bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium" data-tab="album-requests">
+                <i class="fas fa-book mr-2"></i>Album
+            </button>
+        </div>
+    </div>
+
+    <!-- News Edit Requests Tab -->
+    <div id="news-requests-tab" class="tab-content">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="news-requests-title">
+            <h2 id="news-requests-title" class="text-xl font-semibold text-gray-800 mb-4">Permintaan Izin Edit Artikel</h2>
+
+            <!-- Search and Filter -->
+            <div class="flex space-x-4 mb-4">
+                <input type="text" id="news-search" placeholder="Cari artikel..." class="flex-1 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="news-date-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- News Requests List -->
+            <div id="news-requests-list" class="space-y-4">
+                <!-- News edit requests will be loaded here dynamically -->
+            </div>
+
+            <!-- No requests message -->
+            <div id="news-no-requests" class="hidden text-center py-8 text-gray-500">
+                <p>Tidak ada permintaan izin edit artikel yang menunggu.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Album Edit Requests Tab -->
+    <div id="album-requests-tab" class="tab-content hidden">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-8" role="region" aria-labelledby="album-requests-title">
+            <h2 id="album-requests-title" class="text-xl font-semibold text-gray-800 mb-4">Permintaan Izin Edit Album</h2>
+
+            <!-- Search and Filter -->
+            <div class="flex space-x-4 mb-4">
+                <input type="text" id="album-search" placeholder="Cari album..." class="flex-1 bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="album-date-filter" class="bg-white border border-gray-300 text-gray-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <!-- Album Requests List -->
+            <div id="album-requests-list" class="space-y-4">
+                <!-- Album edit requests will be loaded here dynamically -->
+            </div>
+
+            <!-- No requests message -->
+            <div id="album-no-requests" class="hidden text-center py-8 text-gray-500">
+                <p>Tidak ada permintaan izin edit album yang menunggu.</p>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+.tab-content { display: block !important; visibility: visible !important; height: auto !important; min-height: 100px !important; overflow: visible !important; }
+.tab-content.hidden { display: none !important; }
+#news-requests-list, #album-requests-list { display: block !important; visibility: visible !important; height: auto !important; min-height: 50px !important; overflow: visible !important; }
+</style>
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/content-edit-requests.js') }}"></script>
+{% endblock %}
+
+

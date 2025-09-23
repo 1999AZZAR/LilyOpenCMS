@@ -40,6 +40,7 @@
         </div>
         <p class="text-gray-600 mb-4">Perfect for news websites, blogs, and content-focused sites. Features news articles, latest updates, and popular content.</p>
         <form id="form-homepage-news" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="homepage_design" value="news">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set news-focused design">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -62,6 +63,7 @@
         </div>
         <p class="text-gray-600 mb-4">Perfect for book/album websites like Goodreads. Features albums, categories, and reading lists prominently.</p>
         <form id="form-homepage-albums" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="homepage_design" value="albums">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set albums-focused design">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -98,6 +100,7 @@
         </div>
         <p class="text-gray-600 mb-4">Categories are displayed as cards in the main content area of the homepage. Perfect for showcasing all available categories prominently.</p>
         <form id="form-categories-body" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="categories_display_location" value="body">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set body display">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -120,6 +123,7 @@
         </div>
         <p class="text-gray-600 mb-4">Categories are displayed as a dropdown menu in the navigation bar. Saves space and provides quick access to category filtering.</p>
         <form id="form-categories-navbar" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="categories_display_location" value="navbar">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set navbar dropdown display">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -163,6 +167,7 @@
         </div>
         <p class="text-gray-600 mb-4 text-sm">Traditional card layout with image on top, title, excerpt, and metadata below. Clean and familiar design.</p>
         <form id="form-card-classic" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="card_design" value="classic">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set classic card design">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -192,6 +197,7 @@
         </div>
         <p class="text-gray-600 mb-4 text-sm">Contemporary design with gradient overlays, rounded corners, and enhanced visual hierarchy. Perfect for modern websites.</p>
         <form id="form-card-modern" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="card_design" value="modern">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set modern card design">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -221,6 +227,7 @@
         </div>
         <p class="text-gray-600 mb-4 text-sm">Clean and simple design with minimal visual elements. Focuses on content readability and fast scanning.</p>
         <form id="form-card-minimal" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="card_design" value="minimal">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set minimal card design">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -252,6 +259,7 @@
         </div>
         <p class="text-gray-600 mb-4 text-sm">Premium design with enhanced visual elements, larger images, and prominent featured indicators. Perfect for highlighting important content.</p>
         <form id="form-card-featured" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="card_design" value="featured">
           <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-all duration-300 shadow-md" aria-label="Set featured card design">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">

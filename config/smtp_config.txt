@@ -1,0 +1,29 @@
+# SMTP Configuration for LilyOpenCMS (DirectAdmin)
+# This file contains SMTP settings for email delivery
+
+# SMTP Server Configuration (DirectAdmin)
+smtp_server=mail.hystory.id
+smtp_port=587
+smtp_use_tls=true
+smtp_use_ssl=false
+
+# Authentication (DirectAdmin Email)
+smtp_username=admin@hystory.id
+smtp_password=yainiadminpassword
+
+# Email Settings
+mail_default_sender=admin@hystory.id
+mail_sender_name=LilyOpenCMS
+mail_reply_to=admin@hystory.id
+
+# Rate Limiting
+email_rate_limit_per_hour=10
+email_rate_limit_per_day=50
+
+# Security
+smtp_verify_ssl=true
+smtp_timeout=30
+
+# Development/Testing
+smtp_debug=false
+smtp_suppress_send=false

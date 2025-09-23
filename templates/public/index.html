@@ -52,7 +52,7 @@
                       {% if news_item.is_news %}
                           <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-[10px] font-semibold ml-auto flex-shrink-0">Berita</span>
                       {% else %}
-                          <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-[10px] font-semibold ml-auto flex-shrink-0">Artikel</span>
+                          <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-[10px] font-semibold ml-auto flex-shrink-0">Cerita</span>
                       {% endif %}
                       {% if news_item.is_premium %}
                           <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-[10px] font-semibold ml-1 flex-shrink-0">Premium</span>
@@ -94,7 +94,7 @@
         <div class="flex justify-between items-center mb-6 border-b border-border pb-3">
           <h2 class="text-2xl lg:text-3xl font-semibold text-foreground flex items-center gap-x-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6 text-primary/80"><path fill-rule="evenodd" d="M4.25 2A2.25 2.25 0 0 0 2 4.25v11.5A2.25 2.25 0 0 0 4.25 18h11.5A2.25 2.25 0 0 0 18 15.75V4.25A2.25 2.25 0 0 0 15.75 2H4.25ZM2.5 7.75v5.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-5.5H2.5Zm11-3H2.5V4.75c0-.138.112-.25.25-.25h10.5a.25.25 0 0 1 .25.25V5Z" clip-rule="evenodd" /></svg>
-            Artikel Terbaru
+            Cerita Terbaru
           </h2>
           <a href="{{ url_for('main.news') }}?type=articles" class="text-sm font-semibold text-primary hover:underline">Lihat Semua →</a>
         </div>
@@ -141,7 +141,7 @@
                            {% if article_item.is_news %}
                              <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Berita</span>
                            {% else %}
-                             <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Artikel</span>
+                             <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
                            {% endif %}
                            {% if article_item.is_premium %}
                              <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">Premium</span>
@@ -251,7 +251,7 @@
                            {% if news_item.is_news %}
                              <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Berita</span>
                            {% else %}
-                             <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Artikel</span>
+                             <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
                            {% endif %}
                            {% if news_item.is_premium %}
                              <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold">Premium</span>
@@ -359,7 +359,7 @@
                                 {% if news_item.is_news %}
                                   <span class="bg-primary text-primary-foreground px-1.5 py-0 rounded text-[9px] font-semibold border border-primary-foreground/20 shadow-sm">Berita</span>
                                 {% else %}
-                                  <span class="bg-secondary text-secondary-foreground px-1.5 py-0 rounded text-[9px] font-semibold border border-secondary-foreground/20 shadow-sm">Artikel</span>
+                                  <span class="bg-secondary text-secondary-foreground px-1.5 py-0 rounded text-[9px] font-semibold border border-secondary-foreground/20 shadow-sm">Cerita</span>
                                 {% endif %}
                                 {% if news_item.is_premium %}
                                   <span class="bg-yellow-100 text-yellow-800 px-1.5 py-0 rounded text-[9px] font-semibold border border-yellow-200 shadow-sm">Premium</span>
@@ -478,7 +478,7 @@
                       {% if item.is_news %}
                         <span class="bg-primary text-primary-foreground px-2 py-1 rounded text-[11px] font-semibold">Berita</span>
                       {% else %}
-                        <span class="bg-secondary text-secondary-foreground px-2 py-1 rounded text-[11px] font-semibold">Artikel</span>
+                        <span class="bg-secondary text-secondary-foreground px-2 py-1 rounded text-[11px] font-semibold">Cerita</span>
                       {% endif %}
                       {% if item.is_premium %}
                         <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-[11px] font-semibold">Premium</span>

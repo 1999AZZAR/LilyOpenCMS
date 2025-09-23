@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} - Profile{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+<style>
+.profile-header {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    color: hsl(var(--primary-foreground));
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid hsl(var(--primary-foreground));
+    object-fit: cover;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s ease;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.05);
+}
+
+.profile-info h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: hsl(var(--primary-foreground));
+    position: relative;
+    z-index: 1;
+}
+
+.profile-bio {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0;
+    color: hsl(var(--primary-foreground));
+    position: relative;
+    z-index: 1;
+}
+
+.profile-meta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-meta span {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: hsl(var(--primary-foreground));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: hsl(var(--card));
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid hsl(var(--border));
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)));
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: hsl(var(--primary) / 0.3);
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: hsl(var(--primary));
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.content-section {
+    background: hsl(var(--card));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    transition: all 0.3s ease;
+}
+
+.content-section:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.content-section h3 {
+    margin-bottom: 1rem;
+    color: hsl(var(--primary));
+    border-bottom: 2px solid hsl(var(--primary));
+    padding-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.content-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.content-item:hover {
+    background-color: hsl(var(--muted));
+    transform: translateX(4px);
+}
+
+.content-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.content-thumbnail {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-right: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.content-item:hover .content-thumbnail {
+    transform: scale(1.05);
+}
+
+.content-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: hsl(var(--foreground));
+    font-weight: 600;
+}
+
+.content-info h4 a {
+    color: hsl(var(--foreground));
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.content-info h4 a:hover {
+    color: hsl(var(--primary));
+}
+
+.content-info p {
+    margin: 0;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+}
+
+.follow-btn {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.follow-btn:hover {
+    background: hsl(var(--secondary));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.follow-btn.following {
+    background: hsl(var(--accent));
+}
+
+.follow-btn.following:hover {
+    background: hsl(var(--accent));
+    opacity: 0.8;
+}
+
+.nav-tabs {
+    border-bottom: 2px solid hsl(var(--border));
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 0;
+    background: hsl(var(--card));
+    border-radius: 12px 12px 0 0;
+    padding: 0.5rem;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: hsl(var(--muted-foreground));
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    position: relative;
+}
+
+.nav-tabs .nav-link:hover {
+    color: hsl(var(--primary));
+    background-color: hsl(var(--muted) / 0.5);
+}
+
+.nav-tabs .nav-link.active {
+    color: hsl(var(--primary));
+    background-color: hsl(var(--primary) / 0.1);
+}
+
+.social-links {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.social-links a {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    text-align: center;
+    line-height: 40px;
+    color: hsl(var(--primary-foreground));
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.social-links a:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        text-align: center;
+        padding: 2rem 0;
+    }
+    
+    .profile-info h1 {
+        font-size: 2rem;
+    }
+    
+    .profile-meta {
+        justify-content: center;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .nav-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:gap-8">
+                <div class="text-center lg:text-left mb-6 lg:mb-0">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture }}" alt="{{ user.username }}" class="profile-avatar mx-auto lg:mx-0">
+                    {% else %}
+                        <div class="profile-avatar mx-auto lg:mx-0 flex items-center justify-center" style="background: rgba(255, 255, 255, 0.2); font-size: 3rem;">
+                            {{ user.username[0].upper() }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="text-center lg:text-left">
+                    <div class="profile-info">
+                        <h1>{{ user.username }}</h1>
+                        {% if profile and profile.short_bio %}
+                            <p class="profile-bio">{{ profile.short_bio }}</p>
+                        {% elif user.bio %}
+                            <p class="profile-bio">{{ user.bio }}</p>
+                        {% endif %}
+                        
+                        <div class="profile-meta">
+                            {% if profile and profile.location %}
+                                <span><i class="fas fa-map-marker-alt mr-1"></i> {{ profile.location }}</span>
+                            {% endif %}
+                            {% if profile and profile.pronouns %}
+                                <span><i class="fas fa-user mr-1"></i> {{ profile.pronouns }}</span>
+                            {% endif %}
+                            <span><i class="fas fa-calendar mr-1"></i> Joined {{ user.created_at.strftime('%B %Y') }}</span>
+                        </div>
+                        
+                        {% if profile and profile.social_links %}
+                            <div class="social-links">
+                                {% for platform, url in profile.social_links.items() %}
+                                    {% if url %}
+                                        <a href="{{ url }}" target="_blank" rel="noopener" title="{{ platform|title }}">
+                                            <i class="fab fa-{{ platform }}"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="text-center lg:text-right mt-6 lg:mt-0">
+                {% if current_user.is_authenticated and current_user.id != user.id %}
+                    <button class="follow-btn" id="followBtn" data-user-id="{{ user.id }}">
+                        {% if is_following %}
+                            <i class="fas fa-user-check mr-2"></i> Following
+                        {% else %}
+                            <i class="fas fa-user-plus mr-2"></i> Follow
+                        {% endif %}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_stories or 0 }}</div>
+            <div class="stat-label">Stories</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_albums or 0 }}</div>
+            <div class="stat-label">Albums</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_views or 0 }}</div>
+            <div class="stat-label">Total Views</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_followers or 0 }}</div>
+            <div class="stat-label">Followers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_following or 0 }}</div>
+            <div class="stat-label">Following</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_reads or 0 }}</div>
+            <div class="stat-label">Total Reads</div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <a class="nav-link active" href="{{ url_for('main.public_user_profile', username=user.username) }}">
+            <i class="fas fa-user mr-2"></i> Overview
+        </a>
+        <a class="nav-link" href="{{ url_for('main.public_user_stats', username=user.username) }}">
+            <i class="fas fa-chart-bar mr-2"></i> Statistics
+        </a>
+        <a class="nav-link" href="{{ url_for('main.public_user_content', username=user.username, tab='stories') }}">
+            <i class="fas fa-book mr-2"></i> Content
+        </a>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="content-section">
+            <h3><i class="fas fa-book mr-2"></i> Recent Stories</h3>
+            {% if published_stories %}
+                {% for story in published_stories %}
+                    <div class="content-item">
+                        {% if story.image %}
+                            <img src="{{ url_for('static', filename=story.image.filepath.split('static/')[-1]) }}" 
+                                 alt="{{ story.title }}" class="content-thumbnail">
+                        {% else %}
+                            <div class="content-thumbnail flex items-center justify-center bg-muted text-muted-foreground">
+                                <i class="fas fa-book"></i>
+                            </div>
+                        {% endif %}
+                        <div class="content-info">
+                            <h4><a href="{{ url_for('main.news_detail', news_id=story.id, news_title=story.title.replace(' ', '-').lower()) }}">{{ story.title }}</a></h4>
+                            <p>{{ story.created_at.strftime('%B %d, %Y') }} • {{ story.read_count or 0 }} reads</p>
+                        </div>
+                    </div>
+                {% endfor %}
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('main.public_user_content', username=user.username, tab='stories') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                        <i class="fas fa-arrow-right mr-2"></i> View All Stories
+                    </a>
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-muted-foreground">
+                    <i class="fas fa-book text-4xl mb-4 opacity-50"></i>
+                    <p>No stories published yet.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="content-section">
+            <h3><i class="fas fa-images mr-2"></i> Recent Albums</h3>
+            {% if published_albums %}
+                {% for album in published_albums %}
+                    <div class="content-item">
+                        {% if album.cover_image %}
+                            <img src="{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}" 
+                                 alt="{{ album.title }}" class="content-thumbnail">
+                        {% else %}
+                            <div class="content-thumbnail flex items-center justify-center bg-muted text-muted-foreground">
+                                <i class="fas fa-images"></i>
+                            </div>
+                        {% endif %}
+                        <div class="content-info">
+                            <h4><a href="{{ url_for('main.album_detail', album_id=album.id, album_title=album.title.replace(' ', '-').lower()) }}">{{ album.title }}</a></h4>
+                            <p>{{ album.created_at.strftime('%B %d, %Y') }} • {{ album.total_reads or 0 }} reads</p>
+                        </div>
+                    </div>
+                {% endfor %}
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('main.public_user_content', username=user.username, tab='albums') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                        <i class="fas fa-arrow-right mr-2"></i> View All Albums
+                    </a>
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-muted-foreground">
+                    <i class="fas fa-images text-4xl mb-4 opacity-50"></i>
+                    <p>No albums published yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Comments -->
+    {% if recent_comments %}
+        <div class="content-section">
+            <h3><i class="fas fa-comments mr-2"></i> Recent Comments</h3>
+            {% for comment in recent_comments %}
+                <div class="content-item">
+                    <div class="content-info">
+                        <h4>{{ comment.content[:100] }}{% if comment.content|length > 100 %}...{% endif %}</h4>
+                        <p>{{ comment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const followBtn = document.getElementById('followBtn');
+    if (followBtn) {
+        followBtn.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            const isFollowing = this.classList.contains('following');
+            
+            // Disable button during request
+            this.disabled = true;
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            
+            try {
+                const response = await fetch(`/api/profile/{{ user.username }}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.action === 'followed') {
+                        this.innerHTML = '<i class="fas fa-user-check mr-2"></i> Following';
+                        this.classList.add('following');
+                    } else {
+                        this.innerHTML = '<i class="fas fa-user-plus mr-2"></i> Follow';
+                        this.classList.remove('following');
+                    }
+                    
+                    // Update follower count in stats
+                    const followerCard = document.querySelector('.stat-card:nth-child(4) .stat-number');
+                    if (followerCard) {
+                        followerCard.textContent = data.follower_count;
+                    }
+                    
+                    // Show success message
+                    showToast('success', data.action === 'followed' ? 'Now following {{ user.username }}' : 'Unfollowed {{ user.username }}');
+                } else {
+                    throw new Error(data.error || 'Failed to update follow status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.innerHTML = originalText;
+                showToast('error', 'Failed to update follow status');
+            } finally {
+                this.disabled = false;
+            }
+        });
+    }
+    
+    // Simple toast function
+    function showToast(type, message) {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-5 right-5 p-4 rounded-lg text-white z-50 transition-all duration-300 ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
+
+{% block title %}{{ album.title }} - Detail Album - Dasbor Pengguna{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-foreground">{{ album.title }}</h1>
+                    {% if album.description %}
+                    <p class="mt-2 text-muted-foreground">{{ album.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('user_albums.list_albums') }}" 
+                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Album
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-6" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="{{ url_for('user_albums.list_albums') }}" class="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground">
+                        <i class="fas fa-home mr-2"></i>
+                        Album Saya
+                    </a>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right text-muted-foreground mx-2"></i>
+                        <span class="text-sm font-medium text-foreground">{{ album.title }}</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Album Header -->
+        <div class="bg-card rounded-lg shadow-sm border border-border p-6 mb-6">
+            <div class="flex items-start justify-between mb-6">
+                <div class="flex items-start space-x-6">
+                    <div class="flex-shrink-0">
+                        {% if album.cover_image and album.cover_image.filepath %}
+                        <img src="{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}" alt="Sampul Album" class="w-32 h-40 object-cover rounded-lg shadow-md">
+                        {% else %}
+                        <div class="w-32 h-40 bg-primary/10 rounded-lg shadow-md flex items-center justify-center">
+                            <i class="fas fa-book-open text-4xl text-primary"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2">
+                            <h1 class="text-3xl font-bold text-foreground">{{ album.title }}</h1>
+                        <div class="flex items-center space-x-2">
+                            {% if album.is_premium %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                                <i class="fas fa-crown mr-1"></i>Premium
+                            </span>
+                            {% endif %}
+                            {% if album.age_rating %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" title="Age Rating">
+                                <i class="fas fa-user-shield mr-1"></i>{{ album.age_rating }}
+                            </span>
+                            {% endif %}
+                            {% if not album.is_visible %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-eye-slash mr-1"></i>Tersembunyi
+                            </span>
+                            {% endif %}
+                            {% if album.is_archived %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-archive mr-1"></i>Diarsipkan
+                            </span>
+                            {% endif %}
+                            {% if album.is_completed %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check mr-1"></i>Selesai
+                            </span>
+                            {% endif %}
+                            {% if album.is_hiatus %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                                <i class="fas fa-pause mr-1"></i>Ditangguhkan
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                        <p class="text-muted-foreground mb-4">{{ album.description or 'Tidak ada deskripsi' }}</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="text-muted-foreground">Penulis:</span>
+                                <span class="font-medium text-foreground">{{ album.author if album.author else current_user.username }}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted-foreground">Kategori:</span>
+                                <span class="font-medium text-foreground">{{ album.category.name if album.category else 'Tanpa kategori' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted-foreground">Batas Usia:</span>
+                                <span class="font-medium text-foreground">{{ album.age_rating or '-' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted-foreground">Bab:</span>
+                                <span class="font-medium text-foreground">{{ album.total_chapters or 0 }}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted-foreground">Total Dilihat:</span>
+                                <span class="font-medium text-foreground">{{ album.total_views or 0 }}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted-foreground">Total Dibaca:</span>
+                                <span class="font-medium text-foreground">{{ album.total_reads or 0 }}</span>
+                            </div>
+                        </div>
+                </div>
+            </div>
+                <div class="flex flex-col space-y-2">
+                    <a href="{{ url_for('user_albums.edit_album', album_id=album.id) }}" 
+                       class="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-primary/90">
+                        <i class="fas fa-edit mr-2"></i>Edit Album
+                    </a>
+                    <a href="{{ url_for('user_albums.album_chapters', album_id=album.id) }}" 
+                       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-list mr-2"></i>Kelola Bab
+                    </a>
+                    <button onclick="toggleAlbumVisibility({{ album.id }})" 
+                            class="bg-{{ 'red' if album.is_visible else 'green' }}-600 hover:bg-{{ 'red' if album.is_visible else 'green' }}-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-{{ 'eye-slash' if album.is_visible else 'eye' }} mr-2"></i>{{ 'Sembunyikan' if album.is_visible else 'Tampilkan' }} Album
+                    </button>
+                </div>
+        </div>
+    </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-primary/10 text-primary">
+                        <i class="fas fa-list text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-muted-foreground">Total Bab</p>
+                        <p class="text-2xl font-semibold text-foreground">{{ album.total_chapters or 0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-eye text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-muted-foreground">Total Dilihat</p>
+                        <p class="text-2xl font-semibold text-foreground">{{ album.total_views or 0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-bookmark text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-muted-foreground">Total Dibaca</p>
+                        <p class="text-2xl font-semibold text-foreground">{{ album.total_reads or 0 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+                        <i class="fas fa-star text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-muted-foreground">Rating Rata-rata</p>
+                        <p class="text-2xl font-semibold text-foreground">{{ "%.1f"|format(album.average_rating or 0) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chapters Section -->
+        <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-foreground">Bab</h2>
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('user_albums.album_chapters', album_id=album.id) }}" 
+                       class="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-primary/90">
+                        <i class="fas fa-plus mr-2"></i>Tambah Bab
+                    </a>
+                    <a href="{{ url_for('user_albums.album_chapters', album_id=album.id) }}" 
+                       class="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-secondary/90">
+                        <i class="fas fa-edit mr-2"></i>Kelola Semua
+                    </a>
+                </div>
+            </div>
+
+            {% if album.chapters %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-secondary">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Bab</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Judul</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Artikel Sumber</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-card divide-y divide-border">
+                        {% for chapter in album.chapters %}
+                        <tr class="hover:bg-secondary/50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-lg">
+                                        <span class="text-sm font-bold text-primary">{{ chapter.chapter_number }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-foreground">{{ chapter.chapter_title }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-foreground">{{ chapter.news.title if chapter.news else 'Tidak ada artikel sumber' }}</div>
+                                {% if chapter.news %}
+                                <div class="text-xs text-muted-foreground">{{ chapter.news.created_at.strftime('%Y-%m-%d') if chapter.news.created_at else 'Tanggal tidak diketahui' }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if chapter.is_visible %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check mr-1"></i>Terpublikasi
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                                    <i class="fas fa-clock mr-1"></i>Tersembunyi
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+            {% else %}
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-list text-3xl text-primary"></i>
+                </div>
+                <h3 class="text-lg font-medium text-foreground mb-2">Belum ada bab</h3>
+                <p class="text-muted-foreground mb-6">Mulai bangun album Anda dengan menambahkan bab dari artikel yang sudah ada.</p>
+                <a href="{{ url_for('user_albums.album_chapters', album_id=album.id) }}" 
+                   class="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium transition-colors hover:bg-primary/90">
+                    <i class="fas fa-plus mr-2"></i>Tambah Bab Pertama
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-card rounded-lg shadow-sm border border-border p-6 mt-6">
+            <h2 class="text-xl font-semibold text-foreground mb-4">Aktivitas Terbaru</h2>
+            <div class="space-y-4">
+                {% for activity in recent_activities %}
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <i class="fas fa-{{ activity.icon }} text-primary text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-foreground">{{ activity.message }}</p>
+                        <p class="text-xs text-muted-foreground">{{ activity.timestamp }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not recent_activities %}
+                <p class="text-muted-foreground text-center py-4">Tidak ada aktivitas terbaru</p>
+                {% endif %}
+            </div>
+        </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-foreground mb-4" id="confirm-title">Konfirmasi Tindakan</h3>
+            <p class="text-muted-foreground mb-6" id="confirm-message">Apakah Anda yakin ingin melakukan tindakan ini?</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeConfirmModal()" class="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-secondary/90">
+                    Batal
+                </button>
+                <button id="confirm-action" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Konfirmasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function toggleAlbumVisibility(albumId) {
+    fetchWithCSRF(`/user/albums/${albumId}/toggle-visibility`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Kesalahan: ' + data.message);
+        }
+    });
+}
+
+function removeChapter(albumId, chapterId) {
+    showConfirmModal(
+        'Hapus Bab',
+        'Apakah Anda yakin ingin menghapus bab ini dari album? Ini tidak akan menghapus artikel sumber.',
+        () => {
+            fetchWithCSRF(`/user/albums/${albumId}/chapters/${chapterId}/remove`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+        }
+    );
+}
+
+function showConfirmModal(title, message, action) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-action').onclick = action;
+    document.getElementById('confirm-modal').classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.add('hidden');
+}
+</script>
+{% endblock %}

@@ -17,6 +17,7 @@ from .routes_roles import *
 from .routes_analytics import *
 from .routes_video import *
 from .routes_albums import *
+from .routes_user_albums import *
 from .routes_seo import *
 from .routes_user_dashboard import *
 from .routes_library import *
@@ -24,6 +25,8 @@ from .routes_public_api import *
 from .routes_api_xlate import *
 from .routes_external_auth import *
 from .routes_swagger import *
+from .routes_user_api import user_api_bp
+from .routes_user_xlate import user_xlate_bp
 
 __all__ = [
     "main_blueprint",
@@ -43,6 +46,7 @@ __all__ = [
     "routes_analytics",
     "routes_video",
     "routes_albums",
+    "routes_user_albums",
     "routes_seo",
     "routes_user_dashboard",
     "routes_library",
@@ -50,4 +54,6 @@ __all__ = [
     "routes_api_xlate",
     "routes_external_auth",
     "routes_swagger",
+    "user_api_bp",
+    "user_xlate_bp",
 ]

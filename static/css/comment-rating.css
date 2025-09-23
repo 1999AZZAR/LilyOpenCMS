@@ -1,5 +1,37 @@
 /* Comment and Rating System Styles - Updated to avoid design system conflicts */
 
+/* ===== COMMENT SOURCE BADGES ===== */
+
+.comment-source {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+.comment-source.bg-primary {
+    background-color: var(--primary-color, #3b82f6) !important;
+    color: var(--primary-foreground, #ffffff) !important;
+}
+
+.comment-source.bg-secondary {
+    background-color: var(--secondary-color, #6b7280) !important;
+    color: var(--secondary-foreground, #ffffff) !important;
+}
+
+.dark .comment-source.bg-primary {
+    background-color: var(--primary-color, #2563eb) !important;
+}
+
+.dark .comment-source.bg-secondary {
+    background-color: var(--secondary-color, #4b5563) !important;
+}
+
 /* ===== LOADING AND ERROR STATES ===== */
 
 .rating-loading {
@@ -136,22 +168,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
-    color: #6b7280;
+    padding: 1.5rem;
+    transition: opacity 0.3s ease;
 }
 
-.dark .comments-loading-more {
-    color: #9ca3af;
-}
-
-.comments-loading-more .spinner {
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid #e5e7eb;
-    border-top: 2px solid #3b82f6;
-    border-radius: 50%;
+.comments-loading-more .spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 2px;
     animation: spin 1s linear infinite;
-    margin-right: 0.5rem;
+}
+
+.auto-load-indicator {
+    transition: opacity 0.3s ease;
+}
+
+.auto-load-indicator[style*="display: none"] {
+    opacity: 0;
 }
 
 /* No Comments State */
@@ -174,23 +207,18 @@
 
 /* Comments Loading State */
 .comments-loading {
-    text-align: center;
-    padding: 2rem 1rem;
-    color: #6b7280;
-}
-
-.dark .comments-loading {
-    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+    margin: 1rem 0;
 }
 
 .comments-loading .spinner-border {
     width: 2rem;
     height: 2rem;
-    border: 2px solid #e5e7eb;
-    border-top: 2px solid #3b82f6;
-    border-radius: 50%;
+    border-width: 2px;
     animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
 }
 
 /* Comment Item Improvements */

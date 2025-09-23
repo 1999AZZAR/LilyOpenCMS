@@ -18,6 +18,7 @@
         </button>
       </div>
       <form id="change-password-form" class="space-y-4" role="form" aria-label="Change password form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div>
           <label for="current-password" class="block text-gray-700 font-medium mb-2">Kata Sandi Saat Ini</label>
           <input type="password" id="current-password" class="w-full p-3 rounded-lg bg-white border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" required aria-required="true">
@@ -323,6 +324,7 @@
         <h2 id="profile-edit-modal-title" class="text-xl font-bold text-indigo-600">Edit Profil</h2>
       </div>
       <form id="profile-edit-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div>
           <label for="edit-full-name" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
           <input type="text" id="edit-full-name" class="w-full p-3 rounded-lg bg-white border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
@@ -351,7 +353,7 @@
 
 // Load profile data
 function loadProfileData() {
-    fetch('/api/account/profile')
+    fetchWithCSRF('/api/account/profile')
         .then(response => response.json())
         .then(data => {
             document.getElementById('profile-full-name').textContent = data.full_name || 'Tidak diisi';
@@ -385,7 +387,7 @@ function loadProfileData() {
 
 // Refresh all stats
 function refreshStats() {
-    fetch('/api/account/stats')
+    fetchWithCSRF('/api/account/stats')
         .then(response => response.json())
         .then(data => {
             document.getElementById('total-articles').textContent = data.total_articles || 0;
@@ -412,7 +414,7 @@ function editPasswordSettings() {
 // Edit profile settings
 function editProfileSettings() {
     // Load current profile data into the modal
-    fetch('/api/account/profile')
+    fetchWithCSRF('/api/account/profile')
         .then(response => response.json())
         .then(data => {
             document.getElementById('edit-full-name').value = data.full_name || '';
@@ -453,7 +455,7 @@ function loadOwnedAlbums(page = 1) {
         type: type
     });
     
-    fetch(`/api/account/albums?${params}`)
+    fetchWithCSRF(`/api/account/albums?${params}`)
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('owned-albums-list');
@@ -535,7 +537,7 @@ function updateAlbumsPagination(data) {
 
 // Load recent comments
 function refreshComments() {
-    fetch('/api/account/comments')
+    fetchWithCSRF('/api/account/comments')
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('recent-comments-list');
@@ -562,7 +564,7 @@ function refreshComments() {
 
 // Load recent activity
 function refreshActivity() {
-    fetch('/api/account/activity')
+    fetchWithCSRF('/api/account/activity')
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('recent-activity-list');
@@ -612,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            const response = await fetch('/api/account/profile', {
+            const response = await fetchWithCSRF('/api/account/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'

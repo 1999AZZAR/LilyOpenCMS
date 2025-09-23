@@ -8,6 +8,7 @@ from routes import main_blueprint
 from .common_imports import *
 from models import UserRole
 from flask import jsonify
+from flask import send_file
 
 
 # Asset Optimization API Routes
@@ -100,6 +101,101 @@ def api_optimize_ssr_cache():
             'success': False,
             'message': f'Error optimizing SSR cache: {str(e)}'
         }), 500
+
+
+@main_blueprint.route("/api/ssr-optimization/stats", methods=["GET"])
+@login_required
+def api_get_ssr_stats():
+    # Allow access only to ADMIN and SUPERUSER
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    try:
+        from optimizations.ssr_optimization import get_ssr_stats
+        stats = get_ssr_stats()
+        return jsonify({ 'success': True, 'stats': stats })
+    except Exception as e:
+        return jsonify({ 'success': False, 'message': str(e) }), 500
+
+
+@main_blueprint.route("/api/ssr-optimization/cache-stats", methods=["GET"])
+@login_required
+def api_get_ssr_cache_stats():
+    # Allow access only to ADMIN and SUPERUSER
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    try:
+        from optimizations.ssr_optimization import get_ssr_optimizer
+        optimizer = get_ssr_optimizer()
+        stats = optimizer.get_cache_stats()
+        return jsonify({ 'success': True, 'cache': stats })
+    except Exception as e:
+        return jsonify({ 'success': False, 'message': str(e) }), 500
+
+
+# SSR Settings API
+@main_blueprint.route("/api/ssr-optimization/settings", methods=["GET"])
+@login_required
+def api_get_ssr_settings():
+    # Allow access only to ADMIN and SUPERUSER
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    try:
+        import os, json
+        settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+        data = {}
+        if os.path.exists(settings_path):
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+        ssr = data.get('ssr', {
+            'template_caching': 'enabled',
+            'cache_duration': 300,
+            'max_cache_size': 100,
+            'auto_clear': 'disabled'
+        })
+        return jsonify({'success': True, 'ssr': ssr})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@main_blueprint.route("/api/ssr-optimization/settings", methods=["POST"])
+@login_required
+def api_set_ssr_settings():
+    # Allow access only to ADMIN and SUPERUSER
+    if not (current_user.is_admin_tier() or current_user.is_owner()):
+        abort(403)
+    try:
+        import os, json
+        payload = request.get_json() or {}
+        template_caching = (payload.get('template_caching') or 'enabled')
+        cache_duration = int(payload.get('cache_duration') or 300)
+        max_cache_size = int(payload.get('max_cache_size') or 100)
+        auto_clear = (payload.get('auto_clear') or 'disabled')
+
+        settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+        data = {}
+        if os.path.exists(settings_path):
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+        data['ssr'] = {
+            'template_caching': template_caching,
+            'cache_duration': cache_duration,
+            'max_cache_size': max_cache_size,
+            'auto_clear': auto_clear
+        }
+        with open(settings_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        return jsonify({'success': True, 'message': 'Pengaturan SSR disimpan', 'ssr': data['ssr']})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 # Performance Optimization API Routes
@@ -902,7 +998,7 @@ def api_list_backups():
         
         if os.path.exists(backup_dir):
             for filename in os.listdir(backup_dir):
-                if filename.endswith('.db') and filename.startswith('database_backup_'):
+                if filename.endswith('.db') and (filename.startswith('database_backup_') or filename.startswith('pre_restore_backup_')):
                     file_path = os.path.join(backup_dir, filename)
                     file_stat = os.stat(file_path)
                     
@@ -926,6 +1022,192 @@ def api_list_backups():
             'success': False,
             'message': f'Error listing backups: {str(e)}'
         }), 500
+
+
+@main_blueprint.route("/api/database/restore", methods=["POST"])
+@login_required
+def api_restore_database():
+    """Restore database from a selected backup (SQLite only)
+
+    Security safeguards:
+    - ADMIN or SUPERUSER only
+    - Only allows restoring files from the app's backups directory
+    - Whitelists filenames matching pattern 'database_backup_*.db'
+    - Creates an automatic pre-restore backup of the current DB
+    """
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+
+    try:
+        import os
+        import shutil
+        import re
+        from datetime import datetime
+        from flask import request
+
+        # Parse payload
+        payload = request.get_json(silent=True) or {}
+        filename = (payload.get('filename') or '').strip()
+        if not filename:
+            return jsonify({'success': False, 'message': 'filename is required'}), 400
+
+        # Validate filename strictly to prevent path traversal
+        if not re.fullmatch(r"database_backup_\d{8}_\d{6}\.db", filename):
+            return jsonify({'success': False, 'message': 'Invalid backup filename'}), 400
+
+        backup_dir = os.path.join(current_app.root_path, 'backups')
+        source_path = os.path.join(backup_dir, filename)
+
+        # Ensure the path exists and still resides under backup_dir
+        if not os.path.isfile(source_path) or not os.path.realpath(source_path).startswith(os.path.realpath(backup_dir) + os.sep):
+            return jsonify({'success': False, 'message': 'Backup file not found'}), 404
+
+        # Determine DB path (SQLite only, same logic as backup)
+        db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        if not db_uri.startswith('sqlite:///'):
+            return jsonify({'success': False, 'message': 'Restore only supported for SQLite databases'}), 400
+        db_path = db_uri.replace('sqlite:///', '')
+
+        if not os.path.exists(db_path):
+            alternative_paths = [
+                os.path.join(current_app.root_path, 'instance', 'LilyOpenCms.db'),
+                os.path.join(current_app.root_path, 'LilyOpenCms.db'),
+                'instance/LilyOpenCms.db',
+                'LilyOpenCms.db'
+            ]
+            for alt in alternative_paths:
+                if os.path.exists(alt):
+                    db_path = alt
+                    break
+
+        if not os.path.exists(db_path):
+            return jsonify({'success': False, 'message': 'Target database file not found'}), 404
+
+        os.makedirs(backup_dir, exist_ok=True)
+
+        # Close active DB connections before file operations
+        try:
+            from models import db
+            db.session.close()
+            db.engine.dispose()
+        except Exception:
+            # proceed best-effort
+            pass
+
+        # Create pre-restore safety backup of the current DB
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        pre_backup_filename = f"pre_restore_backup_{timestamp}.db"
+        pre_backup_path = os.path.join(backup_dir, pre_backup_filename)
+        shutil.copy2(db_path, pre_backup_path)
+
+        # Perform restore
+        shutil.copy2(source_path, db_path)
+
+        # Basic verification
+        if not os.path.exists(db_path) or os.path.getsize(db_path) == 0:
+            return jsonify({'success': False, 'message': 'Restore failed: target DB invalid after copy'}), 500
+
+        return jsonify({
+            'success': True,
+            'message': 'Database restored successfully',
+            'restore_info': {
+                'restored_from': filename,
+                'pre_restore_backup': pre_backup_filename,
+                'db_path': db_path
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error restoring database: {str(e)}'}), 500
+
+
+@main_blueprint.route("/api/database/download", methods=["GET"])
+@login_required
+def api_download_database():
+    """Download current SQLite DB or a chosen backup via ?filename= query.
+
+    Security:
+    - ADMIN/SUPERUSER only
+    - If filename provided, must match backup pattern and live under backups/
+    - Otherwise returns the active DB file
+    """
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+
+    try:
+        import os, re
+        from flask import request
+
+        filename = (request.args.get('filename') or '').strip()
+        backup_dir = os.path.join(current_app.root_path, 'backups')
+
+        # If requesting a backup file
+        if filename:
+            if not (re.fullmatch(r"database_backup_\d{8}_\d{6}\.db", filename) or re.fullmatch(r"pre_restore_backup_\d{8}_\d{6}\.db", filename)):
+                return jsonify({'success': False, 'message': 'Invalid backup filename'}), 400
+            path = os.path.join(backup_dir, filename)
+            if not os.path.isfile(path) or not os.path.realpath(path).startswith(os.path.realpath(backup_dir) + os.sep):
+                return jsonify({'success': False, 'message': 'Backup file not found'}), 404
+            return send_file(path, as_attachment=True, download_name=filename)
+
+        # Otherwise, serve the current DB
+        db_uri = current_app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        if not db_uri.startswith('sqlite:///'):
+            return jsonify({'success': False, 'message': 'Download supported for SQLite only'}), 400
+        db_path = db_uri.replace('sqlite:///', '')
+
+        if not os.path.exists(db_path):
+            alternatives = [
+                os.path.join(current_app.root_path, 'instance', 'LilyOpenCms.db'),
+                os.path.join(current_app.root_path, 'LilyOpenCms.db'),
+                'instance/LilyOpenCms.db',
+                'LilyOpenCms.db'
+            ]
+            for alt in alternatives:
+                if os.path.exists(alt):
+                    db_path = alt
+                    break
+
+        if not os.path.exists(db_path):
+            return jsonify({'success': False, 'message': 'Database file not found'}), 404
+
+        return send_file(db_path, as_attachment=True, download_name='LilyOpenCms.db')
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error downloading database: {str(e)}'}), 500
+
+
+@main_blueprint.route("/api/database/backup/delete", methods=["POST"])
+@login_required
+def api_delete_backup():
+    """Delete a backup file from backups/ by filename.
+
+    Security:
+    - ADMIN/SUPERUSER only
+    - Strict filename validation: database_backup_YYYYMMDD_HHMMSS.db
+    - Only deletes inside backups/ directory
+    """
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+
+    try:
+        import os, re
+        from flask import request
+
+        payload = request.get_json(silent=True) or {}
+        filename = (payload.get('filename') or '').strip()
+        if not filename:
+            return jsonify({'success': False, 'message': 'filename is required'}), 400
+        if not (re.fullmatch(r"database_backup_\d{8}_\d{6}\.db", filename) or re.fullmatch(r"pre_restore_backup_\d{8}_\d{6}\.db", filename)):
+            return jsonify({'success': False, 'message': 'Invalid backup filename'}), 400
+
+        backup_dir = os.path.join(current_app.root_path, 'backups')
+        path = os.path.join(backup_dir, filename)
+        if not os.path.isfile(path) or not os.path.realpath(path).startswith(os.path.realpath(backup_dir) + os.sep):
+            return jsonify({'success': False, 'message': 'Backup file not found'}), 404
+
+        os.remove(path)
+        return jsonify({'success': True, 'message': f'Backup {filename} deleted'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error deleting backup: {str(e)}'}), 500
 
 
 # System Management API Routes
@@ -1037,5 +1319,55 @@ def api_set_ads_settings():
         with open(settings_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         return jsonify({ 'success': True, 'message': 'Pengaturan iklan disimpan', 'ads': data['ads'] })
+    except Exception as e:
+        return jsonify({ 'success': False, 'message': str(e) }), 500
+
+
+# Maintenance Mode Settings (global)
+@main_blueprint.route("/api/settings/maintenance", methods=["GET"])
+@login_required
+def api_get_maintenance_settings():
+    if current_user.role != UserRole.SUPERUSER:
+        abort(403)
+    try:
+        import os, json
+        settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+        data = {}
+        if os.path.exists(settings_path):
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+        maintenance = data.get('maintenance', { 'enabled': False, 'message': 'Situs dalam mode perawatan' })
+        return jsonify({ 'success': True, 'maintenance': maintenance })
+    except Exception as e:
+        return jsonify({ 'success': False, 'message': str(e), 'maintenance': { 'enabled': False } })
+
+
+@main_blueprint.route("/api/settings/maintenance", methods=["POST"])
+@login_required
+def api_set_maintenance_settings():
+    if current_user.role != UserRole.SUPERUSER:
+        abort(403)
+    try:
+        import os, json
+        payload = request.get_json() or {}
+        enabled = bool(payload.get('enabled', False))
+        message = (payload.get('message') or 'Situs dalam mode perawatan')
+        settings_path = os.path.join(current_app.instance_path, 'app_settings.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+        data = {}
+        if os.path.exists(settings_path):
+            with open(settings_path, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+        data['maintenance'] = { 'enabled': enabled, 'message': message }
+        with open(settings_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return jsonify({ 'success': True, 'message': 'Pengaturan mode perawatan disimpan', 'maintenance': data['maintenance'] })
     except Exception as e:
         return jsonify({ 'success': False, 'message': str(e) }), 500

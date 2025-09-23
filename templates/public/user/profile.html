@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const userId = this.dataset.userId;
             const isFollowing = this.dataset.following === 'true';
             
-            fetch(`/api/follow/${userId}`, {
+            fetchWithCSRF(`/api/follow/${userId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

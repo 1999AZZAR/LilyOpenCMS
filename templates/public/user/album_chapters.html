@@ -1,0 +1,844 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
+
+{% block title %}Kelola Bab - {{ album.title }} - Dasbor Pengguna{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-foreground">Kelola Bab</h1>
+                    <p class="mt-2 text-muted-foreground">{{ album.title }}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('user_albums.album_detail', album_id=album.id) }}" 
+                       class="text-primary hover:text-foreground">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Album
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Explanation Section -->
+        <div class="bg-card border border-border rounded-lg p-6 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-primary text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-foreground mb-2">Mengelola Bab Album</h3>
+                    <p class="text-muted-foreground mb-3">
+                        <strong>{{ album.title }}</strong> is an album containing a collection of related articles as chapters. 
+                        Each article you add will become a chapter in this album.
+                    </p>
+                    <div class="bg-background rounded-lg p-4 border border-border">
+                        <h4 class="font-semibold text-foreground mb-2">Cara kerja:</h4>
+                        <ul class="text-muted-foreground space-y-1 text-sm">
+                            <li>• <strong>Artikel Tersedia:</strong> Menampilkan semua artikel Anda (publik dan draf)</li>
+                            <li>• <strong>Menambah Bab:</strong> Klik "Tambah" pada artikel untuk menjadikannya bab</li>
+                            <li>• <strong>Mengelola Urutan:</strong> Gunakan tombol panah untuk mengurutkan bab</li>
+                            <li>• <strong>Visibilitas Bab:</strong> Setiap bab memiliki visibilitas terpisah dari artikel sumbernya</li>
+                            <li>• <strong>Lihat Sumber:</strong> Klik ikon tautan untuk membuka artikel sumber di tab baru</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav class="flex mb-6" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                <li class="inline-flex items-center">
+                    <a href="{{ url_for('user_albums.list_albums') }}" class="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary">
+                        <i class="fas fa-home mr-2"></i>
+                        Album Saya
+                    </a>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right text-muted-foreground mx-2"></i>
+                        <a href="{{ url_for('user_albums.album_detail', album_id=album.id) }}" class="text-sm font-medium text-muted-foreground hover:text-primary">{{ album.title }}</a>
+                    </div>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right text-muted-foreground mx-2"></i>
+                        <span class="text-sm font-medium text-foreground">Bab</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-foreground">Kelola Bab</h2>
+                <p class="text-muted-foreground">{{ album.title }} - {{ chapters|length }} bab</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{{ url_for('user_profile.create_user_story', username=current_user.username) }}?album_id={{ album.id }}&album_title={{ album.title|urlencode }}" 
+                   class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Buat Bab Baru
+                </a>
+                <a href="{{ url_for('user_albums.album_detail', album_id=album.id) }}" 
+                   class="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/90 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali ke Album
+                </a>
+            </div>
+        </div>
+
+        <!-- Chapters List -->
+        <div class="bg-card rounded-lg shadow-sm border border-border p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-foreground">Bab Saat Ini</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-muted-foreground">{{ chapters|length }} bab</span>
+                    <a href="{{ url_for('user_profile.create_user_story', username=current_user.username) }}?album_id={{ album.id }}&album_title={{ album.title|urlencode }}" 
+                       class="bg-primary text-primary-foreground px-3 py-1 rounded text-sm font-medium transition-colors hover:bg-primary/90">
+                        <i class="fas fa-plus mr-1"></i>Tambah Bab
+                    </a>
+                    <button onclick="reorderChapters()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
+                        <i class="fas fa-sort mr-1"></i>Urutkan
+                    </button>
+                </div>
+            </div>
+
+            {% if chapters %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-secondary">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Urutan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Bab</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Judul</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Artikel Sumber</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-secondary-foreground uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-card divide-y divide-border" id="chapters-tbody">
+                        {% for chapter in chapters %}
+                        <tr class="hover:bg-secondary/50" data-chapter-id="{{ chapter.id }}" data-chapter-number="{{ chapter.chapter_number }}" data-chapter-title="{{ chapter.chapter_title }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-lg">
+                                        <span class="text-sm font-bold text-primary">{{ chapter.chapter_number }}</span>
+                                    </div>
+                                    <div class="ml-2 flex flex-col">
+                                        <button onclick="moveChapter({{ chapter.id }}, 'up')" 
+                                                class="text-muted-foreground hover:text-foreground text-xs" title="Move Up">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                        <button onclick="moveChapter({{ chapter.id }}, 'down')" 
+                                                class="text-muted-foreground hover:text-foreground text-xs" title="Move Down">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-foreground">Bab {{ chapter.chapter_number }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-foreground">{{ chapter.chapter_title }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-foreground">{{ chapter.news.title if chapter.news else 'Tidak ada artikel sumber' }}</div>
+                                {% if chapter.news %}
+                                <div class="text-xs text-muted-foreground">{{ chapter.news.created_at.strftime('%Y-%m-%d') if chapter.news.created_at else 'Tanggal tidak diketahui' }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if chapter.is_visible %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check mr-1"></i>Terpublikasi
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                                    <i class="fas fa-clock mr-1"></i>Tersembunyi
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-3">
+                                    <button onclick="editChapter({{ chapter.id }})" 
+                                            class="inline-flex items-center justify-center w-8 h-8 text-primary hover:text-primary/80 hover:bg-primary/10 rounded-lg transition-colors" 
+                                            title="Edit Bab">
+                                        <i class="fas fa-edit text-sm"></i>
+                                    </button>
+                                    <button onclick="toggleChapterVisibility({{ chapter.id }}, {{ chapter.is_visible|tojson }})" 
+                                            class="inline-flex items-center justify-center w-8 h-8 {% if chapter.is_visible %}text-green-600 hover:text-green-900 hover:bg-green-50{% else %}text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50{% endif %} rounded-lg transition-colors" 
+                                            title="{% if chapter.is_visible %}Sembunyikan Bab{% else %}Tampilkan Bab{% endif %}">
+                                        <i class="fas {% if chapter.is_visible %}fa-eye-slash{% else %}fa-eye{% endif %} text-sm"></i>
+                                    </button>
+                                    {% if chapter.news %}
+                                    <a href="{{ url_for('main.news_detail', news_id=chapter.news.id, news_title=safe_title(chapter.news.title)) }}" 
+                                       target="_blank" rel="noopener noreferrer"
+                                       class="inline-flex items-center justify-center w-8 h-8 text-primary hover:text-primary/80 hover:bg-primary/10 rounded-lg transition-colors" 
+                                       title="Lihat Artikel Sumber (Buka di tab baru)">
+                                        <i class="fas fa-external-link-alt text-sm"></i>
+                                    </a>
+                                    {% endif %}
+                                    <button onclick="removeChapter({{ chapter.id }})" 
+                                            class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" 
+                                            title="Hapus Bab">
+                                        <i class="fas fa-trash text-sm"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-list text-3xl text-primary"></i>
+                </div>
+                <h3 class="text-lg font-medium text-foreground mb-2">Belum ada bab</h3>
+                <p class="text-muted-foreground mb-6">Mulai bangun album Anda dengan membuat bab baru atau menambahkan artikel yang sudah ada.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{{ url_for('user_profile.create_user_story', username=current_user.username) }}?album_id={{ album.id }}&album_title={{ album.title|urlencode }}" 
+                       class="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium transition-colors hover:bg-primary/90">
+                        <i class="fas fa-plus mr-2"></i>Buat Bab Baru
+                    </a>
+                    <button onclick="openAddChapterModal()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-link mr-2"></i>Tambah dari Artikel
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Available Articles -->
+        <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+            <h2 class="text-lg font-semibold text-foreground mb-4">Artikel Tersedia</h2>
+            <p class="text-muted-foreground mb-4">Pilih artikel untuk ditambahkan sebagai bab ke album ini. Menampilkan semua artikel Anda (publik dan draf).</p>
+        
+            <div class="mb-4 space-y-4">
+                <!-- Search and Filters Row -->
+                <div class="flex flex-col lg:flex-row gap-4">
+                    <div class="flex-1">
+                        <input type="text" id="article-search" placeholder="Cari artikel..." 
+                               class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex items-center space-x-2">
+                            <label for="category-filter" class="text-sm font-medium text-foreground whitespace-nowrap">Kategori:</label>
+                            <select id="category-filter" class="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground min-w-[150px]">
+                                <option value="">Semua Kategori</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <label for="per-page" class="text-sm font-medium text-foreground whitespace-nowrap">Tampilkan:</label>
+                            <select id="per-page" class="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                                <option value="6" {% if request.args.get('per_page', '12') == '6' %}selected{% endif %}>6 per halaman</option>
+                                <option value="12" {% if request.args.get('per_page', '12') == '12' %}selected{% endif %}>12 per halaman</option>
+                                <option value="24" {% if request.args.get('per_page', '12') == '24' %}selected{% endif %}>24 per halaman</option>
+                                <option value="48" {% if request.args.get('per_page', '12') == '48' %}selected{% endif %}>48 per halaman</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter Results Info -->
+                <div id="filter-results-info" class="text-sm text-muted-foreground hidden">
+                    <span id="filtered-count">0</span> artikel ditampilkan (disaring dari <span id="total-count">{{ available_news|length }}</span> total)
+                    <button id="clear-filters" class="ml-2 text-primary hover:text-primary/80 underline">Hapus semua filter</button>
+                </div>
+            </div>
+        
+            <div id="available-articles" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for article in available_news %}
+                <div class="border border-border rounded-lg p-4 hover:border-primary/30 transition-colors article-card bg-background" 
+                     data-category="{{ article.category.name if article.category else 'Uncategorized' }}"
+                     data-title="{{ article.title|lower }}"
+                     data-description="{{ (article.description or '')|lower }}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-sm font-medium text-foreground line-clamp-2">{{ article.title }}</h3>
+                            <div class="flex items-center mt-1">
+                                {% if article.is_visible %}
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                                    <i class="fas fa-check mr-1"></i>Terpublikasi
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground mr-2">
+                                    <i class="fas fa-clock mr-1"></i>Draf
+                                </span>
+                                {% endif %}
+                                <span class="text-xs text-muted-foreground">{{ article.category.name if article.category else 'Uncategorized' }}</span>
+                            </div>
+                        </div>
+                        <button onclick="addArticleAsChapter({{ article.id }})" 
+                                class="bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium transition-colors ml-2 hover:bg-primary/90">
+                            <i class="fas fa-plus mr-1"></i>Tambah
+                        </button>
+                    </div>
+                    <p class="text-xs text-muted-foreground mb-2">{{ article.description[:100] + '...' if article.description and article.description|length > 100 else article.description or 'No description' }}</p>
+                    <div class="flex justify-between items-center text-xs text-muted-foreground">
+                        <span>{{ article.created_at.strftime('%Y-%m-%d') if article.created_at else 'Tanggal tidak diketahui' }}</span>
+                        <span>oleh {{ current_user.username }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        
+            <!-- Pagination -->
+            {% set avail_pagination = available_pagination if available_pagination is defined else pagination %}
+            {% if avail_pagination and avail_pagination.pages > 1 %}
+            <div class="mt-6 flex items-center justify-between">
+                <div class="text-sm text-muted-foreground">
+                    Menampilkan {{ avail_pagination.items|length }} dari {{ avail_pagination.total }} artikel
+                    {% if avail_pagination.total > avail_pagination.per_page %}
+                    (Halaman {{ avail_pagination.page }} dari {{ avail_pagination.pages }})
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <!-- Previous Page -->
+                    {% if avail_pagination.has_prev %}
+                    <a href="{{ url_for('user_albums.album_chapters', album_id=album.id, page=avail_pagination.prev_num, search=request.args.get('search', ''), category=request.args.get('category', ''), per_page=request.args.get('per_page', '12')) }}" 
+                       class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-secondary hover:text-foreground transition-colors">
+                        <i class="fas fa-chevron-left mr-1"></i>
+                        Sebelumnya
+                    </a>
+                    {% else %}
+                    <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground bg-secondary border border-border rounded-lg cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i>
+                        Sebelumnya
+                    </span>
+                    {% endif %}
+                    
+                    <!-- Page Numbers -->
+                    <div class="flex items-center space-x-1">
+                        {% for page_num in avail_pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                            {% if page_num %}
+                                {% if page_num != avail_pagination.page %}
+                                <a href="{{ url_for('user_albums.album_chapters', album_id=album.id, page=page_num, search=request.args.get('search', ''), category=request.args.get('category', ''), per_page=request.args.get('per_page', '12')) }}" 
+                                   class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-secondary hover:text-foreground transition-colors">
+                                    {{ page_num }}
+                                </a>
+                                {% else %}
+                                <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-primary-foreground bg-primary border border-primary rounded-lg">
+                                    {{ page_num }}
+                                </span>
+                                {% endif %}
+                            {% else %}
+                            <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground">
+                                ...
+                            </span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Next Page -->
+                    {% if avail_pagination.has_next %}
+                    <a href="{{ url_for('user_albums.album_chapters', album_id=album.id, page=avail_pagination.next_num, search=request.args.get('search', ''), category=request.args.get('category', ''), per_page=request.args.get('per_page', '12')) }}" 
+                       class="pagination-link inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground bg-background border border-border rounded-lg hover:bg-secondary hover:text-foreground transition-colors">
+                        Berikutnya
+                        <i class="fas fa-chevron-right ml-1"></i>
+                    </a>
+                    {% else %}
+                    <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-muted-foreground bg-secondary border border-border rounded-lg cursor-not-allowed">
+                        Berikutnya
+                        <i class="fas fa-chevron-right ml-1"></i>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if not available_news %}
+            <div class="text-center py-8">
+                <p class="text-muted-foreground">Tidak ada artikel yang tersedia untuk ditambahkan sebagai bab.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Chapter Modal -->
+<div id="add-chapter-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-foreground">Tambah Bab</h3>
+                <button onclick="closeAddChapterModal()" class="text-muted-foreground hover:text-foreground">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="add-chapter-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div>
+                    <label for="chapter-number" class="block text-sm font-medium text-foreground mb-2">
+                        Nomor Bab *
+                    </label>
+                    <input type="number" id="chapter-number" name="chapter_number" min="1" required
+                           class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                </div>
+                
+                <div>
+                    <label for="chapter-title" class="block text-sm font-medium text-foreground mb-2">
+                        Judul Bab *
+                    </label>
+                    <input type="text" id="chapter-title" name="chapter_title" required
+                           class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                </div>
+                
+                <div>
+                    <label for="article-select" class="block text-sm font-medium text-foreground mb-2">
+                        Artikel Sumber *
+                    </label>
+                    <select id="article-select" name="news_id" required
+                            class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                        <option value="">Select article</option>
+                        {% for article in available_news %}
+                        <option value="{{ article.id }}">{{ article.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeAddChapterModal()" 
+                            class="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-secondary/90">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-primary/90">
+                        Tambah Bab
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Chapter Modal -->
+<div id="edit-chapter-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-foreground">Edit Bab</h3>
+                <button onclick="closeEditChapterModal()" class="text-muted-foreground hover:text-foreground">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="edit-chapter-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" id="edit-chapter-id">
+                
+                <div>
+                    <label for="edit-chapter-number" class="block text-sm font-medium text-foreground mb-2">
+                        Nomor Bab *
+                    </label>
+                    <input type="number" id="edit-chapter-number" name="chapter_number" min="1" required
+                           class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                </div>
+                
+                <div>
+                    <label for="edit-chapter-title" class="block text-sm font-medium text-foreground mb-2">
+                        Judul Bab *
+                    </label>
+                    <input type="text" id="edit-chapter-title" name="chapter_title" required
+                           class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeEditChapterModal()" 
+                            class="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-secondary/90">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-primary/90">
+                        Perbarui Bab
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-card rounded-lg shadow-xl w-full max-w-md border border-border">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-foreground mb-4" id="confirm-title">Konfirmasi Tindakan</h3>
+            <p class="text-muted-foreground mb-6" id="confirm-message">Apakah Anda yakin ingin melakukan tindakan ini?</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeConfirmModal()" class="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium transition-colors hover:bg-secondary/90">
+                    Batal
+                </button>
+                <button id="confirm-action" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Konfirmasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal functions
+function openAddChapterModal() {
+    document.getElementById('add-chapter-modal').classList.remove('hidden');
+}
+
+function closeAddChapterModal() {
+    document.getElementById('add-chapter-modal').classList.add('hidden');
+    document.getElementById('add-chapter-form').reset();
+}
+
+function openEditChapterModal() {
+    document.getElementById('edit-chapter-modal').classList.remove('hidden');
+}
+
+function closeEditChapterModal() {
+    document.getElementById('edit-chapter-modal').classList.add('hidden');
+}
+
+function showConfirmModal(title, message, action) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-action').onclick = action;
+    document.getElementById('confirm-modal').classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.add('hidden');
+}
+
+// Form submissions
+document.getElementById('add-chapter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        news_id: document.getElementById('article-select').value,
+        chapter_title: document.getElementById('chapter-title').value,
+        chapter_number: document.getElementById('chapter-number').value
+    };
+    
+    fetchWithCSRF(`/user/albums/{{ album.id }}/chapters/add`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while adding the chapter');
+    });
+});
+
+document.getElementById('edit-chapter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const chapterId = document.getElementById('edit-chapter-id').value;
+    const formData = {
+        chapter_title: document.getElementById('edit-chapter-title').value,
+        chapter_number: document.getElementById('edit-chapter-number').value
+    };
+    
+    fetchWithCSRF(`/user/albums/{{ album.id }}/chapters/${chapterId}/edit`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the chapter');
+    });
+});
+
+// Chapter management functions
+function addArticleAsChapter(articleId) {
+    // Find the article title
+    const articleElement = document.querySelector(`[onclick="addArticleAsChapter(${articleId})"]`).closest('.border');
+    const title = articleElement.querySelector('h3').textContent;
+    
+    // Auto-fill the form
+    document.getElementById('article-select').value = articleId;
+    document.getElementById('chapter-title').value = title;
+    
+    // Auto-calculate next chapter number
+    const currentChapters = document.querySelectorAll('#chapters-tbody tr');
+    const nextNumber = currentChapters.length + 1;
+    document.getElementById('chapter-number').value = nextNumber;
+    
+    openAddChapterModal();
+}
+
+function editChapter(chapterId) {
+    const row = document.querySelector(`[data-chapter-id="${chapterId}"]`);
+    if (!row) return;
+    // Prefer data attributes for reliability
+    let number = row.getAttribute('data-chapter-number');
+    let title = row.getAttribute('data-chapter-title');
+    // Fallbacks in case attributes are missing
+    if (!number) {
+        const numberEl = row.querySelector('td:nth-child(1) span.text-primary');
+        number = numberEl ? numberEl.textContent.trim() : '';
+    }
+    if (!title) {
+        const titleEl = row.querySelector('td:nth-child(3) .text-sm');
+        title = titleEl ? titleEl.textContent.trim() : '';
+    }
+
+    document.getElementById('edit-chapter-id').value = chapterId;
+    document.getElementById('edit-chapter-number').value = number;
+    document.getElementById('edit-chapter-title').value = title;
+
+    openEditChapterModal();
+}
+
+function removeChapter(chapterId) {
+    showConfirmModal(
+        'Hapus Bab',
+        'Apakah Anda yakin ingin menghapus bab ini dari album? Ini tidak akan menghapus artikel sumber.',
+        () => {
+            fetchWithCSRF(`/user/albums/{{ album.id }}/chapters/${chapterId}/remove`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while removing the chapter');
+            });
+        }
+    );
+}
+
+function toggleChapterVisibility(chapterId, currentVisibility) {
+    const action = currentVisibility ? 'hide' : 'show';
+    const message = currentVisibility ? 
+        'Apakah Anda yakin ingin menyembunyikan bab ini?' : 
+        'Apakah Anda yakin ingin menampilkan bab ini?';
+    
+    showConfirmModal(
+        `${currentVisibility ? 'Sembunyikan' : 'Tampilkan'} Bab`,
+        message,
+        () => {
+            fetchWithCSRF(`/user/albums/{{ album.id }}/chapters/${chapterId}/toggle-visibility`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ is_visible: !currentVisibility })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while changing chapter visibility');
+            });
+        }
+    );
+}
+
+function moveChapter(chapterId, direction) {
+    fetchWithCSRF(`/user/albums/{{ album.id }}/chapters/${chapterId}/move`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ direction: direction })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while moving the chapter');
+    });
+}
+
+function reorderChapters() {
+    // This would implement drag-and-drop reordering
+    alert('Chapter reordering feature coming soon!');
+}
+
+// Filter functionality
+function populateFilters() {
+    // Populate category filter from backend data
+    const categoryFilter = document.getElementById('category-filter');
+    {% for category in available_categories %}
+    const categoryOption{{ category.id }} = document.createElement('option');
+    categoryOption{{ category.id }}.value = '{{ category.name }}';
+    categoryOption{{ category.id }}.textContent = '{{ category.name }} ({{ category.news_count }})';
+    categoryFilter.appendChild(categoryOption{{ category.id }});
+    {% endfor %}
+    
+    // Set current filter values from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSearch = urlParams.get('search') || '';
+    const currentCategory = urlParams.get('category') || '';
+    
+    document.getElementById('article-search').value = currentSearch;
+    document.getElementById('category-filter').value = currentCategory;
+    
+    // Update filter results info
+    updateFilterResultsInfo();
+}
+
+function updateFilterResultsInfo() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasFilters = urlParams.get('search') || urlParams.get('category');
+    const filterInfo = document.getElementById('filter-results-info');
+    const filteredCount = document.getElementById('filtered-count');
+    const totalCount = document.getElementById('total-count');
+    
+    if (hasFilters) {
+        const visibleArticles = document.querySelectorAll('.article-card');
+        filteredCount.textContent = visibleArticles.length;
+        filterInfo.classList.remove('hidden');
+    } else {
+        filterInfo.classList.add('hidden');
+    }
+}
+
+function filterArticles() {
+    const searchTerm = document.getElementById('article-search').value;
+    const selectedCategory = document.getElementById('category-filter').value;
+    const perPage = document.getElementById('per-page') ? document.getElementById('per-page').value : (new URLSearchParams(window.location.search).get('per_page') || '12');
+    
+    // Build URL with current parameters
+    const currentUrl = new URL(window.location);
+    const params = new URLSearchParams();
+    
+    // Add album_id
+    params.set('album_id', currentUrl.searchParams.get('album_id') || '{{ album.id }}');
+    
+    // Add filters if they have values
+    if (searchTerm) params.set('search', searchTerm);
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (perPage) params.set('per_page', perPage);
+    
+    // Reset to page 1 when filtering
+    params.set('page', '1');
+    
+    // Redirect to the filtered URL
+    const newUrl = `{{ url_for('user_albums.album_chapters', album_id=album.id) }}?${params.toString()}`;
+    window.location.href = newUrl;
+}
+
+function clearAllFilters() {
+    // Redirect to the page without any filters
+    const newUrl = `{{ url_for('user_albums.album_chapters', album_id=album.id) }}`;
+    window.location.href = newUrl;
+}
+
+// Event listeners
+document.getElementById('article-search').addEventListener('input', debounce(filterArticles, 300));
+document.getElementById('category-filter').addEventListener('change', filterArticles);
+document.getElementById('clear-filters').addEventListener('click', clearAllFilters);
+
+// Debounce function to limit search input frequency
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Add search parameter to pagination links
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize filters
+    populateFilters();
+    
+    const searchInput = document.getElementById('article-search');
+    const perPageSelect = document.getElementById('per-page');
+    const paginationLinks = document.querySelectorAll('.pagination-link');
+    
+    // Update pagination links to include all filter parameters
+    function updatePaginationLinks() {
+        const searchTerm = searchInput.value;
+        const categoryFilter = document.getElementById('category-filter').value;
+        const perPage = perPageSelect.value;
+        
+        paginationLinks.forEach(link => {
+            const url = new URL(link.href);
+            if (searchTerm) {
+                url.searchParams.set('search', searchTerm);
+            } else {
+                url.searchParams.delete('search');
+            }
+            if (categoryFilter) {
+                url.searchParams.set('category', categoryFilter);
+            } else {
+                url.searchParams.delete('category');
+            }
+            url.searchParams.set('per_page', perPage);
+            link.href = url.toString();
+        });
+    }
+    
+    // Update links when per-page changes
+    perPageSelect.addEventListener('change', function() {
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('per_page', this.value);
+        currentUrl.searchParams.delete('page'); // Reset to page 1
+        window.location.href = currentUrl.toString();
+    });
+    
+    // Initial update
+    updatePaginationLinks();
+});
+</script>
+{% endblock %}

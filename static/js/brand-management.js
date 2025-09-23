@@ -824,7 +824,7 @@ async function updateColorVariable(variable, value) {
       headers['X-CSRFToken'] = csrfToken;
     }
     
-    const response = await fetch('/api/brand-colors', {
+    const response = await fetchWithCSRF('/api/brand-colors', {
       method: 'POST',
       headers: headers,
       body: JSON.stringify({ variable, value })
@@ -1017,7 +1017,7 @@ function handleBrandForm(formId, fieldName) {
         headers['X-CSRFToken'] = csrfToken;
       }
       
-      const resp = await fetch('/api/brand-identity', {
+      const resp = await fetchWithCSRF('/api/brand-identity', {
         method: 'POST',
         headers: headers,
         body: formData
@@ -1083,7 +1083,7 @@ function handleBrandTextForm(formId, fieldName) {
         headers['X-CSRFToken'] = csrfToken;
       }
       
-      const resp = await fetch('/api/brand-identity/text', {
+      const resp = await fetchWithCSRF('/api/brand-identity/text', {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -1148,7 +1148,7 @@ function handleHomepageDesignForm(formId) {
         headers['X-CSRFToken'] = csrfToken;
       }
       
-      const resp = await fetch('/api/brand-identity/text', {
+      const resp = await fetchWithCSRF('/api/brand-identity/text', {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -1223,7 +1223,7 @@ function handleCategoriesDisplayForm(formId) {
         headers['X-CSRFToken'] = csrfToken;
       }
       
-      const resp = await fetch('/api/brand-identity/text', {
+      const resp = await fetchWithCSRF('/api/brand-identity/text', {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -1298,7 +1298,7 @@ function handleCardDesignForm(formId) {
         headers['X-CSRFToken'] = csrfToken;
       }
       
-      const resp = await fetch('/api/brand-identity/text', {
+      const resp = await fetchWithCSRF('/api/brand-identity/text', {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -1376,7 +1376,7 @@ function debugCardDesign(formId) {
 // Initialize everything
 document.addEventListener('DOMContentLoaded', function() {
   // Load color palette
-  fetch('/api/brand-colors')
+  fetchWithCSRF('/api/brand-colors')
     .then(resp => resp.json())
     .then(data => {
       COLOR_VARIABLES = data;
@@ -1491,7 +1491,7 @@ document.addEventListener('DOMContentLoaded', function() {
             headers['X-CSRFToken'] = csrfToken;
           }
           
-          const response = await fetch('/api/brand-colors', {
+          const response = await fetchWithCSRF('/api/brand-colors', {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(update)
@@ -1503,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Reload palette from backend
-        const response = await fetch('/api/brand-colors');
+        const response = await fetchWithCSRF('/api/brand-colors');
         const data = await response.json();
         COLOR_VARIABLES = data;
         renderColorPaletteTable();

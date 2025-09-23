@@ -42,6 +42,7 @@
             </h2>
             
             <form id="upload-form" class="space-y-4" role="form" aria-label="Form unggah gambar">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-foreground mb-2" for="image-name">
@@ -241,6 +242,7 @@
     <div class="bg-card border border-border p-6 rounded-lg shadow-xl w-full max-w-md">
         <h3 id="edit-modal-title" class="text-xl font-semibold mb-4 text-foreground">Edit Gambar</h3>
         <form id="edit-form" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" id="edit-image-id">
             
             <div>
@@ -326,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadBtn.disabled = true;
         
         try {
-            const response = await fetch(`{{ url_for('user_profile.user_upload_image', username=user.username) }}`, {
+            const response = await fetchWithCSRF(`{{ url_for('user_profile.user_upload_image', username=user.username) }}`, {
                 method: 'POST',
                 body: formData
             });
@@ -378,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const isVisible = document.getElementById('edit-visibility').value === 'true';
         
         try {
-            const response = await fetch(`{{ url_for('user_profile.user_update_image', username=user.username, image_id=0) }}`.replace('0', imageId), {
+            const response = await fetchWithCSRF(`{{ url_for('user_profile.user_update_image', username=user.username, image_id=0) }}`.replace('0', imageId), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -412,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch(`{{ url_for('user_profile.user_delete_image', username=user.username, image_id=0) }}`.replace('0', imageId), {
+        fetchWithCSRF(`{{ url_for('user_profile.user_delete_image', username=user.username, image_id=0) }}`.replace('0', imageId), {
             method: 'DELETE'
         })
         .then(response => response.json())

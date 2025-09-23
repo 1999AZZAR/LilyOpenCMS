@@ -19,6 +19,7 @@ from routes.utils.permission_decorators import (
     require_album_manage, require_album_create, require_album_edit, 
     require_album_delete, require_content_creation
 )
+from optimizations import cache_frontend_critical, cache_public_content, cache_user_dashboard
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -352,8 +353,21 @@ def edit_album(album_id):
         album.title = data.get('title', album.title)
         album.description = data.get('description', album.description)
         album.category_id = data.get('category_id', album.category_id)
+        # When owner_id is changed, also set author to new owner's username
+        new_owner_id = data.get('owner_id', album.owner_id)
+        # Update basic fields first
         album.author = data.get('author', album.author)  # Update author field
-        album.owner_id = data.get('owner_id', album.owner_id)  # Update owner field
+        album.owner_id = new_owner_id  # Update owner field
+        try:
+            if new_owner_id and new_owner_id != getattr(album, 'owner_id', None):
+                # Fetch owner user to set author if not explicitly provided
+                owner_user = db.session.get(User, new_owner_id)
+                if owner_user:
+                    # If client did not explicitly send author, or wants to align, set to username
+                    if 'author' not in data or (data.get('author') or '').strip() == '':
+                        album.author = owner_user.username
+        except Exception:
+            pass
         album.is_premium = data.get('is_premium', album.is_premium)
         album.is_completed = data.get('is_completed', album.is_completed)
         album.is_hiatus = data.get('is_hiatus', album.is_hiatus)

@@ -4,6 +4,7 @@ from models import db, User, UserProfile, UserStats, News, Album, UserLibrary, R
 from sqlalchemy import text
 import json
 from datetime import datetime, timedelta
+from optimizations import cache_user_dashboard, cache_frontend_critical
 
 user_profile_bp = Blueprint('user_profile', __name__)
 
@@ -12,6 +13,7 @@ def has_write_access(user):
     return user.is_admin_tier() or user.write_access == True
 
 
+@cache_user_dashboard(timeout=300)  # 5 minutes - user profile pages
 @user_profile_bp.route('/user/<username>')
 def user_profile(username):
     """Main user profile page with Medium-like tabs."""
@@ -832,11 +834,27 @@ def user_settings(username):
     
     return render_template('public/user/profile_settings.html', user=user, profile=profile)
 
+@user_profile_bp.route('/user/<username>/write-access-request')
+@login_required
+def user_write_access_request(username):
+    """Write access request page (user-scoped to hide global header/footer)."""
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('main.home'))
+    # Only allow accessing own page
+    if current_user.id != user.id and not current_user.is_admin_tier():
+        flash('You can only access your own write access page', 'error')
+        return redirect(url_for('user_profile.user_write_access_request', username=current_user.username))
+    # Check if there is a pending write access request
+    pending_request = WriteAccessRequest.query.filter_by(user_id=current_user.id, status='pending').order_by(WriteAccessRequest.requested_at.desc()).first()
+    return render_template('public/user/write_access_request.html', pending_request=pending_request)
+
+# Backward compatibility: redirect old path to user-scoped path
 @user_profile_bp.route('/write-access-request')
 @login_required
 def write_access_request():
-    """Write access request page."""
-    return render_template('public/user/write_access_request.html')
+    return redirect(url_for('user_profile.user_write_access_request', username=current_user.username))
 
 
 @user_profile_bp.route('/api/write-access/request', methods=['POST'])
@@ -848,6 +866,11 @@ def request_write_access():
         
         if not data:
             return jsonify({'error': 'No data provided'}), 400
+        
+        # Validate reason is present and non-empty
+        reason = (data.get('reason') or '').strip()
+        if not reason:
+            return jsonify({'error': 'Reason is required'}), 400
         
         # Check if user already has write access
         if current_user.write_access:
@@ -865,7 +888,7 @@ def request_write_access():
         # Create new request
         new_request = WriteAccessRequest(
             user_id=current_user.id,
-            request_reason=data.get('reason', ''),
+            request_reason=reason,
             portfolio_links=data.get('portfolio_links', ''),
             experience_description=data.get('experience', '')
         )
@@ -929,6 +952,158 @@ def review_write_access_request(request_id):
         'success': True,
         'message': f'Request {decision} successfully'
     })
+
+
+@user_profile_bp.route('/api/write-access-requests/<int:request_id>/approve', methods=['POST'])
+@login_required
+def approve_write_access_request(request_id):
+    """Approve a write access request (alias for review with approved decision)."""
+    if not current_user.is_admin_tier():
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        request_obj = WriteAccessRequest.query.get_or_404(request_id)
+
+        if request_obj.status != 'pending':
+            return jsonify({
+                'error': f'Request has already been {request_obj.status}',
+                'current_status': request_obj.status
+            }), 400
+
+        # Update the request
+        request_obj.status = 'approved'
+        request_obj.admin_notes = request.get_json().get('admin_notes', '')
+        request_obj.reviewed_by_id = current_user.id
+        request_obj.reviewed_at = datetime.utcnow()
+
+        # Grant write access to the user
+        request_obj.user.write_access = True
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Request approved successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error approving write access request: {e}")
+        return jsonify({'error': 'Failed to approve request'}), 500
+
+
+@user_profile_bp.route('/api/write-access-requests/<int:request_id>/reject', methods=['POST'])
+@login_required
+def reject_write_access_request(request_id):
+    """Reject a write access request (alias for review with rejected decision)."""
+    if not current_user.is_admin_tier():
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        request_obj = WriteAccessRequest.query.get_or_404(request_id)
+
+        if request_obj.status != 'pending':
+            return jsonify({
+                'error': f'Request has already been {request_obj.status}',
+                'current_status': request_obj.status
+            }), 400
+
+        # Update the request
+        request_obj.status = 'rejected'
+        request_obj.admin_notes = request.get_json().get('admin_notes', '')
+        request_obj.reviewed_by_id = current_user.id
+        request_obj.reviewed_at = datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Request rejected successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error rejecting write access request: {e}")
+        return jsonify({'error': 'Failed to reject request'}), 500
+
+
+@user_profile_bp.route('/api/write-access-requests/bulk/approve', methods=['POST'])
+@login_required
+def bulk_approve_write_access_requests():
+    """Bulk approve all pending write access requests."""
+    if not current_user.is_admin_tier():
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        # Get all pending requests
+        pending_requests = WriteAccessRequest.query.filter_by(status='pending').all()
+
+        if not pending_requests:
+            return jsonify({'error': 'No pending requests to approve'}), 400
+
+        approved_count = 0
+        for request_obj in pending_requests:
+            try:
+                # Update the request
+                request_obj.status = 'approved'
+                request_obj.admin_notes = 'Bulk approved'
+                request_obj.reviewed_by_id = current_user.id
+                request_obj.reviewed_at = datetime.utcnow()
+
+                # Grant write access to the user
+                request_obj.user.write_access = True
+                approved_count += 1
+            except Exception as e:
+                current_app.logger.error(f"Error approving request {request_obj.id}: {e}")
+                continue
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Bulk approved {approved_count} requests successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error bulk approving write access requests: {e}")
+        return jsonify({'error': 'Failed to bulk approve requests'}), 500
+
+
+@user_profile_bp.route('/api/write-access-requests/bulk/reject', methods=['POST'])
+@login_required
+def bulk_reject_write_access_requests():
+    """Bulk reject all pending write access requests."""
+    if not current_user.is_admin_tier():
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        # Get all pending requests
+        pending_requests = WriteAccessRequest.query.filter_by(status='pending').all()
+
+        if not pending_requests:
+            return jsonify({'error': 'No pending requests to reject'}), 400
+
+        rejected_count = 0
+        for request_obj in pending_requests:
+            try:
+                # Update the request
+                request_obj.status = 'rejected'
+                request_obj.admin_notes = 'Bulk rejected'
+                request_obj.reviewed_by_id = current_user.id
+                request_obj.reviewed_at = datetime.utcnow()
+                rejected_count += 1
+            except Exception as e:
+                current_app.logger.error(f"Error rejecting request {request_obj.id}: {e}")
+                continue
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Bulk rejected {rejected_count} requests successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error bulk rejecting write access requests: {e}")
+        return jsonify({'error': 'Failed to bulk reject requests'}), 500
 
 
 @user_profile_bp.route('/api/write-access-requests')

@@ -48,6 +48,9 @@ click
 blinker
 bleach
 
+# Email
+Flask-Mail
+
 # Additional Utilities
 python-dateutil
 six

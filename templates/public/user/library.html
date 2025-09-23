@@ -34,6 +34,12 @@
                     <p class="mt-2 text-muted-foreground">Perpustakaan {{ user.get_full_name() or user.username }}</p>
                 </div>
                 <div class="flex items-center space-x-4">
+                    {% if current_user.is_authenticated and current_user.id == user.id and not (current_user.is_admin_tier() or current_user.write_access == True) %}
+                    <a href="{{ url_for('user_profile.user_write_access_request', username=user.username) }}"
+                       class="button button-primary">
+                        <i class="fas fa-pen-fancy mr-2"></i>Minta Akses Menulis
+                    </a>
+                    {% endif %}
                     <a href="{{ url_for('user_profile.user_profile', username=user.username) }}" 
                        class="text-primary hover:text-foreground">
                         <i class="fas fa-arrow-left mr-2"></i>Kembali ke Profil
@@ -132,10 +138,17 @@
                                                 
                                                 {% if current_user.is_authenticated and current_user.id == user.id %}
                                                     <div class="mt-3 flex space-x-2">
-                                                        <a href="{{ url_for('main.create_news', news_id=story.id) }}" 
-                                                           class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
-                                                            <i class="fas fa-edit mr-1"></i>Edit
-                                                        </a>
+                                                        {% if story.is_visible %}
+                                                            <button data-edit-btn data-id="{{ story.id }}" data-title="{{ story.title | e }}" 
+                                                                    class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
+                                                                <i class="fas fa-edit mr-1"></i><span class="edit-btn-label">Minta Izin Edit</span>
+                                                            </button>
+                                                        {% else %}
+                                                            <a href="{{ url_for('user_profile.create_user_story', username=user.username) }}?news_id={{ story.id }}" 
+                                                               class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
+                                                                <i class="fas fa-edit mr-1"></i>Edit
+                                                            </a>
+                                                        {% endif %}
                                                     </div>
                                                 {% endif %}
                                             </div>
@@ -163,7 +176,7 @@
                                             <!-- Image Container -->
                                             <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
                                                 <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
-                                                    {% if album.cover_image_id %}
+                                                    {% if album.cover_image_id and album.cover_image and album.cover_image.filename %}
                                                         <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
                                                              alt="{{ album.title }}" 
                                                              class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
@@ -252,7 +265,7 @@
                     <p class="text-muted-foreground mb-4">Pengguna ini belum membuat album atau cerita apapun.</p>
                     {% if current_user.is_authenticated and current_user.id == user.id %}
                         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                            <a href="{{ url_for('albums.create_album') }}" 
+                            <a href="{{ url_for('user_albums.create_album') }}" 
                                class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
                                 <i class="fas fa-plus mr-2"></i>Buat Album
                             </a>
@@ -329,6 +342,21 @@
                                                                     <i class="fas fa-trash mr-1.5"></i>
                                                                     Hapus
                                                                 </button>
+                                                                {% if current_user.is_authenticated and current_user.id == user.id and news %}
+                                                                <div class="ml-2">
+                                                                    {% if news.is_visible %}
+                                                                        <button data-edit-btn data-id="{{ news.id }}" data-title="{{ news.title | e }}" 
+                                                                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors">
+                                                                            <i class="fas fa-edit mr-1.5"></i><span class="edit-btn-label">Minta Izin Edit</span>
+                                                                        </button>
+                                                                    {% else %}
+                                                                        <a href="{{ url_for('user_profile.create_user_story', username=user.username) }}?news_id={{ news.id }}" 
+                                                                           class="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors">
+                                                                            <i class="fas fa-edit mr-1.5"></i>Edit
+                                                                        </a>
+                                                                    {% endif %}
+                                                                </div>
+                                                                {% endif %}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -358,7 +386,7 @@
                                                     <!-- Image Container -->
                                                     <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
                                                         <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
-                                                            {% if album.cover_image_id %}
+                                                            {% if album.cover_image_id and album.cover_image and album.cover_image.filename %}
                                                                 <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
                                                                      alt="{{ album.title }}" 
                                                                      class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
@@ -533,7 +561,7 @@
                                                     <!-- Image Container -->
                                                     <div class="sm:w-1/4 lg:w-1/3 xl:w-1/4 flex-shrink-0 bg-secondary overflow-hidden aspect-video sm:aspect-auto">
                                                         <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full" aria-label="View album: {{ album.title | e }}">
-                                                            {% if album.cover_image_id %}
+                                                            {% if album.cover_image_id and album.cover_image and album.cover_image.filename %}
                                                                 <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
                                                                      alt="{{ album.title }}" 
                                                                      class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
@@ -649,7 +677,7 @@
                                             </a>
                                         {% elif album %}
                                             <a href="{{ url_for('main.album_detail', album_id=album.id, album_title='album') }}" class="block h-full">
-                                                {% if album.cover_image_id %}
+                                                {% if album.cover_image_id and album.cover_image and album.cover_image.filename %}
                                                     <img src="{{ url_for('static', filename='uploads/' + album.cover_image.filename) }}" 
                                                          alt="{{ album.title }}" 
                                                          class="w-full h-full object-cover object-center transition-transform duration-300 ease-in-out group-hover:scale-105" 
@@ -758,6 +786,66 @@
 
 {% block extra_scripts %}
 <script>
+// Hydrate edit permission buttons like on stories page
+async function hydrateEditButtonsFromLibrary() {
+    try {
+        const rsp = await fetchWithCSRF('/api/news/my-edit-requests');
+        if (!rsp.ok) return;
+        const data = await rsp.json();
+        const map = new Map();
+        (data.requests || []).forEach(r => { map.set(String(r.news_id), r.status || 'pending'); });
+        document.querySelectorAll('[data-edit-btn]').forEach(btn => {
+            const id = btn.getAttribute('data-id');
+            const labelEl = btn.querySelector('.edit-btn-label');
+            const status = map.get(String(id));
+            if (status === 'pending') {
+                if (labelEl) labelEl.textContent = 'Permintaan Tertunda';
+                btn.disabled = true;
+                btn.classList.add('opacity-60','cursor-not-allowed');
+            } else if (status === 'approved') {
+                if (labelEl) labelEl.textContent = 'Edit';
+                btn.disabled = false;
+                btn.classList.remove('opacity-60','cursor-not-allowed');
+                btn.onclick = () => {
+                    fetchWithCSRF(`/api/news/${id}/consume-edit`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                      .catch(() => {})
+                      .finally(() => {
+                        const editUrl = `${window.location.origin}${`{{ url_for('user_profile.create_user_story', username=user.username) }}`}?news_id=${id}`;
+                        window.location.href = editUrl;
+                      });
+                };
+            } else {
+                if (labelEl) labelEl.textContent = 'Minta Izin Edit';
+                btn.disabled = false;
+                btn.classList.remove('opacity-60','cursor-not-allowed');
+                const title = btn.getAttribute('data-title') || '';
+                btn.onclick = () => requestEditPermissionFromLibrary(id, title);
+            }
+        });
+    } catch (_) {
+        // silent fail
+    }
+}
+
+function requestEditPermissionFromLibrary(storyId, storyTitle) {
+    const reason = prompt(`Minta izin edit untuk: ${storyTitle}\nJelaskan alasannya:`);
+    if (!reason) return;
+    fetchWithCSRF(`/api/news/${storyId}/request-edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+    }).then(res => res.json())
+     .then(data => {
+        if (data.success) {
+            showToast('success', 'Permintaan edit telah dikirim.');
+            hydrateEditButtonsFromLibrary();
+        } else {
+            showToast('error', data.error || 'Gagal mengirim permintaan edit');
+        }
+     })
+     .catch(() => showToast('error', 'Gagal mengirim permintaan edit'));
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const tabs = ['your-list', 'saved-list', 'reading-history', 'response'];
     const tabElements = {};
@@ -858,7 +946,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Library management functions
 function addToLibrary(contentType, contentId) {
-    fetch('/api/library/add', {
+    fetchWithCSRF('/api/library/add', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -883,7 +971,7 @@ function addToLibrary(contentType, contentId) {
 }
 
 function removeFromLibrary(contentType, contentId) {
-    fetch('/api/library/remove', {
+    fetchWithCSRF('/api/library/remove', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1094,6 +1182,9 @@ document.addEventListener('DOMContentLoaded', function() {
             removeFromLibrary(contentType, contentId);
         }
     });
+
+    // Initialize edit buttons state
+    hydrateEditButtonsFromLibrary();
 });
 
 // Function to expand all sections
@@ -1186,7 +1277,7 @@ function saveCommentEdit(commentId) {
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Menyimpan...';
     saveBtn.disabled = true;
     
-    fetch(`/api/comments/${commentId}`, {
+    fetchWithCSRF(`/api/comments/${commentId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -1226,7 +1317,7 @@ function deleteComment(commentId) {
         return;
     }
     
-    fetch(`/api/comments/${commentId}`, {
+    fetchWithCSRF(`/api/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',

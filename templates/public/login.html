@@ -60,20 +60,20 @@
         <div id="loginFormContainer" role="tabpanel" aria-labelledby="loginTabButton" tabindex="0">
             <h2 class="sr-only">Login Form</h2>
             <form method="POST" action="{{ url_for('main.login') }}" class="space-y-5" aria-label="Login form">
-                {# Use standard CSRF token - works without WTForms #}
-                <!-- CSRF protection disabled for this application -->
+                {# CSRF Protection #}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div>
-                    <label for="login-username" class="block text-sm font-medium text-foreground mb-1.5">Username</label>
-                    <input type="text" 
-                           name="username" 
+                    <label for="login-username" class="block text-sm font-medium text-foreground mb-1.5">Username or Email</label>
+                    <input type="text"
+                           name="username"
                            id="login-username"
                            class="block w-full h-10 px-3 bg-input border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary transition-colors"
-                           required 
-                           minlength="3" 
+                           required
+                           minlength="3"
                            autocomplete="username"
                            aria-required="true"
                            aria-describedby="login-username-help">
-                    <p id="login-username-help" class="sr-only">Masukkan username Anda</p>
+                    <p id="login-username-help" class="sr-only">Masukkan username atau email Anda</p>
                 </div>
                 <div>
                     <label for="login-password" class="block text-sm font-medium text-foreground mb-1.5">Password</label>
@@ -104,8 +104,8 @@
              hidden>
             <h2 class="sr-only">Registration Form</h2>
             <form method="POST" action="{{ url_for('main.register') }}" class="space-y-5" aria-label="Registration form">
-                 {# Use standard CSRF token #}
-                <!-- CSRF protection disabled for this application -->
+                {# CSRF Protection #}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div>
                     <label for="register-username" class="block text-sm font-medium text-foreground mb-1.5">Username</label>
                     <input type="text" name="username" id="register-username"

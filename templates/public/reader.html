@@ -77,7 +77,13 @@
             <div class="text-sm text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border pb-4 mb-4" role="contentinfo" aria-label="Article metadata">
               <span>
                 <i class="fas fa-user fa-fw mr-1 opacity-70"></i>
-                {{ news.writer if news.writer else news.author.username if news.author else 'Penulis Tidak Diketahui' }}
+                {% if news.user and news.user.username %}
+                  <a href="{{ url_for('main.public_user_profile', username=news.user.username) }}" class="text-primary hover:text-primary-dark transition-colors">
+                    {{ news.writer if news.writer else news.user.username }}
+                  </a>
+                {% else %}
+                  {{ news.writer if news.writer else 'Penulis Tidak Diketahui' }}
+                {% endif %}
               </span>
               {% if news.date %}
                 <time datetime="{{ news.date.isoformat() }}">
@@ -290,6 +296,7 @@
             <!-- Inline Comment Form (Hidden by default) -->
             <div id="inline-comment-form" class="hidden mb-4 p-4 bg-muted/30 rounded-lg border border-border">
               <form class="comment-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="form-group">
                   <textarea class="form-control comment-content w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" rows="4" placeholder="Tulis komentar Anda di sini..." required></textarea>
                   </div>
@@ -490,6 +497,23 @@
       </div>
     </div>
   </div>
+
+<!-- Confirmation Modal for Comment Deletion -->
+<div id="confirmation-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[9999] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirmation-title">
+  <div class="bg-card rounded-lg border border-border p-6 max-w-md w-full mx-4">
+    <h3 id="confirmation-title" class="text-lg font-semibold text-foreground mb-2">Konfirmasi</h3>
+    <p id="confirmation-message" class="text-muted-foreground mb-6"></p>
+    <div class="flex gap-3 justify-end">
+      <button id="cancel-confirmation" class="px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary hover:bg-secondary/80 rounded-lg transition-colors">
+        Batal
+      </button>
+      <button id="confirm-action" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+        Hapus
+      </button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 
@@ -505,25 +529,23 @@
   {# Embedded Reader JS Logic #}
   <script>
     window.newsId = {{ news.id | default('null') | tojson }};
-    window.newsTitle = {{ news.title | default('Artikel Ini') | tojson }};
+    window.newsTitle = {{ news.title | default('Cerita Ini') | tojson }};
     window.newsUrl = window.location.href;
     
     // User context for comment and rating system
-    window.currentUserId = {{ current_user.id if current_user.is_authenticated else 'null' | tojson }};
-    window.currentUserRole = {{ current_user.role.value if current_user.is_authenticated else 'null' | tojson }};
+    window.currentUserId = {{ (current_user.id if current_user.is_authenticated else None) | tojson }};
+    window.currentUserRole = {{ (current_user.role.value if current_user.is_authenticated else None) | tojson }};
   </script>
   <!-- Load JavaScript files directly instead of as modules -->
   <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
   <script src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
   <script src="{{ url_for('static', filename='js/premium-content.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/comment-system.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/rating-system.js') }}"></script>
   <script src="{{ url_for('static', filename='js/featured-image-modal.js') }}"></script>
   <script src="{{ url_for('static', filename='js/share.js') }}"></script>
   <script src="{{ url_for('static', filename='js/slick-init.js') }}"></script>
   <script src="{{ url_for('static', filename='js/reader.js') }}"></script>
-  
-  {# Comment and Rating System JavaScript #}
-  <script src="{{ url_for('static', filename='js/comment-system.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/rating-system.js') }}"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -580,12 +602,25 @@
       }
 
       // --- Initialize Comment and Rating Systems ---
+      console.log('Initializing comment system...', {
+        CommentSystem: typeof CommentSystem,
+        newsId: window.newsId,
+        newsTitle: window.newsTitle
+      });
+      
       if (typeof CommentSystem !== 'undefined' && window.newsId) {
+        console.log('Creating CommentSystem instance...');
         window.commentSystem = new CommentSystem('news', window.newsId, {
           autoLoad: true,
           perPage: 12,
           autoLoadMore: true,
           loadMoreThreshold: 0.8
+        });
+        console.log('CommentSystem created:', window.commentSystem);
+      } else {
+        console.error('CommentSystem initialization failed:', {
+          CommentSystem: typeof CommentSystem,
+          newsId: window.newsId
         });
       }
 
@@ -629,6 +664,26 @@
           if (textarea) {
             textarea.value = '';
           }
+        });
+      }
+      
+      // Handle comment form submission to close form after successful submission
+      const commentForm = document.querySelector('.comment-form');
+      if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+          // Let the comment system handle the submission
+          // We'll close the form after a short delay to allow the comment to be processed
+          setTimeout(() => {
+            if (inlineCommentForm && addCommentBtn) {
+              inlineCommentForm.classList.add('hidden');
+              addCommentBtn.classList.remove('hidden');
+              // Clear the form
+              const textarea = inlineCommentForm.querySelector('textarea');
+              if (textarea) {
+                textarea.value = '';
+              }
+            }
+          }, 1000); // Wait 1 second for the comment to be processed
         });
       }
       

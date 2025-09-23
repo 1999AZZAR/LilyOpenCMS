@@ -131,7 +131,7 @@
 <script>
 async function toggleFollow(btn) {
     const userId = btn.getAttribute('data-user-id');
-    const res = await fetch(`/api/follow/${userId}`, { method: 'POST' });
+    const res = await fetchWithCSRF(`/api/follow/${userId}`, { method: 'POST' });
     const data = await res.json();
     if (data && data.success) {
         if (data.action === 'followed') {

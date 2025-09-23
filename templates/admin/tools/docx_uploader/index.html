@@ -33,6 +33,7 @@
         <!-- Upload Form -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
             <form id="docxUploadForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <!-- File Upload -->
                 <div class="space-y-2">
                     <label for="docxFile" class="block text-sm font-medium text-gray-700">

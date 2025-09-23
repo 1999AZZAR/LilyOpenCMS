@@ -58,6 +58,7 @@
         <!-- Upload Form -->
         <div class="bg-card rounded-lg shadow-sm border border-border p-6">
             <form id="docxUploadForm" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <!-- Hidden field to set visibility to hidden/draft -->
                 <input type="hidden" name="is_visible" value="false">
                 
@@ -255,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengunggah...';
         
-        fetch('/api/user/upload-docx-story', {
+        fetchWithCSRF('/api/user/upload-docx-story', {
             method: 'POST',
             body: formData
         })

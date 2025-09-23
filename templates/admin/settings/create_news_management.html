@@ -27,6 +27,7 @@
             </div>
             
             <form id="add-news-form" class="flex flex-col lg:flex-row gap-6" method="POST" action="{{ url_for('main.create_news_api') }}" enctype="multipart/form-data" role="form" aria-label="Form tambah cerita baru">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <!-- Step 1: Details Section (Full Width) -->
                 <div id="step-1-content" class="w-full">
                     <div class="h-full flex flex-col">
@@ -380,6 +381,10 @@
 <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
 {# Load the main script for this page #}
 <script src="{{ url_for('static', filename='js/news-create.js') }}"></script>
+{# Shared Image Picker module #}
+<script src="{{ url_for('static', filename='js/image-picker.js') }}"></script>
+{# Shared Premium Pricing module #}
+<script src="{{ url_for('static', filename='js/premium-pricing.js') }}"></script>
 
 {# Provide server data to JS without inline Jinja in JS code #}
 <script id="news-meta" type="application/json">{{ news_id|default(None)|tojson }}</script>
@@ -1142,44 +1147,17 @@
         // Initialize album context handling
         handleAlbumContext();
 
-        // Prize input visibility handler
-        function setupPrizeInputHandler() {
-            const premiumCheckbox = document.getElementById('news-is-premium');
-            const prizeSection = document.getElementById('prize-input-section');
-            const prizeInput = document.getElementById('news-prize');
-            const coinTypeSelect = document.getElementById('news-prize-coin-type');
-            
-            if (premiumCheckbox && prizeSection && prizeInput && coinTypeSelect) {
-                // Function to toggle prize input visibility
-                function togglePrizeInput() {
-                    if (premiumCheckbox.checked) {
-                        prizeSection.classList.remove('hidden');
-                        prizeInput.setAttribute('required', 'true');
-                        prizeInput.setAttribute('aria-required', 'true');
-                        coinTypeSelect.setAttribute('required', 'true');
-                        coinTypeSelect.setAttribute('aria-required', 'true');
-                    } else {
-                        prizeSection.classList.add('hidden');
-                        prizeInput.removeAttribute('required');
-                        prizeInput.setAttribute('aria-required', 'false');
-                        coinTypeSelect.removeAttribute('required');
-                        coinTypeSelect.setAttribute('aria-required', 'false');
-                        // Reset prize to 0 when premium is unchecked
-                        prizeInput.value = '0';
-                        coinTypeSelect.value = 'any';
-                    }
-                }
-                
-                // Add event listener
-                premiumCheckbox.addEventListener('change', togglePrizeInput);
-                
-                // Initialize state on page load
-                togglePrizeInput();
-            }
+        // Initialize premium pricing functionality using shared module
+        if (window.PremiumPricing && typeof window.PremiumPricing.init === 'function') {
+            window.PremiumPricing.init({
+                premiumId: 'news-is-premium',
+                prizeSectionId: 'prize-input-section',
+                prizeId: 'news-prize',
+                coinTypeId: 'news-prize-coin-type'
+            });
+        } else {
+            console.error('PremiumPricing module not found');
         }
-        
-        // Initialize prize input handler
-        setupPrizeInputHandler();
 
         // Cancel button handler
         const cancelBtn = document.getElementById('cancel-edit-btn');
@@ -1202,6 +1180,34 @@
         }
     });
 })();
+</script>
+
+<script>
+// Use shared ImagePicker for header image selection
+function openImageHeaderModalCreate() {
+    if (window.ImagePicker && typeof window.ImagePicker.open === 'function') {
+        window.ImagePicker.open({
+            onSelect: function(image, previewUrl) {
+                if (typeof window.showFeaturedImagePreview === 'function') {
+                    window.showFeaturedImagePreview(previewUrl, image.id);
+                } else {
+                    var imageIdInput = document.getElementById('news-image-id');
+                    if (imageIdInput) imageIdInput.value = image.id;
+                    var preview = document.getElementById('featured-preview-create');
+                    var placeholder = document.getElementById('no-image-placeholder');
+                    if (preview) {
+                        preview.src = previewUrl;
+                        preview.classList.remove('hidden');
+                    }
+                    if (placeholder) placeholder.classList.add('hidden');
+                }
+            },
+            perPage: 12
+        });
+    } else {
+        console.error('ImagePicker module not found');
+    }
+}
 </script>
 
 <script>

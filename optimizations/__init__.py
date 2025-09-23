@@ -56,7 +56,15 @@ from .query_caching import (
     invalidate_cache_pattern,
     cache_news_queries,
     cache_user_queries,
-    cache_analytics_queries
+    cache_analytics_queries,
+    # Aggressive caching decorators
+    aggressive_cache_query,
+    cache_frontend_critical,
+    cache_user_dashboard,
+    cache_public_content,
+    cache_navigation_data,
+    initialize_aggressive_caching,
+    get_query_cache_stats
 )
 
 from .ssr_optimization import (
@@ -117,6 +125,15 @@ __all__ = [
     'cache_news_queries',
     'cache_user_queries',
     'cache_analytics_queries',
+    
+    # Aggressive caching
+    'aggressive_cache_query',
+    'cache_frontend_critical',
+    'cache_user_dashboard',
+    'cache_public_content',
+    'cache_navigation_data',
+    'initialize_aggressive_caching',
+    'get_query_cache_stats',
     
     # SSR optimization
     'SSROptimizer',

@@ -11,6 +11,7 @@
     <div id="add-video-form" class="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-lg shadow-lg mb-8" role="region" aria-labelledby="add-video-title">
         <h2 id="add-video-title" class="text-xl font-semibold mb-4 text-amber-800">Tambah Video YouTube Baru</h2>
         <form id="add-video" class="space-y-4" role="form" aria-label="Form tambah video YouTube">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div>
                 <label for="video-link" class="block text-amber-700 font-medium mb-2">Tautan Video</label>
                 <input type="url" id="video-link" class="w-full bg-white border border-amber-300 text-amber-700 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400" required aria-required="true" aria-label="Masukkan tautan video YouTube">

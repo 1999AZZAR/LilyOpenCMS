@@ -41,6 +41,28 @@ def test_comment_system():
             print(f"    ❌ Failed: {response.status_code} - {response.text}")
     except Exception as e:
         print(f"    ❌ Error: {e}")
+    
+    # Test 3: Get comments for album with chapters (new endpoint)
+    print("  📝 Testing GET comments for album with chapters...")
+    try:
+        response = requests.get(f"{base_url}/api/comments/album-with-chapters/1")
+        if response.status_code == 200:
+            data = response.json()
+            comments = data.get('comments', [])
+            album_info = data.get('album_info', {})
+            print(f"    ✅ Success: Found {len(comments)} comments from album and chapters")
+            print(f"    📊 Album: {album_info.get('title', 'Unknown')} with {album_info.get('total_chapters', 0)} chapters")
+            
+            # Check if comments have source information
+            sources = set()
+            for comment in comments:
+                if 'source' in comment:
+                    sources.add(comment['source']['type'])
+            print(f"    🏷️  Comment sources: {', '.join(sources) if sources else 'None'}")
+        else:
+            print(f"    ❌ Failed: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"    ❌ Error: {e}")
 
 def test_rating_system():
     """Test the rating system functionality."""

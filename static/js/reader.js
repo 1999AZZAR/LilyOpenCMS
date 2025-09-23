@@ -4,7 +4,7 @@
 // Logger utility
 const IS_DEBUG = false;
 const logger = {
-
+    log: (...args) => { if (IS_DEBUG) { try { console.log('[Reader]', ...args); } catch(e){} } },
     error: (...args) => console.error('[Reader]', ...args),
     warn: (...args) => console.warn('[Reader]', ...args),
 };
@@ -16,11 +16,11 @@ try {
     const newsTitle = window.newsTitle;
     const newsUrl = window.newsUrl || window.location.href;
     if (newsId === null || typeof newsId !== 'number') throw new Error("News ID is missing or invalid from template.");
-    newsData = { id: newsId, title: newsTitle || "Artikel Ini", url: newsUrl };
+    newsData = { id: newsId, title: newsTitle || "Cerita Ini", url: newsUrl };
     logger.log("News data initialized:", newsData);
 } catch (e) {
     logger.error("Could not parse newsData for JS:", e);
-    newsData = { id: null, title: "Artikel Ini", url: window.location.href };
+    newsData = { id: null, title: "Cerita Ini", url: window.location.href };
 }
 
 document.addEventListener('DOMContentLoaded', function() {

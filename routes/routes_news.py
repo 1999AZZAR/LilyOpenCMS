@@ -1,8 +1,11 @@
 from routes import main_blueprint
 from .common_imports import *
 from routes.utils.permission_decorators import require_api_news_create
+from optimizations import cache_frontend_critical, cache_public_content
 import io
 import re
+import json
+from pathlib import Path
 try:
     import mammoth  # .docx to HTML/text
 except Exception:
@@ -98,6 +101,8 @@ def get_news_api():
     user_filter = request.args.get(
         "user", ""
     )  # 'owned', 'by_admin', 'by_general', 'all'
+    # Optional: explicit owner filter by user ID (admin/superuser only)
+    owner_id_param = request.args.get("owner_id", type=int)
     featured_image_filter = request.args.get("featured_image", "") # 'has_image', 'no_image'
     external_link_filter = request.args.get("external_link", "") # 'has_link', 'no_link'
 
@@ -142,44 +147,46 @@ def get_news_api():
         query = query.filter(or_(News.external_source == None, News.external_source == ''))
 
     # --- Apply user/ownership filter based on current user's role ---
-    if current_user.role == UserRole.SUPERUSER:
-        if user_filter == "owned":
-            query = query.filter(News.user_id == current_user.id)
-        elif user_filter == "by_admin":
-            query = query.join(News.author).filter(User.role == UserRole.ADMIN)
-        elif user_filter == "by_general":
-            query = query.join(News.author).filter(User.role == UserRole.GENERAL)
-        # 'all' for SUPERUSER means no additional user filtering
+    # Highest precedence: explicit owner_id (admin/superuser)
+    if owner_id_param is not None and current_user.role in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        query = query.filter(News.user_id == owner_id_param)
+    else:
+        if current_user.role == UserRole.SUPERUSER:
+            if user_filter == "owned":
+                query = query.filter(News.user_id == current_user.id)
+            elif user_filter == "by_admin":
+                query = query.join(News.author).filter(User.role == UserRole.ADMIN)
+            elif user_filter == "by_general":
+                query = query.join(News.author).filter(User.role == UserRole.GENERAL)
+            # 'all' for SUPERUSER means no additional user filtering
+        elif current_user.role == UserRole.ADMIN:
+            allowed_user_ids = [current_user.id]
+            general_users = (
+                User.query.filter_by(role=UserRole.GENERAL).with_entities(User.id).all()
+            )
+            allowed_user_ids.extend([u.id for u in general_users])
 
-    elif current_user.role == UserRole.ADMIN:
-        allowed_user_ids = [current_user.id]
-        general_users = (
-            User.query.filter_by(role=UserRole.GENERAL).with_entities(User.id).all()
-        )
-        allowed_user_ids.extend([u.id for u in general_users])
-
-        if user_filter == "owned":
-            query = query.filter(News.user_id == current_user.id)
-        elif user_filter == "by_general":
-            query = query.join(News.author).filter(User.role == UserRole.GENERAL)
-        else:  # 'all' for ADMIN defaults to owned + general users' news
-            query = query.filter(News.user_id.in_(allowed_user_ids))
-
-    else:  # Non-admin tier users: restrict to owned, with editor exceptions
-        # If user has a custom role of Subadmin, allow all
-        custom_name = (current_user.custom_role.name.lower() if current_user.custom_role and current_user.custom_role.name else "")
-        if custom_name == "subadmin":
-            pass  # no restriction
-        elif custom_name == "editor":
-            # Editors can see their own and their assigned writers' content
-            try:
-                writer_ids = [w.id for w in current_user.assigned_writers] if hasattr(current_user, 'assigned_writers') else []
-            except Exception:
-                writer_ids = []
-            allowed_ids = set(writer_ids + [current_user.id])
-            query = query.filter(News.user_id.in_(allowed_ids))
-        else:
-            query = query.filter(News.user_id == current_user.id)
+            if user_filter == "owned":
+                query = query.filter(News.user_id == current_user.id)
+            elif user_filter == "by_general":
+                query = query.join(News.author).filter(User.role == UserRole.GENERAL)
+            else:  # 'all' for ADMIN defaults to owned + general users' news
+                query = query.filter(News.user_id.in_(allowed_user_ids))
+        else:  # Non-admin tier users: restrict to owned, with editor exceptions
+            # If user has a custom role of Subadmin, allow all
+            custom_name = (current_user.custom_role.name.lower() if current_user.custom_role and current_user.custom_role.name else "")
+            if custom_name == "subadmin":
+                pass  # no restriction
+            elif custom_name == "editor":
+                # Editors can see their own and their assigned writers' content
+                try:
+                    writer_ids = [w.id for w in current_user.assigned_writers] if hasattr(current_user, 'assigned_writers') else []
+                except Exception:
+                    writer_ids = []
+                allowed_ids = set(writer_ids + [current_user.id])
+                query = query.filter(News.user_id.in_(allowed_ids))
+            else:
+                query = query.filter(News.user_id == current_user.id)
 
     # --- Exclude archived news by default ---
     archived_filter = request.args.get("archived", "")
@@ -454,6 +461,10 @@ def create_news_api():
                             chapter_title=title  # Use the news title as chapter title
                         )
                         db.session.add(chapter)
+                        db.session.commit()
+                        
+                        # Update album's chapter count
+                        album.update_chapter_count()
                         db.session.commit()
                         
                         current_app.logger.info(
@@ -1598,6 +1609,63 @@ def bulk_update_news_category():
     return jsonify({"message": f"Updated category for {updated_count} articles"}), 200
 
 
+@main_blueprint.route("/api/news/bulk-owner", methods=["POST"])
+@login_required
+def bulk_update_news_owner():
+    """Transfer ownership (author/user_id) of multiple news to a new user.
+
+    Request JSON:
+      - ids: list[int] news IDs to transfer
+      - new_owner_id: int target user ID
+
+    Permissions:
+      - Only ADMIN or SUPERUSER can perform bulk ownership transfer
+    """
+    # Permission check
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+
+    data = request.get_json() or {}
+    ids = data.get("ids", [])
+    new_owner_id = data.get("new_owner_id")
+
+    if not isinstance(ids, list) or not all(isinstance(i, int) for i in ids):
+        return jsonify({"error": "Invalid or missing 'ids'"}), 400
+    if not isinstance(new_owner_id, int):
+        return jsonify({"error": "'new_owner_id' must be an integer"}), 400
+
+    # Verify target user exists and is active
+    target_user = db.session.get(User, new_owner_id)
+    if target_user is None:
+        return jsonify({"error": "Target user not found"}), 404
+    if getattr(target_user, "is_active", True) is False:
+        return jsonify({"error": "Target user is inactive"}), 400
+
+    # Optional safety: prevent assigning to SUPERUSER unless current user is owner
+    if target_user.role == UserRole.SUPERUSER and not current_user.is_owner():
+        return jsonify({"error": "Cannot assign ownership to a superuser account"}), 403
+
+    news_to_update = News.query.filter(News.id.in_(ids)).all()
+    updated_count = 0
+    for news in news_to_update:
+        # Admin/Superuser can transfer any
+        if news.user_id != new_owner_id or (news.writer or '').strip() != (target_user.username or ''):
+            news.user_id = new_owner_id
+            # Always set writer to new owner's username per requirement
+            try:
+                news.writer = target_user.username
+            except Exception:
+                pass
+            updated_count += 1
+
+    db.session.commit()
+    return jsonify({
+        "message": f"Transferred ownership for {updated_count} articles",
+        "updated_count": updated_count,
+        "new_owner_id": new_owner_id
+    }), 200
+
+
 @main_blueprint.route("/api/news/<int:news_id>/duplicate", methods=["POST"])
 @login_required
 def duplicate_news_api(news_id):
@@ -1868,19 +1936,49 @@ def get_news_deletion_requests():
 
         requests_data = []
         for news in news_with_requests:
-            requester = db.session.get(User, news.deletion_requested_by) if news.deletion_requested_by else None
+            try:
+                requester = db.session.get(User, news.deletion_requested_by) if news.deletion_requested_by else None
+            except Exception:
+                requester = None
+            try:
+                author_name = news.author.get_full_name() if getattr(news, 'author', None) else "Unknown"
+            except Exception:
+                author_name = "Unknown"
+            try:
+                author_username = news.author.username if getattr(news, 'author', None) else "unknown"
+            except Exception:
+                author_username = "unknown"
+            try:
+                category_name = news.category.name if getattr(news, 'category', None) else "Uncategorized"
+            except Exception:
+                category_name = "Uncategorized"
+            try:
+                created_iso = news.created_at.isoformat() if getattr(news, 'created_at', None) else None
+            except Exception:
+                created_iso = None
+            try:
+                deletion_iso = news.deletion_requested_at.isoformat() if getattr(news, 'deletion_requested_at', None) else None
+            except Exception:
+                deletion_iso = None
+            try:
+                requester_name = requester.get_full_name() if requester else "Unknown"
+                requester_username = requester.username if requester else "unknown"
+            except Exception:
+                requester_name = "Unknown"
+                requester_username = "unknown"
+
             requests_data.append({
                 "id": news.id,
                 "title": news.title,
-                "author": news.author.get_full_name() if news.author else "Unknown",
-                "author_username": news.author.username if news.author else "unknown",
-                "category": news.category.name if news.category else "Uncategorized",
-                "created_at": news.created_at.isoformat(),
-                "deletion_requested_at": news.deletion_requested_at.isoformat() if news.deletion_requested_at else None,
-                "requester": requester.get_full_name() if requester else "Unknown",
-                "requester_username": requester.username if requester else "unknown",
-                "read_count": news.read_count,
-                "is_visible": news.is_visible
+                "author": author_name,
+                "author_username": author_username,
+                "category": category_name,
+                "created_at": created_iso,
+                "deletion_requested_at": deletion_iso,
+                "requester": requester_name,
+                "requester_username": requester_username,
+                "read_count": getattr(news, 'read_count', 0) or 0,
+                "is_visible": bool(getattr(news, 'is_visible', False))
             })
 
         return jsonify({"requests": requests_data}), 200
@@ -1961,3 +2059,299 @@ def reject_news_deletion(news_id):
             f"Error rejecting news deletion ID {news_id} by {current_user.username}: {e}"
         )
         return jsonify({"error": "Failed to reject deletion request"}), 500
+
+
+@main_blueprint.route("/api/news/<int:news_id>/request-edit", methods=["POST"])
+@login_required
+def request_news_edit(news_id):
+    """Request edit permission for a published story/chapter.
+
+    Body JSON: {"reason": "..."}
+    Returns 200 with success message if accepted.
+    """
+    if not current_user.verified:
+        return jsonify({"error": "Account not verified"}), 403
+
+    news = db.session.get(News, news_id)
+    if news is None:
+        abort(404, f"News article with ID {news_id} not found.")
+
+    # Only the owner or admin/superuser can file an edit request
+    if not (
+        news.user_id == current_user.id
+        or current_user.role in [UserRole.ADMIN, UserRole.SUPERUSER]
+    ):
+        abort(403, "You do not have permission to request edits for this article.")
+
+    # Require content to be published; drafts can be edited directly
+    if not news.is_visible:
+        return jsonify({"error": "Content is not published; you can edit directly."}), 400
+
+    payload = request.get_json(silent=True) or {}
+    reason = (payload.get("reason") or "").strip()
+    if not reason:
+        return jsonify({"error": "Reason is required"}), 400
+
+    # Persist request to a JSON file under instance/ (no DB migration required)
+    try:
+        store_dir = Path(current_app.instance_path)
+        store_dir.mkdir(parents=True, exist_ok=True)
+        store_file = store_dir / "edit_requests.json"
+        try:
+            with store_file.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            data = {"news": []}
+        if not isinstance(data, dict):
+            data = {"news": []}
+        if "news" not in data or not isinstance(data["news"], list):
+            data["news"] = []
+
+        # Helper: trim store before/after write
+        def _trim_requests(data_obj, max_items=500, max_age_days=30):
+            try:
+                items = data_obj.get("news", []) if isinstance(data_obj, dict) else []
+                if not isinstance(items, list):
+                    return data_obj
+                # Age-based cleanup for non-pending statuses
+                cutoff = datetime.utcnow() - timedelta(days=max_age_days)
+                def parse_dt(iso):
+                    try:
+                        return datetime.fromisoformat(iso.replace('Z','+00:00')).replace(tzinfo=None)
+                    except Exception:
+                        return None
+                cleaned = []
+                for r in items:
+                    status = (r.get("status") or "").lower()
+                    if status == "pending":
+                        cleaned.append(r)
+                        continue
+                    ts = parse_dt(r.get("moderated_at") or r.get("consumed_at") or r.get("created_at"))
+                    if ts is None or ts >= cutoff:
+                        cleaned.append(r)
+                # Size-based trimming (prefer keeping pending and newest)
+                if len(cleaned) > max_items:
+                    # Sort: pending first, then newest created_at
+                    def sort_key(r):
+                        is_pending = (r.get("status") or "").lower() == "pending"
+                        ts = parse_dt(r.get("created_at")) or datetime.min
+                        # pending sorts before non-pending; newer later in list we will slice from the end
+                        return (0 if is_pending else 1, ts)
+                    cleaned.sort(key=sort_key)
+                    # keep the last max_items (most recent, and pending prioritized)
+                    cleaned = cleaned[-max_items:]
+                data_obj["news"] = cleaned
+            except Exception:
+                pass
+            return data_obj
+
+        # prevent duplicates: one open request per news_id
+        data["news"] = [r for r in data["news"] if not (r.get("news_id") == news_id and r.get("status") == "pending")]
+
+        data["news"].append({
+            "news_id": news_id,
+            "title": news.title,
+            "owner_id": news.user_id,
+            "requester_id": current_user.id,
+            "requester_username": current_user.username,
+            "reason": reason,
+            "created_at": datetime.utcnow().isoformat(),
+            "status": "pending"
+        })
+        data = _trim_requests(data)
+        with store_file.open("w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        current_app.logger.error(f"Failed to persist edit request: {e}", exc_info=True)
+        return jsonify({"error": "Failed to save edit request"}), 500
+
+    return jsonify({"success": True, "message": "Edit request submitted"}), 200
+
+
+@main_blueprint.route("/api/news/edit-requests", methods=["GET"])
+@login_required
+def list_news_edit_requests():
+    """List pending edit requests for news (admin-tier only)."""
+    if not current_user.is_admin_tier():
+        abort(403)
+    try:
+        store_file = Path(current_app.instance_path) / "edit_requests.json"
+        if not store_file.exists():
+            return jsonify({"requests": []})
+        with store_file.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        requests_list = data.get("news", []) if isinstance(data, dict) else []
+        # Return pending first, then others
+        pending = [r for r in requests_list if r.get("status") == "pending"]
+        others = [r for r in requests_list if r.get("status") != "pending"]
+        return jsonify({"requests": pending + others}), 200
+    except Exception as e:
+        current_app.logger.error(f"Error reading edit requests: {e}", exc_info=True)
+        return jsonify({"error": "Failed to load edit requests"}), 500
+
+
+def _update_news_edit_request_status(news_id: int, status: str, moderator_username: str):
+    store_file = Path(current_app.instance_path) / "edit_requests.json"
+    try:
+        if not store_file.exists():
+            return False
+        with store_file.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        changed = False
+        if not isinstance(data, dict) or "news" not in data:
+            return False
+        for r in data["news"]:
+            if r.get("news_id") == news_id and r.get("status") == "pending":
+                r["status"] = status
+                r["moderated_at"] = datetime.utcnow().isoformat()
+                r["moderated_by"] = moderator_username
+                changed = True
+        if changed:
+            # Trim on every write
+            try:
+                def _trim_requests(data_obj, max_items=500, max_age_days=30):
+                    cutoff = datetime.utcnow() - timedelta(days=max_age_days)
+                    def parse_dt(iso):
+                        try:
+                            return datetime.fromisoformat(iso.replace('Z','+00:00')).replace(tzinfo=None)
+                        except Exception:
+                            return None
+                    items = data_obj.get("news", []) if isinstance(data_obj, dict) else []
+                    if not isinstance(items, list):
+                        return data_obj
+                    cleaned = []
+                    for r in items:
+                        status_l = (r.get("status") or "").lower()
+                        if status_l == "pending":
+                            cleaned.append(r)
+                            continue
+                        ts = parse_dt(r.get("moderated_at") or r.get("consumed_at") or r.get("created_at"))
+                        if ts is None or ts >= cutoff:
+                            cleaned.append(r)
+                    if len(cleaned) > max_items:
+                        def sort_key(r):
+                            is_pending = (r.get("status") or "").lower() == "pending"
+                            ts = parse_dt(r.get("created_at")) or datetime.min
+                            return (0 if is_pending else 1, ts)
+                        cleaned.sort(key=sort_key)
+                        cleaned = cleaned[-max_items:]
+                    data_obj["news"] = cleaned
+                    return data_obj
+                data = _trim_requests(data)
+            except Exception:
+                pass
+            with store_file.open("w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        return changed
+    except Exception as e:
+        current_app.logger.error(f"Error updating edit request status: {e}", exc_info=True)
+        return False
+
+
+@main_blueprint.route("/api/news/<int:news_id>/approve-edit", methods=["POST"])
+@login_required
+def approve_news_edit(news_id: int):
+    if not current_user.is_admin_tier():
+        abort(403)
+    updated = _update_news_edit_request_status(news_id, "approved", current_user.username)
+    if not updated:
+        return jsonify({"error": "No pending request found"}), 404
+    return jsonify({"success": True, "message": "Edit request approved"}), 200
+
+
+@main_blueprint.route("/api/news/<int:news_id>/reject-edit", methods=["POST"])
+@login_required
+def reject_news_edit(news_id: int):
+    if not current_user.is_admin_tier():
+        abort(403)
+    payload = request.get_json(silent=True) or {}
+    _ = (payload.get("reason") or "").strip()  # optional moderator note (unused for now)
+    updated = _update_news_edit_request_status(news_id, "rejected", current_user.username)
+    if not updated:
+        return jsonify({"error": "No pending request found"}), 404
+    return jsonify({"success": True, "message": "Edit request rejected"}), 200
+
+
+@main_blueprint.route("/api/news/my-edit-requests", methods=["GET"])
+@login_required
+def my_news_edit_requests():
+    """List current user's edit requests and statuses."""
+    try:
+        store_file = Path(current_app.instance_path) / "edit_requests.json"
+        if not store_file.exists():
+            return jsonify({"requests": []}), 200
+        with store_file.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        all_reqs = data.get("news", []) if isinstance(data, dict) else []
+        mine = [r for r in all_reqs if r.get("requester_id") == current_user.id]
+        return jsonify({"requests": mine}), 200
+    except Exception as e:
+        current_app.logger.error(f"Error reading my edit requests: {e}", exc_info=True)
+        return jsonify({"error": "Failed to load your edit requests"}), 500
+
+
+def _consume_news_edit_request(news_id: int, user_id: int):
+    store_file = Path(current_app.instance_path) / "edit_requests.json"
+    try:
+        if not store_file.exists():
+            return False
+        with store_file.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        changed = False
+        if not isinstance(data, dict) or "news" not in data:
+            return False
+        for r in data["news"]:
+            if r.get("news_id") == news_id and r.get("requester_id") == user_id and r.get("status") == "approved":
+                r["status"] = "consumed"
+                r["consumed_at"] = datetime.utcnow().isoformat()
+                changed = True
+        if changed:
+            # Trim on write
+            try:
+                def _trim_requests(data_obj, max_items=500, max_age_days=30):
+                    cutoff = datetime.utcnow() - timedelta(days=max_age_days)
+                    def parse_dt(iso):
+                        try:
+                            return datetime.fromisoformat(iso.replace('Z','+00:00')).replace(tzinfo=None)
+                        except Exception:
+                            return None
+                    items = data_obj.get("news", []) if isinstance(data_obj, dict) else []
+                    if not isinstance(items, list):
+                        return data_obj
+                    cleaned = []
+                    for r in items:
+                        status_l = (r.get("status") or "").lower()
+                        if status_l == "pending":
+                            cleaned.append(r)
+                            continue
+                        ts = parse_dt(r.get("moderated_at") or r.get("consumed_at") or r.get("created_at"))
+                        if ts is None or ts >= cutoff:
+                            cleaned.append(r)
+                    if len(cleaned) > max_items:
+                        def sort_key(r):
+                            is_pending = (r.get("status") or "").lower() == "pending"
+                            ts = parse_dt(r.get("created_at")) or datetime.min
+                            return (0 if is_pending else 1, ts)
+                        cleaned.sort(key=sort_key)
+                        cleaned = cleaned[-max_items:]
+                    data_obj["news"] = cleaned
+                    return data_obj
+                data = _trim_requests(data)
+            except Exception:
+                pass
+            with store_file.open("w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        return changed
+    except Exception as e:
+        current_app.logger.error(f"Error consuming edit request: {e}", exc_info=True)
+        return False
+
+
+@main_blueprint.route("/api/news/<int:news_id>/consume-edit", methods=["POST"])
+@login_required
+def consume_news_edit(news_id: int):
+    """Mark an approved edit request as consumed (one-time use)."""
+    ok = _consume_news_edit_request(news_id, current_user.id)
+    if not ok:
+        return jsonify({"error": "No approved request to consume"}), 400
+    return jsonify({"success": True}), 200

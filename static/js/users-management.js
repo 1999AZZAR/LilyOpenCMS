@@ -184,7 +184,7 @@ class UsersManagement {
                 verification: verification
         });
         
-            const response = await fetch(`/api/users?${params}`);
+            const response = await fetchWithCSRF(`/api/users?${params}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -218,7 +218,7 @@ class UsersManagement {
 
     async loadUserStats() {
         try {
-            const response = await fetch('/api/users/stats');
+            const response = await fetchWithCSRF('/api/users/stats');
             if (!response.ok) {
                 throw new Error('Failed to fetch user statistics');
             }
@@ -243,7 +243,7 @@ class UsersManagement {
 
     async loadRoleStats() {
         try {
-            const response = await fetch('/api/roles');
+            const response = await fetchWithCSRF('/api/roles');
             if (!response.ok) {
                 throw new Error('Failed to fetch roles');
             }
@@ -262,7 +262,7 @@ class UsersManagement {
             }
             
             // Load permissions count
-            const permissionsResponse = await fetch('/api/permissions');
+            const permissionsResponse = await fetchWithCSRF('/api/permissions');
             if (permissionsResponse.ok) {
                 const permissions = await permissionsResponse.json();
                 if (totalPermissionsElement) totalPermissionsElement.textContent = permissions.length || 0;
@@ -275,7 +275,7 @@ class UsersManagement {
 
     async loadPendingStats() {
         try {
-            const response = await fetch('/api/pending/stats');
+            const response = await fetchWithCSRF('/api/pending/stats');
             if (!response.ok) {
                 throw new Error('Failed to fetch pending statistics');
             }
@@ -336,11 +336,16 @@ class UsersManagement {
         }
     }
 
+    shouldShowPasswordResetButtons() {
+        return window.currentUserData && window.currentUserData.role === 'su';
+    }
+
     createUserCard(user) {
     const card = document.createElement('div');
         card.className = 'bg-white border border-amber-200 rounded-lg p-4 hover:shadow-md transition-shadow';
     card.setAttribute('role', 'listitem');
     card.setAttribute('aria-label', `User: ${user.username}`);
+    
     
         // Status and role badges
     const statusClass = user.is_suspended ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100';
@@ -389,6 +394,14 @@ class UsersManagement {
                     <button onclick="usersManagement.openEditUserModal(${user.id})" class="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-300 transition-colors" title="Edit User">
                     <i class="fas fa-edit"></i>
                 </button>
+                    ${this.shouldShowPasswordResetButtons() ? `
+                    <button onclick="usersManagement.openPasswordResetModal(${user.id})" class="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors" title="Reset Password">
+                    <i class="fas fa-key"></i>
+                </button>
+                    <button onclick="usersManagement.showDefaultPasswordModal(${user.id})" class="p-2 bg-orange-100 hover:bg-orange-200 text-orange-600 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors" title="Change to Default Password">
+                    <i class="fas fa-unlock-alt"></i>
+                </button>
+                    ` : ''}
                     <button onclick="usersManagement.showDeleteUserModal(${user.id})" class="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300 transition-colors" title="Delete User">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -564,7 +577,7 @@ renderPagination() {
     };
     
     try {
-            const response = await fetch(`/api/users/${this.currentUserId}`, {
+            const response = await fetchWithCSRF(`/api/users/${this.currentUserId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
@@ -586,24 +599,38 @@ renderPagination() {
 async handleCreateUser(e) {
     e.preventDefault();
     
+    // Validate password confirmation
+    const password = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('new-confirm-password').value;
+    
+    if (password !== confirmPassword) {
+        this.showToast('error', 'Password tidak cocok!');
+        return;
+    }
+    
     const formData = {
-        username: document.getElementById('create-username').value.trim(),
-        email: document.getElementById('create-email').value.trim(),
-        password: document.getElementById('create-password').value,
-        first_name: document.getElementById('create-first-name').value.trim(),
-        last_name: document.getElementById('create-last-name').value.trim(),
-        bio: document.getElementById('create-bio').value.trim(),
-        role: document.getElementById('create-role').value,
-        custom_role: document.getElementById('create-custom-role').value || null,
-        is_active: document.getElementById('create-is-active').checked,
-        verified: document.getElementById('create-verified').checked,
-        is_premium: document.getElementById('create-is-premium').checked,
-        premium_duration: document.getElementById('create-premium-duration').value,
-        send_welcome_email: document.getElementById('create-send-email').checked
+        username: document.getElementById('new-username').value.trim(),
+        email: document.getElementById('new-email').value.trim(),
+        password: password,
+        first_name: document.getElementById('new-first-name').value.trim(),
+        last_name: document.getElementById('new-last-name').value.trim(),
+        bio: document.getElementById('new-bio').value.trim(),
+        role: document.getElementById('new-role').value,
+        custom_role_id: document.getElementById('new-custom-role').value || null,
+        is_active: document.getElementById('new-is-active').checked,
+        verified: document.getElementById('new-verified').checked,
+        is_premium: document.getElementById('new-is-premium').checked,
+        premium_duration: document.getElementById('new-premium-duration')?.value,
+        send_welcome_email: document.getElementById('new-send-welcome-email').checked,
+        premium_features: {
+            ads_free: document.getElementById('new-premium-ads-free')?.checked || false,
+            priority_support: document.getElementById('new-premium-priority')?.checked || false,
+            advanced_features: document.getElementById('new-premium-advanced')?.checked || false
+        }
     };
     
     try {
-        const response = await fetch('/api/users', {
+        const response = await fetchWithCSRF('/api/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
@@ -627,21 +654,43 @@ async handleCreateUser(e) {
 async handlePasswordReset(e) {
     e.preventDefault();
     
+    const newPassword = document.getElementById('new-password-reset').value;
+    const confirmPassword = document.getElementById('confirm-password-reset').value;
+    
+    // Validate password confirmation
+    if (newPassword !== confirmPassword) {
+        this.showToast('error', 'Password dan konfirmasi password tidak cocok');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        this.showToast('error', 'Password harus minimal 6 karakter');
+        return;
+    }
+    
     const formData = {
-        new_password: document.getElementById('reset-password').value,
-        send_email: document.getElementById('reset-send-email').checked
+        new_password: newPassword,
+        send_email: document.getElementById('send-email-reset').checked
     };
     
     try {
-        const response = await fetch(`/api/users/${this.currentUserId}/reset-password`, {
+        const response = await fetchWithCSRF(`/api/users/${this.currentUserId}/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to reset password');
+            let errorMessage = 'Failed to reset password';
+            try {
+                const error = await response.json();
+                errorMessage = error.error || errorMessage;
+            } catch (parseError) {
+                // If response is not JSON, get text
+                const errorText = await response.text();
+                errorMessage = errorText || errorMessage;
+            }
+            throw new Error(errorMessage);
         }
         
         this.showToast('success', 'Password berhasil direset!');
@@ -662,7 +711,7 @@ async handlePasswordReset(e) {
     };
     
     try {
-        const response = await fetch('/api/roles', {
+        const response = await fetchWithCSRF('/api/roles', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
@@ -738,25 +787,36 @@ async handlePasswordReset(e) {
 
     async populateCustomRoleDropdown(selectedRoleId = null) {
         try {
-            const response = await fetch('/api/roles');
+            const response = await fetchWithCSRF('/api/roles');
             if (response.ok) {
                 const roles = await response.json();
-                const dropdown = document.getElementById('edit-custom-role');
+                const editDropdown = document.getElementById('edit-custom-role');
+                const createDropdown = document.getElementById('new-custom-role');
                 
-                // Clear existing options
-                dropdown.innerHTML = '<option value="">Tidak ada peran kustom</option>';
+                // Clear and populate edit dropdown
+                if (editDropdown) {
+                    editDropdown.innerHTML = '<option value="">Tidak ada peran kustom</option>';
+                    roles.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.id;
+                        option.textContent = role.name;
+                        if (selectedRoleId && role.id === parseInt(selectedRoleId)) {
+                            option.selected = true;
+                        }
+                        editDropdown.appendChild(option);
+                    });
+                }
                 
-                // Add role options
-                roles.forEach(role => {
-                    const option = document.createElement('option');
-                    option.value = role.id;
-                    option.textContent = role.name;
-                    if (selectedRoleId && role.id === parseInt(selectedRoleId)) {
-                        option.selected = true;
-                    }
-                    dropdown.appendChild(option);
-                });
-                
+                // Clear and populate create dropdown
+                if (createDropdown) {
+                    createDropdown.innerHTML = '<option value="">Tidak ada peran kustom</option>';
+                    roles.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.id;
+                        option.textContent = role.name;
+                        createDropdown.appendChild(option);
+                    });
+                }
 
             } else {
                 console.error('Failed to load custom roles:', response.status);
@@ -783,7 +843,7 @@ async handlePasswordReset(e) {
 
     async confirmDeleteUser() {
         try {
-            const response = await fetch(`/api/users/${this.currentUserId}`, {
+            const response = await fetchWithCSRF(`/api/users/${this.currentUserId}`, {
                 method: 'DELETE'
             });
             
@@ -830,14 +890,14 @@ async handlePasswordReset(e) {
         try {
             
             // Load custom roles
-            const customRolesResponse = await fetch('/api/roles');
+            const customRolesResponse = await fetchWithCSRF('/api/roles');
             if (customRolesResponse.ok) {
                 const customRoles = await customRolesResponse.json();
                 this.renderCustomRoles(customRoles);
             }
             
             // Load permissions
-            const permissionsResponse = await fetch('/api/permissions');
+            const permissionsResponse = await fetchWithCSRF('/api/permissions');
             if (permissionsResponse.ok) {
                 const permissions = await permissionsResponse.json();
                 this.renderPermissions(permissions);
@@ -940,7 +1000,7 @@ async handlePasswordReset(e) {
     async loadPendingUsers() {
         try {
             
-            const response = await fetch('/api/registrations/pending');
+            const response = await fetchWithCSRF('/api/registrations/pending');
             if (!response.ok) {
                 throw new Error('Failed to fetch pending users');
             }
@@ -955,7 +1015,7 @@ async handlePasswordReset(e) {
 
     async loadDeletionRequests() {
         try {
-            const response = await fetch('/api/users/deletion-requests');
+            const response = await fetchWithCSRF('/api/users/deletion-requests');
             if (!response.ok) {
                 throw new Error('Failed to fetch deletion requests');
             }
@@ -1019,7 +1079,7 @@ async handlePasswordReset(e) {
 
     async approveDeletion(userId) {
         try {
-            const response = await fetch(`/api/users/${userId}/approve-deletion`, {
+            const response = await fetchWithCSRF(`/api/users/${userId}/approve-deletion`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1042,7 +1102,7 @@ async handlePasswordReset(e) {
 
     async rejectDeletion(userId) {
         try {
-            const response = await fetch(`/api/users/${userId}/reject-deletion`, {
+            const response = await fetchWithCSRF(`/api/users/${userId}/reject-deletion`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1316,7 +1376,7 @@ async handlePasswordReset(e) {
 
     async confirmDeleteRole() {
         try {
-            const response = await fetch(`/api/roles/${this.currentRoleId}`, {
+            const response = await fetchWithCSRF(`/api/roles/${this.currentRoleId}`, {
                 method: 'DELETE'
             });
             
@@ -1349,7 +1409,7 @@ async handlePasswordReset(e) {
         };
         
         try {
-            const response = await fetch(`/api/roles/${this.currentRoleId}`, {
+            const response = await fetchWithCSRF(`/api/roles/${this.currentRoleId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -1381,7 +1441,7 @@ async handlePasswordReset(e) {
     // Additional methods for user approval
     async approveUser(userId) {
         try {
-            const response = await fetch(`/api/registrations/${userId}/approve`, {
+            const response = await fetchWithCSRF(`/api/registrations/${userId}/approve`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -1400,7 +1460,7 @@ async handlePasswordReset(e) {
 
     async rejectUser(userId) {
         try {
-            const response = await fetch(`/api/registrations/${userId}/reject`, {
+            const response = await fetchWithCSRF(`/api/registrations/${userId}/reject`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ reason: 'Ditolak oleh administrator' })
@@ -1427,7 +1487,7 @@ async handlePasswordReset(e) {
 
     async exportUsers() {
         try {
-            const response = await fetch('/api/users/bulk/export', {
+            const response = await fetchWithCSRF('/api/users/bulk/export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ format: 'csv' })
@@ -1454,7 +1514,7 @@ async handlePasswordReset(e) {
     async exportPerformance() {
         try {
             const period = document.getElementById('performance-period')?.value || '30';
-            const response = await fetch(`/api/users/performance/report/export?days=${period}`, {
+            const response = await fetchWithCSRF(`/api/users/performance/report/export?days=${period}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ format: 'csv' })
@@ -1480,7 +1540,7 @@ async handlePasswordReset(e) {
 
     async exportRoles() {
         try {
-            const response = await fetch('/api/roles/bulk/export', {
+            const response = await fetchWithCSRF('/api/roles/bulk/export', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ format: 'csv' })
@@ -1528,6 +1588,8 @@ async handlePasswordReset(e) {
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            // Load custom roles when modal opens
+            this.populateCustomRoleDropdown();
         }
     }
 
@@ -1539,6 +1601,33 @@ async handlePasswordReset(e) {
             // Reset form
             const form = document.getElementById('create-user-form');
             if (form) form.reset();
+            // Hide premium settings
+            const premiumSettings = document.getElementById('premium-settings');
+            if (premiumSettings) {
+                premiumSettings.classList.add('hidden');
+            }
+            // Clear username status
+            const usernameStatus = document.getElementById('username-status');
+            if (usernameStatus) {
+                usernameStatus.classList.add('hidden');
+            }
+            // Reset username field styling
+            const usernameField = document.getElementById('new-username');
+            if (usernameField) {
+                usernameField.classList.remove('border-red-500');
+                usernameField.classList.add('border-gray-300');
+            }
+            // Clear email status
+            const emailStatus = document.getElementById('email-status');
+            if (emailStatus) {
+                emailStatus.classList.add('hidden');
+            }
+            // Reset email field styling
+            const emailField = document.getElementById('new-email');
+            if (emailField) {
+                emailField.classList.remove('border-red-500');
+                emailField.classList.add('border-gray-300');
+            }
         }
     }
 
@@ -1581,6 +1670,9 @@ async handlePasswordReset(e) {
             // Reset form
             const form = document.getElementById('password-reset-form');
             if (form) form.reset();
+            // Set the user ID in the hidden field
+            const userIdField = document.getElementById('reset-user-id');
+            if (userIdField) userIdField.value = userId;
         }
     }
 
@@ -1589,6 +1681,82 @@ async handlePasswordReset(e) {
         if (modal) {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+        }
+    }
+
+    showDefaultPasswordModal(userId) {
+        this.currentUserId = userId;
+        const user = this.users.find(u => u.id === userId);
+        if (!user) {
+            this.showToast('error', 'User tidak ditemukan');
+            return;
+        }
+
+        // Store the username for confirmation
+        this.currentUsername = user.username;
+        
+        // Reset the confirmation input
+        const confirmInput = document.getElementById('confirm-username');
+        if (confirmInput) {
+            confirmInput.value = '';
+        }
+
+        const modal = document.getElementById('default-password-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
+    closeDefaultPasswordModal() {
+        const modal = document.getElementById('default-password-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        this.currentUserId = null;
+        this.currentUsername = null;
+    }
+
+    async confirmDefaultPasswordReset() {
+        const confirmInput = document.getElementById('confirm-username');
+        const enteredUsername = confirmInput.value.trim();
+        
+        if (enteredUsername !== this.currentUsername) {
+            this.showToast('error', 'Username tidak cocok. Silakan ketik username yang benar.');
+            return;
+        }
+
+        try {
+            const response = await fetchWithCSRF(`/api/users/${this.currentUserId}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    new_password: 'password123',
+                    send_email: false
+                })
+            });
+
+            if (!response.ok) {
+                let errorMessage = 'Failed to reset password';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.error || errorMessage;
+                } catch (parseError) {
+                    // If response is not JSON, get text
+                    const errorText = await response.text();
+                    errorMessage = errorText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
+            this.showToast('success', 'Password berhasil direset ke default!');
+            this.closeDefaultPasswordModal();
+        } catch (error) {
+            console.error('Error resetting password to default:', error);
+            this.showToast('error', `Gagal reset password: ${error.message}`);
         }
     }
 
@@ -1641,6 +1809,210 @@ async handlePasswordReset(e) {
                 </div>
             </div>
         `;
+    }
+
+    async loadWriteAccessRequests() {
+        try {
+            const response = await fetchWithCSRF('/api/write-access-requests');
+            if (!response.ok) {
+                throw new Error('Failed to fetch write access requests');
+            }
+
+            const data = await response.json();
+            this.renderWriteAccessRequests(data.requests || []);
+            this.updateWriteAccessStats(data);
+        } catch (error) {
+            console.error('Error loading write access requests:', error);
+            this.showToast('error', 'Gagal memuat permintaan akses tulis');
+        }
+    }
+
+    renderWriteAccessRequests(requests) {
+        const container = document.getElementById('write-access-requests');
+        if (!container) return;
+
+        if (!requests || requests.length === 0) {
+            container.innerHTML = '<div class="text-gray-600">Tidak ada permintaan akses tulis yang menunggu.</div>';
+            return;
+        }
+
+        const html = requests.map(request => `
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="font-semibold text-gray-800">${request.user.username}</h4>
+                        <p class="text-gray-600 text-sm">${request.user.email || 'Tidak ada email'}</p>
+                        <p class="text-gray-500 text-xs">Diminta pada: ${new Date(request.requested_at).toLocaleDateString('id-ID')}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="approveWriteAccessRequest(${request.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                            <i class="fas fa-check mr-1"></i>Setujui
+                        </button>
+                        <button onclick="rejectWriteAccessRequest(${request.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                            <i class="fas fa-times mr-1"></i>Tolak
+                        </button>
+                        <button onclick="viewWriteAccessRequest(${request.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                            <i class="fas fa-eye mr-1"></i>Lihat
+                        </button>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <p><strong>Alasan:</strong> ${request.request_reason || 'Tidak ada alasan'}</p>
+                    <p><strong>Pengalaman:</strong> ${request.experience_description || 'Tidak ada pengalaman'}</p>
+                    <p><strong>Portfolio:</strong> ${request.portfolio_links || 'Tidak ada portfolio'}</p>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = html;
+    }
+
+    updateWriteAccessStats(data) {
+        const totalPending = document.getElementById('total-write-access-pending');
+        const approvedToday = document.getElementById('approved-write-access-today');
+        const rejectedToday = document.getElementById('rejected-write-access-today');
+        const avgTime = document.getElementById('avg-write-access-time');
+
+        if (totalPending) totalPending.textContent = data.total_pending || 0;
+        if (approvedToday) approvedToday.textContent = data.approved_today || 0;
+        if (rejectedToday) rejectedToday.textContent = data.rejected_today || 0;
+        if (avgTime) avgTime.textContent = data.avg_time || '-';
+    }
+
+    async approveWriteAccess(requestId) {
+        try {
+            const response = await fetchWithCSRF(`/api/write-access-requests/${requestId}/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                
+                // Handle specific error cases
+                if (error.error && error.error.includes('already been')) {
+                    this.showToast('warning', 'Permintaan ini sudah diproses sebelumnya');
+                    this.loadWriteAccessRequests(); // Refresh to update UI
+                    return;
+                }
+                
+                throw new Error(error.error || 'Failed to approve write access request');
+            }
+
+            this.showToast('success', 'Permintaan akses tulis berhasil disetujui');
+            this.loadWriteAccessRequests(); // Refresh the list
+        } catch (error) {
+            console.error('Error approving write access request:', error);
+            this.showToast('error', error.message || 'Gagal menyetujui permintaan akses tulis');
+        }
+    }
+
+    async rejectWriteAccess(requestId) {
+        try {
+            const response = await fetchWithCSRF(`/api/write-access-requests/${requestId}/reject`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                
+                // Handle specific error cases
+                if (error.error && error.error.includes('already been')) {
+                    this.showToast('warning', 'Permintaan ini sudah diproses sebelumnya');
+                    this.loadWriteAccessRequests(); // Refresh to update UI
+                    return;
+                }
+                
+                throw new Error(error.error || 'Failed to reject write access request');
+            }
+
+            this.showToast('success', 'Permintaan akses tulis berhasil ditolak');
+            this.loadWriteAccessRequests(); // Refresh the list
+        } catch (error) {
+            console.error('Error rejecting write access request:', error);
+            this.showToast('error', error.message || 'Gagal menolak permintaan akses tulis');
+        }
+    }
+
+    async viewWriteAccessRequest(requestId) {
+        try {
+            const response = await fetchWithCSRF(`/api/write-access-requests/${requestId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch write access request details');
+            }
+
+            const data = await response.json();
+            if (data.success && data.request) {
+                this.showWriteAccessDetails(data.request);
+            }
+        } catch (error) {
+            console.error('Error loading write access request details:', error);
+            this.showToast('error', 'Gagal memuat detail permintaan akses tulis');
+        }
+    }
+
+    showWriteAccessDetails(request) {
+        // This could open a modal or show details in place
+        alert(`Detail Permintaan Akses Tulis:\n\nPengguna: ${request.user.username}\nAlasan: ${request.request_reason}\nPengalaman: ${request.experience_description}`);
+    }
+
+    async bulkApproveWriteAccess() {
+        try {
+            const response = await fetchWithCSRF('/api/write-access-requests/bulk/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                
+                // Handle specific error cases
+                if (error.error && error.error.includes('No pending requests')) {
+                    this.showToast('info', 'Tidak ada permintaan yang menunggu untuk disetujui');
+                    this.loadWriteAccessRequests(); // Refresh to update UI
+                    return;
+                }
+                
+                throw new Error(error.error || 'Failed to bulk approve write access requests');
+            }
+
+            const result = await response.json();
+            this.showToast('success', result.message || 'Semua permintaan akses tulis yang menunggu berhasil disetujui');
+            this.loadWriteAccessRequests(); // Refresh the list
+        } catch (error) {
+            console.error('Error bulk approving write access requests:', error);
+            this.showToast('error', error.message || 'Gagal menyetujui permintaan akses tulis secara massal');
+        }
+    }
+
+    async bulkRejectWriteAccess() {
+        try {
+            const response = await fetchWithCSRF('/api/write-access-requests/bulk/reject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                
+                // Handle specific error cases
+                if (error.error && error.error.includes('No pending requests')) {
+                    this.showToast('info', 'Tidak ada permintaan yang menunggu untuk ditolak');
+                    this.loadWriteAccessRequests(); // Refresh to update UI
+                    return;
+                }
+                
+                throw new Error(error.error || 'Failed to bulk reject write access requests');
+            }
+
+            const result = await response.json();
+            this.showToast('success', result.message || 'Semua permintaan akses tulis yang menunggu berhasil ditolak');
+            this.loadWriteAccessRequests(); // Refresh the list
+        } catch (error) {
+            console.error('Error bulk rejecting write access requests:', error);
+            this.showToast('error', error.message || 'Gagal menolak permintaan akses tulis secara massal');
+        }
     }
 }
 
@@ -1782,5 +2154,61 @@ function approveDeletion(userId) {
 function rejectDeletion(userId) {
     if (window.usersManagement) {
         window.usersManagement.rejectDeletion(userId);
+    }
+}
+
+// Default password reset functions
+function showDefaultPasswordModal(userId) {
+    if (window.usersManagement) {
+        window.usersManagement.showDefaultPasswordModal(userId);
+    }
+}
+
+function closeDefaultPasswordModal() {
+    if (window.usersManagement) {
+        window.usersManagement.closeDefaultPasswordModal();
+    }
+}
+
+function confirmDefaultPasswordReset() {
+    if (window.usersManagement) {
+        window.usersManagement.confirmDefaultPasswordReset();
+    }
+}
+
+// Write access request functions
+function loadWriteAccessRequests() {
+    if (window.usersManagement) {
+        window.usersManagement.loadWriteAccessRequests();
+    }
+}
+
+function approveWriteAccessRequest(requestId) {
+    if (window.usersManagement) {
+        window.usersManagement.approveWriteAccess(requestId);
+    }
+}
+
+function rejectWriteAccessRequest(requestId) {
+    if (window.usersManagement) {
+        window.usersManagement.rejectWriteAccess(requestId);
+    }
+}
+
+function viewWriteAccessRequest(requestId) {
+    if (window.usersManagement) {
+        window.usersManagement.viewWriteAccessRequest(requestId);
+    }
+}
+
+function bulkApproveWriteAccess() {
+    if (window.usersManagement) {
+        window.usersManagement.bulkApproveWriteAccess();
+    }
+}
+
+function bulkRejectWriteAccess() {
+    if (window.usersManagement) {
+        window.usersManagement.bulkRejectWriteAccess();
     }
 }

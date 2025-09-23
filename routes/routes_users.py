@@ -68,11 +68,69 @@ def list_editor_assignments(editor_id):
     if not editor:
         abort(404)
     return jsonify({"editor_id": editor.id, "writers": [{"id": w.id, "username": w.username, "email": w.email} for w in editor.assigned_writers]})
-from models import User, News, Image, YouTubeVideo, UserActivity, CustomRole
+from models import User, News, Image, YouTubeVideo, UserActivity, CustomRole, Album
+from sqlalchemy import text
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_, func
 from werkzeug.security import generate_password_hash
+
+
+def _transfer_and_delete_user(target_user: User, transfer_user_id: int) -> None:
+    """Transfer owned content away from target_user and delete the user safely.
+
+    Also includes a best-effort SQLite schema guard for the `ad` table to avoid
+    ORM selects failing on outdated schemas (missing enhanced ad columns).
+    """
+    # Best-effort: ensure enhanced ad columns exist (SQLite only)
+    try:
+        if db.session.bind and db.session.bind.dialect.name == 'sqlite':
+            cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(ad)")).fetchall()]
+            required_cols = [
+                ('image_filename', 'VARCHAR(255)'),
+                ('image_upload_path', 'VARCHAR(500)'),
+                ('image_alt', 'VARCHAR(200)'),
+                ('image_width', 'INTEGER'),
+                ('image_height', 'INTEGER'),
+                ('image_file_size', 'INTEGER'),
+                ('text_content', 'TEXT'),
+                ('html_content', 'TEXT'),
+                ('external_ad_code', 'TEXT'),
+                ('external_ad_client', 'VARCHAR(100)'),
+                ('external_ad_slot', 'VARCHAR(100)'),
+                ('width', 'INTEGER'),
+                ('height', 'INTEGER'),
+                ('css_classes', 'VARCHAR(500)'),
+                ('inline_styles', 'TEXT'),
+                ('content_type', 'VARCHAR(50)'),
+                ('impressions', 'INTEGER DEFAULT 0 NOT NULL'),
+                ('clicks', 'INTEGER DEFAULT 0 NOT NULL'),
+                ('ctr', 'FLOAT DEFAULT 0.0 NOT NULL'),
+                ('created_by', 'INTEGER'),
+                ('updated_by', 'INTEGER'),
+            ]
+            for col_name, col_type in required_cols:
+                if col_name not in cols:
+                    db.session.execute(text(f"ALTER TABLE ad ADD COLUMN {col_name} {col_type}"))
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    # Transfer ownership of ORM-mapped content without loading Ad ORM
+    Album.query.filter_by(user_id=target_user.id).update({Album.user_id: transfer_user_id}, synchronize_session=False)
+    News.query.filter_by(user_id=target_user.id).update({News.user_id: transfer_user_id}, synchronize_session=False)
+    Image.query.filter_by(user_id=target_user.id).update({Image.user_id: transfer_user_id}, synchronize_session=False)
+    YouTubeVideo.query.filter_by(user_id=target_user.id).update({YouTubeVideo.user_id: transfer_user_id}, synchronize_session=False)
+
+    # Raw SQL to update ad ownership to avoid ORM projection of missing columns
+    try:
+        db.session.execute(text("UPDATE ad SET created_by = :to WHERE created_by = :from"), {"to": transfer_user_id, "from": target_user.id})
+        db.session.execute(text("UPDATE ad SET updated_by = :to WHERE updated_by = :from"), {"to": transfer_user_id, "from": target_user.id})
+    except Exception:
+        pass
+
+    # Delete user using raw SQL to avoid ORM relationship loads that may SELECT Ad
+    db.session.execute(text("DELETE FROM user WHERE id = :uid"), {"uid": target_user.id})
 
 @main_blueprint.route("/api/users", methods=["GET"])
 @login_required
@@ -185,6 +243,62 @@ def get_users():
         }
     })
 
+@main_blueprint.route("/api/users/check-username", methods=["GET"])
+@login_required
+def check_username_availability():
+    """Check if a username is available."""
+    try:
+        # Only superusers and admins can check usernames
+        if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+            abort(403)
+        
+        username = request.args.get('username', '').strip()
+        if not username:
+            return jsonify({"error": "Username is required"}), 400
+        
+        # Check if username already exists
+        existing_user = User.query.filter_by(username=username).first()
+        available = existing_user is None
+        
+        return jsonify({
+            "available": available,
+            "username": username,
+            "message": "Username available" if available else "Username already exists"
+        })
+        
+    except Exception as e:
+        print(f"Error checking username: {e}")
+        return jsonify({"error": "Failed to check username"}), 500
+
+
+@main_blueprint.route("/api/users/check-email", methods=["GET"])
+@login_required
+def check_email_availability():
+    """Check if an email is available."""
+    try:
+        # Only superusers and admins can check emails
+        if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+            abort(403)
+        
+        email = request.args.get('email', '').strip()
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+        
+        # Check if email already exists
+        existing_user = User.query.filter_by(email=email).first()
+        available = existing_user is None
+        
+        return jsonify({
+            "available": available,
+            "email": email,
+            "message": "Email available" if available else "Email already exists"
+        })
+        
+    except Exception as e:
+        print(f"Error checking email: {e}")
+        return jsonify({"error": "Failed to check email"}), 500
+
+
 @main_blueprint.route("/api/users", methods=["POST"])
 @login_required
 def create_user():
@@ -201,7 +315,8 @@ def create_user():
         # Validate required fields
         required_fields = ['username', 'email', 'password', 'role']
         for field in required_fields:
-            if not data.get(field):
+            field_value = data.get(field)
+            if not field_value:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
         # Check if username already exists
@@ -214,9 +329,10 @@ def create_user():
         
         # Validate role
         try:
-            role = UserRole(data['role'])
-        except ValueError:
-            return jsonify({"error": "Invalid role value"}), 400
+            role_value = data['role']
+            role = UserRole(role_value)
+        except ValueError as e:
+            return jsonify({"error": f"Invalid role value: {role_value}"}), 400
         
         # Create user
         user = User(
@@ -253,8 +369,9 @@ def create_user():
                 user.premium_expires_at = datetime.now(timezone.utc) + timedelta(days=int(duration))
         
         # Assign custom role if specified
-        if data.get('custom_role'):
-            custom_role = CustomRole.query.filter_by(name=data['custom_role']).first()
+        custom_role_id = data.get('custom_role_id')
+        if custom_role_id:
+            custom_role = CustomRole.query.get(custom_role_id)
             if custom_role:
                 user.custom_role = custom_role
         
@@ -282,6 +399,15 @@ def create_user():
             }
         }), 201
         
+    except IntegrityError as e:
+        db.session.rollback()
+        error_msg = str(e)
+        if "UNIQUE constraint failed: user.email" in error_msg:
+            return jsonify({"error": "Email already exists"}), 400
+        elif "UNIQUE constraint failed: user.username" in error_msg:
+            return jsonify({"error": "Username already exists"}), 400
+        else:
+            return jsonify({"error": "User with this information already exists"}), 400
     except Exception as e:
         db.session.rollback()
         print(f"Error creating user: {e}")
@@ -362,9 +488,23 @@ def delete_user(user_id):
     # Record activity before deletion (disabled - method not available)
     pass
     
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"message": "User deleted successfully"})
+    # Reassign owned content to the deleter (or optional transfer target)
+    try:
+        transfer_to = request.args.get('transfer_to', type=int)
+        transfer_user_id = transfer_to if transfer_to else current_user.id
+        if transfer_user_id == user.id:
+            return jsonify({"error": "transfer_to cannot be the same as the deleted user"}), 400
+        transfer_user = User.query.get(transfer_user_id)
+        if not transfer_user:
+            return jsonify({"error": "transfer target user not found"}), 404
+
+        _transfer_and_delete_user(user, transfer_user_id)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting user {user_id}: {e}")
+        return jsonify({"error": "Failed to delete user"}), 500
+    return jsonify({"message": "User deleted successfully", "transferred_to": transfer_user_id})
 
 
 @main_blueprint.route("/api/user/role", methods=["GET"])
@@ -471,8 +611,8 @@ def approve_account_deletion(user_id):
         if user.id == current_user.id:
             return jsonify({"error": "Cannot delete your own account"}), 403
         
-        # Permanently delete the user
-        db.session.delete(user)
+        # Permanently delete the user with safe transfer (to current admin)
+        _transfer_and_delete_user(user, current_user.id)
         db.session.commit()
         
         return jsonify({
@@ -938,9 +1078,9 @@ def bulk_delete_users():
         # Record activity before deletion (disabled - method not available)
         pass
         
-        # Delete users
+        # Delete users with safe transfer to current admin
         for user in deletable_users:
-            db.session.delete(user)
+            _transfer_and_delete_user(user, current_user.id)
         
         db.session.commit()
         
@@ -1621,7 +1761,7 @@ def get_user_details(user_id):
 @login_required
 def reset_user_password(user_id):
     """Reset user password."""
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+    if current_user.role != UserRole.SUPERUSER:
         abort(403)
     
     user = User.query.get_or_404(user_id)

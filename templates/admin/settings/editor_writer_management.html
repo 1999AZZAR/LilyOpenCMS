@@ -40,7 +40,7 @@
 <script>
 let selectedEditorId = null;
 async function fetchEditors(q='') {
-  const res = await fetch(`/api/editor-writer/editors?q=${encodeURIComponent(q)}`);
+  const res = await fetchWithCSRF(`/api/editor-writer/editors?q=${encodeURIComponent(q)}`);
   const list = await res.json();
   const box = document.getElementById('editors-list');
   box.innerHTML = '';
@@ -61,7 +61,7 @@ function renderEditors(list){
   })
 }
 async function fetchWriters(q='') {
-  const res = await fetch(`/api/editor-writer/writers?q=${encodeURIComponent(q)}`);
+  const res = await fetchWithCSRF(`/api/editor-writer/writers?q=${encodeURIComponent(q)}`);
   const list = await res.json();
   const box = document.getElementById('writers-list');
   box.innerHTML = '';
@@ -78,7 +78,7 @@ async function fetchWriters(q='') {
   });
 }
 async function loadAssigned(editorId) {
-  const res = await fetch(`/api/editor-writer/${editorId}/list`);
+  const res = await fetchWithCSRF(`/api/editor-writer/${editorId}/list`);
   if (!res.ok) { return; }
   const data = await res.json();
   // Tick checkboxes for assigned writers
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const editorId = selectedEditorId;
     if (!editorId) { if (typeof showToast==='function') showToast('warning', 'Pilih editor terlebih dahulu'); return; }
     const writer_ids = Array.from(document.querySelectorAll('#writers-list input[type="checkbox"]:checked')).map(cb=>parseInt(cb.value,10));
-    const res = await fetch(`/api/editor-writer/${editorId}/assign`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({writer_ids})});
+    const res = await fetchWithCSRF(`/api/editor-writer/${editorId}/assign`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({writer_ids})});
     if (res.ok) {
       await loadAssigned(editorId);
       if (typeof showToast==='function') showToast('success', 'Penugasan disimpan');

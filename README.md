@@ -2,9 +2,26 @@
 
 A comprehensive Flask-based content management system with advanced SEO features, multimedia management, and robust user permissions. Built for modern web publishing with automatic image optimization, comprehensive sitemap generation, and enterprise-grade security.
 
-## 🚀 Features
+## Features
 
-### 🔧 Recent System Improvements (2025-01-08)
+### Recent System Improvements (2025-09-08)
+
+- **✅ Aggressive Query Caching System**: Advanced caching with background refresh, smart preloading, and extended cache times
+  - Background refresh system that refreshes cache at 80% of timeout
+  - Smart preloading with prediction patterns for related queries
+  - Extended cache times (2x) for aggressive mode performance
+  - Preload queue system for background query execution
+  - Cache warming functionality for common queries on startup
+  - Enhanced statistics tracking (preloads, background refreshes, prediction accuracy)
+  - Aggressive caching decorators: `@cache_frontend_critical`, `@cache_user_dashboard`, `@cache_public_content`, `@cache_navigation_data`
+  - Applied to all major route files for maximum performance impact
+  - Thread-safe cache operations with proper locking
+  - Smart cache invalidation with pattern matching
+- **✅ SSR Optimization Dashboard**: Live refresh functionality with dynamic DOM updates
+  - Read-only endpoints for SSR statistics and cache stats
+  - Settings endpoints for template caching configuration
+  - Dynamic DOM updates without full page reload
+  - Settings persistence to `instance/app_settings.json`
 - **✅ Comment Edit & Delete System**: Comprehensive comment management with inline editing and deletion in user library
 - **✅ User Image Management**: Dedicated image management page with upload, edit, delete, and visibility controls
 - **✅ Enhanced Profile Layout**: Optimized profile.html to use more viewport width with improved spacing and layout
@@ -27,7 +44,8 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **✅ Error Handling**: Robust error handling and fallback mechanisms implemented
 - **✅ DOCX Upload Tool Enhancement**: Added quick link to news management for seamless workflow integration
 
-### 📝 Content Management
+### Content Management
+
 - **Advanced News Management**: Create, edit, delete articles with rich text editing (edit via `/settings/create_news?news_id=<id>`, redirects back to `/settings/manage_news` or album chapters if `album_id` present)
 - **Album Management System**: Create albums containing multiple news/articles as chapters, like a novel structure
 - **Public Album Pages**: Dedicated album listing, detail pages, and chapter reader with markdown support
@@ -43,7 +61,8 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Related Articles**: Smart content suggestions
 - **Enhanced Settings Management**: Advanced admin dashboard with tabbed interface, real-time search, and optimized JavaScript architecture
 
-### 🎨 Media Management
+### Media Management
+
 - **Automatic Image Optimization**: WebP conversion, compression, and multiple thumbnail sizes
 - **User Image Management**: Dedicated image management page with upload, edit, delete, and visibility controls
 - **Image Visibility Control**: Toggle image visibility with proper permission checks
@@ -54,7 +73,8 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Bulk Upload**: Multiple file upload with progress tracking
 - **CDN Ready**: Optimized for content delivery networks
 
-### 👥 User & Permission System
+### User & Permission System
+
 - **Smart Routing System**: Role-based dashboard routing (admin/superuser/owner → `/settings`, general users → `/dashboard`)
 - **Template Context Integration**: Automatic dashboard selection based on user role
 - **Enhanced User Management**: Advanced user listing with pagination, search, and filtering
@@ -70,7 +90,8 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Registration Approval**: Admin-controlled user registration
 - **Backup API Endpoints**: Resolved 404 errors for roles and permissions
 
-### 🔍 SEO & Analytics
+### SEO & Analytics
+
 - **SEO Leveling System**: Hierarchical SEO management with content-specific SEO taking precedence over root SEO
 - **Comprehensive Sitemaps**: XML sitemaps for all content types
 - **SEO Score Calculation**: Automated SEO scoring (0-100)
@@ -80,23 +101,28 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Analytics Dashboard**: Content performance metrics
 - **Search Engine Optimization**: URL slugs, canonical URLs, robots.txt
 
-### 🛡️ Security & Performance
+### Security & Performance
+
 - **Advanced Security**: Rate limiting, input validation, CSRF protection
 - **File Upload Security**: Virus scanning, type restrictions
 - **Session Management**: Secure session handling with auto-logout
 - **Database Security**: SQL injection protection with parameterized queries
+- **Aggressive Query Caching**: Advanced caching system with background refresh, smart preloading, and extended cache times
 - **Performance Optimization**: Redis caching, database optimization, lazy loading, progressive images, externalized JavaScript modules
 - **Performance Monitoring**: Real-time metrics, slow query detection, cache management
 - **Frontend Optimization**: Externalized JavaScript files for better caching and faster loading
+- **Cache Statistics**: Comprehensive cache performance tracking with preloads, background refreshes, and prediction accuracy
 
-### 🎯 Premium & Subscription System
+### Premium & Subscription System
+
 - **Premium Content**: Exclusive content for subscribers
 - **Subscription Management**: Multiple subscription tiers
 - **Ad-Free Experience**: Premium users get ad-free browsing
 - **Content Gating**: Protect premium content with subscription requirements
 - **Payment Integration**: Ready for payment gateway integration
 
-### 🛡️ Content Deletion Request System
+### Content Deletion Request System
+
 - **Consistent Workflow**: All users (including admins) must request content deletion for approval
 - **Request Workflow**: Any user can request deletion of any content for admin approval
 - **Admin Approval**: Content moderators and admins approve/reject deletion requests
@@ -105,7 +131,8 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Audit Trail**: Complete tracking of who requested, when, and approval status
 - **Enhanced Security**: Prevents unauthorized content deletion while maintaining consistent workflownn### 🌐 Public API Endpointsn- **Multiplatform Access**: JSON endpoints for mobile apps, desktop clients, and third-party integrationsn- **News API**: Public endpoints for news articles and lists with filtering and paginationn- **Albums API**: Public endpoints for albums, chapters, and related contentn- **User Profiles API**: Public user profile data, statistics, and library accessn- **Categories & Tags API**: Public access to content categories and tag systemn- **Comments API**: Public comment retrieval with threading and moderationn- **Unified Search API**: Cross-content search with type filtering and paginationn- **No Authentication Required**: All endpoints are publicly accessible for multiplatform usage
 
-### 💬 Comment & Rating System
+### Comment & Rating System
+
 - **Nested Comments**: Threaded comment system with replies
 - **Inline Comment Editing**: Edit comments directly in the user library with real-time updates
 - **Comment Deletion**: Delete comments with confirmation dialogs and DOM updates
@@ -122,7 +149,8 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Rating Distribution**: Visual breakdown of 1-5 star ratings
 - **Top Rated Content**: Discover highest-rated articles and albums
 
-### 🏆 Achievement System
+### Achievement System
+
 - **Comprehensive Gamification**: Track user activities and award achievements
 - **Streak Tracking**: Login, activity, and reading streaks with daily consistency
 - **Contribution Achievements**: Content creation milestones (articles, albums, images)
@@ -136,9 +164,10 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Achievement Dashboard**: Comprehensive user achievement overview
 - **Performance Optimized**: Efficient tracking with database indexes and cleanup
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 ### Backend
+
 - **Python 3.8+** - Core programming language
 - **Flask 2.x** - Web framework
 - **SQLAlchemy** - ORM and database management
@@ -148,6 +177,7 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Pillow (PIL)** - Image processing and optimization
 
 ### Frontend
+
 - **Tailwind CSS** - Utility-first CSS framework
 - **JavaScript (ES6+)** - Modern JavaScript with externalized modules for optimal caching
 - **SimpleMDE** - Markdown editor
@@ -155,17 +185,20 @@ A comprehensive Flask-based content management system with advanced SEO features
 - **Advanced Search System** - Real-time search with dedicated results tab and highlighted matches
 
 ### Database
+
 - **SQLite** - Default database (production-ready alternatives supported)
 - **PostgreSQL/MySQL** - Production database options
 
 ### Deployment
+
 - **Gunicorn** - WSGI server
 - **Passenger** - Alternative WSGI server
 - **Docker** - Containerization ready
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
+
 - Python 3.8 or higher
 - pip package manager
 - Git
@@ -174,62 +207,66 @@ A comprehensive Flask-based content management system with advanced SEO features
 ### Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd LilyOpenCms
    ```
-
 2. **Create virtual environment**
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
-
 3. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
-
 4. **Set up Redis (Required for performance optimizations)**
-   
+
    **Ubuntu/Debian:**
+
    ```bash
    sudo apt update
    sudo apt install redis-server
    sudo systemctl start redis-server
    sudo systemctl enable redis-server
    ```
-   
+
    **macOS:**
+
    ```bash
    brew install redis
    brew services start redis
    ```
-   
+
    **Windows:**
+
    ```bash
    # Download from https://redis.io/download
    # Or use WSL2 with Ubuntu instructions above
    ```
-   
+
    **Using the provided setup script:**
+
    ```bash
    chmod +x optimizations/setup_redis.sh
    ./optimizations/setup_redis.sh
    ```
-
 5. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
-
 6. **Initialize database**
+
    ```bash
    flask db upgrade
    ```
-
 7. **Seed initial data (optional)**
+
    ```bash
    cd helper
    python generate_user.py
@@ -239,17 +276,17 @@ A comprehensive Flask-based content management system with advanced SEO features
    python add_videos.py
    python init_footer_data.py
    ```
-
 8. **Set up achievement system (optional)**
+
    ```bash
    # Initialize achievement system with default categories and achievements
    python helper/init_achievement_system.py
-   
+
    # Test the achievement system
    python test/test_achievement_system.py
    ```
-
 9. **Run the application**
+
    ```bash
    python main.py
    ```
@@ -261,24 +298,28 @@ A comprehensive Flask-based content management system with advanced SEO features
 The application uses Redis for caching and performance optimizations. Make sure Redis is running before starting the application.
 
 **Verify Redis is running:**
+
 ```bash
 redis-cli ping
 # Should return: PONG
 ```
 
 **Test Redis connection from Python:**
+
 ```bash
 python -c "import redis; r = redis.Redis(); print('Redis connection:', r.ping())"
 ```
 
 **Redis Configuration Options:**
+
 - **Default**: `redis://localhost:6379/0`
 - **With Password**: `redis://:password@localhost:6379/0`
 - **Custom Host/Port**: Set `REDIS_HOST` and `REDIS_PORT` in `.env`
 
-## 📚 Documentation
+## Documentation
 
 ### Core Documentation
+
 - **[Documentation Index](docs/README.md)** - Complete documentation index and navigation
 - **[API Documentation](docs/api.md)** - Complete API reference with endpoints and examples
 - **[Admin UI Guide](docs/admin_ui.md)** - Comprehensive admin interface documentation
@@ -287,20 +328,22 @@ python -c "import redis; r = redis.Redis(); print('Redis connection:', r.ping())
 - **[Achievement System Guide](docs/ACHIEVEMENT_SYSTEM_GUIDE.md)** - Comprehensive achievement system documentation
 
 ### Performance & Optimization
-- **[Performance & Optimizations – Comprehensive](docs/PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Complete performance guide with quick start and advanced topics
+
+- **[Performance &amp; Optimizations – Comprehensive](docs/PERFORMANCE_OPTIMIZATIONS_COMPREHENSIVE.md)** - Complete performance guide with quick start and advanced topics
 - **[Performance Optimization Guide](docs/PERFORMANCE_OPTIMIZATION.md)** - Comprehensive performance optimization
 - **[Performance Quick Start](docs/PERFORMANCE_QUICK_START.md)** - Quick setup for performance features
 - **[Advanced Optimizations](docs/ADVANCED_OPTIMIZATIONS.md)** - Advanced optimization techniques
 - **[Optimization Reorganization](docs/OPTIMIZATION_REORGANIZATION.md)** - Optimization system structure
 
 ### System Implementation
+
 - **[Current System Status](docs/CURRENT_SYSTEM_STATUS.md)** - Current implementation status overview
 - **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)** - Current system implementation status
 - **[Final Implementation Summary](docs/FINAL_IMPLEMENTATION_SUMMARY.md)** - Complete implementation overview
 - **[Premium System Implementation](docs/PREMIUM_SYSTEM_IMPLEMENTATION.md)** - Premium content system guide
-- **[Premium Content & Subscription – Comprehensive](docs/PREMIUM_SYSTEM_COMPREHENSIVE.md)** - Premium content and subscription system
+- **[Premium Content &amp; Subscription – Comprehensive](docs/PREMIUM_SYSTEM_COMPREHENSIVE.md)** - Premium content and subscription system
 - **[Subscription System Status](docs/SUBSCRIPTION_SYSTEM_STATUS.md)** - Subscription feature status
-- **[Comment & Rating System – Comprehensive](docs/COMMENT_RATING_COMPREHENSIVE.md)** - Complete comment and rating system documentation
+- **[Comment &amp; Rating System – Comprehensive](docs/COMMENT_RATING_COMPREHENSIVE.md)** - Complete comment and rating system documentation
 - **[Comment Rating System](docs/COMMENT_RATING_SYSTEM.md)** - Comment and rating system documentation
 - **[Premium Content System](docs/PREMIUM_CONTENT_SYSTEM.md)** - Premium content and subscription features
 - **[Weighted Rating System](docs/WEIGHTED_RATING_SYSTEM.md)** - Advanced rating algorithms and analytics
@@ -310,24 +353,29 @@ python -c "import redis; r = redis.Redis(); print('Redis connection:', r.ping())
 - **[SEO Leveling Comprehensive](docs/SEO_LEVELING_COMPREHENSIVE.md)** - Hierarchical SEO management system
 
 ### UI/UX & Design
+
 - **[Card Design System](docs/CARD_DESIGN_SYSTEM.md)** - Complete card design system with 4 distinct designs
 - **[Card Design Troubleshooting](docs/CARD_DESIGN_TROUBLESHOOTING.md)** - Troubleshooting guide for card design issues
 
 ### Ads & Marketing
+
 - **[Ads Injection System – Comprehensive](docs/ADS_INJECTION_COMPREHENSIVE.md)** - Ads injection architecture and roadmap
 
 ### Content & Media
+
 - **[Album View Count Implementation](docs/ALBUM_VIEW_COUNT_IMPLEMENTATION.md)** - View count tracking for albums
 - **[Share System Fix](docs/SHARE_SYSTEM_FIX.md)** - Social sharing system implementation
 
 ### Deployment & Configuration
+
 - **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Complete deployment guide for DirectAdmin hosting and other environments
 
-## 🎯 SEO Leveling System
+## SEO Leveling System
 
 The SEO Leveling System implements a hierarchical approach to SEO data management, ensuring that content-specific SEO takes precedence over root SEO settings. This prevents the root SEO from always taking over and allows for proper content-specific optimization.
 
 ### Key Features
+
 - **Hierarchical SEO Management**: Content-specific SEO takes precedence over root SEO
 - **URL Pattern Detection**: Automatic detection of news articles (`/news/<id>/<title>`) and albums (`/album/<id>/<title>`)
 - **Content-Specific Overrides**: News and album SEO fields override root SEO settings
@@ -337,20 +385,23 @@ The SEO Leveling System implements a hierarchical approach to SEO data managemen
 - **Fallback System**: Root SEO provides sensible defaults when content-specific SEO is not available
 
 ### SEO Hierarchy (Priority Order)
+
 1. **Content-Specific SEO** (Highest Priority)
+
    - News/Article SEO
    - Album SEO
    - Chapter SEO
-
 2. **Root SEO** (Fallback)
+
    - Page-specific root SEO settings
    - Default values
-
 3. **Brand Defaults** (Lowest Priority)
+
    - Brand identity settings
    - Hardcoded fallbacks
 
 ### Implementation Details
+
 - **Context Processor**: `inject_seo_data()` handles SEO leveling logic
 - **URL Detection**: Automatic detection of content types based on URL patterns
 - **Template Blocks**: Content templates can override SEO data using template blocks
@@ -360,11 +411,12 @@ The SEO Leveling System implements a hierarchical approach to SEO data managemen
 For detailed implementation information, see [SEO Leveling System Documentation](docs/seo_leveling_system.md).
 
 ### Development
+
 - **[Development Roadmap](docs/TODO.md)** - Current development status and future plans
 - **[Helper Scripts README](helper/README.md)** - Helper scripts documentation and usage
 - **[Routes Utils README](routes/utils/README.md)** - Permission and role management system documentation
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -403,11 +455,12 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 ```
 
-## 🚀 Performance Optimizations
+## Performance Optimizations
 
 LilyOpenCms includes comprehensive performance optimizations organized in the `optimizations/` package:
 
 ### Quick Setup
+
 ```bash
 # Install Redis and configure performance optimizations
 chmod +x optimizations/setup_redis.sh
@@ -418,21 +471,26 @@ chmod +x optimizations/setup_redis.sh
 ```
 
 ### Key Features
+
+- **Aggressive Query Caching**: Advanced caching system with background refresh, smart preloading, and extended cache times
 - **Redis Caching**: Fast data retrieval with intelligent cache invalidation
 - **Database Optimization**: Connection pooling, query optimization, automatic indexing
 - **Frontend Optimization**: Lazy loading, progressive images, asset optimization, externalized JavaScript modules
 - **Performance Monitoring**: Real-time metrics, slow query detection, cache management
 - **JavaScript Optimization**: Externalized modules for better caching and faster loading times
+- **Cache Statistics**: Comprehensive performance tracking with preloads, background refreshes, and prediction accuracy
 
 ### Documentation
+
 - [Performance Optimization Guide](docs/PERFORMANCE_OPTIMIZATION.md)
 - [Quick Start Guide](docs/PERFORMANCE_QUICK_START.md)
 - [Advanced Optimizations](docs/ADVANCED_OPTIMIZATIONS.md)
 - [Optimizations Package README](optimizations/README.md)
 
-## 🚀 API Endpoints
+## API Endpoints
 
 ### Content Management
+
 - `GET /api/news` - List news articles with filtering
 - `POST /api/news` - Create new article
 - `PUT /api/news/<id>` - Update article
@@ -460,6 +518,7 @@ chmod +x optimizations/setup_redis.sh
 - `DELETE /api/albums/<id>/chapters/<chapter_id>` - Remove chapter from album
 
 ### Comment System
+
 - `GET /api/comments/<content_type>/<content_id>` - Get comments for news/album with pagination
 - `POST /api/comments` - Create new comment (requires authentication)
 - `PUT /api/comments/<comment_id>` - Update comment with success response (owner or admin only)
@@ -474,6 +533,7 @@ chmod +x optimizations/setup_redis.sh
 - `POST /admin/comments/<comment_id>/delete` - Admin delete comment
 
 ### Rating System
+
 - `GET /api/ratings/<content_type>/<content_id>` - Get rating statistics for news/album
 - `POST /api/ratings` - Create or update rating (requires authentication)
 - `DELETE /api/ratings/<content_type>/<content_id>` - Delete user's rating
@@ -484,11 +544,13 @@ chmod +x optimizations/setup_redis.sh
 - `GET /admin/ratings/analytics` - Admin rating analytics dashboard
 
 ### Public Album Pages
+
 - `GET /albums` - Public album listing page with filtering and search
 - `GET /album/<album_id>/<album_title>` - Album detail page with author info and chapters
 - `GET /album/<album_id>/chapter/<chapter_id>/<chapter_title>` - Chapter reader with markdown support
 
 ### Media Management
+
 - `GET /api/images` - List images with filtering
 - `POST /api/images` - Upload image
 - `PUT /api/images/<id>` - Update image
@@ -504,6 +566,7 @@ chmod +x optimizations/setup_redis.sh
 - `DELETE /api/youtube_videos/<id>` - Delete video
 
 ### User Management
+
 - `GET /api/users` - List users with pagination, search, and filtering (role, status, verification)
 - `POST /api/users` - Create user with role assignment and premium status
 - `GET /api/users/<user_id>/details` - Get comprehensive user details and statistics
@@ -525,6 +588,7 @@ chmod +x optimizations/setup_redis.sh
 - `POST /api/users/<id>/reject-deletion` - Reject account deletion request (admin only)
 
 ### Roles & Permissions
+
 - `GET /api/roles` - List roles (backup implementation in routes_users.py)
 - `POST /api/roles` - Create role
 - `PUT /api/roles/<id>` - Update role
@@ -535,6 +599,7 @@ chmod +x optimizations/setup_redis.sh
 - `DELETE /api/permissions/<id>` - Delete permission
 
 ### Navigation Management
+
 - `GET /api/navigation-links` - List navigation links
 - `POST /api/navigation-links` - Create navigation link
 - `PUT /api/navigation-links/<id>` - Update navigation link
@@ -542,6 +607,7 @@ chmod +x optimizations/setup_redis.sh
 - `POST /api/navigation-links/bulk-update` - Bulk update navigation links
 
 ### SEO & Analytics
+
 - `GET /sitemap.xml` - Main sitemap
 - `GET /sitemap-news.xml` - News-specific sitemap
 - `GET /sitemap-index.xml` - Sitemap index
@@ -552,6 +618,7 @@ chmod +x optimizations/setup_redis.sh
 - `GET /api/analytics/performance` - Performance metrics
 
 ### Premium & Subscription
+
 - `GET /api/subscriptions/plans` - Get subscription plans
 - `POST /api/subscriptions/create` - Create subscription
 - `POST /api/subscriptions/cancel` - Cancel subscription
@@ -559,14 +626,16 @@ chmod +x optimizations/setup_redis.sh
 - `POST /api/subscriptions/update-ad-preferences` - Update ad preferences
 - `GET /api/subscriptions/check-premium-access` - Check premium access
 
-## 🔐 Authentication & Authorization
+## Authentication & Authorization
 
 ### User Roles
+
 - **SUPERUSER**: Full system access with all permissions
 - **ADMIN**: Content and user management with limited system access
 - **GENERAL**: Basic content creation and personal management
 
 ### Smart Routing System
+
 - **Role-Based Navigation**: Automatic dashboard routing based on user role
 - **Admin/Superuser/Owner**: Redirected to `/settings` (admin dashboard)
 - **General Users**: Redirected to `/dashboard` (reader dashboard)
@@ -575,6 +644,7 @@ chmod +x optimizations/setup_redis.sh
 - **Consistent Experience**: Seamless navigation across all templates
 
 ### Permission System
+
 - **Enhanced User Management**: Advanced user listing with pagination, search, and filtering
 - **User Creation System**: Admin user creation with role assignment and premium status
 - **User Statistics Dashboard**: Real-time user statistics and role distribution
@@ -588,15 +658,17 @@ chmod +x optimizations/setup_redis.sh
 - **Error Handling**: Robust error handling for permission violations
 - **Backup API Endpoints**: Resolved 404 errors for roles and permissions
 
-## 📊 SEO Features
+## SEO Features
 
 ### Sitemap Generation
+
 - **Main Sitemap**: All content types with proper priorities
 - **News Sitemap**: News-specific optimization with publication dates
 - **Sitemap Index**: For large sites with multiple sitemaps
 - **SEO Integration**: Uses meta_robots, seo_slug, priorities, and changefreq
 
 ### SEO Management
+
 - **Meta Tags**: Description, keywords, author, language, robots
 - **Open Graph**: Social media optimization for Facebook, LinkedIn
 - **Twitter Cards**: Twitter-specific optimization
@@ -605,9 +677,10 @@ chmod +x optimizations/setup_redis.sh
 - **Canonical URLs**: Prevent duplicate content issues
 - **URL Optimization**: SEO-friendly slugs and redirects
 
-## 🎨 UI/UX Features
+## UI/UX Features
 
 ### Design System
+
 - **Tailwind CSS**: Utility-first styling with custom configuration
 - **Responsive Design**: Mobile-first approach with breakpoint optimization
 - **Dark Mode**: Theme switching capability with persistent preferences
@@ -615,6 +688,7 @@ chmod +x optimizations/setup_redis.sh
 - **Loading States**: Comprehensive loading indicators and skeleton screens
 
 ### Components
+
 - **Dynamic Sidebar**: Role-based navigation with collapsible sections
 - **Pagination**: Efficient content browsing with configurable page sizes
 - **Search & Filter**: Advanced content discovery with multiple filters and real-time search results
@@ -623,9 +697,10 @@ chmod +x optimizations/setup_redis.sh
 - **Data Tables**: Sortable, filterable tables with bulk actions
 - **Tabbed Interfaces**: Advanced tabbed navigation with search integration and state management
 
-## 🗄️ Database Models
+## Database Models
 
 ### Core Models
+
 - **User**: Authentication, profiles, roles, permissions, activity tracking
 - **News**: Articles with SEO, scheduling, archiving, related content
 - **Album**: Album management with chapters, completion status, hiatus tracking, author relationships
@@ -636,18 +711,21 @@ chmod +x optimizations/setup_redis.sh
 - **TeamMember**: Team management with roles and contact information
 
 ### Comment & Rating Models
+
 - **Comment**: User comments on news/albums with moderation, spam detection, nested replies
 - **CommentLike**: Like/dislike system for comments with user tracking
 - **CommentReport**: Comment reporting system for inappropriate content
 - **Rating**: 5-star rating system for news/albums with statistics and analytics
 
 ### SEO & Brand Models
+
 - **BrandIdentity**: Brand assets, colors, typography, guidelines
 - **SocialMedia**: Social media links and platform management
 - **ContactDetail**: Contact information and location data
 - **NavigationLink**: Navigation menu management with internal/external links
 
 ### Legal & Policy Models
+
 - **PrivacyPolicy**: Privacy policy content and versioning
 - **MediaGuideline**: Media guidelines and usage policies
 - **VisiMisi**: Vision and mission statements
@@ -655,31 +733,36 @@ chmod +x optimizations/setup_redis.sh
 - **PedomanHak**: Rights and guidelines documentation
 
 ### System Models
+
 - **UserRole**: Role definitions and permissions
 - **Permission**: Granular permission system
 - **CustomRole**: Custom role creation and management
 - **UserActivity**: Activity logging and audit trails
 - **ShareLog**: Social sharing tracking and analytics
 
-## 🚀 Deployment
+## Deployment
 
 ### Development
+
 ```bash
 python main.py
 ```
 
 ### Production with Gunicorn
+
 ```bash
 gunicorn --bind 0.0.0.0:8000 main:app
 ```
 
 ### Production with Passenger
+
 ```bash
 # Configure passenger_wsgi.py
 passenger start
 ```
 
 ### Docker Deployment
+
 ```dockerfile
 FROM python:3.9-slim
 WORKDIR /app
@@ -690,9 +773,10 @@ EXPOSE 8000
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "main:app"]
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -713,6 +797,7 @@ python test/test_user_management.py
 ```
 
 ### Test Coverage
+
 - **Core System Tests**: Authentication, user management, database models
 - **Performance Tests**: Monitoring, caching, optimization
 - **Feature Tests**: Comments, ratings, assets, navigation
@@ -724,7 +809,9 @@ python test/test_user_management.py
 - **Permission System Tests**: Role-based access control verification across all endpoints
 
 ### SEO Leveling Test
+
 The SEO leveling system includes comprehensive tests to verify:
+
 - ✅ Content-specific SEO takes precedence over root SEO
 - ✅ URL pattern detection for news and album pages
 - ✅ Template integration with SEO override blocks
@@ -737,6 +824,7 @@ python test/test_seo_leveling.py
 ```
 
 ### Comprehensive Endpoint Testing (NEW)
+
 The system includes comprehensive endpoint testing with session-based authentication:
 
 - ✅ **95% Success Rate**: 28/30 endpoints working correctly
@@ -747,6 +835,7 @@ The system includes comprehensive endpoint testing with session-based authentica
 - ✅ **Error Handling**: Comprehensive error handling and fallback mechanisms
 
 **Test Coverage:**
+
 - Comment moderation endpoints
 - Rating management endpoints
 - Ads management endpoints
@@ -760,7 +849,7 @@ The system includes comprehensive endpoint testing with session-based authentica
 python test/test_comprehensive_endpoints.py
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -769,24 +858,25 @@ python test/test_comprehensive_endpoints.py
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Follow PEP 8 Python style guide
 - Write tests for new features
 - Update documentation for API changes
 - Use conventional commit messages
 - Ensure all tests pass before submitting PR
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the CC0 License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## Support
 
 - **Documentation**: Check the [docs/](docs/) folder for comprehensive guides
 - **Issues**: Report bugs via GitHub Issues
 - **Discussions**: Use GitHub Discussions for questions
 - **Email**: Contact the development team
 
-## 🏆 Acknowledgments
+## Acknowledgments
 
 - Flask community for the excellent web framework
 - Tailwind CSS for the utility-first CSS framework
@@ -794,4 +884,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**LilyOpenCms** - Modern content management for the digital age. 
+**LilyOpenCms** - Modern content management for the digital age.

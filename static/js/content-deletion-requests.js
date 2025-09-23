@@ -53,8 +53,12 @@ class ContentDeletionRequestsManager {
     bindEvents() {
         // Tab switching
         document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const tab = e.target.dataset.tab;
+            button.addEventListener('click', (event) => {
+                const tab = event.currentTarget?.dataset?.tab;
+                if (!tab) {
+                    console.warn('Tab button clicked without data-tab');
+                    return;
+                }
                 this.switchTab(tab);
             });
         });
@@ -112,7 +116,15 @@ class ContentDeletionRequestsManager {
             content.classList.add('hidden');
         });
         
+        if (!tabName) {
+            console.warn('switchTab called without tabName');
+            return;
+        }
         const targetTab = document.getElementById(`${tabName}-tab`);
+        if (!targetTab) {
+            console.warn(`Target tab element not found for id: ${tabName}-tab`);
+            return;
+        }
         targetTab.classList.remove('hidden');
         
         console.log('Tab switched to:', tabName);
@@ -161,7 +173,7 @@ class ContentDeletionRequestsManager {
     async loadNewsRequests() {
         try {
             console.log('Loading news deletion requests...');
-            const response = await fetch('/api/news/deletion-requests');
+            const response = await fetchWithCSRF('/api/news/deletion-requests');
             console.log('Response status:', response.status);
             console.log('Response ok:', response.ok);
             
@@ -188,7 +200,7 @@ class ContentDeletionRequestsManager {
 
     async loadAlbumRequests() {
         try {
-            const response = await fetch('/admin/albums/deletion-requests');
+            const response = await fetchWithCSRF('/admin/albums/deletion-requests');
             if (!response.ok) {
                 // Check if response is a redirect (authentication issue)
                 if (response.status === 302 || response.status === 401) {
@@ -504,7 +516,7 @@ class ContentDeletionRequestsManager {
         }
 
         try {
-            const response = await fetch(`/api/news/${newsId}/approve-deletion`, {
+            const response = await fetchWithCSRF(`/api/news/${newsId}/approve-deletion`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -536,7 +548,7 @@ class ContentDeletionRequestsManager {
         }
 
         try {
-            const response = await fetch(`/api/news/${newsId}/reject-deletion`, {
+            const response = await fetchWithCSRF(`/api/news/${newsId}/reject-deletion`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -568,7 +580,7 @@ class ContentDeletionRequestsManager {
         }
 
         try {
-            const response = await fetch(`/admin/albums/${albumId}/approve-deletion`, {
+            const response = await fetchWithCSRF(`/admin/albums/${albumId}/approve-deletion`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -600,7 +612,7 @@ class ContentDeletionRequestsManager {
         }
 
         try {
-            const response = await fetch(`/admin/albums/${albumId}/reject-deletion`, {
+            const response = await fetchWithCSRF(`/admin/albums/${albumId}/reject-deletion`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

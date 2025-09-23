@@ -124,7 +124,7 @@ export function initializeLogin() {
         }
 
         try {
-            const response = await fetch(endpoint);
+            const response = await fetchWithCSRF(endpoint);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

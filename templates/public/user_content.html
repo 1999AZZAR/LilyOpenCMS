@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} - Content{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}">
+<style>
+.content-header {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    color: hsl(var(--primary-foreground));
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.content-card {
+    background: hsl(var(--card));
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid hsl(var(--border));
+}
+
+.content-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: hsl(var(--primary) / 0.3);
+}
+
+.content-thumbnail {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.content-card:hover .content-thumbnail {
+    transform: scale(1.05);
+}
+
+.content-info {
+    padding: 1.5rem;
+}
+
+.content-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: hsl(var(--foreground));
+    line-height: 1.4;
+}
+
+.content-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.content-title a:hover {
+    color: hsl(var(--primary));
+}
+
+.content-meta {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.content-excerpt {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.content-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid hsl(var(--border));
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.85rem;
+    gap: 0.25rem;
+}
+
+.nav-tabs {
+    border-bottom: 2px solid hsl(var(--border));
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 0;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: hsl(var(--muted-foreground));
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    color: hsl(var(--primary));
+    background-color: hsl(var(--muted) / 0.5);
+}
+
+.nav-tabs .nav-link.active {
+    color: hsl(var(--primary));
+    border-bottom-color: hsl(var(--primary));
+    background-color: hsl(var(--muted) / 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+    color: hsl(var(--primary));
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: hsl(var(--foreground));
+    font-size: 1.5rem;
+}
+
+.search-container {
+    position: relative;
+}
+
+.search-loading {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    display: none;
+}
+
+.search-loading.active {
+    display: block;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+}
+
+.search-suggestion {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid hsl(var(--border));
+    transition: background-color 0.2s ease;
+}
+
+.search-suggestion:hover {
+    background-color: hsl(var(--muted));
+}
+
+.search-suggestion:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .content-header {
+        text-align: center;
+    }
+    
+    .nav-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 py-8 lg:py-12">
+    <!-- Content Header -->
+    <div class="content-header">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2">
+                    <i class="fas fa-book mr-2"></i>{{ user.username }}'s Content
+                </h1>
+                <p class="text-lg opacity-90">Browse all published stories and albums</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{{ url_for('main.public_user_profile', username=user.username) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                    <i class="fas fa-user mr-2"></i> View Profile
+                </a>
+                <a href="{{ url_for('main.public_user_stats', username=user.username) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                    <i class="fas fa-chart-bar mr-2"></i> Statistics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <a class="nav-link" href="{{ url_for('main.public_user_profile', username=user.username) }}">
+            <i class="fas fa-user mr-2"></i> Overview
+        </a>
+        <a class="nav-link" href="{{ url_for('main.public_user_stats', username=user.username) }}">
+            <i class="fas fa-chart-bar mr-2"></i> Statistics
+        </a>
+        <a class="nav-link {% if active_tab == 'stories' %}active{% endif %}" href="{{ url_for('main.public_user_content', username=user.username, tab='stories') }}">
+            <i class="fas fa-book mr-2"></i> Stories
+        </a>
+        <a class="nav-link {% if active_tab == 'albums' %}active{% endif %}" href="{{ url_for('main.public_user_content', username=user.username, tab='albums') }}">
+            <i class="fas fa-images mr-2"></i> Albums
+        </a>
+    </div>
+
+    <!-- Enhanced Search -->
+    <div class="mb-8 p-4 bg-card rounded-lg border border-border">
+        <div class="flex items-center gap-3">
+            <div class="flex-1 min-w-0 search-container">
+                <input type="text" 
+                       id="search-input"
+                       placeholder="Search {{ user.username }}'s content..." 
+                       class="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                       autocomplete="off">
+                <div class="search-loading" id="search-loading">
+                    <i class="fas fa-spinner fa-spin text-primary"></i>
+                </div>
+                <div class="search-suggestions" id="search-suggestions"></div>
+            </div>
+            <button type="button"
+                    class="px-3 py-2 border border-border rounded-lg hover:bg-secondary transition-colors whitespace-nowrap"
+                    data-filters-toggle="#content-filters"
+                    data-storage-key="content_filters_open"
+                    aria-expanded="false"
+                    aria-controls="content-filters">
+                Filter
+                <span data-chevron class="ml-2 inline-block align-middle transition-transform">▾</span>
+            </button>
+        </div>
+        <div id="content-filters" class="mt-4 hidden">
+            <div class="flex flex-wrap gap-4 items-center">
+                <select id="category-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Categories</option>
+                    {% if grouped_categories %}
+                        {% for group_data in grouped_categories %}
+                            <optgroup label="{{ group_data.group.name }}">
+                                {% for category in group_data.categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endfor %}
+                    {% else %}
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+                <select id="sort-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="popular">Most Popular</option>
+                    <option value="least-popular">Least Popular</option>
+                </select>
+                {% if active_tab == 'albums' %}
+                <select id="status-filter" class="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="">All Status</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                    <option value="hiatus">Hiatus</option>
+                </select>
+                {% endif %}
+                <button type="button" onclick="clearAllFilters()" class="px-4 py-2 bg-muted hover:bg-muted/80 text-muted-foreground rounded-lg transition-colors">
+                    <i class="fa-solid fa-times mr-1"></i>Clear
+                </button>
+            </div>
+        </div>
+        <div class="result-count mt-3" id="result-count"></div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid" id="content-grid">
+        <!-- Content will be loaded dynamically -->
+    </div>
+
+    <!-- No Results Message -->
+    <div class="empty-state hidden" id="no-results">
+        <i class="fas fa-search"></i>
+        <h3>No Content Found</h3>
+        <p>Try adjusting your search terms or filters</p>
+    </div>
+
+    <!-- Dynamic Pagination -->
+    <div class="flex justify-center mt-8" id="pagination-container">
+        <!-- Pagination will be loaded dynamically -->
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Pass user info to JavaScript
+window.userInfo = {
+    username: {{ user.username | tojson }},
+    activeTab: {{ active_tab | tojson }}
+};
+
+// Pass brand info to JavaScript
+window.brandInfo = {{ brand_info.to_dict() | tojson | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/lazyload.js') }}"></script>
+<script src="{{ url_for('static', filename='js/filters-toggle.js') }}"></script>
+<script src="{{ url_for('static', filename='js/user-content-search.js') }}"></script>
+{% endblock %}

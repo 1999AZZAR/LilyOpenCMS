@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user-pages.css') }}">
+{% endblock %}
+
+{% block title %}{{ 'Edit' if album else 'Buat' }} Album - Dasbor Pengguna{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-background">
+    <!-- Header -->
+    <div class="bg-card border-b border-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-foreground">{{ 'Edit' if album else 'Buat' }} Album</h1>
+                    <p class="mt-2 text-muted-foreground">{{ 'Perbarui informasi album' if album else 'Buat album baru' }}</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('user_albums.list_albums') }}" 
+                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Album
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{{ url_for('user_albums.list_albums') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-home mr-2"></i>
+                    Album Saya
+                </a>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                    <span class="text-sm font-medium text-gray-500">{{ 'Edit' if album else 'Buat' }} Album</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Explanation Section -->
+        <div class="bg-card border border-border rounded-lg p-6 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-primary text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-foreground mb-2">Membuat Album</h3>
+                    <p class="text-muted-foreground mb-3">
+                        <strong>Album</strong> adalah kumpulan artikel terkait. Setiap artikel yang Anda tambahkan akan menjadi bab di album Anda.
+                    </p>
+                    <div class="bg-background rounded-lg p-4 border border-border">
+                        <h4 class="font-semibold text-foreground mb-2">Tips:</h4>
+                        <ul class="text-muted-foreground space-y-1 text-sm">
+                            <li>• Beri judul album yang menarik dan deskriptif</li>
+                            <li>• Tulis sinopsis yang menjelaskan isi album</li>
+                            <li>• Pilih kategori yang sesuai</li>
+                            <li>• Unggah sampul yang menarik (disarankan 400x600 piksel)</li>
+                            <li>• Artikel akan ditambahkan sebagai bab setelah album dibuat</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-card rounded-lg shadow-sm border border-border p-6">
+            <form id="album-form" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {% if album %}
+                <input type="hidden" id="album-id" value="{{ album.id }}">
+                {% endif %}
+                
+                <!-- Basic Information -->
+                <div class="border-b border-border pb-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">Informasi Dasar</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="album-title" class="block text-sm font-medium text-foreground mb-2">
+                                Judul Album *
+                            </label>
+                            <input type="text" id="album-title" name="title" required
+                                   value="{{ album.title if album else '' }}"
+                                   class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                                   placeholder="Masukkan judul album">
+                        </div>
+                        
+                        <div>
+                            <label for="album-category" class="block text-sm font-medium text-foreground mb-2">
+                                Kategori *
+                            </label>
+                            <select id="album-category" name="category_id"
+                                    class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                                <option value="">Pilih Kategori</option>
+                                {% if grouped_categories %}
+                                    {% for group_data in grouped_categories %}
+                                        <optgroup label="{{ group_data.group.name }}">
+                                            {% for category in group_data.categories %}
+                                                <option value="{{ category.id }}" 
+                                                        {% if album and album.category_id == category.id %}selected{% endif %}>
+                                                    {{ category.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label for="album-author" class="block text-sm font-medium text-foreground mb-2">
+                            <i class="fas fa-user-edit text-muted-foreground mr-2"></i>Penulis
+                        </label>
+                        <input type="text" id="album-author" name="author" 
+                               value="{{ album.author if album and album.author else current_user.username }}"
+                               class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                               placeholder="Masukkan nama penulis">
+                        <p class="text-xs text-muted-foreground mt-1">Nama penulis atau pembuat album ini. Jika kosong, akan menggunakan nama pengguna Anda.</p>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <label for="album-description" class="block text-sm font-medium text-foreground mb-2">
+                            Sinopsis (opsional)
+                        </label>
+                        <textarea id="album-description" name="description" rows="4"
+                                  class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                                  placeholder="Masukkan deskripsi album">{{ album.description if album else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Cover Image -->
+                <div class="border-b border-border pb-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">Gambar Sampul</h3>
+                    <div class="flex items-center space-x-4">
+                        <div id="cover-preview" class="w-32 h-40 bg-secondary rounded-lg flex items-center justify-center">
+                            {% if album and album.cover_image and album.cover_image.filepath %}
+                            <img src="{{ url_for('static', filename=album.cover_image.filepath.split('static/')[-1]) }}" alt="Cover" class="w-full h-full object-cover rounded-lg">
+                            {% else %}
+                            <i class="fas fa-image text-muted-foreground text-2xl"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <button type="button" onclick="openImageHeaderModalCreate()" 
+                                    class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors">
+                                <i class="fas fa-upload mr-2"></i>Pilih Gambar Sampul
+                            </button>
+                            <p class="text-sm text-muted-foreground mt-2">Ukuran yang disarankan: 400x600 piksel</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="cover-image-id" name="cover_image_id" 
+                           value="{{ album.cover_image_id if album else '' }}">
+                </div>
+
+                <!-- Album Settings -->
+                <div class="border-b border-border pb-6">
+                    <h3 class="text-lg font-medium text-foreground mb-4">Pengaturan Album</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is-visible" name="is_visible"
+                                       {% if not album or album.is_visible %}checked{% endif %}
+                                       class="rounded border-border text-green-600 focus:ring-green-500">
+                                <label for="is-visible" class="ml-2 text-sm font-medium text-foreground">
+                                    Tampilkan ke Publik
+                                </label>
+                            </div>
+                            <p class="text-xs text-muted-foreground ml-6">Buat album terlihat oleh semua pengguna</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="age-rating" class="block text-sm font-medium text-foreground mb-2">
+                                    Batas Usia
+                                </label>
+                                <select id="age-rating" name="age_rating" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground">
+                                    <option value="">Pilih batas usia...</option>
+                                    <option value="SU" {% if album and album.age_rating=='SU' %}selected{% endif %}>SU — Semua Umur</option>
+                                    <option value="P" {% if album and album.age_rating=='P' %}selected{% endif %}>P — Prasekolah (2–6)</option>
+                                    <option value="A" {% if album and album.age_rating=='A' %}selected{% endif %}>A — Anak (7–12)</option>
+                                    <option value="3+" {% if album and album.age_rating=='3+' %}selected{% endif %}>3+ — 3 Tahun Ke Atas (Gim)</option>
+                                    <option value="7+" {% if album and album.age_rating=='7+' %}selected{% endif %}>7+ — 7 Tahun Ke Atas (Gim)</option>
+                                    <option value="13+" {% if album and album.age_rating=='13+' %}selected{% endif %}>R / 13+ — Remaja</option>
+                                    <option value="17+" {% if album and album.age_rating=='17+' %}selected{% endif %}>D / 17+ — Dewasa</option>
+                                    <option value="18+" {% if album and album.age_rating=='18+' %}selected{% endif %}>18+ — 18 Tahun Ke Atas (Gim)</option>
+                                    <option value="21+" {% if album and album.age_rating=='21+' %}selected{% endif %}>21+ — 21 Tahun Ke Atas</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is-completed" name="is_completed"
+                                       {% if album and album.is_completed %}checked{% endif %}
+                                       class="rounded border-border text-green-600 focus:ring-green-500">
+                                <label for="is-completed" class="ml-2 text-sm font-medium text-foreground">
+                                    Album Selesai
+                                </label>
+                            </div>
+                            <p class="text-xs text-muted-foreground ml-6">Tandai album sebagai selesai</p>
+                            
+                            <div class="flex items-center">
+                                <input type="checkbox" id="is-hiatus" name="is_hiatus"
+                                       {% if album and album.is_hiatus %}checked{% endif %}
+                                       class="rounded border-border text-orange-600 focus:ring-orange-500">
+                                <label for="is-hiatus" class="ml-2 text-sm font-medium text-foreground">
+                                    Ditangguhkan (Tidak aktif)
+                                </label>
+                            </div>
+                            <p class="text-xs text-muted-foreground ml-6">Tandai album sebagai tidak aktif</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{{ url_for('user_albums.list_albums') }}" 
+                       class="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-6 py-2 rounded-lg font-medium transition-colors">
+                        Batal
+                    </a>
+                    <button type="submit" 
+                            class="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-save mr-2"></i>{{ 'Perbarui' if album else 'Buat' }} Album
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Header Image Modal (shared with stories picker) -->
+<div id="image-header-modal-create" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-card rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-border">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-foreground">Pilih Gambar Sampul</h3>
+                <button id="header-image-close-create" class="text-muted-foreground hover:text-foreground">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="header-image-library-create" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+            <div id="header-image-pagination-controls-create" class="mt-6"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/story-images.js') }}"></script>
+<script src="{{ url_for('static', filename='js/story-modals.js') }}"></script>
+<script>
+// Form submission
+document.getElementById('album-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        title: document.getElementById('album-title').value,
+        description: document.getElementById('album-description').value,
+        category_id: document.getElementById('album-category').value || null,
+        author: document.getElementById('album-author').value || null,
+        cover_image_id: document.getElementById('cover-image-id').value || null,
+        age_rating: document.getElementById('age-rating').value || null,
+        is_visible: document.getElementById('is-visible').checked,
+        is_completed: document.getElementById('is-completed').checked,
+        is_hiatus: document.getElementById('is-hiatus').checked
+    };
+    
+    const albumId = document.getElementById('album-id')?.value;
+    const url = albumId ? `/user/albums/${albumId}/edit` : '/user/albums/create';
+    
+    fetchWithCSRF(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (albumId) {
+                window.location.href = `/user/albums/${albumId}`;
+            } else {
+                window.location.href = `/user/albums/${data.album_id}`;
+            }
+        } else {
+            alert('Kesalahan: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menyimpan album');
+    });
+});
+
+// Adapter: integrate stories header image picker with album cover fields
+document.addEventListener('DOMContentLoaded', function() {
+    const prior = window.selectHeaderImage;
+    window.selectHeaderImage = function(imageUrl, imageId) {
+        if (typeof prior === 'function') {
+            try { prior(imageUrl, imageId); } catch (_) {}
+        }
+        const hiddenInput = document.getElementById('cover-image-id');
+        if (hiddenInput) hiddenInput.value = imageId;
+        const preview = document.getElementById('cover-preview');
+        if (preview) {
+            preview.innerHTML = `<img src="${imageUrl}" alt="Sampul" class="w-full h-full object-cover rounded-lg">`;
+        }
+    };
+});
+</script>
+{% endblock %}

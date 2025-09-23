@@ -1,10 +1,10 @@
-# 📞 Contact Details Management Guide
+# Contact Details Management Guide
 
 ## Overview
 
 The contact details feature allows you to manage contact information that appears in the footer and about page of your website. All contact details are stored in the database and can be managed through the admin panel.
 
-## ✨ Features
+## Features
 
 - **Dynamic Footer**: Contact details automatically appear in the website footer
 - **Admin Management**: Full CRUD operations through the admin panel
@@ -13,7 +13,7 @@ The contact details feature allows you to manage contact information that appear
 - **Ordering**: Control the display order of contact details
 - **Active/Inactive**: Toggle contact details on/off
 
-## 🚀 Quick Setup
+## Quick Setup
 
 ### 1. Add Default Contact Details
 
@@ -24,6 +24,7 @@ python helper/add_default_contact_details.py
 ```
 
 This will add:
+
 - Email: info.sindikasimedia@gmail.com
 - WhatsApp: +62 812-3456-7890
 - Address: Jl. Contoh No. 123, Jakarta
@@ -37,7 +38,7 @@ This will add:
 2. Go to **Settings** > **Detail Kontak**
 3. Manage your contact details
 
-## 📋 Managing Contact Details
+## Managing Contact Details
 
 ### Adding New Contact Details
 
@@ -53,6 +54,7 @@ This will add:
 ### Available Icons
 
 The system supports these Font Awesome icons:
+
 - `envelope` - Email
 - `phone` - Phone
 - `map-marker-alt` - Location/Address
@@ -90,11 +92,12 @@ Use these link formats for different contact types:
 2. Click **Hapus**
 3. Confirm the deletion
 
-## 🎨 Display Features
+## Display Features
 
 ### Footer Display
 
 Contact details appear in the footer with:
+
 - Icons (if specified)
 - Clickable links (if provided)
 - Proper formatting
@@ -109,7 +112,7 @@ Contact details also appear on the About page in a dedicated contact section.
 - Desktop: Icons and text side by side
 - Mobile: Stacked layout for better readability
 
-## 🔧 Technical Details
+## Technical Details
 
 ### Database Model
 
@@ -156,7 +159,7 @@ Contact details are automatically available in all templates via the `contact_de
 {% endif %}
 ```
 
-## 🎯 Best Practices
+## Best Practices
 
 1. **Order Matters**: Use section_order to control display sequence
 2. **Icons Help**: Add appropriate icons for better visual appeal
@@ -164,7 +167,7 @@ Contact details are automatically available in all templates via the `contact_de
 4. **Keep Active**: Only show contact details that are currently valid
 5. **Test Links**: Verify all links work correctly before making them active
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Contact Details Not Showing
 
@@ -186,9 +189,10 @@ Contact details are automatically available in all templates via the `contact_de
 3. Check for typos in URLs
 4. Ensure external links have proper protocols (http://, https://)
 
-## 📞 Support
+## Support
 
 If you need help with contact details management:
+
 1. Check the admin panel for error messages
 2. Verify database connectivity
 3. Review the contact details settings page
@@ -196,4 +200,4 @@ If you need help with contact details management:
 
 ---
 
-**Your contact details are now fully dynamic and manageable through the admin panel!** 🎉 
+**Your contact details are now fully dynamic and manageable through the admin panel!**

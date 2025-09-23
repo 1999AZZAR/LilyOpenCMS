@@ -93,7 +93,7 @@
                                                     {% if story.is_news %}
                                                         <span class="bg-primary text-primary-foreground px-2 py-0.5 rounded text-xs font-semibold">Berita</span>
                                                     {% else %}
-                                                        <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Artikel</span>
+                                                        <span class="bg-secondary text-secondary-foreground px-2 py-0.5 rounded text-xs font-semibold">Cerita</span>
                                                     {% endif %}
                                                 {% endif %}
                                                 {% if story.is_premium %}
@@ -147,10 +147,17 @@
                                                     <i class="fas fa-clock mr-1"></i>Permintaan Tertunda
                                                 </button>
                                             {% else %}
-                                                <a href="{{ url_for('user_profile.create_user_story', username=user.username, news_id=story.id) }}" 
-                                                   class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
-                                                    <i class="fas fa-edit mr-1"></i>Edit
-                                                </a>
+                                                {% if story.is_visible %}
+                                                    <button data-edit-btn data-id="{{ story.id }}" data-title="{{ story.title | e }}" 
+                                                            class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
+                                                        <i class="fas fa-edit mr-1"></i><span class="edit-btn-label">Minta Izin Edit</span>
+                                                    </button>
+                                                {% else %}
+                                                    <a href="{{ url_for('user_profile.create_user_story', username=user.username, news_id=story.id) }}" 
+                                                       class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
+                                                        <i class="fas fa-edit mr-1"></i>Edit
+                                                    </a>
+                                                {% endif %}
                                                 <button onclick="requestStoryDeletion({{ story.id }}, '{{ story.title | e }}')" 
                                                         class="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-600 text-center py-2 px-3 rounded text-sm transition-colors">
                                                     <i class="fas fa-trash mr-1"></i>Minta Hapus
@@ -265,10 +272,17 @@
                                                     <i class="fas fa-clock mr-1"></i>Permintaan Tertunda
                                                 </button>
                                             {% else %}
-                                                <a href="{{ url_for('user_profile.create_user_story', username=user.username, news_id=story.id) }}" 
-                                                   class="flex-1 bg-primary text-primary-foreground text-center py-2 px-3 rounded text-sm hover:bg-primary/90 transition-colors">
-                                                    <i class="fas fa-edit mr-1"></i>Edit
-                                                </a>
+                                                {% if story.is_visible %}
+                                                    <button data-edit-btn data-id="{{ story.id }}" data-title="{{ story.title | e }}" 
+                                                            class="flex-1 bg-secondary text-secondary-foreground text-center py-2 px-3 rounded text-sm hover:bg-secondary/90 transition-colors">
+                                                        <i class="fas fa-edit mr-1"></i><span class="edit-btn-label">Minta Izin Edit</span>
+                                                    </button>
+                                                {% else %}
+                                                    <a href="{{ url_for('user_profile.create_user_story', username=user.username, news_id=story.id) }}" 
+                                                       class="flex-1 bg-primary text-primary-foreground text-center py-2 px-3 rounded text-sm hover:bg-primary/90 transition-colors">
+                                                        <i class="fas fa-edit mr-1"></i>Edit
+                                                    </a>
+                                                {% endif %}
                                                 <button onclick="requestStoryDeletion({{ story.id }}, '{{ story.title | e }}')" 
                                                         class="flex-1 bg-orange-100 hover:bg-orange-200 text-orange-600 text-center py-2 px-3 rounded text-sm transition-colors">
                                                     <i class="fas fa-trash mr-1"></i>Minta Hapus
@@ -319,6 +333,11 @@
             <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
                 <p class="text-sm text-orange-600"><i class="fas fa-info-circle mr-1"></i> Ini akan mengirimkan permintaan penghapusan untuk ditinjau oleh admin.</p>
             </div>
+            <div class="mb-4">
+                <label for="delete-reason" class="block text-sm font-medium text-gray-700 mb-1">Alasan Penghapusan<span class="text-red-500">*</span></label>
+                <textarea id="delete-reason" rows="4" class="w-full border border-gray-300 rounded-lg p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-300" placeholder="Jelaskan mengapa Anda ingin menghapus cerita ini" aria-describedby="delete-reason-help"></textarea>
+                <p id="delete-reason-help" class="text-xs text-gray-500 mt-1">Wajib diisi. Berikan alasan yang jelas untuk membantu admin meninjau permintaan Anda.</p>
+            </div>
             <div class="flex justify-end space-x-3">
                 <button onclick="closeDeleteConfirmModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
                     Batal
@@ -329,6 +348,36 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Edit Permission Request Modal -->
+<div id="edit-request-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-labelledby="edit-request-title" aria-modal="true">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+            <h3 id="edit-request-title" class="text-lg font-semibold text-gray-900 mb-4">Minta Izin Edit</h3>
+            <p class="text-gray-700 mb-3">Konten ini sudah dipublikasikan. Jelaskan alasan Anda membutuhkan izin untuk mengedit "<span id="edit-story-title" class="font-semibold"></span>".</p>
+            <div class="mb-4">
+                <label for="edit-reason" class="block text-sm font-medium text-gray-700 mb-1">Alasan Permintaan<span class="text-red-500">*</span></label>
+                <textarea id="edit-reason" rows="4" class="w-full border border-gray-300 rounded-lg p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="Tuliskan perubahan yang diperlukan dan alasannya"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Wajib diisi. Permintaan akan ditinjau oleh admin.</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeEditRequestModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                    Batal
+                </button>
+                <button id="confirm-edit-request-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                    Kirim Permintaan
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    
+    
+    
+    
 </div>
 {% endblock %}
 
@@ -372,12 +421,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('fixed') && e.target.classList.contains('bg-black')) {
             closeDeleteConfirmModal();
+            closeEditRequestModal();
         }
     });
+
+    // After DOM ready, hydrate edit buttons based on my edit requests
+    hydrateEditButtons();
 });
 
 // Global variables for delete functionality
 let storyToDelete = null;
+let storyToEditRequest = null;
 
 // Request story deletion - shows confirmation modal
 function requestStoryDeletion(storyId, storyTitle) {
@@ -396,16 +450,113 @@ function requestStoryDeletion(storyId, storyTitle) {
 function closeDeleteConfirmModal() {
     document.getElementById('delete-confirm-modal').classList.add('hidden');
     storyToDelete = null;
+    const reasonEl = document.getElementById('delete-reason');
+    if (reasonEl) reasonEl.value = '';
+}
+
+// Edit permission request flow
+function requestEditPermission(storyId, storyTitle) {
+    storyToEditRequest = storyId;
+    document.getElementById('edit-story-title').textContent = storyTitle;
+    document.getElementById('edit-request-modal').classList.remove('hidden');
+    const confirmBtn = document.getElementById('confirm-edit-request-btn');
+    confirmBtn.onclick = function() {
+        submitEditRequest(storyId);
+    };
+}
+
+function closeEditRequestModal() {
+    document.getElementById('edit-request-modal').classList.add('hidden');
+    storyToEditRequest = null;
+    const reasonEl = document.getElementById('edit-reason');
+    if (reasonEl) reasonEl.value = '';
+}
+
+async function submitEditRequest(storyId) {
+    try {
+        const reasonEl = document.getElementById('edit-reason');
+        const reason = reasonEl ? reasonEl.value.trim() : '';
+        if (!reason) {
+            showToast('Mohon isi alasan permintaan edit.', 'warning');
+            return;
+        }
+        const res = await fetchWithCSRF(`/api/news/${storyId}/request-edit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        if (!res.ok) {
+            const contentType = res.headers.get('content-type');
+            const err = contentType && contentType.includes('application/json') ? (await res.json()).error || 'Gagal mengirim permintaan edit' : 'Sesi berakhir. Muat ulang halaman.';
+            throw new Error(err);
+        }
+        showToast('Permintaan edit telah dikirim. Admin akan meninjau.', 'success');
+        closeEditRequestModal();
+        await hydrateEditButtons();
+    } catch (e) {
+        showToast(`Gagal mengirim permintaan edit: ${e.message}`, 'error');
+    }
+}
+
+async function hydrateEditButtons() {
+    try {
+        const rsp = await fetchWithCSRF('/api/news/my-edit-requests');
+        if (!rsp.ok) return;
+        const data = await rsp.json();
+        const map = new Map();
+        (data.requests || []).forEach(r => { map.set(String(r.news_id), r.status || 'pending'); });
+        document.querySelectorAll('[data-edit-btn]').forEach(btn => {
+            const id = btn.getAttribute('data-id');
+            const labelEl = btn.querySelector('.edit-btn-label');
+            const status = map.get(String(id));
+            if (status === 'pending') {
+                if (labelEl) labelEl.textContent = 'Permintaan Tertunda';
+                btn.disabled = true;
+                btn.classList.add('opacity-60','cursor-not-allowed');
+            } else if (status === 'approved') {
+                if (labelEl) labelEl.textContent = 'Edit';
+                btn.disabled = false;
+                btn.classList.remove('opacity-60','cursor-not-allowed');
+                // turn into direct edit action
+                btn.onclick = () => {
+                    const newsId = btn.getAttribute('data-id');
+                    // Consume the approval once used, then navigate to edit
+                    fetchWithCSRF(`/api/news/${newsId}/consume-edit`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                      .catch(() => {})
+                      .finally(() => {
+                        const editUrl = `${window.location.origin}${`{{ url_for('user_profile.create_user_story', username=user.username) }}`}?news_id=${newsId}`;
+                        window.location.href = editUrl;
+                      });
+                };
+            } else {
+                // no request or rejected -> default request flow
+                if (labelEl) labelEl.textContent = 'Minta Izin Edit';
+                btn.disabled = false;
+                btn.classList.remove('opacity-60','cursor-not-allowed');
+                const title = btn.getAttribute('data-title') || '';
+                btn.onclick = () => requestEditPermission(btn.getAttribute('data-id'), title);
+            }
+        });
+    } catch (_) {
+        // silent fail, keep default buttons
+    }
 }
 
 // Delete story function - uses deletion request system
 async function deleteStory(storyId) {
     try {
-        const response = await fetch(`/api/news/${storyId}/request-deletion`, {
+        const reasonEl = document.getElementById('delete-reason');
+        const reason = reasonEl ? reasonEl.value.trim() : '';
+        if (!reason) {
+            showToast('Mohon isi alasan penghapusan.', 'warning');
+            return;
+        }
+        const response = await fetchWithCSRF(`/api/news/${storyId}/request-deletion`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({ reason })
         });
 
         if (!response.ok) {
