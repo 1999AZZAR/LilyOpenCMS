@@ -291,6 +291,127 @@ def bulk_export_roles():
     )
 
 
+@main_blueprint.route("/api/roles/bulk/permissions", methods=["POST"])
+@login_required
+def bulk_update_role_permissions():
+    """Bulk update permissions for multiple roles."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        role_ids = data.get("role_ids", [])
+        permission_ids = data.get("permission_ids", [])
+        action = data.get("action", "set")  # "set", "add", "remove"
+        
+        if not role_ids:
+            return jsonify({"error": "No role IDs provided"}), 400
+        
+        if not isinstance(role_ids, list):
+            return jsonify({"error": "role_ids must be a list"}), 400
+        
+        # Get roles to update
+        roles = CustomRole.query.filter(CustomRole.id.in_(role_ids)).all()
+        
+        if not roles:
+            return jsonify({"error": "No valid roles found"}), 404
+        
+        # Get permissions if provided
+        permissions = []
+        if permission_ids:
+            permissions = Permission.query.filter(Permission.id.in_(permission_ids)).all()
+        
+        updated_roles = []
+        
+        for role in roles:
+            if action == "set":
+                # Replace all permissions
+                role.permissions = permissions
+            elif action == "add":
+                # Add permissions to existing ones
+                existing_permission_ids = {p.id for p in role.permissions}
+                new_permissions = [p for p in permissions if p.id not in existing_permission_ids]
+                role.permissions.extend(new_permissions)
+            elif action == "remove":
+                # Remove specified permissions
+                permission_ids_to_remove = {p.id for p in permissions}
+                role.permissions = [p for p in role.permissions if p.id not in permission_ids_to_remove]
+            else:
+                return jsonify({"error": "Invalid action. Must be 'set', 'add', or 'remove'"}), 400
+            
+            updated_roles.append(role)
+        
+        db.session.commit()
+        
+        # Record activity (disabled for now)
+        pass
+        
+        return jsonify({
+            "success": True,
+            "message": f"Updated permissions for {len(updated_roles)} roles",
+            "updated_count": len(updated_roles),
+            "action": action,
+            "permission_count": len(permission_ids)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error bulk updating role permissions: {e}")
+        return jsonify({"error": "Failed to update role permissions"}), 500
+
+
+@main_blueprint.route("/api/roles/bulk/activate", methods=["POST"])
+@login_required
+def bulk_activate_roles():
+    """Bulk activate/deactivate roles."""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPERUSER]:
+        abort(403)
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        role_ids = data.get("role_ids", [])
+        is_active = data.get("is_active", True)
+        
+        if not role_ids:
+            return jsonify({"error": "No role IDs provided"}), 400
+        
+        if not isinstance(role_ids, list):
+            return jsonify({"error": "role_ids must be a list"}), 400
+        
+        # Get roles to update
+        roles = CustomRole.query.filter(CustomRole.id.in_(role_ids)).all()
+        
+        if not roles:
+            return jsonify({"error": "No valid roles found"}), 404
+        
+        # Update role status
+        for role in roles:
+            role.is_active = bool(is_active)
+        
+        db.session.commit()
+        
+        # Record activity (disabled for now)
+        pass
+        
+        return jsonify({
+            "success": True,
+            "message": f"Updated status for {len(roles)} roles",
+            "updated_count": len(roles),
+            "is_active": is_active
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error bulk updating role status: {e}")
+        return jsonify({"error": "Failed to update role status"}), 500
+
+
 @main_blueprint.route("/api/users/<int:user_id>/role", methods=["PUT"])
 @login_required
 def assign_role_to_user(user_id):

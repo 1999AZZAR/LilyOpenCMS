@@ -372,17 +372,6 @@ paths:
         '401':
           description: Authentication required
 
-  /api/auth/me:
-    get:
-      summary: Get current user (JWT auth)
-      description: Get current user information with JWT authentication for mobile apps
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: User information retrieved successfully
-        '401':
-          description: Authentication required
 
   # =============================================================================
   # PUBLIC API ENDPOINTS (with "public" prefix)
@@ -7496,90 +7485,6 @@ paths:
         '500':
           description: Placement deletion failed
 
-components:
-  schemas:
-    # =============================================================================
-    # PUBLIC API RESPONSE SCHEMAS
-    # =============================================================================
-    
-    NewsUpdatePayload:
-      type: object
-      properties:
-        title: { type: string }
-        content: { type: string }
-        category: { type: integer, nullable: true }
-        date: { type: string, format: date-time, nullable: true }
-        age_rating: { type: string, nullable: true }
-        is_news: { type: boolean }
-        is_main_news: { type: boolean }
-        is_premium: { type: boolean }
-        is_visible: { type: boolean }
-        writer: { type: integer, nullable: true }
-        external_source: { type: string, nullable: true }
-        image_id: { type: integer, nullable: true }
-        prize: { type: number, nullable: true }
-        prize_coin_type: { type: string, enum: [achievement, topup], nullable: true }
-        album_id: { type: integer, nullable: true }
-    
-    PublicNewsResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Unique identifier for the news article
-        title:
-          type: string
-          description: Title of the news article
-        content:
-          type: string
-          description: Full content of the article (may be redacted for premium content)
-        excerpt:
-          type: string
-          description: Short excerpt or summary
-        is_premium:
-          type: boolean
-          description: Whether this is premium content
-        is_news:
-          type: boolean
-          description: Whether this is classified as news
-        created_at:
-          type: string
-          format: date-time
-          description: Creation timestamp
-        updated_at:
-          type: string
-          format: date-time
-          description: Last update timestamp
-        view_count:
-          type: integer
-          description: Number of times this article has been read
-        share_count:
-          type: integer
-          description: Number of times this article has been shared
-        category:
-          $ref: '#/components/schemas/CategoryInfo'
-        header_image:
-          $ref: '#/components/schemas/ImageInfo'
-        author:
-          $ref: '#/components/schemas/UserInfo'
-        tags:
-          type: array
-          items:
-            type: string
-          description: List of tags associated with the article
-        related_news:
-          type: array
-          items:
-            $ref: '#/components/schemas/RelatedNewsItem'
-        message:
-          type: string
-          description: Additional message (e.g., premium content notice)
-      required:
-        - id
-        - title
-        - is_premium
-        - is_news
-
     PublicNewsListResponse:
       type: object
       properties:
@@ -8456,19 +8361,536 @@ components:
       in: cookie
       name: session
       description: Session-based authentication via cookies
-    
+
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
       description: JWT token authentication
-    
+
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: lily_session
+      description: Session-based authentication via lily_session cookie
+
     apiKeyAuth:
       type: apiKey
       in: header
       name: X-API-Key
       description: API key for external ad access and third-party integrations
 
+  schemas:
+    # =============================================================================
+    # SESSION SECURITY SCHEMAS
+    # =============================================================================
+
+    UserSession:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: Unique session identifier
+        user_id:
+          type: integer
+          description: User ID
+        username:
+          type: string
+          description: Username
+        device_fingerprint:
+          type: string
+          description: SHA256 device fingerprint
+        ip_address:
+          type: string
+          description: Client IP address
+        user_agent:
+          type: string
+          description: User agent string
+        created_at:
+          type: string
+          format: date-time
+          description: Session creation time
+        last_activity:
+          type: string
+          format: date-time
+          description: Last activity time
+        is_active:
+          type: boolean
+          description: Session active status
+        invalidated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Session invalidation time
+        invalidation_reason:
+          type: string
+          nullable: true
+          description: Reason for invalidation
+
+    SecurityEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+          description: User ID (nullable for non-user events)
+        username:
+          type: string
+          nullable: true
+          description: Username (nullable for non-user events)
+        event_type:
+          type: string
+          enum: [login_success, login_failure, session_created, session_invalidated, session_expired, suspicious_activity, password_change, logout]
+        description:
+          type: string
+          description: Event description
+        ip_address:
+          type: string
+          description: Client IP address
+        user_agent:
+          type: string
+          description: User agent string
+        created_at:
+          type: string
+          format: date-time
+          description: Event creation time
+        session_id:
+          type: string
+          nullable: true
+          description: Related session ID
+
 security:
   - sessionAuth: []
   - bearerAuth: []
+  # =============================================================================
+  # SESSION SECURITY MANAGEMENT API ENDPOINTS (Superuser only)
+  # =============================================================================
+
+/api/admin/sessions:
+    get:
+      summary: Get all active sessions
+      description: Get all active sessions with filtering and pagination (Superuser only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: user_filter
+          in: query
+          description: Filter by user ID or username
+          schema:
+            type: string
+        - name: status_filter
+          in: query
+          description: Filter by session status (active, expired, invalidated)
+          schema:
+            type: string
+            enum: [active, expired, invalidated]
+            default: active
+      responses:
+        '200':
+          description: List of active sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserSession'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      per_page:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        '403':
+          description: Access denied (requires superuser)
+        '500':
+          description: Internal server error
+
+/api/admin/sessions/{session_id}:
+    get:
+      summary: Get detailed session information
+      description: Get detailed information about a specific session (Superuser only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: Session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSession'
+        '404':
+          description: Session not found
+        '403':
+          description: Access denied (requires superuser)
+
+    delete:
+      summary: Invalidate/terminate specific session
+      description: Invalidate a specific session (Superuser only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: Session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session invalidated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  invalidated_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Session not found
+        '403':
+          description: Access denied (requires superuser)
+
+/api/admin/sessions/bulk-invalidate:
+    post:
+      summary: Bulk invalidate multiple sessions
+      description: Invalidate multiple sessions in bulk (Superuser only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_ids:
+                  type: array
+                  items:
+                    type: string
+                user_ids:
+                  type: array
+                  items:
+                    type: integer
+                reason:
+                  type: string
+                  description: Reason for invalidation
+      responses:
+        '200':
+          description: Sessions invalidated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  invalidated_count:
+                    type: integer
+        '403':
+          description: Access denied (requires superuser)
+
+/api/admin/session-analytics:
+    get:
+      summary: Get session analytics and security metrics
+      description: Get comprehensive session analytics and security metrics (Superuser only)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Session analytics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_sessions:
+                    type: integer
+                  active_sessions:
+                    type: integer
+                  expired_sessions:
+                    type: integer
+                  security_events:
+                    type: integer
+                  device_breakdown:
+                    type: object
+                  geographic_data:
+                    type: object
+                  timeline_data:
+                    type: array
+                    items:
+                      type: object
+        '403':
+          description: Access denied (requires superuser)
+
+/api/admin/session-settings:
+    get:
+      summary: Get session security configuration
+      description: Get current session security settings (Superuser only)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Session security settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_timeout:
+                    type: integer
+                  max_concurrent_sessions:
+                    type: integer
+                  inactivity_timeout:
+                    type: integer
+                  session_encryption_enabled:
+                    type: boolean
+        '403':
+          description: Access denied (requires superuser)
+
+    put:
+      summary: Update session security settings
+      description: Update session security configuration (Superuser only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_timeout:
+                  type: integer
+                  minimum: 60
+                  maximum: 86400
+                max_concurrent_sessions:
+                  type: integer
+                  minimum: 1
+                  maximum: 50
+                inactivity_timeout:
+                  type: integer
+                  minimum: 30
+                  maximum: 3600
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  settings:
+                    type: object
+        '403':
+          description: Access denied (requires superuser)
+
+/api/admin/security-events:
+    get:
+      summary: Get recent security events and alerts
+      description: Get recent security events and alerts (Superuser only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: event_type
+          in: query
+          description: Filter by event type
+          schema:
+            type: string
+            enum: [login_success, login_failure, session_created, session_invalidated, session_expired, suspicious_activity, password_change, logout]
+      responses:
+        '200':
+          description: Security events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SecurityEvent'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      per_page:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        '403':
+          description: Access denied (requires superuser)
+
+  # =============================================================================
+  # SESSION MANAGEMENT UI ENDPOINTS
+  # =============================================================================
+
+/admin/session-management:
+    get:
+      summary: Session management dashboard
+      description: Administrative dashboard for session management (Superuser only)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Session management dashboard
+        '403':
+          description: Access denied (requires superuser)
+
+/admin/security-dashboard:
+    get:
+      summary: Comprehensive security monitoring
+      description: Comprehensive security monitoring dashboard (Superuser only)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Security monitoring dashboard
+        '403':
+          description: Access denied (requires superuser)
+
+/admin/session-analytics:
+    get:
+      summary: Advanced session analytics and reporting
+      description: Advanced session analytics and reporting interface (Superuser only)
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Session analytics interface
+        '403':
+          description: Access denied (requires superuser)
+
+# =============================================================================
+# SECURITY COMPONENTS
+# =============================================================================
+
+components:
+  schemas:
+    UserSession:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: Unique session identifier
+        user_id:
+          type: integer
+          description: User ID
+        username:
+          type: string
+          description: Username
+        device_fingerprint:
+          type: string
+          description: SHA256 device fingerprint
+        ip_address:
+          type: string
+          description: Client IP address
+        user_agent:
+          type: string
+          description: User agent string
+        created_at:
+          type: string
+          format: date-time
+          description: Session creation time
+        last_activity:
+          type: string
+          format: date-time
+          description: Last activity time
+        is_active:
+          type: boolean
+          description: Session active status
+        invalidated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Session invalidation time
+        invalidation_reason:
+          type: string
+          nullable: true
+          description: Reason for invalidation
+
+    SecurityEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+          description: User ID (nullable for non-user events)
+        username:
+          type: string
+          nullable: true
+          description: Username (nullable for non-user events)
+        event_type:
+          type: string
+          enum: [login_success, login_failure, session_created, session_invalidated, session_expired, suspicious_activity, password_change, logout]
+        description:
+          type: string
+          description: Event description
+        ip_address:
+          type: string
+          description: Client IP address
+        user_agent:
+          type: string
+          description: User agent string
+        created_at:
+          type: string
+          format: date-time
+          description: Event creation time
+        session_id:
+          type: string
+          nullable: true
+          description: Related session ID

@@ -15,6 +15,9 @@ python-dotenv
 SQLAlchemy
 # alembic - Removed in favor of safe migration system
 
+# YAML Processing (for OpenAPI spec validation)
+PyYAML
+
 # Image Processing
 Pillow
 
@@ -58,7 +61,7 @@ urllib3
 charset-normalizer
 idna
 certifi
-markdown
+cryptography
 
 # Optional: PostgreSQL support (uncomment if using PostgreSQL)
 # psycopg2-binary

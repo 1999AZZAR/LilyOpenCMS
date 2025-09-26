@@ -67,6 +67,7 @@ Premium items return limited info with a message.
 - Validation:
   - `npx redoc-cli lint /home/azzar/project/exposeur/docs/openapi.yml`
   - or `npx @stoplight/spectral-cli lint /home/azzar/project/exposeur/docs/openapi.yml`
+  - Built-in validation: `GET /api/openapi.yml/validate` (detailed spec analysis)
 
 ---
 

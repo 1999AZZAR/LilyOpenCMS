@@ -106,11 +106,17 @@ app.config["DEBUG"] = os.getenv("FLASK_ENV") != "production"
 # Enhanced session configuration for better security and UX
 app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"  # HTTPS only in production
 app.config["SESSION_COOKIE_HTTPONLY"] = True  # Prevent XSS access to session cookies
-app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # CSRF protection
-app.config["PERMANENT_SESSION_LIFETIME"] = 3600 * 4  # 4 hours session timeout (increased for better UX)
+app.config["SESSION_COOKIE_SAMESITE"] = "Strict"  # Strong CSRF protection
+app.config["PERMANENT_SESSION_LIFETIME"] = 3600 * 2  # 2 hours session timeout (shorter for security)
 app.config["SESSION_REFRESH_EACH_REQUEST"] = True  # Refresh session on each request
 app.config["SESSION_COOKIE_NAME"] = "lily_session"  # Custom session cookie name
 app.config["SESSION_USE_SIGNER"] = True  # Sign session cookies for security
+
+# Session security enhancements
+app.config["SESSION_INACTIVE_TIMEOUT"] = 1800  # 30 minutes of inactivity before timeout
+app.config["MAX_CONCURRENT_SESSIONS"] = 5  # Maximum concurrent sessions per user
+app.config["SESSION_ROTATION_ENABLED"] = True  # Rotate session ID on login/logout
+app.config["SESSION_INVALIDATION_ON_PWD_CHANGE"] = True  # Invalidate all sessions on password change
 
 # Performance optimization configuration
 app.config["COMPRESS_MIMETYPES"] = [
@@ -135,6 +141,32 @@ ssr_optimizer = get_ssr_optimizer()
 
 # Initialize email service
 email_service.init_app(app)
+
+# Initialize session security manager
+from routes.utils.session_security import init_session_security, init_session_security_for_migration
+
+# Try to initialize normally, but fall back to migration-safe initialization if needed
+try:
+    init_session_security(app)
+except Exception as e:
+    # If normal initialization fails, try migration-safe version
+    try:
+        init_session_security_for_migration(app)
+        app.logger.warning(f"⚠️ Used migration-safe session security initialization: {e}")
+    except Exception as e2:
+        app.logger.error(f"❌ Failed to initialize session security manager: {e2}")
+        # Create a minimal stub
+        from routes.utils.session_security import session_security_manager
+        class MinimalStub:
+            def cleanup_expired_sessions(self):
+                pass
+            def create_user_session(self, user):
+                import uuid
+                return str(uuid.uuid4())
+            def validate_session(self):
+                return True
+        session_security_manager = MinimalStub()
+        app.logger.warning("⚠️ Using minimal session security stub")
 
 # ----------------------
 # 🔍 Database Health Check
@@ -765,6 +797,16 @@ except ImportError as e:
     app.logger.error(f"❌ Failed to import or register blueprint 'user_xlate_bp': {e}")
 except Exception as e:
     app.logger.error(f"❌ Unexpected error during user translation blueprint registration: {e}", exc_info=True)
+
+# Register Session Management Blueprint with URL prefix
+try:
+    from routes.routes_session_management import session_mgmt_bp
+    app.register_blueprint(session_mgmt_bp, url_prefix='/admin')
+    app.logger.info("✅ Session Management Blueprint registered at '/admin' prefix.")
+except ImportError as e:
+    app.logger.error(f"❌ Failed to register session management blueprint: {e}")
+except Exception as e:
+    app.logger.error(f"❌ Unexpected error during session management blueprint registration: {e}", exc_info=True)
 
 # ----------------------
 # 🔧 Database Initialization

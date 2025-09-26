@@ -88,11 +88,30 @@ class UsersManagement {
             });
         }
 
-        // Bulk actions
-        const bulkActionsBtn = document.getElementById('bulk-actions-btn');
-        if (bulkActionsBtn) {
-            bulkActionsBtn.addEventListener('click', () => this.toggleBulkActions());
-        }
+    // Bulk actions
+    const bulkActionsBtn = document.getElementById('bulk-actions-btn');
+    if (bulkActionsBtn) {
+        bulkActionsBtn.addEventListener('click', () => this.toggleBulkActions());
+    }
+
+    // Bulk permission actions
+    const bulkActivateBtn = document.getElementById('bulk-activate');
+    const bulkDeactivateBtn = document.getElementById('bulk-deactivate');
+    const bulkVerifyBtn = document.getElementById('bulk-verify');
+    const bulkSuspendBtn = document.getElementById('bulk-suspend');
+    
+    if (bulkActivateBtn) {
+        bulkActivateBtn.addEventListener('click', () => this.bulkUpdateUserStatus(true));
+    }
+    if (bulkDeactivateBtn) {
+        bulkDeactivateBtn.addEventListener('click', () => this.bulkUpdateUserStatus(false));
+    }
+    if (bulkVerifyBtn) {
+        bulkVerifyBtn.addEventListener('click', () => this.bulkVerifyUsers(true));
+    }
+    if (bulkSuspendBtn) {
+        bulkSuspendBtn.addEventListener('click', () => this.bulkSuspendUsers(true));
+    }
 
         // Form handlers
         this.initFormHandlers();
@@ -117,6 +136,23 @@ class UsersManagement {
         
         if (bulkRejectDeletionBtn) {
             bulkRejectDeletionBtn.addEventListener('click', () => this.bulkRejectDeletions());
+        }
+        
+        // Write access request handlers
+        const writeAccessSearch = document.getElementById('write-access-search');
+        const writeAccessStatusFilter = document.getElementById('write-access-status-filter');
+        const writeAccessDateFilter = document.getElementById('write-access-date-filter');
+        
+        if (writeAccessSearch) {
+            writeAccessSearch.addEventListener('input', this.debounce(() => this.loadWriteAccessRequests(), 500));
+        }
+        
+        if (writeAccessStatusFilter) {
+            writeAccessStatusFilter.addEventListener('change', () => this.loadWriteAccessRequests());
+        }
+        
+        if (writeAccessDateFilter) {
+            writeAccessDateFilter.addEventListener('change', () => this.loadWriteAccessRequests());
         }
     }
 
@@ -165,6 +201,9 @@ class UsersManagement {
                 break;
             case 'performance':
                 this.loadPerformanceData();
+                break;
+            case 'write-access':
+                this.loadWriteAccessRequests();
                 break;
         }
     }
@@ -374,6 +413,7 @@ class UsersManagement {
     card.innerHTML = `
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
+                <input type="checkbox" name="user-select" value="${user.id}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-300" onchange="usersManagement.updateSelectedCount()" title="Pilih untuk aksi massal">
                 <div class="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full flex items-center justify-center">
                     <span class="text-white font-semibold text-sm">${user.username.charAt(0).toUpperCase()}</span>
                 </div>
@@ -1485,6 +1525,146 @@ async handlePasswordReset(e) {
         }
     }
 
+    async bulkUpdateUserStatus(isActive) {
+        const selectedUsers = this.getSelectedUsers();
+        if (selectedUsers.length === 0) {
+            this.showToast('warning', 'Pilih pengguna terlebih dahulu');
+            return;
+        }
+
+        const action = isActive ? 'mengaktifkan' : 'menonaktifkan';
+        if (!confirm(`Apakah Anda yakin ingin ${action} ${selectedUsers.length} pengguna?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetchWithCSRF('/api/users/bulk/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_ids: selectedUsers,
+                    is_active: isActive
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update user status');
+            }
+
+            const result = await response.json();
+            this.showToast('success', result.message || `Berhasil ${action} ${result.updated_count || selectedUsers.length} pengguna`);
+            this.loadUsers(this.currentPage);
+            this.clearUserSelection();
+        } catch (error) {
+            this.showToast('error', `Gagal ${action} pengguna: ${error.message}`);
+        }
+    }
+
+    async bulkVerifyUsers(verified) {
+        const selectedUsers = this.getSelectedUsers();
+        if (selectedUsers.length === 0) {
+            this.showToast('warning', 'Pilih pengguna terlebih dahulu');
+            return;
+        }
+
+        const action = verified ? 'memverifikasi' : 'membatalkan verifikasi';
+        if (!confirm(`Apakah Anda yakin ingin ${action} ${selectedUsers.length} pengguna?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetchWithCSRF('/api/users/bulk/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_ids: selectedUsers,
+                    verified: verified
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update user verification');
+            }
+
+            const result = await response.json();
+            this.showToast('success', result.message || `Berhasil ${action} ${result.updated_count || selectedUsers.length} pengguna`);
+            this.loadUsers(this.currentPage);
+            this.clearUserSelection();
+        } catch (error) {
+            this.showToast('error', `Gagal ${action} pengguna: ${error.message}`);
+        }
+    }
+
+    async bulkSuspendUsers(suspend) {
+        const selectedUsers = this.getSelectedUsers();
+        if (selectedUsers.length === 0) {
+            this.showToast('warning', 'Pilih pengguna terlebih dahulu');
+            return;
+        }
+
+        const action = suspend ? 'mensuspend' : 'menghentikan suspend';
+        if (!confirm(`Apakah Anda yakin ingin ${action} ${selectedUsers.length} pengguna?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetchWithCSRF('/api/users/bulk/suspend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_ids: selectedUsers,
+                    suspend: suspend,
+                    reason: 'Bulk suspension by admin'
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update user suspension');
+            }
+
+            const result = await response.json();
+            this.showToast('success', result.message || `Berhasil ${action} ${result.updated_count || selectedUsers.length} pengguna`);
+            this.loadUsers(this.currentPage);
+            this.clearUserSelection();
+        } catch (error) {
+            this.showToast('error', `Gagal ${action} pengguna: ${error.message}`);
+        }
+    }
+
+    getSelectedUsers() {
+        // Get selected user IDs from checkboxes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][name="user-select"]:checked');
+        return Array.from(checkboxes).map(cb => parseInt(cb.value));
+    }
+
+    clearUserSelection() {
+        // Clear all user selection checkboxes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][name="user-select"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        this.updateSelectedCount();
+    }
+
+    updateSelectedCount() {
+        const selectedCount = document.getElementById('selected-count');
+        if (selectedCount) {
+            const count = this.getSelectedUsers().length;
+            selectedCount.textContent = count;
+            
+            // Show/hide bulk actions button based on selection
+            const bulkActionsBtn = document.getElementById('bulk-actions-btn');
+            if (bulkActionsBtn) {
+                if (count > 0) {
+                    bulkActionsBtn.classList.remove('hidden');
+                } else {
+                    bulkActionsBtn.classList.add('hidden');
+                }
+            }
+        }
+    }
+
     async exportUsers() {
         try {
             const response = await fetchWithCSRF('/api/users/bulk/export', {
@@ -1813,7 +1993,19 @@ async handlePasswordReset(e) {
 
     async loadWriteAccessRequests() {
         try {
-            const response = await fetchWithCSRF('/api/write-access-requests');
+            // Get current filter values
+            const search = document.getElementById('write-access-search')?.value || '';
+            const statusFilter = document.getElementById('write-access-status-filter')?.value || '';
+            const dateFilter = document.getElementById('write-access-date-filter')?.value || '';
+            
+            const params = new URLSearchParams({
+                search: search,
+                status: statusFilter,
+                date_filter: dateFilter,
+                page: 1
+            });
+            
+            const response = await fetchWithCSRF(`/api/write-access-requests?${params}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch write access requests');
             }
@@ -1836,21 +2028,33 @@ async handlePasswordReset(e) {
             return;
         }
 
-        const html = requests.map(request => `
+        const html = requests.map(request => {
+            const isPending = request.status === 'pending';
+            const statusColor = request.status === 'approved' ? 'green' : 
+                               request.status === 'rejected' ? 'red' : 'yellow';
+            const statusText = request.status === 'approved' ? 'Disetujui' : 
+                              request.status === 'rejected' ? 'Ditolak' : 'Menunggu';
+            
+            return `
             <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                 <div class="flex justify-between items-start mb-3">
                     <div>
                         <h4 class="font-semibold text-gray-800">${request.user.username}</h4>
                         <p class="text-gray-600 text-sm">${request.user.email || 'Tidak ada email'}</p>
                         <p class="text-gray-500 text-xs">Diminta pada: ${new Date(request.requested_at).toLocaleDateString('id-ID')}</p>
+                        <span class="px-2 py-1 text-xs rounded-full bg-${statusColor}-100 text-${statusColor}-600 mt-1">
+                            ${statusText}
+                        </span>
                     </div>
                     <div class="flex space-x-2">
+                        ${isPending ? `
                         <button onclick="approveWriteAccessRequest(${request.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
                             <i class="fas fa-check mr-1"></i>Setujui
                         </button>
                         <button onclick="rejectWriteAccessRequest(${request.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
                             <i class="fas fa-times mr-1"></i>Tolak
                         </button>
+                        ` : ''}
                         <button onclick="viewWriteAccessRequest(${request.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
                             <i class="fas fa-eye mr-1"></i>Lihat
                         </button>
@@ -1860,9 +2064,12 @@ async handlePasswordReset(e) {
                     <p><strong>Alasan:</strong> ${request.request_reason || 'Tidak ada alasan'}</p>
                     <p><strong>Pengalaman:</strong> ${request.experience_description || 'Tidak ada pengalaman'}</p>
                     <p><strong>Portfolio:</strong> ${request.portfolio_links || 'Tidak ada portfolio'}</p>
+                    ${request.admin_notes ? `<p><strong>Catatan Admin:</strong> ${request.admin_notes}</p>` : ''}
+                    ${request.reviewed_at ? `<p><strong>Ditinjau:</strong> ${new Date(request.reviewed_at).toLocaleDateString('id-ID')}</p>` : ''}
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         container.innerHTML = html;
     }
@@ -1890,7 +2097,7 @@ async handlePasswordReset(e) {
                 const error = await response.json();
                 
                 // Handle specific error cases
-                if (error.error && error.error.includes('already been')) {
+                if (error.error && (error.error.includes('already been') || error.error.includes('already been reviewed'))) {
                     this.showToast('warning', 'Permintaan ini sudah diproses sebelumnya');
                     this.loadWriteAccessRequests(); // Refresh to update UI
                     return;
@@ -1899,7 +2106,8 @@ async handlePasswordReset(e) {
                 throw new Error(error.error || 'Failed to approve write access request');
             }
 
-            this.showToast('success', 'Permintaan akses tulis berhasil disetujui');
+            const result = await response.json();
+            this.showToast('success', result.message || 'Permintaan akses tulis berhasil disetujui');
             this.loadWriteAccessRequests(); // Refresh the list
         } catch (error) {
             console.error('Error approving write access request:', error);
@@ -1918,7 +2126,7 @@ async handlePasswordReset(e) {
                 const error = await response.json();
                 
                 // Handle specific error cases
-                if (error.error && error.error.includes('already been')) {
+                if (error.error && (error.error.includes('already been') || error.error.includes('already been reviewed'))) {
                     this.showToast('warning', 'Permintaan ini sudah diproses sebelumnya');
                     this.loadWriteAccessRequests(); // Refresh to update UI
                     return;
@@ -1927,7 +2135,8 @@ async handlePasswordReset(e) {
                 throw new Error(error.error || 'Failed to reject write access request');
             }
 
-            this.showToast('success', 'Permintaan akses tulis berhasil ditolak');
+            const result = await response.json();
+            this.showToast('success', result.message || 'Permintaan akses tulis berhasil ditolak');
             this.loadWriteAccessRequests(); // Refresh the list
         } catch (error) {
             console.error('Error rejecting write access request:', error);

@@ -99,10 +99,26 @@ function loadSEOScoreChart() {
 }
 
 function createSEOScoreChart(distribution) {
-    const ctx = document.getElementById('seo-score-chart').getContext('2d');
-    
+    // Check if canvas element exists and has proper context
+    const canvasElement = document.getElementById('seo-score-chart');
+    if (!canvasElement) {
+        console.error('SEO Score chart canvas element not found');
+        return;
+    }
+
+    const ctx = canvasElement.getContext('2d');
+    if (!ctx) {
+        console.error('Failed to get 2D context for SEO Score chart');
+        return;
+    }
+
+    // Destroy existing chart if it exists
     if (seoScoreChart) {
-        seoScoreChart.destroy();
+        try {
+            seoScoreChart.destroy();
+        } catch (error) {
+            console.warn('Error destroying existing SEO Score chart:', error);
+        }
     }
     
     seoScoreChart = new Chart(ctx, {
@@ -164,10 +180,26 @@ function loadContentPerformanceChart() {
 }
 
 function createContentPerformanceChart(performance) {
-    const ctx = document.getElementById('content-performance-chart').getContext('2d');
-    
+    // Check if canvas element exists and has proper context
+    const canvasElement = document.getElementById('content-performance-chart');
+    if (!canvasElement) {
+        console.error('Content performance chart canvas element not found');
+        return;
+    }
+
+    const ctx = canvasElement.getContext('2d');
+    if (!ctx) {
+        console.error('Failed to get 2D context for content performance chart');
+        return;
+    }
+
+    // Destroy existing chart if it exists
     if (contentPerformanceChart) {
-        contentPerformanceChart.destroy();
+        try {
+            contentPerformanceChart.destroy();
+        } catch (error) {
+            console.warn('Error destroying existing content performance chart:', error);
+        }
     }
     
     contentPerformanceChart = new Chart(ctx, {

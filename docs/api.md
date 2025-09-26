@@ -1240,6 +1240,71 @@ Hybrid verification/approval flow:
 | GET    | `/api/account/profile`               | Yes  | Get current user's profile data (username, email, full_name, first_name, last_name, birthdate, age, role, custom_role_name, created_at, last_login) |
 | PUT    | `/api/account/profile`               | Yes  | Update current user's profile data (full_name, birthdate) - full_name is split into first_name and last_name                                        |
 
+## Session Security Management API
+
+Advanced session security management system with real-time monitoring, device tracking, and administrative controls. All endpoints require superuser authentication for security.
+
+### **Session Monitoring & Management**
+
+| Method | Endpoint                                    | Auth       | Description                                                                 |
+| ------ | ------------------------------------------- | ---------- | --------------------------------------------------------------------------- |
+| GET    | `/api/admin/sessions`                     | Superuser | Get all active sessions with filtering and pagination                       |
+| GET    | `/api/admin/sessions/<session_id>`        | Superuser | Get detailed session information                                            |
+| DELETE | `/api/admin/sessions/<session_id>`        | Superuser | Invalidate/terminate specific session                                       |
+| POST   | `/api/admin/sessions/bulk-invalidate`     | Superuser | Bulk invalidate multiple sessions                                           |
+| GET    | `/api/admin/session-analytics`            | Superuser | Get session analytics and security metrics                                  |
+| GET    | `/api/admin/session-settings`             | Superuser | Get session security configuration                                          |
+| PUT    | `/api/admin/session-settings`             | Superuser | Update session security settings                                            |
+| GET    | `/api/admin/security-events`              | Superuser | Get recent security events and alerts                                       |
+
+### **Session Security Features**
+
+- **Real-time Monitoring**: Live session tracking with device fingerprinting
+- **Device Tracking**: SHA256-based device identification for security
+- **Concurrent Session Limits**: Configurable maximum sessions per user (default: 5)
+- **Session Rotation**: Automatic session ID rotation on login/logout
+- **Activity-based Timeouts**: 30-minute inactivity timeout
+- **Security Event Logging**: Comprehensive audit trail for all session events
+- **Administrative Controls**: Superuser-only access to session management
+- **Rate Limiting**: Protection against session enumeration attacks
+- **Encryption**: All session data encrypted using Fernet with PBKDF2 key derivation
+
+### **Session Management UI**
+
+| Method | Endpoint                           | Auth       | Description                              |
+| ------ | ---------------------------------- | ---------- | ---------------------------------------- |
+| GET    | `/admin/session-management`      | Superuser | Session management dashboard             |
+| GET    | `/admin/security-dashboard`      | Superuser | Comprehensive security monitoring        |
+| GET    | `/admin/session-analytics`       | Superuser | Advanced session analytics and reporting |
+
+### **Security Event Types**
+
+- `login_success`: Successful user authentication
+- `login_failure`: Failed login attempts (rate limiting triggers)
+- `session_created`: New session establishment
+- `session_invalidated`: Session termination (manual/admin)
+- `session_expired`: Session timeout due to inactivity
+- `suspicious_activity`: Security policy violations
+- `password_change`: Password modification events
+- `logout`: User-initiated logout
+
+### **Device Fingerprinting**
+
+The system generates SHA256 fingerprints based on:
+- User Agent string
+- IP address
+- Screen resolution and color depth
+- Timezone information
+- Browser plugins and capabilities
+
+This enables detection of:
+- Multiple devices accessing the same account
+- Session hijacking attempts
+- Unusual login patterns
+- Geographic anomalies
+
+---
+
 ## Public/Pages
 
 | Method | Endpoint                                                   | Auth | Description                                                                                       |

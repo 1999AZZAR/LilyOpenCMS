@@ -27,16 +27,25 @@ class TestRunner:
         self.report_dir.mkdir(exist_ok=True)
         
     def discover_tests(self):
-        """Discover all test files in the test directory"""
+        """Discover all test files in the test directory and subdirectories"""
         print("🔍 Discovering test files...")
         
         test_dir = Path("test")
-        for file in test_dir.glob("test_*.py"):
-            if file.name != "run_tests.py":
+        # Search for test files in all subdirectories
+        for file in test_dir.rglob("test_*.py"):
+            if file.name not in ["run_tests.py", "quick_test.py", "demo_test_runner.py"]:
                 self.test_files.append(file)
         
+        # Sort files by category for better organization
+        self.test_files.sort(key=lambda x: (x.parent.name, x.name))
+        
         print(f"✅ Found {len(self.test_files)} test files:")
+        current_category = None
         for file in self.test_files:
+            category = file.parent.name if file.parent.name != "test" else "root"
+            if category != current_category:
+                print(f"\n📁 {category.upper()}:")
+                current_category = category
             print(f"  - {file.name}")
         
         return self.test_files

@@ -313,6 +313,25 @@
                         ]
                     },
                     {
+                        'id': 'security',
+                        'title': 'Security Management',
+                        'icon': 'fas fa-shield-alt',
+                        'visible': current_user.role == UserRole.SUPERUSER,
+                        'subgroups': [
+                            {
+                                'id': 'session-mgmt',
+                                'title': 'Session Security',
+                                'icon': 'fas fa-user-shield',
+                                'visible': current_user.role == UserRole.SUPERUSER,
+                                'links': [
+                                    {'url': url_for('session_mgmt.session_management_dashboard'), 'icon': 'fas fa-shield-alt', 'label': 'Session Management', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('session_mgmt.security_dashboard'), 'icon': 'fas fa-chart-line', 'label': 'Security Dashboard', 'visible': current_user.role == UserRole.SUPERUSER},
+                                    {'url': url_for('session_mgmt.session_analytics'), 'icon': 'fas fa-chart-bar', 'label': 'Session Analytics', 'visible': current_user.role == UserRole.SUPERUSER}
+                                ]
+                            }
+                        ]
+                    },
+                    {
                         'id': 'seo',
                         'title': 'SEO Management',
                         'icon': 'fas fa-search',
@@ -616,6 +635,83 @@
         // Flash messages will be injected here by Jinja template engine
         document.addEventListener('DOMContentLoaded', function() {
             // This will be populated by the server-side template processing
+        });
+
+        // Global error handler for JavaScript context issues
+        window.addEventListener('error', function(event) {
+            // Handle various context-related errors that might occur with external libraries
+            if (event.message && (
+                event.message.includes("can't access property") ||
+                event.message.includes("api") ||
+                event.message.includes("C is undefined") ||
+                event.message.includes("Cannot read propert") ||
+                event.message.includes("undefined is not an object") ||
+                event.message.includes("context") ||
+                event.message.includes("null reference")
+            )) {
+                console.warn('JavaScript context error detected:', event.message);
+
+                // Only show user notification if it's a critical error that breaks functionality
+                const isCriticalError = event.message.includes("C is undefined") ||
+                                      event.message.includes("can't access property");
+
+                if (isCriticalError) {
+                    // Create a non-intrusive notification
+                    const errorNotification = document.createElement('div');
+                    errorNotification.id = 'js-error-notification';
+                    errorNotification.style.cssText = `
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background: #f44336;
+                        color: white;
+                        padding: 12px 16px;
+                        border-radius: 8px;
+                        z-index: 10000;
+                        font-size: 14px;
+                        max-width: 350px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        cursor: pointer;
+                    `;
+                    errorNotification.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>JavaScript Error Detected</span>
+                        </div>
+                        <div style="margin-top: 4px; font-size: 12px; opacity: 0.9;">
+                            Some functionality may be affected. Click to dismiss.
+                        </div>
+                    `;
+
+                    // Add click handler to dismiss
+                    errorNotification.addEventListener('click', function() {
+                        if (this.parentNode) {
+                            this.parentNode.removeChild(this);
+                        }
+                    });
+
+                    // Auto-dismiss after 10 seconds
+                    setTimeout(() => {
+                        if (errorNotification.parentNode) {
+                            errorNotification.parentNode.removeChild(errorNotification);
+                        }
+                    }, 10000);
+
+                    // Only add if not already present
+                    if (!document.getElementById('js-error-notification')) {
+                        document.body.appendChild(errorNotification);
+                    }
+
+                    // Prevent default error handling for these specific errors
+                    event.preventDefault();
+                }
+            }
+        });
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            console.warn('Unhandled promise rejection:', event.reason);
+            // Don't prevent default behavior for promise rejections
         });
     </script>
     <script id="flash-messages" type="application/json" style="display: none;">

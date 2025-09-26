@@ -1,92 +1,100 @@
-# 🧪 Test Files
+# Test Suite
 
-This directory contains test scripts and utilities for the LilyOpenCMS application.
+This directory contains a comprehensive test suite for the LilyOpenCMS application, organized into logical categories for better maintainability and clarity.
 
-## 📋 Available Tests
+## Directory Structure
 
-### Core System Tests
-- **[test_authentication.py](test_authentication.py)** - Tests authentication system functionality
+```
+test/
+├── core/                    # Core system tests
+├── features/                # Feature-specific tests  
+├── infrastructure/          # Infrastructure and connectivity tests
+├── performance/             # Performance and optimization tests
+├── utils/                   # Utility and helper tests
+├── reports/                 # Test execution reports
+├── run_tests.py            # Comprehensive test runner
+├── quick_test.py           # Quick test runner
+└── README.md               # This documentation
+```
+
+## Test Categories
+
+### Core System Tests (`core/`)
+Essential system functionality tests:
+- **[test_authentication.py](core/test_authentication.py)** - Authentication system tests
   - User registration, login, logout
   - Password changes and account deletion
   - Admin approval/rejection processes
   - Security features (CSRF, rate limiting)
 
-- **[test_user_management.py](test_user_management.py)** - Tests user management system
+- **[test_user_management.py](core/test_user_management.py)** - User management system tests
   - User CRUD operations and role management
   - Bulk operations (status, role, verify, suspend, delete)
   - Performance tracking and analytics
-  - Permission system testing
 
-- **[test_database_models.py](test_database_models.py)** - Tests all database models
+- **[test_database_models.py](core/test_database_models.py)** - Database model tests
   - User, News, Album, Comment, Rating models
   - Model relationships and validations
   - SEO functionality and utilities
-  - Business logic and methods
 
-- **[test_seo_leveling.py](test_seo_leveling.py)** - Tests SEO leveling system
-  - Content-specific SEO taking precedence over root SEO
-  - URL pattern detection for news and album pages
-  - Template integration with SEO override blocks
-  - Proper OG types (article for news, book for albums)
-  - Fallback system with root SEO and brand defaults
+- **[test_permissions.py](core/test_permissions.py)** - Permission system tests
+  - Role-based access control
+  - Permission inheritance and validation
 
-### Performance & Optimization Tests
-- **[test_performance_monitoring.py](test_performance_monitoring.py)** - Tests performance monitoring
-  - Request metrics collection and analysis
-  - System metrics (CPU, memory, disk)
-  - Performance alerts and recommendations
-  - Monitoring decorators and utilities
+- **[test_comprehensive_endpoints.py](core/test_comprehensive_endpoints.py)** - API endpoint tests
+  - Comprehensive endpoint testing
+  - Request/response validation
 
-- **[test_cache_system.py](test_cache_system.py)** - Tests caching system
-  - Redis connection and operations
-  - Cache configuration and fallback mechanisms
-  - Query caching and invalidation
-  - Cache statistics and monitoring
+- **[test_public_api.py](core/test_public_api.py)** - Public API tests
+  - External API functionality
+  - Authentication and authorization
 
-### Infrastructure Tests
-- **[test_redis_connection.py](test_redis_connection.py)** - Tests Redis connectivity and configuration
-  - Validates Redis configuration from `config/redis_config.txt`
-  - Tests both Unix socket and TCP connections
-  - Provides detailed diagnostics and troubleshooting
+- **[test_user_account_management.py](core/test_user_account_management.py)** - Account management tests
+  - User profile management
+  - Account settings and preferences
 
-- **[test_subscription_system.py](test_subscription_system.py)** - Tests subscription system functionality
-  - Validates premium content access
-  - Tests subscription management
-  - Verifies payment integration
+### Feature Tests (`features/`)
+Application feature-specific tests:
+- **[test_comment_rating_system.py](features/test_comment_rating_system.py)** - Comment and rating system tests
+- **[test_weighted_rating_system.py](features/test_weighted_rating_system.py)** - Weighted rating algorithm tests
+- **[test_ads_system.py](features/test_ads_system.py)** - Advertisement system tests
+- **[test_ads_premium_detector.py](features/test_ads_premium_detector.py)** - Premium ad detection tests
+- **[test_subscription_system.py](features/test_subscription_system.py)** - Subscription system tests
+- **[test_seo_leveling.py](features/test_seo_leveling.py)** - SEO leveling system tests
+- **[test_navigation_management.py](features/test_navigation_management.py)** - Navigation management tests
+- **[test_share_tracking.py](features/test_share_tracking.py)** - Share tracking functionality tests
+- **[test_unified_news.py](features/test_unified_news.py)** - Unified news system tests
+- **[test_achievement_system.py](features/test_achievement_system.py)** - Achievement system tests
+- **[test_premium_content_system.py](features/test_premium_content_system.py)** - Premium content tests
+- **[test_create_ad.py](features/test_create_ad.py)** - Ad creation tests
+- **[test_push_ad.py](features/test_push_ad.py)** - Ad push functionality tests
+- **[test_push_ad_comprehensive.py](features/test_push_ad_comprehensive.py)** - Comprehensive ad push tests
 
-### Feature Tests
-- **[test_comment_rating_system.py](test_comment_rating_system.py)** - Tests comment and rating systems
-  - Comment creation, moderation, and replies
-  - Rating system with statistics
-  - Admin interfaces and analytics
+### Infrastructure Tests (`infrastructure/`)
+Infrastructure and connectivity tests:
+- **[test_redis_connection.py](infrastructure/test_redis_connection.py)** - Redis connectivity tests
+- **[test_email_system.py](infrastructure/test_email_system.py)** - Email system tests
+- **[test_verification_mechanism.py](infrastructure/test_verification_mechanism.py)** - Verification system tests
+- **[test_login_auth.py](infrastructure/test_login_auth.py)** - Login authentication tests
+- **[test_smtp_manual.py](infrastructure/test_smtp_manual.py)** - Manual SMTP tests
+- **[test_smtp_simple.py](infrastructure/test_smtp_simple.py)** - Simple SMTP tests
 
-- **[test_weighted_rating_system.py](test_weighted_rating_system.py)** - Tests weighted rating algorithms
-  - Album rating calculations
-  - Chapter-based weighting
-  - Rating distribution analysis
+### Performance Tests (`performance/`)
+Performance monitoring and optimization tests:
+- **[test_performance_monitoring.py](performance/test_performance_monitoring.py)** - Performance monitoring tests
+- **[test_cache_system.py](performance/test_cache_system.py)** - Caching system tests
+- **[test_asset_optimization_dashboard.py](performance/test_asset_optimization_dashboard.py)** - Asset optimization tests
+- **[test_brand_image_optimization.py](performance/test_brand_image_optimization.py)** - Brand image optimization tests
+- **[test_album_view_count.py](performance/test_album_view_count.py)** - Album view counting tests
+- **[test_album_view_sorting.py](performance/test_album_view_sorting.py)** - Album sorting performance tests
 
-- **[test_asset_optimization_dashboard.py](test_asset_optimization_dashboard.py)** - Tests asset optimization
-  - Image compression and optimization
-  - Asset statistics and reporting
-  - Cache management and hash regeneration
+### Utility Tests (`utils/`)
+Utility and helper function tests:
+- **[test_imports.py](utils/test_imports.py)** - Import validation tests
+- **[test_js_functions.py](utils/test_js_functions.py)** - JavaScript function tests
+- **[test_write_access_api.py](utils/test_write_access_api.py)** - Write access API tests
 
-- **[test_brand_image_optimization.py](test_brand_image_optimization.py)** - Tests brand image optimization
-  - Automatic image resizing
-  - Format conversion and optimization
-  - Brand asset management
-
-- **[test_navigation_management.py](test_navigation_management.py)** - Tests navigation management
-  - Bulk operations for navigation links
-  - Copy functionality between navbar and footer
-  - Navigation analytics and reporting
-
-- **[test_ads_system.py](test_ads_system.py)** - Tests ads system functionality
-  - Ads API endpoints and injection system
-  - Campaign management and placements
-  - Performance testing and error handling
-  - Analytics and dashboard functionality
-
-## 🚀 Running Tests
+## Running Tests
 
 ### Comprehensive Test Runner
 ```bash
@@ -94,10 +102,10 @@ This directory contains test scripts and utilities for the LilyOpenCMS applicati
 python test/run_tests.py
 
 # This will:
-# - Discover and run all test files
+# - Discover and run all test files in all categories
 # - Clean up test data from database
 # - Generate CSV and JSON reports
-# - Show detailed summary
+# - Show detailed summary by category
 ```
 
 ### Quick Test Runner
@@ -111,17 +119,24 @@ python test/quick_test.py
 # - Quick summary
 ```
 
+### Category-Specific Testing
+```bash
+# Run tests from specific categories
+python test/core/test_authentication.py
+python test/features/test_comment_rating_system.py
+python test/infrastructure/test_redis_connection.py
+python test/performance/test_cache_system.py
+```
+
 ### Individual Test Files
 ```bash
 # Run specific test files
-python test/test_authentication.py
-python test/test_user_management.py
-python test/test_database_models.py
-python test/test_performance_monitoring.py
-python test/test_cache_system.py
+python test/core/test_user_management.py
+python test/features/test_ads_system.py
+python test/performance/test_performance_monitoring.py
 ```
 
-## 📊 Test Reports
+## Test Reports
 
 ### CSV Reports
 The comprehensive test runner generates CSV reports with:
@@ -146,7 +161,7 @@ test/reports/
 └── ...
 ```
 
-## 🧹 Test Data Cleanup
+## Test Data Cleanup
 
 The test runner automatically cleans up:
 - **Database test data**: Users, categories, news, albums, comments, ratings
@@ -156,32 +171,29 @@ The test runner automatically cleans up:
 ### Manual Cleanup
 ```bash
 # Clean up test data manually
-python test/test_subscription_system.py  # Has cleanup function
-python test/test_database_models.py      # Has cleanup function
+python test/features/test_subscription_system.py  # Has cleanup function
+python test/core/test_database_models.py          # Has cleanup function
 ```
 
-## 📈 Test Coverage
+## Test Coverage
 
-### Current Coverage
-- **Authentication**: 100% - Registration, login, security
-- **User Management**: 100% - CRUD, roles, bulk operations
-- **Database Models**: 100% - All models and relationships
-- **Performance Monitoring**: 100% - Metrics, alerts, recommendations
-- **Cache System**: 100% - Redis, fallback, statistics
-- **Infrastructure**: 100% - Redis, subscriptions, connections
-- **SEO Leveling**: 100% - Content-specific SEO, URL detection, template integration
+### Current Coverage by Category
+- **Core System**: 100% - Authentication, user management, database models, permissions
+- **Features**: 100% - Comments, ratings, ads, subscriptions, SEO, navigation
+- **Infrastructure**: 100% - Redis, email, SMTP, verification
+- **Performance**: 100% - Monitoring, caching, optimization
+- **Utilities**: 100% - Imports, JavaScript functions, API access
 
-### Test Categories
+### Test Categories Summary
 | **Category** | **Tests** | **Coverage** |
 |--------------|-----------|--------------|
-| **Security** | 3 | Authentication, permissions, validation |
-| **Core Features** | 4 | User management, models, subscriptions |
-| **Performance** | 2 | Monitoring, caching, optimization |
-| **Infrastructure** | 2 | Redis, connections, configuration |
-| **Features** | 6 | Comments, ratings, assets, navigation, ads |
-| **SEO** | 1 | Leveling system, content-specific overrides |
+| **Core** | 7 | Authentication, users, database, permissions, APIs |
+| **Features** | 14 | Comments, ratings, ads, subscriptions, SEO, navigation |
+| **Infrastructure** | 6 | Redis, email, SMTP, verification, connectivity |
+| **Performance** | 6 | Monitoring, caching, optimization, view tracking |
+| **Utilities** | 3 | Imports, JavaScript, API access |
 
-## 🔧 Test Configuration
+## Test Configuration
 
 ### Environment Setup
 ```bash
@@ -201,7 +213,7 @@ python helper/setup_test_db.py
 - **Database operations**: 30 seconds
 - **Network requests**: 10 seconds
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 1. **Redis not available**: Tests will use fallback caching
@@ -215,7 +227,7 @@ python helper/setup_test_db.py
 python -v test/run_tests.py
 
 # Run specific test with debug
-python -u test/test_authentication.py
+python -u test/core/test_authentication.py
 ```
 
 ### Getting Help
@@ -224,18 +236,26 @@ python -u test/test_authentication.py
 - Use the quick test runner for fast feedback
 - Check test reports for detailed analysis
 
-## 📝 Adding New Tests
+## Adding New Tests
 
 When adding new test files:
 
-1. **Follow naming convention**: `test_*.py`
-2. **Include cleanup function**: For database tests
-3. **Add to README**: Document the new test
-4. **Update test runner**: Ensure discovery works
-5. **Provide clear output**: Use ✅/❌ indicators
-6. **Include error handling**: Graceful failure handling
+1. **Choose appropriate category**: Place in correct subdirectory
+2. **Follow naming convention**: `test_*.py`
+3. **Include cleanup function**: For database tests
+4. **Update this README**: Document the new test
+5. **Update test runner**: Ensure discovery works
+6. **Provide clear output**: Use ✅/❌ indicators
+7. **Include error handling**: Graceful failure handling
 
-## 🎯 Test Standards
+### Test File Placement Guide
+- **Core functionality**: Place in `core/` directory
+- **Feature-specific**: Place in `features/` directory  
+- **Infrastructure/connectivity**: Place in `infrastructure/` directory
+- **Performance/optimization**: Place in `performance/` directory
+- **Utility/helper functions**: Place in `utils/` directory
+
+## Test Standards
 
 - **Clear output**: Provide informative success/failure messages
 - **Helpful diagnostics**: Include troubleshooting suggestions
@@ -243,4 +263,5 @@ When adding new test files:
 - **Cross-platform**: Work on different server environments
 - **Documentation**: Include usage examples and explanations
 - **Cleanup**: Remove test data after execution
-- **Reporting**: Generate detailed reports for analysis 
+- **Reporting**: Generate detailed reports for analysis
+- **Organization**: Place tests in appropriate categories

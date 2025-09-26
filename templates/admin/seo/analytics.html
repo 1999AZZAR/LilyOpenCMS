@@ -7,6 +7,23 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/comprehensive-seo-management.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Fix Chart.js context issues that cause "C is undefined" errors
+document.addEventListener('DOMContentLoaded', function() {
+    // Global error handler for Chart.js context issues
+    window.addEventListener('error', function(event) {
+        if (event.message && event.message.includes("can't access property") &&
+            event.message.includes("api") && event.message.includes("C is undefined")) {
+            console.warn('Chart.js context error detected, attempting to fix...');
+            event.preventDefault();
+            // Refresh the page to reinitialize charts
+            if (confirm('A chart rendering error occurred. Would you like to refresh the page?')) {
+                window.location.reload();
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
 
 {% block content %}

@@ -95,9 +95,8 @@ def safe_migrate():
             
             # Check for required columns
             required_album_columns = [
-                'total_views', 'average_rating', 'age_rating', 
+                'total_views', 'average_rating', 'age_rating',
                 'view_count', 'rating_count', 'is_premium',
-                'reading_history_id', 'user_library_id',
                 'deletion_requested', 'deletion_requested_at', 'deletion_requested_by',
                 'author', 'owner_id'  # New fields for author and owner
             ]
@@ -126,12 +125,6 @@ def safe_migrate():
                         elif col == 'is_premium':
                             db.session.execute(text("ALTER TABLE album ADD COLUMN is_premium BOOLEAN DEFAULT 0"))
                             print("✅ Added is_premium column")
-                        elif col == 'reading_history_id':
-                            db.session.execute(text("ALTER TABLE album ADD COLUMN reading_history_id INTEGER"))
-                            print("✅ Added reading_history_id column")
-                        elif col == 'user_library_id':
-                            db.session.execute(text("ALTER TABLE album ADD COLUMN user_library_id INTEGER"))
-                            print("✅ Added user_library_id column")
                         elif col == 'deletion_requested':
                             db.session.execute(text("ALTER TABLE album ADD COLUMN deletion_requested BOOLEAN DEFAULT 0 NOT NULL"))
                             print("✅ Added deletion_requested column to album")
@@ -593,16 +586,17 @@ def safe_migrate():
                 for i, col in enumerate(user_columns, 1):
                     print(f"   {i:2d}. {col}")
                 
-                # Check for reading history and library columns
+                # Check for new user columns that may be missing
                 user_required_columns = [
-                    'reading_history_id',
-                    'user_library_id',
                     'birthdate',
                     'deletion_requested',
                     'deletion_requested_at',
                     # Hybrid verification flow fields
                     'email_verified_at',
-                    'last_verification_sent_at'
+                    'last_verification_sent_at',
+                    # Password reset functionality
+                    'password_reset_token',
+                    'password_reset_expires_at'
                 ]
                 missing_user_cols = [col for col in user_required_columns if col not in user_columns]
                 
@@ -610,13 +604,7 @@ def safe_migrate():
                     print(f"🔧 Adding missing user columns: {missing_user_cols}")
                     for col in missing_user_cols:
                         try:
-                            if col == 'reading_history_id':
-                                db.session.execute(text("ALTER TABLE user ADD COLUMN reading_history_id INTEGER"))
-                                print("✅ Added reading_history_id column to user")
-                            elif col == 'user_library_id':
-                                db.session.execute(text("ALTER TABLE user ADD COLUMN user_library_id INTEGER"))
-                                print("✅ Added user_library_id column to user")
-                            elif col == 'birthdate':
+                            if col == 'birthdate':
                                 db.session.execute(text("ALTER TABLE user ADD COLUMN birthdate DATE"))
                                 print("✅ Added birthdate column to user")
                             elif col == 'deletion_requested':
@@ -631,6 +619,12 @@ def safe_migrate():
                             elif col == 'last_verification_sent_at':
                                 db.session.execute(text("ALTER TABLE user ADD COLUMN last_verification_sent_at TIMESTAMP"))
                                 print("✅ Added last_verification_sent_at column to user")
+                            elif col == 'password_reset_token':
+                                db.session.execute(text("ALTER TABLE user ADD COLUMN password_reset_token VARCHAR(255)"))
+                                print("✅ Added password_reset_token column to user")
+                            elif col == 'password_reset_expires_at':
+                                db.session.execute(text("ALTER TABLE user ADD COLUMN password_reset_expires_at TIMESTAMP"))
+                                print("✅ Added password_reset_expires_at column to user")
                         except Exception as e:
                             print(f"⚠️ Column {col} might already exist: {e}")
                     db.session.commit()
@@ -1813,7 +1807,7 @@ def safe_migrate():
             print("\n" + "="*50)
             print("📊 USER ACTIVITY TRACKING")
             print("="*50)
-            
+
             # Check if user_activity table exists
             if 'user_activity' not in existing_tables:
                 print("\n🔧 Creating user_activity table...")
@@ -1833,6 +1827,86 @@ def safe_migrate():
                     print("✅ Created user_activity table")
                 except Exception as e:
                     print(f"⚠️ Could not create user_activity table: {e}")
+
+            # ===== ENHANCED SESSION SECURITY TABLES =====
+            print("\n" + "="*50)
+            print("🔐 ENHANCED SESSION SECURITY TABLES")
+            print("="*50)
+
+            # Check if user_session table exists (for advanced session tracking)
+            if 'user_session' not in existing_tables:
+                print("\n🔧 Creating user_session table...")
+                try:
+                    db.session.execute(text("""
+                        CREATE TABLE user_session (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            session_id VARCHAR(36) NOT NULL UNIQUE,
+                            user_id INTEGER NOT NULL,
+                            device_fingerprint VARCHAR(64) NOT NULL,
+                            user_agent VARCHAR(500),
+                            ip_address VARCHAR(45),
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            last_activity DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            is_active BOOLEAN DEFAULT 1 NOT NULL,
+                            invalidated_at DATETIME,
+                            invalidation_reason VARCHAR(255),
+                            FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+                        )
+                    """))
+                    print("✅ Created user_session table for advanced session security")
+                except Exception as e:
+                    print(f"⚠️ Could not create user_session table: {e}")
+            else:
+                # Update existing user_session table if needed
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(user_session)"))
+                    session_columns = [row[1] for row in result.fetchall()]
+
+                    # Check if we need to add the device_fingerprint column
+                    if 'device_fingerprint' not in session_columns:
+                        print("🔧 Adding device_fingerprint column to user_session...")
+                        db.session.execute(text("ALTER TABLE user_session ADD COLUMN device_fingerprint VARCHAR(64) NOT NULL DEFAULT 'legacy_device'"))
+                        print("✅ Added device_fingerprint column")
+
+                    # Check if we need to add the invalidation_reason column
+                    if 'invalidation_reason' not in session_columns:
+                        print("🔧 Adding invalidation_reason column to user_session...")
+                        db.session.execute(text("ALTER TABLE user_session ADD COLUMN invalidation_reason VARCHAR(255)"))
+                        print("✅ Added invalidation_reason column")
+
+                    # Check if we need to add the invalidated_at column
+                    if 'invalidated_at' not in session_columns:
+                        print("🔧 Adding invalidated_at column to user_session...")
+                        db.session.execute(text("ALTER TABLE user_session ADD COLUMN invalidated_at DATETIME"))
+                        print("✅ Added invalidated_at column")
+
+                    db.session.commit()
+                    print("✅ user_session table is up to date")
+                except Exception as e:
+                    print(f"⚠️ Could not update user_session table: {e}")
+
+            # Create indexes for session security
+            try:
+                print("\n🔧 Creating session security indexes...")
+                index_statements = [
+                    "CREATE INDEX IF NOT EXISTS idx_user_session_session_id ON user_session (session_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_user_session_user_id ON user_session (user_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_user_session_device_fingerprint ON user_session (device_fingerprint)",
+                    "CREATE INDEX IF NOT EXISTS idx_user_session_is_active ON user_session (is_active)",
+                    "CREATE INDEX IF NOT EXISTS idx_user_session_last_activity ON user_session (last_activity)",
+                    "CREATE INDEX IF NOT EXISTS idx_user_activity_user_id ON user_activity (user_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_user_activity_activity_type ON user_activity (activity_type)",
+                    "CREATE INDEX IF NOT EXISTS idx_user_activity_created_at ON user_activity (created_at)"
+                ]
+                for stmt in index_statements:
+                    try:
+                        db.session.execute(text(stmt))
+                    except Exception as e:
+                        print(f"⚠️ Could not create index: {e}")
+                db.session.commit()
+                print("✅ Session security indexes created")
+            except Exception as e:
+                print(f"⚠️ Could not create session security indexes: {e}")
 
             # ===== RECORD COUNTS =====
             print("\n" + "="*50)
@@ -1907,6 +1981,19 @@ def safe_migrate():
                 print(f"⭐ User points records: {user_points_count}")
             except Exception as e:
                 print(f"⚠️ Could not count user points records: {e}")
+
+            # Session security record counts
+            try:
+                user_session_count = db.session.execute(text("SELECT COUNT(*) FROM user_session")).scalar()
+                print(f"🔐 User session records: {user_session_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count user session records: {e}")
+
+            try:
+                user_activity_count = db.session.execute(text("SELECT COUNT(*) FROM user_activity")).scalar()
+                print(f"📊 User activity records: {user_activity_count}")
+            except Exception as e:
+                print(f"⚠️ Could not count user activity records: {e}")
 
             # New Ad System record counts
             try:
@@ -2198,12 +2285,15 @@ def safe_migrate():
             print("✅ Advertising system tables created")
             print("✅ Legal & policy tables created")
             print("✅ User activity tracking table created")
+            print("✅ Enhanced session security tables created")
+            print("✅ User session tracking with device fingerprinting")
             print("✅ Brand identity SEO fields added")
             print("✅ Root SEO table and columns created")
             print("✅ SEO columns added to News, Album, and AlbumChapter tables")
             print("✅ Author and owner_id fields added to Album table for ownership system")
             print("✅ Default root SEO pages initialized")
             print("✅ Database indexes optimized for performance")
+            print("✅ Session security indexes created")
             print("✅ Database health verified")
             print("✅ Orphaned data cleaned up")
             
@@ -2438,6 +2528,8 @@ def main():
         print("✅ Advertising system tables created")
         print("✅ Legal & policy tables created")
         print("✅ User activity tracking table created")
+        print("✅ Enhanced session security tables created")
+        print("✅ User session tracking with device fingerprinting")
         print("✅ Brand identity SEO fields added")
         print("✅ Root SEO table and columns created")
         print("✅ SEO columns added to News, Album, and AlbumChapter tables")

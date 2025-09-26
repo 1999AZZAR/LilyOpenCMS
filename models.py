@@ -125,7 +125,7 @@ user_follow = db.Table(
 
 class UserActivity(db.Model):
     __tablename__ = "user_activity"
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     activity_type = db.Column(db.String(100), nullable=False)  # e.g., 'login', 'create_news', 'update_user'
@@ -133,13 +133,13 @@ class UserActivity(db.Model):
     ip_address = db.Column(db.String(45), nullable=True)  # IPv6 compatible
     user_agent = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
-    
+
     # Relationship
     user = db.relationship("User", back_populates="activities")
-    
+
     def __repr__(self):
         return f"<UserActivity {self.activity_type} by {self.user_id}>"
-    
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -149,6 +149,44 @@ class UserActivity(db.Model):
             "ip_address": self.ip_address,
             "user_agent": self.user_agent,
             "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class UserSession(db.Model):
+    """Enhanced session tracking for security and audit purposes."""
+    __tablename__ = "user_session"
+
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.String(36), unique=True, nullable=False, index=True)  # UUID format
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    device_fingerprint = db.Column(db.String(64), nullable=False)  # SHA256 hash
+    user_agent = db.Column(db.String(500), nullable=True)
+    ip_address = db.Column(db.String(45), nullable=True)  # IPv6 compatible
+    created_at = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    last_activity = db.Column(db.DateTime, default=default_utcnow, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    invalidated_at = db.Column(db.DateTime, nullable=True)
+    invalidation_reason = db.Column(db.String(255), nullable=True)
+
+    # Relationship
+    user = db.relationship("User", back_populates="sessions")
+
+    def __repr__(self):
+        return f"<UserSession {self.session_id} for user {self.user_id}>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "session_id": self.session_id,
+            "user_id": self.user_id,
+            "device_fingerprint": self.device_fingerprint,
+            "user_agent": self.user_agent,
+            "ip_address": self.ip_address,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "last_activity": self.last_activity.isoformat() if self.last_activity else None,
+            "is_active": self.is_active,
+            "invalidated_at": self.invalidated_at.isoformat() if self.invalidated_at else None,
+            "invalidation_reason": self.invalidation_reason
         }
 
 
@@ -201,7 +239,11 @@ class User(db.Model, UserMixin):
     
     # Write access for content creation (nullable, admin always has write access)
     write_access = db.Column(db.Boolean, nullable=True)  # None = not requested, True = granted, False = denied
-    
+
+    # Password reset functionality
+    password_reset_token = db.Column(db.String(255), nullable=True, index=True)
+    password_reset_expires_at = db.Column(db.DateTime, nullable=True)
+
     # Relationships - Use back_populates for bidirectional links
     news = db.relationship(
         "News",
@@ -244,6 +286,7 @@ class User(db.Model, UserMixin):
     # New relationships for enhanced user management
     custom_role = db.relationship("CustomRole", back_populates="users", lazy=True)
     activities = db.relationship("UserActivity", back_populates="user", lazy=True, cascade="all, delete-orphan")
+    sessions = db.relationship("UserSession", back_populates="user", lazy=True, cascade="all, delete-orphan")
     # Reader features
     reading_history = db.relationship("ReadingHistory", back_populates="user", lazy=True, cascade="all, delete-orphan")
     library_items = db.relationship("UserLibrary", back_populates="user", lazy=True, cascade="all, delete-orphan")

@@ -46,6 +46,33 @@ def _send_verification_email(user):
         import traceback
         current_app.logger.error(f"❌ Stack trace: {traceback.format_exc()}")
 
+def _send_password_reset_email(user):
+    try:
+        current_app.logger.info(f"🔍 Starting password reset email process for user: {user.username} (email: {user.email})")
+
+        s = _get_serializer()
+        token = s.dumps({"user_id": user.id, "email": user.email or ""})
+        current_app.logger.info(f"🔍 Generated password reset token for user {user.username}")
+
+        # Send actual email using email service
+        if user.email:
+            current_app.logger.info(f"🔍 Attempting to send password reset email to {user.email}")
+            success = email_service.send_password_reset_email(user, token)
+            if success:
+                current_app.logger.info(f"✅ Password reset email sent successfully to {user.email}")
+            else:
+                current_app.logger.warning(f"⚠️ Failed to send password reset email to {user.email}")
+        else:
+            # Fallback to logging if no email
+            reset_url = url_for("main.reset_password", token=token, _external=True)
+            current_app.logger.info(f"📧 Password reset link for {user.username} (no email): {reset_url}")
+
+        current_app.logger.info(f"✅ Password reset email process completed for {user.username}")
+    except Exception as e:
+        current_app.logger.error(f"❌ Failed to send password reset email: {e}")
+        import traceback
+        current_app.logger.error(f"❌ Stack trace: {traceback.format_exc()}")
+
 @main_blueprint.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -128,6 +155,120 @@ def verify_email():
     except BadSignature:
         flash("Invalid verification token.", "error")
         return redirect(url_for("main.login"))
+
+
+@main_blueprint.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email_or_username = request.form.get("email_or_username", "").strip()
+
+        if not email_or_username:
+            flash("Please enter your email address or username", "error")
+            return render_template("public/forgot_password.html")
+
+        # Find user by email or username
+        user = _find_user_by_username_or_email(email_or_username)
+
+        if not user:
+            # Don't reveal if user exists or not for security
+            flash("If an account with that email/username exists, you will receive a password reset link.", "info")
+            return render_template("public/forgot_password.html")
+
+        if not user.email:
+            flash("This account doesn't have an email address associated with it.", "error")
+            return render_template("public/forgot_password.html")
+
+        try:
+            # Clear any existing reset tokens
+            user.password_reset_token = None
+            user.password_reset_expires_at = None
+            db.session.commit()
+
+            # Send password reset email
+            _send_password_reset_email(user)
+
+            flash("If an account with that email/username exists, you will receive a password reset link.", "info")
+            return render_template("public/forgot_password.html")
+
+        except Exception as e:
+            current_app.logger.error(f"❌ Error sending password reset email: {e}")
+            flash("An error occurred while sending the password reset email. Please try again later.", "error")
+            return render_template("public/forgot_password.html")
+
+    return render_template("public/forgot_password.html")
+
+
+@main_blueprint.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    token = request.args.get("token", "")
+    if not token:
+        flash("Invalid password reset link.", "error")
+        return redirect(url_for("main.login"))
+
+    try:
+        s = _get_serializer()
+        data = s.loads(token, max_age=60*60)  # 1 hour
+        user = User.query.get(data.get("user_id"))
+
+        if not user:
+            flash("Invalid password reset token.", "error")
+            return redirect(url_for("main.login"))
+
+        if not user.email:
+            flash("This account doesn't have an email address.", "error")
+            return redirect(url_for("main.login"))
+
+        if request.method == "POST":
+            new_password = request.form.get("new_password")
+            confirm_password = request.form.get("confirm_password")
+
+            if not new_password or not confirm_password:
+                flash("Both password fields are required.", "error")
+                return render_template("public/reset_password.html", token=token)
+
+            if new_password != confirm_password:
+                flash("Passwords do not match.", "error")
+                return render_template("public/reset_password.html", token=token)
+
+            if len(new_password) < 6:
+                flash("Password must be at least 6 characters long.", "error")
+                return render_template("public/reset_password.html", token=token)
+
+            try:
+                # Update password
+                user.set_password(new_password)
+
+                # Clear reset token
+                user.password_reset_token = None
+                user.password_reset_expires_at = None
+
+                # Invalidate all sessions on password change
+                try:
+                    from routes.utils.session_security import get_session_security_manager
+                    session_manager = get_session_security_manager()
+                    session_manager.invalidate_user_sessions(user.id, "Password reset")
+                except Exception as e:
+                    current_app.logger.warning(f"Session invalidation failed during password reset: {e}")
+
+                db.session.commit()
+
+                flash("Password reset successfully. Please log in with your new password.", "success")
+                return redirect(url_for("main.login"))
+
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"❌ Error resetting password: {e}")
+                flash("An error occurred while resetting your password. Please try again.", "error")
+                return render_template("public/reset_password.html", token=token)
+
+        return render_template("public/reset_password.html", token=token)
+
+    except SignatureExpired:
+        flash("Password reset link has expired. Please request a new one.", "error")
+        return redirect(url_for("main.forgot_password"))
+    except BadSignature:
+        flash("Invalid password reset token.", "error")
+        return redirect(url_for("main.forgot_password"))
 
 
 @main_blueprint.route("/api/registrations/pending", methods=["GET"])
@@ -346,7 +487,7 @@ def login():
             if not user.is_active:
                 flash("Your account is pending approval. Please wait for administrator approval.", "error")
                 return render_template("public/login.html")
-            
+
             if user.is_suspended:
                 flash("Your account has been suspended. Please contact an administrator.", "error")
                 return render_template("public/login.html")
@@ -355,7 +496,37 @@ def login():
             user.last_login = datetime.now(timezone.utc)
             user.login_count += 1
             db.session.commit()
-            
+
+            # Create enhanced session tracking
+            try:
+                from routes.utils.session_security import get_session_security_manager
+                session_manager = get_session_security_manager()
+
+                # Invalidate existing sessions if rotation is enabled
+                if current_app.config.get('SESSION_ROTATION_ENABLED', False):
+                    session_manager.invalidate_user_sessions(user.id, "Login session rotation")
+
+                # Create new session
+                session_id = session_manager.create_user_session(user)
+
+                # Enforce concurrent session limit
+                session_manager.enforce_concurrent_session_limit(user.id)
+
+                # Record login activity
+                session_manager.record_user_activity(
+                    user.id,
+                    "login",
+                    f"Successful login from {request.remote_addr}",
+                    request.remote_addr,
+                    request.headers.get("User-Agent")
+                )
+
+                current_app.logger.info(f"Enhanced session {session_id} created for user {user.username}")
+
+            except Exception as e:
+                current_app.logger.warning(f"Session security features failed: {e}")
+                # Continue with login even if session security fails
+
             login_user(user)
             next_page = request.args.get("next")
             # Role-based redirect: admins to settings, general users to user profile
@@ -365,6 +536,22 @@ def login():
                 return redirect(url_for("main.settings_dashboard"))
             return redirect(url_for("user_profile.user_profile", username=user.username))
 
+        # Record failed login attempt for security monitoring
+        try:
+            if user:  # Valid user but wrong password
+                from routes.utils.session_security import get_session_security_manager
+                session_manager = get_session_security_manager()
+                session_manager.record_user_activity(
+                    user.id,
+                    "login_failed",
+                    f"Failed login attempt from {request.remote_addr}",
+                    request.remote_addr,
+                    request.headers.get("User-Agent")
+                )
+                current_app.logger.warning(f"Failed login attempt for user {user.username} from {request.remote_addr}")
+        except Exception as e:
+            current_app.logger.warning(f"Could not record failed login attempt: {e}")
+
         flash("Invalid username/email or password", "error")
         return render_template("public/login.html")
 
@@ -373,7 +560,32 @@ def login():
 @main_blueprint.route("/logout")
 @login_required
 def logout():
+    # Enhanced session invalidation
+    try:
+        from routes.utils.session_security import get_session_security_manager
+        session_manager = get_session_security_manager()
+
+        # Invalidate current session
+        session_id = session.get('session_id')
+        if session_id:
+            session_manager.invalidate_session(session_id, "User logout")
+
+        # Record logout activity
+        session_manager.record_user_activity(
+            current_user.id,
+            "logout",
+            f"User logout from {request.remote_addr}",
+            request.remote_addr,
+            request.headers.get("User-Agent")
+        )
+
+        current_app.logger.info(f"Session {session_id} invalidated for user {current_user.username}")
+
+    except Exception as e:
+        current_app.logger.warning(f"Session security features failed during logout: {e}")
+
     logout_user()
+    session.clear()
     return redirect(url_for("main.home"))
 
 
@@ -392,8 +604,31 @@ def change_password():
         return jsonify({"error": "New passwords do not match"}), 400
 
     current_user.set_password(new_password)
+
+    # Enhanced security: invalidate all sessions on password change
+    try:
+        from routes.utils.session_security import get_session_security_manager
+        session_manager = get_session_security_manager()
+
+        # Invalidate all sessions for this user
+        session_manager.invalidate_user_sessions(current_user.id, "Password changed")
+
+        # Record password change activity
+        session_manager.record_user_activity(
+            current_user.id,
+            "password_change",
+            f"Password changed from {request.remote_addr}",
+            request.remote_addr,
+            request.headers.get("User-Agent")
+        )
+
+        current_app.logger.info(f"All sessions invalidated for user {current_user.username} due to password change")
+
+    except Exception as e:
+        current_app.logger.warning(f"Session invalidation failed during password change: {e}")
+
     db.session.commit()
-    return jsonify({"message": "Password changed successfully"}), 200
+    return jsonify({"message": "Password changed successfully. Please log in again."}), 200
 
 
 @main_blueprint.route("/api/account/delete", methods=["DELETE"])
